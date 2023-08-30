@@ -90,7 +90,8 @@ namespace BloogBot.AI.SharedStates
                 currentState = LootStates.LootFrameReady;
             }
 
-            if (currentState == LootStates.LootFrameReady && Wait.For("LootDelay", 150))
+            //if (currentState == LootStates.LootFrameReady && Wait.For("LootDelay", 150))
+            if (currentState == LootStates.LootFrameReady && Wait.For("LootDelay", 150) && lootIndex <= lootFrame.LootItems.Count)
             {
                 var itemToLoot = lootFrame.LootItems.ElementAt(lootIndex);
                 var itemQuality = ItemQuality.Common;

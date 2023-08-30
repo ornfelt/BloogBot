@@ -73,3 +73,22 @@ ___
 ![image](https://user-images.githubusercontent.com/6411339/120980933-f7368a80-c72b-11eb-97ec-d82dd02094dc.png)
 
 ![image](https://user-images.githubusercontent.com/6411339/120980947-fbfb3e80-c72b-11eb-8aa1-35d24ebd5310.png)
+
+
+## Notes
+
+You might need to Right click Fastcall -> properties -> Platform Active(Win32) -> Precompiled headers
+
+Then:
+
+Create StuckLog.txt in Bot dir.
+
+Copy relevant mmaps to Bot dir.
+
+Change bootstrapperSettings.json.
+
+Set Bootstrapper as startup project.
+
+Run VS as admin!
+
+Also see: botSettings.json

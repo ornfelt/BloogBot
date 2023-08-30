@@ -350,7 +350,7 @@ namespace BloogBot.AI
                         if (Environment.TickCount - currentStateStartTime > 300000 && currentState != typeof(TravelState) && container.BotSettings.UseStuckInStateKillswitch)
                         {
                             var msg = $"Hey, it's {player.Name}, and I need help! I've been stuck in the {currentState.Name} for over 5 minutes. I'm stopping for now.";
-                            LogToFile(msg);
+                            //LogToFile(msg);
                             DiscordClientWrapper.SendMessage(msg);
                             Stop();
                             return;
@@ -365,7 +365,7 @@ namespace BloogBot.AI
                         if (Environment.TickCount - currentPositionStartTime > 300000 && container.BotSettings.UseStuckInPositionKillswitch)
                         {
                             var msg = $"Hey, it's {player.Name}, and I need help! I've been stuck in the same position for over 5 minutes. I'm stopping for now.";
-                            LogToFile(msg);
+                            //LogToFile(msg);
                             DiscordClientWrapper.SendMessage(msg);
                             Stop();
                             return;
@@ -401,42 +401,42 @@ namespace BloogBot.AI
                         // offhand throwns don't have durability, but instead register `-2147483648`.
                         // This is a workaround to prevent that from causing us to get caught in a loop.
                         // We default to a durability value of 100 for items that are null because 100 will register them as not needing repaired.
-                        if ((mainhandDurability <= 20 && mainhandDurability > -1 || (offhandDurability <= 20 && offhandDurability > -1)) && currentHotspot.RepairVendor != null && !container.RunningErrands)
-                        {
-                            ShapeshiftToHumanForm(container);
-                            PopStackToBaseState();
+                        //if ((mainhandDurability <= 20 && mainhandDurability > -1 || (offhandDurability <= 20 && offhandDurability > -1)) && currentHotspot.RepairVendor != null && !container.RunningErrands)
+                        //{
+                        //    ShapeshiftToHumanForm(container);
+                        //    PopStackToBaseState();
 
-                            container.RunningErrands = true;
+                        //    container.RunningErrands = true;
 
-                            if (currentHotspot.TravelPath != null)
-                            {
-                                botStates.Push(new TravelState(botStates, container, currentHotspot.TravelPath.Waypoints, 0));
-                                botStates.Push(new MoveToPositionState(botStates, container, currentHotspot.TravelPath.Waypoints[0]));
-                            }
+                        //    if (currentHotspot.TravelPath != null)
+                        //    {
+                        //        botStates.Push(new TravelState(botStates, container, currentHotspot.TravelPath.Waypoints, 0));
+                        //        botStates.Push(new MoveToPositionState(botStates, container, currentHotspot.TravelPath.Waypoints[0]));
+                        //    }
 
-                            botStates.Push(new RepairEquipmentState(botStates, container, currentHotspot.RepairVendor.Name));
-                            botStates.Push(new MoveToPositionState(botStates, container, currentHotspot.RepairVendor.Position));
-                            container.CheckForTravelPath(botStates, true);
-                        }
+                        //    botStates.Push(new RepairEquipmentState(botStates, container, currentHotspot.RepairVendor.Name));
+                        //    botStates.Push(new MoveToPositionState(botStates, container, currentHotspot.RepairVendor.Position));
+                        //    container.CheckForTravelPath(botStates, true);
+                        //}
 
                         // if inventory is full
-                        if (Inventory.CountFreeSlots(false) == 0 && currentHotspot.Innkeeper != null && !container.RunningErrands)
-                        {
-                            ShapeshiftToHumanForm(container);
-                            PopStackToBaseState();
+                        //if (Inventory.CountFreeSlots(false) == 0 && currentHotspot.Innkeeper != null && !container.RunningErrands)
+                        //{
+                        //    ShapeshiftToHumanForm(container);
+                        //    PopStackToBaseState();
 
-                            container.RunningErrands = true;
+                        //    container.RunningErrands = true;
 
-                            if (currentHotspot.TravelPath != null)
-                            {
-                                botStates.Push(new TravelState(botStates, container, currentHotspot.TravelPath.Waypoints, 0));
-                                botStates.Push(new MoveToPositionState(botStates, container, currentHotspot.TravelPath.Waypoints[0]));
-                            }
-                            
-                            botStates.Push(new SellItemsState(botStates, container, currentHotspot.Innkeeper.Name));
-                            botStates.Push(new MoveToPositionState(botStates, container, currentHotspot.Innkeeper.Position));
-                            container.CheckForTravelPath(botStates, true);
-                        }
+                        //    if (currentHotspot.TravelPath != null)
+                        //    {
+                        //        botStates.Push(new TravelState(botStates, container, currentHotspot.TravelPath.Waypoints, 0));
+                        //        botStates.Push(new MoveToPositionState(botStates, container, currentHotspot.TravelPath.Waypoints[0]));
+                        //    }
+                        //    
+                        //    botStates.Push(new SellItemsState(botStates, container, currentHotspot.Innkeeper.Name));
+                        //    botStates.Push(new MoveToPositionState(botStates, container, currentHotspot.Innkeeper.Position));
+                        //    container.CheckForTravelPath(botStates, true);
+                        //}
 
                         if (botStates.Count > 0)
                         {

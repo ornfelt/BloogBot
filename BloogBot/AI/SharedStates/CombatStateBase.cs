@@ -24,6 +24,9 @@ namespace BloogBot.AI.SharedStates
         bool noLos;
         int noLosStartTime;
 
+        private int loopTimer;
+        private int lastTargetHealth;
+
         public CombatStateBase(Stack<IBotState> botStates, IDependencyContainer container, WoWUnit target, int desiredRange)
         {
             player = ObjectManager.Player;
@@ -35,6 +38,8 @@ namespace BloogBot.AI.SharedStates
             this.desiredRange = desiredRange;
 
             WoWEventHandler.OnErrorMessage += OnErrorMessageCallback;
+
+            loopTimer = 0;
         }
 
         public bool Update()
@@ -56,6 +61,22 @@ namespace BloogBot.AI.SharedStates
                 player.StopMovement(ControlBits.Front);
                 noLos = false;
             }
+
+            if (loopTimer == 0)
+                lastTargetHealth = target.Health;
+            loopTimer++;
+            if (loopTimer > 50)
+            {
+                if (target.Health == lastTargetHealth)
+                {
+                    var nextWaypoint = Navigation.GetNextWaypoint(ObjectManager.MapId, player.Position, target.Position, false);
+                    player.MoveToward(nextWaypoint);
+                    if (loopTimer > 150)
+                        loopTimer = 0;
+                    return true;
+                }
+            }
+
             if (noLos)
             {
                 var nextWaypoint = Navigation.GetNextWaypoint(ObjectManager.MapId, player.Position, target.Position, false);

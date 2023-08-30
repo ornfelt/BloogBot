@@ -57,24 +57,30 @@ unsigned __stdcall ThreadMain(void* pParam)
 	AllocConsole();
 	freopen("CONOUT$", "w", stdout);
 
+
+	int skipDebug = 1;
+	std::cout << std::string("Skipping attaching debugger...") << std::endl;
 #if _DEBUG
-	std::cout << std::string("Attach a debugger now to WoW.exe if you want to debug Loader.dll. Waiting 10 seconds...") << std::endl;
-
-	HANDLE hEvent = CreateEvent(nullptr, TRUE, FALSE, L"MyDebugEvent");
-	WaitForSingleObject(hEvent, 10000);  // Wait for 10 seconds
-	bool isDebuggerAttached = IsDebuggerPresent() != FALSE;
-
-	if (isDebuggerAttached)
+	if (!skipDebug)
 	{
-		std::cout << std::string("Debugger found.") << std::endl;
-	}
-	else
-	{
-		std::cout << std::string("Debugger not found.") << std::endl;
-	}
+		std::cout << std::string("Attach a debugger now to WoW.exe if you want to debug Loader.dll. Waiting 10 seconds...") << std::endl;
 
-	SetEvent(hEvent);
-	CloseHandle(hEvent);
+		HANDLE hEvent = CreateEvent(nullptr, TRUE, FALSE, L"MyDebugEvent");
+		WaitForSingleObject(hEvent, 10000);  // Wait for 10 seconds
+		bool isDebuggerAttached = IsDebuggerPresent() != FALSE;
+
+		if (isDebuggerAttached)
+		{
+			std::cout << std::string("Debugger found.") << std::endl;
+		}
+		else
+		{
+			std::cout << std::string("Debugger not found.") << std::endl;
+		}
+
+		SetEvent(hEvent);
+		CloseHandle(hEvent);
+	}
 #endif
 
 

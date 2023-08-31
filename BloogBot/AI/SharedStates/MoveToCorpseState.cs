@@ -3,6 +3,7 @@ using BloogBot.Game.Enums;
 using BloogBot.Game.Objects;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace BloogBot.AI.SharedStates
 {
@@ -19,7 +20,6 @@ namespace BloogBot.AI.SharedStates
         bool initialized;
 
         bool stuckWalkAround;
-        bool firstStuckWpReached;
         static readonly Random random = new Random();
         
         public MoveToCorpseState(Stack<IBotState> botStates, IDependencyContainer container)
@@ -29,7 +29,6 @@ namespace BloogBot.AI.SharedStates
             player = ObjectManager.Player;
             stuckHelper = new StuckHelper(botStates, container);
             stuckWalkAround = false;
-            firstStuckWpReached = false;
         }
 
         public void Update()
@@ -42,13 +41,16 @@ namespace BloogBot.AI.SharedStates
 
             if (stuckCount == 10)
             {
-                //Console.WriteLine("Stuck in movetocorpsestate!");
-                stuckWalkAround = true;
+                if (!stuckWalkAround)
+                {
+                    Console.WriteLine("Stuck in MoveToCorpseState. Trying to find a walkaround...");
+                    stuckWalkAround = true;
+                }
                 DiscordClientWrapper.SendMessage($"{player.Name} is stuck in the MoveToCorpseState. Stopping.");
                 // Might get stuck when moving towards safeWPs
                 if (stuckHelper.CheckIfStuck())
                 {
-            var ran = random.Next(0, 4);
+                    var ran = random.Next(0, 4);
                     if (ran == 0)
                     {
                         player.StartMovement(ControlBits.Front);
@@ -74,34 +76,27 @@ namespace BloogBot.AI.SharedStates
                         player.Jump();
                     }
                 }
-                var safeWaypointOne = new Position(2015.57F, 1608.67F, 72.11F); // Deathknell
-                var safeWaypointTwo = new Position(2198.62F, 1190.28F, 31.17F); // Deathknell-Brill
-                if (!firstStuckWpReached)
-                {
-                    if (player.Position.DistanceTo2D(safeWaypointOne) < 3)
-                    {
-                        firstStuckWpReached = true;
-                        player.MoveToward(safeWaypointTwo);
-                    }
-                    else
-                        player.MoveToward(safeWaypointOne);
-                    return;
-                }
-                else
-                {
-                    if (player.Position.DistanceTo2D(safeWaypointTwo) < 3)
+
+                var hotspot = container.GetCurrentHotspot();
+                // TODO? pick wp that is somewhere central that won't require advanced mountain climbing
+                var nearestWp = container
+                    .Hotspots
+                    .Where(h => h != null)
+                    .SelectMany(h => h.Waypoints)
+                    .OrderBy(w => player.Position.DistanceTo(w))
+                    .FirstOrDefault();
+                    player.MoveToward(nearestWp);
+
+                    if (player.Position.DistanceTo2D(nearestWp) < 5)
                     {
                         stuckWalkAround = false;
                         stuckCount = 0;
                     }
-                    else
-                        player.MoveToward(safeWaypointTwo);
-                }
 
                 //while (botStates.Count > 0)
                 //    botStates.Pop();
 
-                if (!stuckWalkAround)
+                if (stuckWalkAround)
                     return;
             }
 
@@ -133,8 +128,7 @@ namespace BloogBot.AI.SharedStates
             }
 
             else
-                if (!stuckWalkAround)
-                    player.MoveToward(nextWaypoint);
+                player.MoveToward(nextWaypoint);
         }
     }
 }

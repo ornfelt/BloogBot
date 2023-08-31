@@ -61,6 +61,8 @@ namespace BloogBot.AI.SharedStates
                         }
                     }
 
+                    Console.WriteLine("Reslocations: " + resLocs.Length);
+
                     var maxDistance = 0f;
 
                     foreach (var resLoc in resLocs)

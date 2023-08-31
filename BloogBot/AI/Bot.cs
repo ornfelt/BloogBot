@@ -118,6 +118,7 @@ namespace BloogBot.AI
                 });
 
                 StartInternal(container);
+                Console.ReadLine();
             }
             catch (Exception e)
             {

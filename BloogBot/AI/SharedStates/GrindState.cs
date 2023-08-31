@@ -34,23 +34,6 @@ namespace BloogBot.AI.SharedStates
             {
                 var hotspot = container.GetCurrentHotspot();
 
-                if (hotspot == null)
-                {
-                    var nearestHotspot = container
-                        .Hotspots
-                        .Where(h => h != null)
-                        //.SelectMany(h => h.Waypoints)
-                        //.OrderBy(w => player.Position.DistanceTo(w))
-                        .FirstOrDefault();
-                    if (nearestHotspot != null)
-                        hotspot = nearestHotspot;
-                    else
-                    {
-                        Console.WriteLine("No hotspot nearby!");
-                        return;
-                    }
-                }
-
                 var waypointCount = hotspot.Waypoints.Length;
                 var waypoint = hotspot.Waypoints[random.Next(0, waypointCount)];
                 botStates.Push(new MoveToHotspotWaypointState(botStates, container, waypoint));

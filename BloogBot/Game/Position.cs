@@ -67,6 +67,7 @@ namespace BloogBot.Game
             return new Position((float)(X / magnitude), (float)(Y / magnitude), (float)(Z / magnitude));
         }
 
+        // Update these to match new constructor (only necessary if playing rogue?)
         public static Position operator -(Position a, Position b) =>
             new Position(a.X - b.X, a.Y - b.Y, a.Z - b.Z);
 

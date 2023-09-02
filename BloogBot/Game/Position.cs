@@ -5,12 +5,24 @@ namespace BloogBot.Game
 {
     public class Position
     {
-        [JsonConstructor]
+        //[JsonConstructor]
         public Position(float x, float y, float z)
         {
             X = x;
             Y = y;
             Z = z;
+        }
+
+        [JsonConstructor]
+        public Position(float x, float y, float z, int id, string zone, int minlevel, string links)
+        {
+            X = x;
+            Y = y;
+            Z = z;
+            ID = id;
+            Zone = zone;
+            MinLevel = minlevel;
+            Links = links;
         }
 
         public Position(XYZ xyz)
@@ -26,6 +38,11 @@ namespace BloogBot.Game
 
         public float Z { get; }
 
+        public int ID { get; }
+        public string Zone { get; }
+        public int MinLevel { get; }
+        public string Links { get; }
+        
         public float DistanceTo(Position position)
         {
             var deltaX = X - position.X;
@@ -62,5 +79,6 @@ namespace BloogBot.Game
         public XYZ ToXYZ() => new XYZ(X, Y, Z);
         
         public override string ToString() => $"X: {Math.Round(X, 2)}, Y: {Math.Round(Y, 2)}, Z: {Math.Round(Z, 2)}";
+        public string ToStringFull() => $"X: {Math.Round(X, 2)}, Y: {Math.Round(Y, 2)}, Z: {Math.Round(Z, 2)}, ID: {ID}, Zone: {Zone}, MinLevel: {MinLevel}, Links: {Links}";
     }
 }

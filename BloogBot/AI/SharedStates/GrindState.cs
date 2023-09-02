@@ -35,7 +35,27 @@ namespace BloogBot.AI.SharedStates
                 var hotspot = container.GetCurrentHotspot();
 
                 var waypointCount = hotspot.Waypoints.Length;
-                var waypoint = hotspot.Waypoints[random.Next(0, waypointCount)];
+                //var waypoint = hotspot.Waypoints[random.Next(0, waypointCount)];
+
+                var zoneWaypoints = hotspot.Waypoints.Where(x => x.Zone == "14");
+                var waypoint = zoneWaypoints.ElementAtOrDefault(random.Next() % zoneWaypoints.Count());
+                var nearestWps = zoneWaypoints.OrderBy(w => player.Position.DistanceTo(w));
+                if (player.Position.DistanceTo(nearestWps.ElementAtOrDefault(0)) < 3.0F)
+                {
+                    //TODO: select next wp based on links!
+                    // IF new zone, check minlevel. If minlevel not reached -> select link where zone is same as curr
+                    // Don't choose same as last wp when selecting link...
+                    waypoint = nearestWps.ElementAtOrDefault(1);
+                    Console.WriteLine("WP reached, selecting second closest...");
+                }
+                else
+                {
+                    waypoint = nearestWps.ElementAtOrDefault(0);
+                    Console.WriteLine("Probably no waypoint set...");
+                }
+
+                Console.WriteLine("Waypoint count: " + waypointCount);
+                Console.WriteLine("Selected waypoint: " + waypoint.ToStringFull());
                 botStates.Push(new MoveToHotspotWaypointState(botStates, container, waypoint));
             }
         }

@@ -71,12 +71,13 @@ namespace BloogBot.AI.SharedStates
                         int randLink = random.Next() % linkSplit.Length;
                         Console.WriteLine("randLink: " + randLink);
                         var linkWp = hotspot.Waypoints.Where(x => x.ID == Int32.Parse(linkSplit[randLink])).FirstOrDefault();
-                        // Check level requirement
                         // TODO:
-                        // * Avoid certain WP's that are on water or non-suitable grind areas
                         // * Add maxlevels to each zone. If maxlevel reached,
                         // find path to new zone and traverse the links...
                         // Add function (startNode, destZone) and output link of WPs to reach new zone
+                        // * Try to avoid going to visited WPs?
+
+                        // Check level requirement
                         if (linkWp.MinLevel <= player.Level && !blacklistedWPs.Contains(linkWp.ID))
                         {
                             if (player.LastWpId != linkWp.ID)

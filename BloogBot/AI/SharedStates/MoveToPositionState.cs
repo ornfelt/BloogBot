@@ -47,10 +47,22 @@ namespace BloogBot.AI.SharedStates
                     botStates.Pop();
                     return;
                 }
+                else if (player.InGhostForm && stuckCount > 3)
+                {
+                    player.StopAllMovement();
+                    botStates.Pop();
+                    return;
+                }
             }
             else
             {
                 if (player.Position.DistanceTo(destination) < 5 || stuckCount > 15)
+                {
+                    player.StopAllMovement();
+                    botStates.Pop();
+                    return;
+                }
+                else if (player.InGhostForm && stuckCount > 3)
                 {
                     player.StopAllMovement();
                     botStates.Pop();

@@ -80,6 +80,6 @@ namespace BloogBot.Game
         public XYZ ToXYZ() => new XYZ(X, Y, Z);
         
         public override string ToString() => $"X: {Math.Round(X, 2)}, Y: {Math.Round(Y, 2)}, Z: {Math.Round(Z, 2)}";
-        public string ToStringFull() => $"X: {Math.Round(X, 2)}, Y: {Math.Round(Y, 2)}, Z: {Math.Round(Z, 2)}, ID: {ID}, Zone: {Zone}, MinLevel: {MinLevel}, Links: {Links}";
+        public string ToStringFull() => $"ID: {ID}, Zone: {Zone}, MinLevel: {MinLevel}, X: {Math.Round(X, 2)}, Y: {Math.Round(Y, 2)}, Z: {Math.Round(Z, 2)}, Links: {Links}";
     }
 }

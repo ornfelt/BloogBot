@@ -29,7 +29,11 @@ namespace BloogBot.AI.SharedStates
 
         public void Update()
         {
-            if (player.Position.DistanceTo(startingPosition) > 3)
+            var posDistance = random.Next(10, 600);
+            if (player.InGhostForm)
+                posDistance = 3;
+            //if (player.Position.DistanceTo(startingPosition) > 3)
+            if (player.Position.DistanceTo(startingPosition) > posDistance || player.IsInCombat)
             {
                 StopMovement();
                 botStates.Pop();
@@ -38,7 +42,9 @@ namespace BloogBot.AI.SharedStates
 
             if (state == State.Moving)
             {
-                if (stopwatch.ElapsedMilliseconds > 150)
+                //if (stopwatch.ElapsedMilliseconds > 150)
+                var moveTime = posDistance == 3 ? 150 : (100 * posDistance) / 3;
+                if (stopwatch.ElapsedMilliseconds > moveTime)
                     state = State.Stuck;
                 return;
             }

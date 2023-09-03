@@ -4,6 +4,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Markup;
+using System.IO;
+using System.Reflection;
+using BloogBot.UI;
 
 namespace BloogBot.AI.SharedStates
 {
@@ -66,7 +69,7 @@ namespace BloogBot.AI.SharedStates
                         int randLink = random.Next() % linkSplit.Length;
                         Console.WriteLine("randLink: " + randLink);
                         var linkWp = hotspot.Waypoints.Where(x => x.ID == Int32.Parse(linkSplit[randLink])).FirstOrDefault();
-                        // No need to check new zone...
+                        // Check level requirement
                         if (linkWp.MinLevel <= player.Level)
                         {
                             if (player.LastWpId != linkWp.ID)
@@ -87,11 +90,12 @@ namespace BloogBot.AI.SharedStates
                         }
                     }
                     player.LastWpId = nearestWps.ElementAtOrDefault(0).ID;
+                    LogToFile(player.LastWpId + ",");
                 }
                 else
                 {
+                    // Haven't reached any WP. Pick nearest WP
                     waypoint = nearestWps.ElementAtOrDefault(0);
-                    Console.WriteLine("No current waypoint set...");
                 }
 
                 if (player.CurrZone != waypoint.Zone)
@@ -102,6 +106,18 @@ namespace BloogBot.AI.SharedStates
                 Console.WriteLine("Waypoint count: " + waypointCount);
                 Console.WriteLine("Selected waypoint: " + waypoint.ToStringFull());
                 botStates.Push(new MoveToHotspotWaypointState(botStates, container, waypoint));
+            }
+        }
+
+        void LogToFile(string text)
+        {
+            var dir = Path.GetDirectoryName(Assembly.GetAssembly(typeof(MainViewModel)).CodeBase);
+            var path = new UriBuilder(dir).Path;
+            var file = Path.Combine(path, "VisitedWanderNodes.txt");
+
+            using (var sw = File.AppendText(file))
+            {
+                sw.WriteLine(text);
             }
         }
     }

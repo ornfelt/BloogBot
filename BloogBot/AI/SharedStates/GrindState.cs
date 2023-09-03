@@ -81,14 +81,14 @@ namespace BloogBot.AI.SharedStates
                         // Check level requirement
                         if (linkWp.MinLevel <= player.Level && !blacklistedWPs.Contains(linkWp.ID))
                         {
-                            if (player.LastWpId != linkWp.ID)
+                            if (player.LastWpId != linkWp.ID && player.HasVisitedWp(linkWp.ID))
                             {
                                 waypoint = linkWp;
                                 newWpFound = true;
                             }
                             else
                             {
-                                // This means that randLink is same as last visited WP
+                                // This means that randLink is same as previously visited WP
                                 // Choose it if no other links are suitable
                                 if (linkSearchCount > 15)
                                 {
@@ -101,6 +101,7 @@ namespace BloogBot.AI.SharedStates
                     if (player.LastWpId != nearestWps.ElementAtOrDefault(0).ID)
                     {
                         player.LastWpId = nearestWps.ElementAtOrDefault(0).ID;
+                        player.AddWpToVisitedList(nearestWps.ElementAtOrDefault(0).ID);
                         LogToFile(player.LastWpId + ",");
                     }
                 }

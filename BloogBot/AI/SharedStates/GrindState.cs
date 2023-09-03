@@ -53,7 +53,8 @@ namespace BloogBot.AI.SharedStates
                 var waypoint = zoneWaypoints.ElementAtOrDefault(random.Next() % zoneWaypoints.Count());
                 var nearestWps = zoneWaypoints.OrderBy(w => player.Position.DistanceTo(w));
                 // Check if curr waypoint is reached
-                if (player.Position.DistanceTo(nearestWps.ElementAtOrDefault(0)) < 3.0F)
+                //if (player.Position.DistanceTo(nearestWps.ElementAtOrDefault(0)) < 3.0F)
+                if (player.CurrWpId != 0)
                 {
                     Console.WriteLine($"WP: {nearestWps.ElementAtOrDefault(0).ID} reached, selecting new WP...");
                     string wpLinks = nearestWps.ElementAtOrDefault(0).Links.Replace(":0", "");
@@ -76,12 +77,11 @@ namespace BloogBot.AI.SharedStates
                         // find path to new zone and traverse the links...
                         // Add function (startNode, destZone) and output link of WPs to reach new zone
                         // Maybe use .npcb wp go XXX when leveled up / died too many times at current WP
-                        // * Try to avoid going to already visited WPs?
 
                         // Check level requirement
                         if (linkWp.MinLevel <= player.Level && !blacklistedWPs.Contains(linkWp.ID))
                         {
-                            if (player.LastWpId != linkWp.ID && player.HasVisitedWp(linkWp.ID))
+                            if (player.LastWpId != linkWp.ID && !player.HasVisitedWp(linkWp.ID))
                             {
                                 waypoint = linkWp;
                                 newWpFound = true;
@@ -107,7 +107,7 @@ namespace BloogBot.AI.SharedStates
                 }
                 else
                 {
-                    // Haven't reached any WP. Pick nearest WP
+                    // No current WP. Pick nearest WP
                     bool newWpFound = false;
                     waypoint = nearestWps.ElementAtOrDefault(0);
                     int wpCounter = 0;
@@ -119,7 +119,10 @@ namespace BloogBot.AI.SharedStates
                         else
                             waypoint = nearestWps.ElementAtOrDefault(wpCounter);
                     }
+                    Console.WriteLine("No CurrWpId... Selecting new one");
                 }
+
+                player.CurrWpId = waypoint.ID;
 
                 if (player.CurrZone != waypoint.Zone)
                 {

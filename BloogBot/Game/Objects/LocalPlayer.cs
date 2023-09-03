@@ -492,13 +492,10 @@ namespace BloogBot.Game.Objects
         {
             if (visitedWps.Contains(id)) return;
             visitedWps.Add(id);
-            if (visitedWps.Count > 5)
-            {
-                Console.WriteLine("visitedWps.Count > 5. Removing old value");
-                visitedWps.RemoveAt(0);
-                Console.WriteLine("visitedWps.Count: " + visitedWps.Count);
-            }
+            //if (visitedWps.Count > 100)
+            //{
+            //    visitedWps.RemoveAt(0);
+            //}
         }
-
     }
 }

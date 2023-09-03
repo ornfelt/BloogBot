@@ -58,7 +58,7 @@ unsigned __stdcall ThreadMain(void* pParam)
 	freopen("CONOUT$", "w", stdout);
 
 
-	int skipDebug = 1;
+	int skipDebug = 0;
 	std::cout << std::string("Skipping attaching debugger...") << std::endl;
 #if _DEBUG
 	if (!skipDebug)

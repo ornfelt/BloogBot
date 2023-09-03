@@ -144,7 +144,7 @@ namespace BloogBot.Game.Objects
             }
             catch (AccessViolationException)
             {
-                Console.WriteLine("Access violation on WoWObject.Position. Swallowing.");
+                //Console.WriteLine("Access violation on WoWObject.Position. Swallowing.");
                 return new Position(0, 0, 0);
             }
         }
@@ -174,7 +174,7 @@ namespace BloogBot.Game.Objects
             }
             catch (AccessViolationException)
             {
-                Console.WriteLine("Access violation on WoWObject.Facing. Swallowing.");
+                //Console.WriteLine("Access violation on WoWObject.Facing. Swallowing.");
                 return 0;
             }
         }
@@ -228,7 +228,7 @@ namespace BloogBot.Game.Objects
             }
             catch (AccessViolationException)
             {
-                Console.WriteLine("Access violation on WoWObject.Name. Swallowing.");
+                //Console.WriteLine("Access violation on WoWObject.Name. Swallowing.");
                 return "";
             }
         }

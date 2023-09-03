@@ -474,5 +474,8 @@ namespace BloogBot.Game.Objects
         {
             return string.Format(str, names.Select(s => s.ToString().Replace("'", "\\'").Replace("\"", "\\\"")).ToArray());
         }
+
+        public string CurrZone { get; set; } // Keep track of current zone
+        public int LastWpId { get; set; } // Keep track of last Waypoint visited
     }
 }

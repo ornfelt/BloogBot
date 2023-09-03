@@ -62,6 +62,8 @@ namespace BloogBot.AI
                     currentPosition = ObjectManager.Player.Position;
                     currentPositionStartTime = Environment.TickCount;
                     teleportCheckPosition = ObjectManager.Player.Position;
+                    ObjectManager.Player.LastWpId = 0;
+                    ObjectManager.Player.CurrZone = "0";
                 });
 
                 container.CheckForTravelPath(botStates, false);

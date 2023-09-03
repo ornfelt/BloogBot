@@ -64,6 +64,7 @@ namespace BloogBot.AI
                     teleportCheckPosition = ObjectManager.Player.Position;
                     ObjectManager.Player.LastWpId = 0;
                     ObjectManager.Player.CurrZone = "0";
+                    ObjectManager.Player.DeathsAtWp = 0;
                 });
 
                 container.CheckForTravelPath(botStates, false);
@@ -382,6 +383,9 @@ namespace BloogBot.AI
                         // if the player dies
                         if ((player.Health <= 0 || player.InGhostForm) && !retrievingCorpse)
                         {
+                            Console.WriteLine($"Player died. DeathsAtWp: {player.DeathsAtWp}");
+                            Console.WriteLine($"mainhandDurability: {Inventory.GetEquippedItem(EquipSlot.MainHand)?.DurabilityPercentage ?? 100}");
+                            Console.WriteLine($"offhandDurability: {Inventory.GetEquippedItem(EquipSlot.Ranged)?.DurabilityPercentage ?? 100}");
                             PopStackToBaseState();
 
                             retrievingCorpse = true;
@@ -465,9 +469,12 @@ namespace BloogBot.AI
             var path = new UriBuilder(dir).Path;
             var file = Path.Combine(path, "StuckLog.txt");
 
-            using (var sw = File.AppendText(file))
+            if (File.Exists(file))
             {
-                sw.WriteLine(text);
+                using (var sw = File.AppendText(file))
+                {
+                    sw.WriteLine(text);
+                }
             }
         }
 

@@ -476,6 +476,7 @@ namespace BloogBot.Game.Objects
         }
 
         public string CurrZone { get; set; } // Keep track of current zone
-        public int LastWpId { get; set; } // Keep track of last Waypoint visited
+        public int LastWpId { get; set; } // Keep track of last WP visited
+        public int DeathsAtWp { get; set; } // Keep track of deaths at WP
     }
 }

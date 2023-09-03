@@ -75,7 +75,8 @@ namespace BloogBot.AI.SharedStates
                         // * Add maxlevels to each zone. If maxlevel reached,
                         // find path to new zone and traverse the links...
                         // Add function (startNode, destZone) and output link of WPs to reach new zone
-                        // * Try to avoid going to visited WPs?
+                        // Maybe use .npcb wp go XXX when leveled up / died too many times at current WP
+                        // * Try to avoid going to already visited WPs?
 
                         // Check level requirement
                         if (linkWp.MinLevel <= player.Level && !blacklistedWPs.Contains(linkWp.ID))

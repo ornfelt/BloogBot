@@ -78,6 +78,7 @@ namespace BloogBot.AI.SharedStates
                             resLocation = resLoc;
                         }
                     }
+                    Console.WriteLine("Finished finding best resloc!");
                 }
 
                 initialized = true;

@@ -9,7 +9,7 @@ namespace BloogBot.AI.SharedStates
 {
     public class RetrieveCorpseState : IBotState
     {
-        const int resDistance = 30;
+        const int resDistance = 25;
         static readonly Random random = new Random();
 
         // res distance is around 36 units, so we build up a grid of 38 units 

@@ -56,13 +56,13 @@ namespace BloogBot.AI.SharedStates
                 //if (player.Position.DistanceTo(nearestWps.ElementAtOrDefault(0)) < 3.0F)
                 if (player.CurrWpId != 0)
                 {
-                    Console.WriteLine($"WP: {nearestWps.ElementAtOrDefault(0).ID} reached, selecting new WP...");
+                    Console.WriteLine($"WP: {nearestWps.ElementAtOrDefault(0).ID} reached (should be same as CurrWpId: {player.CurrWpId}), selecting new WP...");
                     string wpLinks = nearestWps.ElementAtOrDefault(0).Links.Replace(":0", "");
                     if (wpLinks.EndsWith(" "))
                         wpLinks = wpLinks.Remove(wpLinks.Length - 1);
                     string[] linkSplit = wpLinks.Split(' ');
-                    foreach (string link in linkSplit)
-                        Console.WriteLine("Found link: " + link);
+                    //foreach (string link in linkSplit)
+                    //    Console.WriteLine("Found link: " + link);
 
                     bool newWpFound = false;
                     int linkSearchCount = 0;
@@ -70,7 +70,7 @@ namespace BloogBot.AI.SharedStates
                     {
                         linkSearchCount++;
                         int randLink = random.Next() % linkSplit.Length;
-                        Console.WriteLine("randLink: " + randLink);
+                        //Console.WriteLine("randLink: " + randLink);
                         var linkWp = hotspot.Waypoints.Where(x => x.ID == Int32.Parse(linkSplit[randLink])).FirstOrDefault();
                         // TODO:
                         // * Add maxlevels to each zone. If maxlevel reached,
@@ -81,7 +81,8 @@ namespace BloogBot.AI.SharedStates
                         // Check level requirement
                         if (linkWp.MinLevel <= player.Level && !blacklistedWPs.Contains(linkWp.ID))
                         {
-                            if (player.LastWpId != linkWp.ID && !player.HasVisitedWp(linkWp.ID))
+                            //if (player.LastWpId != linkWp.ID && !player.HasVisitedWp(linkWp.ID))
+                            if (!player.HasVisitedWp(linkWp.ID))
                             {
                                 waypoint = linkWp;
                                 newWpFound = true;
@@ -118,11 +119,14 @@ namespace BloogBot.AI.SharedStates
                             newWpFound = true;
                         else
                             waypoint = nearestWps.ElementAtOrDefault(wpCounter);
+
+                        if (wpCounter > 100) newWpFound = true;
                     }
                     Console.WriteLine("No CurrWpId... Selecting new one");
                 }
 
                 player.CurrWpId = waypoint.ID;
+                player.DeathsAtWp = 0; // Reset
 
                 if (player.CurrZone != waypoint.Zone)
                 {

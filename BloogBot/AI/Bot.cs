@@ -385,8 +385,8 @@ namespace BloogBot.AI
                         if ((player.Health <= 0 || player.InGhostForm) && !retrievingCorpse)
                         {
                             Console.WriteLine($"Player died. DeathsAtWp: {player.DeathsAtWp}");
-                            Console.WriteLine($"mainhandDurability: {Inventory.GetEquippedItem(EquipSlot.MainHand)?.DurabilityPercentage ?? 100}");
-                            Console.WriteLine($"offhandDurability: {Inventory.GetEquippedItem(EquipSlot.Ranged)?.DurabilityPercentage ?? 100}");
+                            //Console.WriteLine($"mainhandDurability: {Inventory.GetEquippedItem(EquipSlot.MainHand)?.DurabilityPercentage ?? 100}");
+                            //Console.WriteLine($"offhandDurability: {Inventory.GetEquippedItem(EquipSlot.Ranged)?.DurabilityPercentage ?? 100}");
                             PopStackToBaseState();
 
                             retrievingCorpse = true;
@@ -403,8 +403,8 @@ namespace BloogBot.AI
                         var currentHotspot = container.GetCurrentHotspot();
 
                         // if equipment needs to be repaired
-                        int mainhandDurability = Inventory.GetEquippedItem(EquipSlot.MainHand)?.DurabilityPercentage ?? 100;
-                        int offhandDurability = Inventory.GetEquippedItem(EquipSlot.Ranged)?.DurabilityPercentage ?? 100;
+                        //int mainhandDurability = Inventory.GetEquippedItem(EquipSlot.MainHand)?.DurabilityPercentage ?? 100;
+                        //int offhandDurability = Inventory.GetEquippedItem(EquipSlot.Ranged)?.DurabilityPercentage ?? 100;
 
                         // offhand throwns don't have durability, but instead register `-2147483648`.
                         // This is a workaround to prevent that from causing us to get caught in a loop.

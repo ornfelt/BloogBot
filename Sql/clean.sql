@@ -1,0 +1,5 @@
+--DELETE FROM Hotspots WHERE `ID` IN (1, 2, 3, 4); 
+
+SET @ID_START = 1;
+SET @ID_END   = 4;
+DELETE FROM `Hotspots` WHERE `ID` BETWEEN @ID_START AND @ID_END;

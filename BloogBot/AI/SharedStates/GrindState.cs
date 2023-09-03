@@ -18,6 +18,8 @@ namespace BloogBot.AI.SharedStates
         readonly IDependencyContainer container;
         readonly LocalPlayer player;
 
+        private static int[] blacklistedWPs = {1466, 1438};
+
         public GrindState(Stack<IBotState> botStates, IDependencyContainer container)
         {
             this.botStates = botStates;
@@ -70,7 +72,12 @@ namespace BloogBot.AI.SharedStates
                         Console.WriteLine("randLink: " + randLink);
                         var linkWp = hotspot.Waypoints.Where(x => x.ID == Int32.Parse(linkSplit[randLink])).FirstOrDefault();
                         // Check level requirement
-                        if (linkWp.MinLevel <= player.Level)
+                        // TODO:
+                        // * Avoid certain WP's that are on water or non-suitable grind areas
+                        // * Add maxlevels to each zone. If maxlevel reached,
+                        // find path to new zone and traverse the links...
+                        // Add function (startNode, destZone) and output link of WPs to reach new zone
+                        if (linkWp.MinLevel <= player.Level && !blacklistedWPs.Contains(linkWp.ID))
                         {
                             if (player.LastWpId != linkWp.ID)
                             {
@@ -89,13 +96,26 @@ namespace BloogBot.AI.SharedStates
                             }
                         }
                     }
-                    player.LastWpId = nearestWps.ElementAtOrDefault(0).ID;
-                    LogToFile(player.LastWpId + ",");
+                    if (player.LastWpId != nearestWps.ElementAtOrDefault(0).ID)
+                    {
+                        player.LastWpId = nearestWps.ElementAtOrDefault(0).ID;
+                        LogToFile(player.LastWpId + ",");
+                    }
                 }
                 else
                 {
                     // Haven't reached any WP. Pick nearest WP
+                    bool newWpFound = false;
                     waypoint = nearestWps.ElementAtOrDefault(0);
+                    int wpCounter = 0;
+                    while (!newWpFound)
+                    {
+                        wpCounter++;
+                        if (!blacklistedWPs.Contains(waypoint.ID))
+                            newWpFound = true;
+                        else
+                            waypoint = nearestWps.ElementAtOrDefault(wpCounter);
+                    }
                 }
 
                 if (player.CurrZone != waypoint.Zone)
@@ -114,10 +134,20 @@ namespace BloogBot.AI.SharedStates
             var dir = Path.GetDirectoryName(Assembly.GetAssembly(typeof(MainViewModel)).CodeBase);
             var path = new UriBuilder(dir).Path;
             var file = Path.Combine(path, "VisitedWanderNodes.txt");
-
-            using (var sw = File.AppendText(file))
+            string altFileName = "C:\\local\\VisitedWanderNodes.txt";
+            if (File.Exists(file))
             {
-                sw.WriteLine(text);
+                using (var sw = File.AppendText(file))
+                {
+                    sw.WriteLine(text);
+                }
+            }
+            else if (File.Exists(altFileName))
+            {
+                using (var sw = File.AppendText(altFileName))
+                {
+                    sw.WriteLine(text);
+                }
             }
         }
     }

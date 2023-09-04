@@ -18,7 +18,7 @@ namespace BloogBot.AI.SharedStates
         readonly IDependencyContainer container;
         readonly LocalPlayer player;
 
-        private static int[] blacklistedWPs = {1466, 1438, 1444, 1445, 1100, 1362};
+        private static int[] blacklistedWPs = {1466, 1438, 1444, 1445, 1100};
 
         public GrindState(Stack<IBotState> botStates, IDependencyContainer container)
         {

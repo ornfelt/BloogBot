@@ -66,6 +66,7 @@ namespace BloogBot.AI
                     ObjectManager.Player.LastWpId = 0;
                     ObjectManager.Player.CurrZone = "0";
                     ObjectManager.Player.DeathsAtWp = 0;
+                    ObjectManager.Player.wpStuckCount = 0;
                 });
 
                 container.CheckForTravelPath(botStates, false);

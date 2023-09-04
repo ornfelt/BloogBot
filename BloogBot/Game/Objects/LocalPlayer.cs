@@ -482,6 +482,7 @@ namespace BloogBot.Game.Objects
         public int CurrWpId { get; set; } // Keep track of current WP
         public int LastWpId { get; set; } // Keep track of last WP visited
         public int DeathsAtWp { get; set; } // Keep track of deaths at WP
+        public int wpStuckCount { get; set; }
 
         public bool HasVisitedWp(int id)
         {

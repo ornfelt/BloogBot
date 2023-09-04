@@ -1,5 +1,6 @@
 ﻿using BloogBot.Game;
 using BloogBot.Game.Objects;
+using System;
 using System.Collections.Generic;
 
 namespace BloogBot.AI.SharedStates
@@ -24,8 +25,8 @@ namespace BloogBot.AI.SharedStates
         public void Update()
         {
             stuckHelper.CheckIfStuck();
-            
-            if ((container.FindClosestTarget() != null && player.Position.DistanceTo(destination) > 8.0F) || player.Position.DistanceTo(destination) < 3)
+
+            if (container.FindClosestTarget() != null || player.Position.DistanceTo(destination) < 3)
             {
                 player.StopAllMovement();
                 botStates.Pop();

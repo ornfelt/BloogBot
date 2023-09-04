@@ -31,35 +31,37 @@ namespace BloogBot.AI.SharedStates
         {
             var enemyTarget = container.FindClosestTarget();
 
-            var hotspot = container.GetCurrentHotspot();
-            var waypointCount = hotspot.Waypoints.Length;
-            //var waypoint = hotspot.Waypoints[random.Next(0, waypointCount)]; // Old 
-
-            // Check if no zone is set
-            if (player.CurrZone == "0")
-            {
-                var nearestWp = hotspot.Waypoints.OrderBy(w => player.Position.DistanceTo(w)).FirstOrDefault();
-                player.CurrZone = nearestWp.Zone;
-                Console.WriteLine("No zone currently set. Setting zone based on nearest WP: " + player.CurrZone);
-            }
-            var zoneWaypoints = hotspot.Waypoints.Where(x => x.Zone == player.CurrZone);
-            var waypoint = zoneWaypoints.ElementAtOrDefault(random.Next() % zoneWaypoints.Count());
-            var nearestWps = zoneWaypoints.OrderBy(w => player.Position.DistanceTo(w));
-            var currWaypoint = player.CurrWpId == 0 ? waypoint : hotspot.Waypoints.Where(x => x.ID == player.CurrWpId).FirstOrDefault();
-            float currWpDist = player.CurrWpId == 0 ? 100.0F : player.Position.DistanceTo(currWaypoint);
-
             // 4 scenarios:
             // 1: MoveToTargetState
             // 2: No CurrWP set -> pick new one
             // 3: CurrWP set and not reached
             // 4: CurrWP set and reached
-            if (enemyTarget != null && currWpDist > 5.0F)
+            if (enemyTarget != null && Math.Abs(enemyTarget.Position.Z - player.Position.Z) < 16.0F)
             {
                 player.SetTarget(enemyTarget.Guid);
                 botStates.Push(container.CreateMoveToTargetState(botStates, container, enemyTarget));
             }
             else
             {
+                var hotspot = container.GetCurrentHotspot();
+                //var waypointCount = hotspot.Waypoints.Length;
+                //Console.WriteLine("Waypoint count: " + waypointCount);
+                //var waypoint = hotspot.Waypoints[random.Next(0, waypointCount)]; // Old 
+
+                // Check if no zone is set
+                if (player.CurrZone == "0")
+                {
+                    var nearestWp = hotspot.Waypoints.OrderBy(w => player.Position.DistanceTo(w)).FirstOrDefault();
+                    player.CurrZone = nearestWp.Zone;
+                    Console.WriteLine("No zone currently set. Setting zone based on nearest WP: " + player.CurrZone);
+                }
+                var zoneWaypoints = hotspot.Waypoints.Where(x => x.Zone == player.CurrZone);
+                var waypoint = zoneWaypoints.ElementAtOrDefault(random.Next() % zoneWaypoints.Count());
+                var nearestWps = zoneWaypoints.OrderBy(w => player.Position.DistanceTo(w));
+                var currWaypoint = player.CurrWpId == 0 ? waypoint : hotspot.Waypoints.Where(x => x.ID == player.CurrWpId).FirstOrDefault();
+                Console.WriteLine("CUrr WP ID: " + player.CurrWpId);
+                //float currWpDist = player.CurrWp == null ? 100.0F : player.Position.DistanceTo(currWaypoint);
+
                 if (player.CurrWpId == 0)
                 {
                     // No current WP. Pick nearest WP
@@ -81,9 +83,9 @@ namespace BloogBot.AI.SharedStates
                 else
                 {
                     // Check if curr waypoint is reached
-                    if (player.Position.DistanceTo(currWaypoint) < 5.0F)
+                    if (player.Position.DistanceTo(currWaypoint) < 6.0F)
                     {
-                        Console.WriteLine($"WP: {nearestWps.ElementAtOrDefault(0).ID} reached (should be same as CurrWpId: {player.CurrWpId}), selecting new WP...");
+                        Console.WriteLine($"WP: {nearestWps.ElementAtOrDefault(0).ID} reached (should be same as CurrWpId: {currWaypoint.ID}), selecting new WP...");
                         string wpLinks = nearestWps.ElementAtOrDefault(0).Links.Replace(":0", "");
                         if (wpLinks.EndsWith(" "))
                             wpLinks = wpLinks.Remove(wpLinks.Length - 1);
@@ -136,7 +138,7 @@ namespace BloogBot.AI.SharedStates
                     }
                     else
                     {
-                        Console.WriteLine("Current waypoint not reached. Selecting it again...");
+                        Console.WriteLine($"CurrWP not reached yet. {player.Position.DistanceTo(currWaypoint)}");
                         waypoint = currWaypoint; // CurrWP not reached yet
                     }
                 }
@@ -148,7 +150,6 @@ namespace BloogBot.AI.SharedStates
                     player.CurrZone = waypoint.Zone; // Update current zone
                     Console.WriteLine("Bot walking towards new zone!");
                 }
-                Console.WriteLine("Waypoint count: " + waypointCount);
                 Console.WriteLine("Selected waypoint: " + waypoint.ToStringFull());
                 botStates.Push(new MoveToHotspotWaypointState(botStates, container, waypoint));
             }

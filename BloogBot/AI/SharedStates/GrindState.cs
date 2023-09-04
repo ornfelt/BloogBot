@@ -18,7 +18,7 @@ namespace BloogBot.AI.SharedStates
         readonly IDependencyContainer container;
         readonly LocalPlayer player;
 
-        private static int[] blacklistedWPs = {1466, 1438, 1100};
+        private static int[] blacklistedWPs = {1466, 1438, 1444, 1445, 1100, 1362};
 
         public GrindState(Stack<IBotState> botStates, IDependencyContainer container)
         {
@@ -47,6 +47,7 @@ namespace BloogBot.AI.SharedStates
                 //var waypointCount = hotspot.Waypoints.Length;
                 //Console.WriteLine("Waypoint count: " + waypointCount);
                 //var waypoint = hotspot.Waypoints[random.Next(0, waypointCount)]; // Old 
+                //var waypoint = zoneWaypoints.ElementAtOrDefault(random.Next() % zoneWaypoints.Count());
 
                 // Check if no zone is set
                 if (player.CurrZone == "0")
@@ -56,10 +57,9 @@ namespace BloogBot.AI.SharedStates
                     Console.WriteLine("No zone currently set. Setting zone based on nearest WP: " + player.CurrZone);
                 }
                 var zoneWaypoints = hotspot.Waypoints.Where(x => x.Zone == player.CurrZone);
-                var waypoint = zoneWaypoints.ElementAtOrDefault(random.Next() % zoneWaypoints.Count());
                 var nearestWps = zoneWaypoints.OrderBy(w => player.Position.DistanceTo(w));
-                var currWaypoint = player.CurrWpId == 0 ? waypoint : hotspot.Waypoints.Where(x => x.ID == player.CurrWpId).FirstOrDefault();
-                //float currWpDist = player.CurrWp == null ? 100.0F : player.Position.DistanceTo(currWaypoint);
+                var waypoint = player.CurrWpId == 0 ? nearestWps.FirstOrDefault() : zoneWaypoints.Where(x => x.ID == player.CurrWpId).FirstOrDefault();
+                //float currWpDist = player.CurrWp == null ? 100.0F : player.Position.DistanceTo(waypoint);
 
                 if (player.CurrWpId == 0)
                 {
@@ -82,10 +82,18 @@ namespace BloogBot.AI.SharedStates
                 else
                 {
                     // Check if curr waypoint is reached
-                    if (player.Position.DistanceTo(currWaypoint) < 5.0F || player.wpStuckCount > 5)
+                    if (player.Position.DistanceTo(waypoint) < 3.0F || player.wpStuckCount > 15)
                     {
-                        Console.WriteLine($"WP: {nearestWps.ElementAtOrDefault(0).ID} reached (should be same as CurrWpId: {currWaypoint.ID}), selecting new WP...");
-                        string wpLinks = nearestWps.ElementAtOrDefault(0).Links.Replace(":0", "");
+                        Console.WriteLine($"WP: {nearestWps.ElementAtOrDefault(0).ID} reached (should be same as CurrWpId: {waypoint.ID}), selecting new WP...");
+                        if (player.LastWpId != waypoint.ID)
+                        {
+                            player.LastWpId = waypoint.ID;
+                            player.AddWpToVisitedList(waypoint.ID);
+                            LogToFile(waypoint.ID + ",");
+                        }
+
+                        // Select new waypoint based on links
+                        string wpLinks = waypoint.Links.Replace(":0", "");
                         if (wpLinks.EndsWith(" "))
                             wpLinks = wpLinks.Remove(wpLinks.Length - 1);
                         string[] linkSplit = wpLinks.Split(' ');
@@ -127,20 +135,13 @@ namespace BloogBot.AI.SharedStates
                                 }
                             }
                         }
-                        if (player.LastWpId != currWaypoint.ID)
-                        {
-                            player.LastWpId = currWaypoint.ID;
-                            player.AddWpToVisitedList(currWaypoint.ID);
-                            LogToFile(currWaypoint.ID + ",");
-                        }
                         // Reset WP checking values
                         player.DeathsAtWp = 0;
                         player.wpStuckCount = 0;
                     }
                     else
                     {
-                        Console.WriteLine($"CurrWP not reached yet. Distance: {player.Position.DistanceTo(currWaypoint)}, wpStuckCount: {player.wpStuckCount}");
-                        waypoint = currWaypoint; // CurrWP not reached yet
+                        Console.WriteLine($"CurrWP not reached yet. Distance: {player.Position.DistanceTo(waypoint)}, wpStuckCount: {player.wpStuckCount}");
                         player.wpStuckCount += 1;
                     }
                 }

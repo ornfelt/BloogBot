@@ -65,6 +65,7 @@ namespace BloogBot.AI.SharedStates
                     // Reslocations are > 300 so the threat search takes a long time to execute
                     // Use it only if we've died more than 2 times at currWp
                     //Console.WriteLine("Reslocations: " + resLocs.Length);
+                    Console.WriteLine("player.DeathsAtWp: " + player.DeathsAtWp);
                     if (player.DeathsAtWp > 1)
                     {
                         var maxDistance = 0f;

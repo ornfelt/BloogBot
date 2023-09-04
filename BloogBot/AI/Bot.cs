@@ -296,6 +296,7 @@ namespace BloogBot.AI
 
         async void StartInternal(IDependencyContainer container)
         {
+            var player = ObjectManager.Player;
             while (running)
             {
                 try
@@ -310,7 +311,6 @@ namespace BloogBot.AI
                             return;
                         }
 
-                        var player = ObjectManager.Player;
 
                         if (player.Level > currentLevel)
                         {
@@ -385,6 +385,7 @@ namespace BloogBot.AI
                         // if the player dies
                         if ((player.Health <= 0 || player.InGhostForm) && !retrievingCorpse)
                         {
+                            player.DeathsAtWp++;
                             Console.WriteLine($"Player died. DeathsAtWp: {player.DeathsAtWp}");
                             //Console.WriteLine($"mainhandDurability: {Inventory.GetEquippedItem(EquipSlot.MainHand)?.DurabilityPercentage ?? 100}");
                             //Console.WriteLine($"offhandDurability: {Inventory.GetEquippedItem(EquipSlot.Ranged)?.DurabilityPercentage ?? 100}");

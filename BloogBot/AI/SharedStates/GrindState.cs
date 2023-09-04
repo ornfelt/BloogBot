@@ -18,7 +18,7 @@ namespace BloogBot.AI.SharedStates
         readonly IDependencyContainer container;
         readonly LocalPlayer player;
 
-        private static int[] blacklistedWPs = {1466, 1438, 1444, 1445, 1100};
+        private static int[] blacklistedWPs = {1466, 1438, 1444, 1445, 1364, 1369, 1100};
 
         public GrindState(Stack<IBotState> botStates, IDependencyContainer container)
         {
@@ -82,11 +82,14 @@ namespace BloogBot.AI.SharedStates
                 else
                 {
                     // Check if curr waypoint is reached
-                    if (player.Position.DistanceTo(waypoint) < 3.0F || player.wpStuckCount > 15)
+                    if (player.Position.DistanceTo(waypoint) < 3.0F || player.wpStuckCount > 30)
                     {
                         Console.WriteLine($"WP: {nearestWps.ElementAtOrDefault(0).ID} reached (should be same as CurrWpId: {waypoint.ID}), selecting new WP...");
                         if (player.LastWpId != waypoint.ID)
                         {
+                            // Reset WP checking values
+                            player.DeathsAtWp = 0;
+                            player.wpStuckCount = 0;
                             player.LastWpId = waypoint.ID;
                             player.AddWpToVisitedList(waypoint.ID);
                             LogToFile(waypoint.ID + ",");
@@ -135,14 +138,11 @@ namespace BloogBot.AI.SharedStates
                                 }
                             }
                         }
-                        // Reset WP checking values
-                        player.DeathsAtWp = 0;
-                        player.wpStuckCount = 0;
                     }
                     else
                     {
                         Console.WriteLine($"CurrWP not reached yet. Distance: {player.Position.DistanceTo(waypoint)}, wpStuckCount: {player.wpStuckCount}");
-                        player.wpStuckCount += 1;
+                        player.wpStuckCount++;
                     }
                 }
 

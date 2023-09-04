@@ -83,7 +83,7 @@ namespace BloogBot.AI.SharedStates
                         }
                     } else
                     {
-                        resLocation = resLocs.ElementAtOrDefault(random.Next() % resLocs.Count());
+                        resLocation = player.CorpsePosition;
                     }
                 }
 

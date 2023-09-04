@@ -31,82 +31,35 @@ namespace BloogBot.AI.SharedStates
         {
             var enemyTarget = container.FindClosestTarget();
 
-            if (enemyTarget != null)
+            var hotspot = container.GetCurrentHotspot();
+            var waypointCount = hotspot.Waypoints.Length;
+            //var waypoint = hotspot.Waypoints[random.Next(0, waypointCount)]; // Old 
+
+            // Check if no zone is set
+            if (player.CurrZone == "0")
+            {
+                var nearestWp = hotspot.Waypoints.OrderBy(w => player.Position.DistanceTo(w)).FirstOrDefault();
+                player.CurrZone = nearestWp.Zone;
+                Console.WriteLine("No zone currently set. Setting zone based on nearest WP: " + player.CurrZone);
+            }
+            var zoneWaypoints = hotspot.Waypoints.Where(x => x.Zone == player.CurrZone);
+            var waypoint = zoneWaypoints.ElementAtOrDefault(random.Next() % zoneWaypoints.Count());
+            var nearestWps = zoneWaypoints.OrderBy(w => player.Position.DistanceTo(w));
+            var currWaypoint = player.CurrWpId == 0 ? waypoint : hotspot.Waypoints.Where(x => x.ID == player.CurrWpId).FirstOrDefault();
+
+            // 4 scenarios:
+            // 1: MoveToTargetState
+            // 2: No CurrWP set -> pick new one
+            // 3: CurrWP set and not reached
+            // 4: CurrWP set and reached
+            if (enemyTarget != null && player.Position.DistanceTo(currWaypoint) > 5.0F)
             {
                 player.SetTarget(enemyTarget.Guid);
                 botStates.Push(container.CreateMoveToTargetState(botStates, container, enemyTarget));
             }
             else
             {
-                var hotspot = container.GetCurrentHotspot();
-                var waypointCount = hotspot.Waypoints.Length;
-                //var waypoint = hotspot.Waypoints[random.Next(0, waypointCount)]; // Old 
-
-                // Check if no zone is set
-                if (player.CurrZone == "0")
-                {
-                    var nearestWp = hotspot.Waypoints.OrderBy(w => player.Position.DistanceTo(w)).FirstOrDefault();
-                    player.CurrZone = nearestWp.Zone;
-                    Console.WriteLine("No zone currently set. Setting zone based on nearest WP: " + player.CurrZone);
-                }
-                var zoneWaypoints = hotspot.Waypoints.Where(x => x.Zone == player.CurrZone);
-                var waypoint = zoneWaypoints.ElementAtOrDefault(random.Next() % zoneWaypoints.Count());
-                var nearestWps = zoneWaypoints.OrderBy(w => player.Position.DistanceTo(w));
-                // Check if curr waypoint is reached
-                //if (player.Position.DistanceTo(nearestWps.ElementAtOrDefault(0)) < 3.0F)
-                if (player.CurrWpId != 0)
-                {
-                    Console.WriteLine($"WP: {nearestWps.ElementAtOrDefault(0).ID} reached (should be same as CurrWpId: {player.CurrWpId}), selecting new WP...");
-                    string wpLinks = nearestWps.ElementAtOrDefault(0).Links.Replace(":0", "");
-                    if (wpLinks.EndsWith(" "))
-                        wpLinks = wpLinks.Remove(wpLinks.Length - 1);
-                    string[] linkSplit = wpLinks.Split(' ');
-                    //foreach (string link in linkSplit)
-                    //    Console.WriteLine("Found link: " + link);
-
-                    bool newWpFound = false;
-                    int linkSearchCount = 0;
-                    while (!newWpFound)
-                    {
-                        linkSearchCount++;
-                        int randLink = random.Next() % linkSplit.Length;
-                        //Console.WriteLine("randLink: " + randLink);
-                        var linkWp = hotspot.Waypoints.Where(x => x.ID == Int32.Parse(linkSplit[randLink])).FirstOrDefault();
-                        // TODO:
-                        // * Add maxlevels to each zone. If maxlevel reached,
-                        // find path to new zone and traverse the links...
-                        // Add function (startNode, destZone) and output link of WPs to reach new zone
-                        // Maybe use .npcb wp go XXX when leveled up / died too many times at current WP
-
-                        // Check level requirement
-                        if (linkWp.MinLevel <= player.Level && !blacklistedWPs.Contains(linkWp.ID))
-                        {
-                            //if (player.LastWpId != linkWp.ID && !player.HasVisitedWp(linkWp.ID))
-                            if (!player.HasVisitedWp(linkWp.ID))
-                            {
-                                waypoint = linkWp;
-                                newWpFound = true;
-                            }
-                            else
-                            {
-                                // This means that randLink is same as previously visited WP
-                                // Choose it if no other links are suitable
-                                if (linkSearchCount > 15)
-                                {
-                                    waypoint = linkWp;
-                                    newWpFound = true;
-                                }
-                            }
-                        }
-                    }
-                    if (player.LastWpId != nearestWps.ElementAtOrDefault(0).ID)
-                    {
-                        player.LastWpId = nearestWps.ElementAtOrDefault(0).ID;
-                        player.AddWpToVisitedList(nearestWps.ElementAtOrDefault(0).ID);
-                        LogToFile(player.LastWpId + ",");
-                    }
-                }
-                else
+                if (player.CurrWpId == 0)
                 {
                     // No current WP. Pick nearest WP
                     bool newWpFound = false;
@@ -124,9 +77,70 @@ namespace BloogBot.AI.SharedStates
                     }
                     Console.WriteLine("No CurrWpId... Selecting new one");
                 }
+                else
+                {
+                    // Check if curr waypoint is reached
+                    if (player.Position.DistanceTo(currWaypoint) < 5.0F)
+                    {
+                        Console.WriteLine($"WP: {nearestWps.ElementAtOrDefault(0).ID} reached (should be same as CurrWpId: {player.CurrWpId}), selecting new WP...");
+                        string wpLinks = nearestWps.ElementAtOrDefault(0).Links.Replace(":0", "");
+                        if (wpLinks.EndsWith(" "))
+                            wpLinks = wpLinks.Remove(wpLinks.Length - 1);
+                        string[] linkSplit = wpLinks.Split(' ');
+                        //foreach (string link in linkSplit)
+                        //    Console.WriteLine("Found link: " + link);
+
+                        bool newWpFound = false;
+                        int linkSearchCount = 0;
+                        while (!newWpFound)
+                        {
+                            linkSearchCount++;
+                            int randLink = random.Next() % linkSplit.Length;
+                            //Console.WriteLine("randLink: " + randLink);
+                            var linkWp = hotspot.Waypoints.Where(x => x.ID == Int32.Parse(linkSplit[randLink])).FirstOrDefault();
+                            // TODO:
+                            // * Add maxlevels to each zone. If maxlevel reached,
+                            // find path to new zone and traverse the links...
+                            // Add function (startNode, destZone) and output link of WPs to reach new zone
+                            // Maybe use .npcb wp go XXX when leveled up / died too many times at current WP
+
+                            // Check level requirement
+                            if (linkWp.MinLevel <= player.Level && !blacklistedWPs.Contains(linkWp.ID))
+                            {
+                                //if (player.LastWpId != linkWp.ID && !player.HasVisitedWp(linkWp.ID))
+                                if (!player.HasVisitedWp(linkWp.ID))
+                                {
+                                    waypoint = linkWp;
+                                    newWpFound = true;
+                                }
+                                else
+                                {
+                                    // This means that randLink is same as previously visited WP
+                                    // Choose it if no other links are suitable
+                                    if (linkSearchCount > 15)
+                                    {
+                                        waypoint = linkWp;
+                                        newWpFound = true;
+                                    }
+                                }
+                            }
+                        }
+                        if (player.LastWpId != currWaypoint.ID)
+                        {
+                            player.LastWpId = currWaypoint.ID;
+                            player.AddWpToVisitedList(currWaypoint.ID);
+                            LogToFile(currWaypoint.ID + ",");
+                        }
+                        player.DeathsAtWp = 0; // Reset
+                    }
+                    else
+                    {
+                        Console.WriteLine("Current waypoint not reached. Selecting it again...");
+                        waypoint = currWaypoint; // CurrWP not reached yet
+                    }
+                }
 
                 player.CurrWpId = waypoint.ID;
-                player.DeathsAtWp = 0; // Reset
 
                 if (player.CurrZone != waypoint.Zone)
                 {

@@ -46,13 +46,14 @@ namespace BloogBot.AI.SharedStates
             var waypoint = zoneWaypoints.ElementAtOrDefault(random.Next() % zoneWaypoints.Count());
             var nearestWps = zoneWaypoints.OrderBy(w => player.Position.DistanceTo(w));
             var currWaypoint = player.CurrWpId == 0 ? waypoint : hotspot.Waypoints.Where(x => x.ID == player.CurrWpId).FirstOrDefault();
+            float currWpDist = player.CurrWpId == 0 ? 100.0F : player.Position.DistanceTo(currWaypoint);
 
             // 4 scenarios:
             // 1: MoveToTargetState
             // 2: No CurrWP set -> pick new one
             // 3: CurrWP set and not reached
             // 4: CurrWP set and reached
-            if (enemyTarget != null && player.Position.DistanceTo(currWaypoint) > 5.0F)
+            if (enemyTarget != null && currWpDist > 5.0F)
             {
                 player.SetTarget(enemyTarget.Guid);
                 botStates.Push(container.CreateMoveToTargetState(botStates, container, enemyTarget));

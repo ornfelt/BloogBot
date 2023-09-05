@@ -142,7 +142,7 @@ namespace BloogBot.AI.SharedStates
                     else
                     {
                         Console.WriteLine($"CurrWP not reached yet. Distance: {player.Position.DistanceTo(waypoint)}, wpStuckCount: {player.wpStuckCount}");
-                        player.wpStuckCount++;
+                        //player.wpStuckCount++; // This is increased in StuckHelper
                     }
                 }
 

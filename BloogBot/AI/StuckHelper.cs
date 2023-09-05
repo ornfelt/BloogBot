@@ -30,7 +30,7 @@ namespace BloogBot.AI
             if (stuckDuration >= 1000)
             {
                 player.wpStuckCount++;
-                Console.WriteLine("Incrementing wpStuckCount: " + player.wpStuckCount);
+                Console.WriteLine($"wpStuckCount: {player.wpStuckCount}");
                 stuckDuration = 0;
                 lastPosition = null;
                 botStates.Push(new StuckState(botStates, container));

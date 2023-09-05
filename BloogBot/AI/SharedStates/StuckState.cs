@@ -31,7 +31,7 @@ namespace BloogBot.AI.SharedStates
         {
             var posDistance = 3;
             if (!player.InGhostForm)
-                posDistance = random.Next(10, (player.wpStuckCount*20));
+                posDistance = random.Next(10, ((player.wpStuckCount+1)*20));
 
             if (player.Position.DistanceTo(startingPosition) > posDistance || player.IsInCombat)
             {

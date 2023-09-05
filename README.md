@@ -92,3 +92,12 @@ Set Bootstrapper as startup project.
 Run VS as admin!
 
 Also see: botSettings.json
+My changes:
+
+  "LootPoor": false,
+  "LootCommon": false,
+  "LootUncommon": false,
+  "GrindingHotspotId": 1,
+  
+  Also see:
+  TargetingExcludedNames, Food, Drink

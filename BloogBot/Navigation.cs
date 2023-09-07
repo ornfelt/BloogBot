@@ -77,7 +77,7 @@ namespace BloogBot
                 //if (!ObjectManager.Player.IsSwimming && !ObjectManager.Player.IsFalling && rand.Next(100) == 1)
                 //    Logger.Log($"Problem building path for mapId \"{mapId}\". Returning destination as next waypoint...");
 #else
-                Logger.Log("Problem building path. Returning destination as next waypoint...");
+                Logger.Log($"Problem building path for mapId \"{mapId}\". Make sure the \"mmaps\" directory contains the required mmap and tile-files. Returning destination as next waypoint...");
 #endif
                 return end;
             }

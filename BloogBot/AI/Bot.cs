@@ -359,6 +359,7 @@ namespace BloogBot.AI
                             //LogToFile(msg);
                             DiscordClientWrapper.SendMessage(msg);
                             Stop();
+                            Console.WriteLine($"Stopping bot due to being stuck in {currentState.Name}");
                             return;
                         }
                         if (botStates.Peek().GetType() != currentState)
@@ -374,6 +375,7 @@ namespace BloogBot.AI
                             //LogToFile(msg);
                             DiscordClientWrapper.SendMessage(msg);
                             Stop();
+                            Console.WriteLine($"Stopping bot due to being stuck in {currentState.Name} for over 5 minutes");
                             return;
                         }
                         if (player.Position.DistanceTo(currentPosition) > 10)
@@ -453,6 +455,8 @@ namespace BloogBot.AI
                             container.Probe.CurrentState = botStates.Peek()?.GetType().Name;
                             botStates.Peek()?.Update();
                         }
+                        else
+                            Console.WriteLine("Bot states empty...");
                     });
                     
                     await Task.Delay(25);
@@ -464,6 +468,7 @@ namespace BloogBot.AI
                     Logger.Log(e + "\n");
                 }
             }
+            Console.WriteLine("End of loop");
         }
 
         void LogToFile(string text)

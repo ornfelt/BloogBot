@@ -98,6 +98,7 @@ My changes:
   "LootCommon": false,
   "LootUncommon": false,
   "GrindingHotspotId": 1,
+  *Turn off autoloot!
   
   Also see:
   TargetingExcludedNames, Food, Drink

@@ -352,8 +352,8 @@ namespace BloogBot.AI
                             retrievingCorpse = false;
                         }
 
-                        // Enter stuck state if player has been in the same state for more than 1 min
-                        if (Environment.TickCount - currentStateStartTime > 60000 && currentState != typeof(TravelState))
+                        // Enter stuck state if player has been in combatstate for more than 2 min
+                        if (Environment.TickCount - currentStateStartTime > 120000 && currentState == typeof(CombatStateBase))
                         {
                             Console.WriteLine($"Stopping bot due to being stuck in {currentState.Name} for 1 minute. Entering Stuckstate");
                             player.StopAllMovement();

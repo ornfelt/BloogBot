@@ -72,13 +72,13 @@ namespace BloogBot.AI.SharedStates
                 if (target.Health == lastTargetHealth)
                 {
                     var ran = random.Next(0, 4);
-                    if (ran == 0 && loopTimer < 20)
+                    if (ran == 0 && loopTimer < 60)
                     {
                         player.StartMovement(ControlBits.Back);
                         player.StartMovement(ControlBits.StrafeLeft);
                         player.Jump();
                     }
-                    else if (ran == 1 && loopTimer < 20)
+                    else if (ran == 1 && loopTimer < 60)
                     {
                         player.StartMovement(ControlBits.Back);
                         player.StartMovement(ControlBits.StrafeRight);
@@ -86,6 +86,7 @@ namespace BloogBot.AI.SharedStates
                     }
                     else
                     {
+                        player.StopAllMovement();
                         var nextWaypoint = Navigation.GetNextWaypoint(ObjectManager.MapId, player.Position, target.Position, false);
                         player.MoveToward(nextWaypoint);
                     }

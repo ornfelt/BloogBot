@@ -31,7 +31,7 @@ namespace FrostMageBot
             if ((!player.KnowsSpell(ArcaneIntellect) || player.HasBuff(ArcaneIntellect)) && (player.HasBuff(FrostArmor) || player.HasBuff(IceArmor) || player.HasBuff(MageArmor)) && (!player.KnowsSpell(DampenMagic) || player.HasBuff(DampenMagic)))
             {
                 botStates.Pop();
-                //botStates.Push(new ConjureItemsState(botStates, container));
+                botStates.Push(new ConjureItemsState(botStates, container));
                 return;
             }
 

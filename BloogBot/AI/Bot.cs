@@ -352,17 +352,23 @@ namespace BloogBot.AI
                             retrievingCorpse = false;
                         }
 
+                        // Enter stuck state if player has been in the same state for more than 1 min
+                        if (Environment.TickCount - currentStateStartTime > 60000 && currentState != typeof(TravelState))
+                        {
+                            Console.WriteLine($"Stopping bot due to being stuck in {currentState.Name} for 1 minute. Entering Stuckstate");
+                            player.StopAllMovement();
+                            botStates.Pop();
+                            botStates.Push(new StuckState(botStates, container));
+                        }
+
                         // if the player has been stuck in the same state for more than 5 minutes
                         if (Environment.TickCount - currentStateStartTime > 300000 && currentState != typeof(TravelState) && container.BotSettings.UseStuckInStateKillswitch)
                         {
                             var msg = $"Hey, it's {player.Name}, and I need help! I've been stuck in the {currentState.Name} for over 5 minutes. I'm stopping for now.";
                             //LogToFile(msg);
                             //DiscordClientWrapper.SendMessage(msg);
-                            //Stop();
+                            Stop();
                             Console.WriteLine($"Stopping bot due to being stuck in {currentState.Name}");
-                            player.StopAllMovement();
-                            botStates.Pop();
-                            botStates.Push(new StuckState(botStates, container));
                             return;
                         }
                         if (botStates.Peek().GetType() != currentState)
@@ -377,11 +383,8 @@ namespace BloogBot.AI
                             var msg = $"Hey, it's {player.Name}, and I need help! I've been stuck in the same position for over 5 minutes. I'm stopping for now.";
                             //LogToFile(msg);
                             //DiscordClientWrapper.SendMessage(msg);
-                            //Stop();
+                            Stop();
                             Console.WriteLine($"Stopping bot due to being stuck in {currentState.Name} for over 5 minutes");
-                            player.StopAllMovement();
-                            botStates.Pop();
-                            botStates.Push(new StuckState(botStates, container));
                             return;
                         }
                         if (player.Position.DistanceTo(currentPosition) > 10)

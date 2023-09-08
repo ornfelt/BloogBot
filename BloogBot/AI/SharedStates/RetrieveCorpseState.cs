@@ -63,28 +63,21 @@ namespace BloogBot.AI.SharedStates
                     }
 
                     // Reslocations are > 300 so the threat search takes a long time to execute
-                    // Use it only if we've died more than 2 times at currWp
                     //Console.WriteLine("Reslocations: " + resLocs.Length);
-                    Console.WriteLine("player.DeathsAtWp: " + player.DeathsAtWp);
-                    if (player.DeathsAtWp > 1)
+                    //Console.WriteLine("player.DeathsAtWp: " + player.DeathsAtWp);
+                    var maxDistance = 0f;
+                    foreach (var resLoc in resLocs)
                     {
-                        var maxDistance = 0f;
-                        foreach (var resLoc in resLocs)
-                        {
-                            var path = Navigation.CalculatePath(ObjectManager.MapId, player.CorpsePosition, resLoc, false);
-                            if (path.Length == 0) continue;
-                            var endPoint = path[path.Length - 1];
-                            var distanceToClosestThreat = endPoint.DistanceTo(threats.OrderBy(u => u.Position.DistanceTo(resLoc)).First().Position);
+                        var path = Navigation.CalculatePath(ObjectManager.MapId, player.CorpsePosition, resLoc, false);
+                        if (path.Length == 0) continue;
+                        var endPoint = path[path.Length - 1];
+                        var distanceToClosestThreat = endPoint.DistanceTo(threats.OrderBy(u => u.Position.DistanceTo(resLoc)).First().Position);
 
-                            if (endPoint.DistanceTo(player.Position) < resDistance && distanceToClosestThreat > maxDistance)
-                            {
-                                maxDistance = distanceToClosestThreat;
-                                resLocation = resLoc;
-                            }
+                        if (endPoint.DistanceTo(player.Position) < resDistance && distanceToClosestThreat > maxDistance)
+                        {
+                            maxDistance = distanceToClosestThreat;
+                            resLocation = resLoc;
                         }
-                    } else
-                    {
-                        resLocation = player.CorpsePosition;
                     }
                 }
 

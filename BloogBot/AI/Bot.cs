@@ -357,9 +357,12 @@ namespace BloogBot.AI
                         {
                             var msg = $"Hey, it's {player.Name}, and I need help! I've been stuck in the {currentState.Name} for over 5 minutes. I'm stopping for now.";
                             //LogToFile(msg);
-                            DiscordClientWrapper.SendMessage(msg);
-                            Stop();
+                            //DiscordClientWrapper.SendMessage(msg);
+                            //Stop();
                             Console.WriteLine($"Stopping bot due to being stuck in {currentState.Name}");
+                            player.StopAllMovement();
+                            botStates.Pop();
+                            botStates.Push(new StuckState(botStates, container));
                             return;
                         }
                         if (botStates.Peek().GetType() != currentState)
@@ -373,9 +376,12 @@ namespace BloogBot.AI
                         {
                             var msg = $"Hey, it's {player.Name}, and I need help! I've been stuck in the same position for over 5 minutes. I'm stopping for now.";
                             //LogToFile(msg);
-                            DiscordClientWrapper.SendMessage(msg);
-                            Stop();
+                            //DiscordClientWrapper.SendMessage(msg);
+                            //Stop();
                             Console.WriteLine($"Stopping bot due to being stuck in {currentState.Name} for over 5 minutes");
+                            player.StopAllMovement();
+                            botStates.Pop();
+                            botStates.Push(new StuckState(botStates, container));
                             return;
                         }
                         if (player.Position.DistanceTo(currentPosition) > 10)

@@ -219,6 +219,8 @@ namespace BloogBot.Game.Objects
                 {
                     var ptr = getNameFunction(Pointer);
 
+                    if (ptr == null)
+                        return MemoryManager.ReadString(ptr);
                     if (ptr != IntPtr.Zero)
                         return MemoryManager.ReadString(ptr);
                     else

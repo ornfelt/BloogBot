@@ -35,9 +35,10 @@ namespace BloogBot.AI.SharedStates
             //posDistance = random.Next(10, ((player.wpStuckCount+1)*20));
             posDistance = player.wpStuckCount+3;
             var currWp = container.GetCurrentHotspot().Waypoints.Where(x => x.ID == player.CurrWpId).FirstOrDefault();
+            var wpDistance = currWp == null ? 100 : player.Position.DistanceTo(currWp);
 
             if (player.Position.DistanceTo(startingPosition) > posDistance || player.IsInCombat 
-                || player.Position.DistanceTo(currWp) < 3)
+                || wpDistance < 3)
             {
                 StopMovement();
                 botStates.Pop();

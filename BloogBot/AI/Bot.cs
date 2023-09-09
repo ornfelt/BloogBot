@@ -203,8 +203,8 @@ namespace BloogBot.AI
                             retrievingCorpse = false;
                         }
 
-                        // if the player has been stuck in the same state for more than 5 minutes
-                        if (Environment.TickCount - currentStateStartTime > 300000 && currentState != typeof(TravelState) && container.BotSettings.UseStuckInStateKillswitch)
+                        // if the player has been stuck in the same state for more than 7 minutes
+                        if (Environment.TickCount - currentStateStartTime > 420000 && currentState != typeof(TravelState) && container.BotSettings.UseStuckInStateKillswitch)
                         {
                             var msg = $"Hey, it's {player.Name}, and I need help! I've been stuck in the {currentState.Name} for over 5 minutes. I'm stopping for now.";
                             LogToFile(msg);
@@ -218,8 +218,8 @@ namespace BloogBot.AI
                             currentStateStartTime = Environment.TickCount;
                         }
 
-                        // if the player has been stuck in the same position for more than 5 minutes
-                        if (Environment.TickCount - currentPositionStartTime > 300000 && container.BotSettings.UseStuckInPositionKillswitch)
+                        // if the player has been stuck in the same position for more than 7 minutes
+                        if (Environment.TickCount - currentPositionStartTime >  420000 && container.BotSettings.UseStuckInPositionKillswitch)
                         {
                             var msg = $"Hey, it's {player.Name}, and I need help! I've been stuck in the same position for over 5 minutes. I'm stopping for now.";
                             LogToFile(msg);

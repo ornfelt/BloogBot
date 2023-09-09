@@ -78,13 +78,18 @@ namespace BloogBot.AI.SharedStates
                         if (wpCounter > 100) newWpFound = true;
                     }
                     Console.WriteLine("No CurrWpId... Selecting new one");
+                    // Log datetime to file to separate new bot sessions
+                    LogToFile(DateTime.Now.ToString("dddd, dd MMMM yyyy hh:mm tt"));
                 }
                 else
                 {
                     // Check if curr waypoint is reached
-                    if (player.Position.DistanceTo(waypoint) < 3.0F || player.WpStuckCount > 40)
+                    if (player.Position.DistanceTo(waypoint) < 3.0F || player.WpStuckCount > 30)
                     {
-                        Console.WriteLine($"WP: {nearestWps.ElementAtOrDefault(0).ID} reached (should be same as CurrWpId: {waypoint.ID}), selecting new WP...");
+                        if (player.WpStuckCount > 30)
+                            Console.WriteLine($"WP: {nearestWps.ElementAtOrDefault(0).ID} COULDN'T be reached (should be same WP as Current Waypoint ID: {waypoint.ID}), selecting new WP...");
+                        else
+                            Console.WriteLine($"WP: {nearestWps.ElementAtOrDefault(0).ID} reached (should be same WP as Current Waypoint ID: {waypoint.ID}), selecting new WP...");
                         if (player.LastWpId != waypoint.ID)
                         {
                             // Reset WP checking values

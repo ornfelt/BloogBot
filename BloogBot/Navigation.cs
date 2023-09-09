@@ -69,7 +69,8 @@ namespace BloogBot
             var path = CalculatePath(mapId, start, end, straightPath);
             if (path.Length <= 1)
             {
-                Logger.Log($"Problem building path for mapId \"{mapId}\". Returning destination as next waypoint...");
+                if (!ObjectManager.Player.IsSwimming)
+                    Logger.Log($"Problem building path for mapId \"{mapId}\". Returning destination as next waypoint...");
                 return end;
             }
 

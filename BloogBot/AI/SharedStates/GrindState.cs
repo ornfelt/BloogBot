@@ -79,7 +79,7 @@ namespace BloogBot.AI.SharedStates
                     }
                     Console.WriteLine("No CurrWpId... Selecting new one");
                     // Log datetime to file to separate new bot sessions
-                    LogToFile(DateTime.Now.ToString("dddd, dd MMMM yyyy hh:mm tt"));
+                    LogToFile(DateTime.Now.ToString("dd/MM/yyyy HH:mm"));
                 }
                 else
                 {
@@ -96,6 +96,7 @@ namespace BloogBot.AI.SharedStates
                             player.DeathsAtWp = 0;
                             player.WpStuckCount = 0;
                             player.LastWpId = waypoint.ID;
+                            // Add to visited WPs and log to file
                             player.AddWpToVisitedList(waypoint.ID);
                             LogToFile(waypoint.ID + ",");
                         }

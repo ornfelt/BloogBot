@@ -206,6 +206,7 @@ namespace BloogBot.AI
                         // if the player has been stuck in the same state for more than 7 minutes
                         if (Environment.TickCount - currentStateStartTime > 420000 && currentState != typeof(TravelState) && container.BotSettings.UseStuckInStateKillswitch)
                         {
+                            // TODO: Add .npcb wp go CurrWpId here
                             var msg = $"Hey, it's {player.Name}, and I need help! I've been stuck in the {currentState.Name} for over 5 minutes. I'm stopping for now.";
                             LogToFile(msg);
                             DiscordClientWrapper.SendMessage(msg);
@@ -221,6 +222,7 @@ namespace BloogBot.AI
                         // if the player has been stuck in the same position for more than 7 minutes
                         if (Environment.TickCount - currentPositionStartTime >  420000 && container.BotSettings.UseStuckInPositionKillswitch)
                         {
+                            // TODO: Add .npcb wp go CurrWpId here
                             var msg = $"Hey, it's {player.Name}, and I need help! I've been stuck in the same position for over 5 minutes. I'm stopping for now.";
                             LogToFile(msg);
                             DiscordClientWrapper.SendMessage(msg);

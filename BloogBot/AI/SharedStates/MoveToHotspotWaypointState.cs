@@ -26,7 +26,10 @@ namespace BloogBot.AI.SharedStates
         {
             stuckHelper.CheckIfStuck();
 
-            if ((container.FindClosestTarget() != null && Math.Abs(container.FindClosestTarget().Position.Z - player.Position.Z) < 16.0F) || player.Position.DistanceTo(destination) < 3)
+            if ((container.FindClosestTarget() != null && 
+                Math.Abs(container.FindClosestTarget().Position.Z - player.Position.Z) < 16.0F) 
+                || player.Position.DistanceTo(destination) < 3
+                || player.WpStuckCount > 30)
             {
                 player.StopAllMovement();
                 botStates.Pop();

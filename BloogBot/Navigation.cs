@@ -1,4 +1,5 @@
-﻿using BloogBot.Game;
+﻿using BloogBot.AI;
+using BloogBot.Game;
 using System;
 using System.IO;
 using System.Reflection;
@@ -68,7 +69,7 @@ namespace BloogBot
             var path = CalculatePath(mapId, start, end, straightPath);
             if (path.Length <= 1)
             {
-                Logger.Log("Problem building path. Returning destination as next waypoint...");
+                Logger.Log($"Problem building path for mapId \"{mapId}\". Returning destination as next waypoint...");
                 return end;
             }
 

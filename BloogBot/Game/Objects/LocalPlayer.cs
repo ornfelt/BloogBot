@@ -41,7 +41,7 @@ namespace BloogBot.Game.Objects
         float amountPerTurn;
         Position turningToward;
 
-        private List<int> visitedWps;
+        private static List<int> visitedWps;
 
         public Class Class => (Class)MemoryManager.ReadByte((IntPtr)MemoryAddresses.LocalPlayerClass);
 
@@ -478,11 +478,70 @@ namespace BloogBot.Game.Objects
             return string.Format(str, names.Select(s => s.ToString().Replace("'", "\\'").Replace("\"", "\\\"")).ToArray());
         }
 
-        public string CurrZone { get; set; } // Keep track of current zone
-        public int CurrWpId { get; set; } // Keep track of current WP
-        public int LastWpId { get; set; } // Keep track of last WP visited
-        public int DeathsAtWp { get; set; } // Keep track of deaths at WP
-        public int wpStuckCount { get; set; }
+        // Keep track of current zone
+        private static string m_CurrZone;
+        public string CurrZone 
+        {
+            get
+            {
+                return m_CurrZone;
+            }
+            set
+            {
+                m_CurrZone = value;
+            }
+        }
+        // Keep track of current WP
+        private static int m_CurrWpId;
+        public int CurrWpId 
+        {
+            get
+            {
+                return m_CurrWpId;
+            }
+            set
+            {
+                m_CurrWpId = value;
+            }
+        }
+        // Keep track of last WP visited
+        private static int m_LastWpId;
+        public int LastWpId 
+        {
+            get
+            {
+                return m_LastWpId;
+            }
+            set
+            {
+                m_LastWpId = value;
+            }
+        }
+        // Keep track of deaths at WP
+        private static int m_DeathsAtWp;
+        public int DeathsAtWp
+        {
+            get
+            {
+                return m_DeathsAtWp;
+            }
+            set
+            {
+                m_DeathsAtWp = value;
+            }
+        }
+        private static int m_WpStuckCount;
+        public int WpStuckCount
+        {
+            get
+            {
+                return m_WpStuckCount;
+            }
+            set
+            {
+                m_WpStuckCount = value;
+            }
+        }
 
         public bool HasVisitedWp(int id)
         {

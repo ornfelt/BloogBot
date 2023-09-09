@@ -30,10 +30,8 @@ namespace BloogBot.AI.SharedStates
 
         public void Update()
         {
-            var posDistance = 3;
-            //if (!player.InGhostForm)
-            //posDistance = random.Next(10, ((player.wpStuckCount+1)*20));
-            posDistance = player.wpStuckCount+3;
+            var wpStuckCount = player.WpStuckCount+1;
+            var posDistance = wpStuckCount < 5 ? 3 : random.Next(wpStuckCount, (wpStuckCount*20));
             var currWp = container.GetCurrentHotspot().Waypoints.Where(x => x.ID == player.CurrWpId).FirstOrDefault();
             var wpDistance = currWp == null ? 100 : player.Position.DistanceTo(currWp);
 

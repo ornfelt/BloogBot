@@ -82,14 +82,14 @@ namespace BloogBot.AI.SharedStates
                 else
                 {
                     // Check if curr waypoint is reached
-                    if (player.Position.DistanceTo(waypoint) < 3.0F || player.wpStuckCount > 30)
+                    if (player.Position.DistanceTo(waypoint) < 3.0F || player.WpStuckCount > 40)
                     {
                         Console.WriteLine($"WP: {nearestWps.ElementAtOrDefault(0).ID} reached (should be same as CurrWpId: {waypoint.ID}), selecting new WP...");
                         if (player.LastWpId != waypoint.ID)
                         {
                             // Reset WP checking values
                             player.DeathsAtWp = 0;
-                            player.wpStuckCount = 0;
+                            player.WpStuckCount = 0;
                             player.LastWpId = waypoint.ID;
                             player.AddWpToVisitedList(waypoint.ID);
                             LogToFile(waypoint.ID + ",");
@@ -141,7 +141,7 @@ namespace BloogBot.AI.SharedStates
                     }
                     else
                     {
-                        Console.WriteLine($"CurrWP not reached yet. Distance: {player.Position.DistanceTo(waypoint)}, wpStuckCount: {player.wpStuckCount}");
+                        Console.WriteLine($"CurrWP not reached yet. Distance: {player.Position.DistanceTo(waypoint)}, wpStuckCount: {player.WpStuckCount}");
                         //player.wpStuckCount++; // This is increased in StuckHelper
                     }
                 }

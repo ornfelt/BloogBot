@@ -67,6 +67,7 @@ namespace BloogBot.AI
                     ObjectManager.Player.CurrZone = "0";
                     ObjectManager.Player.DeathsAtWp = 0;
                     ObjectManager.Player.WpStuckCount = 0;
+                    ObjectManager.Player.ForcedWpPath = new SortedSet<int>();
                 });
 
                 container.CheckForTravelPath(botStates, false);

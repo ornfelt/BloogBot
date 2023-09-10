@@ -59,7 +59,6 @@ namespace BloogBot.AI.SharedStates
                 var zoneWaypoints = hotspot.Waypoints.Where(x => x.Zone == player.CurrZone);
                 var nearestWps = zoneWaypoints.OrderBy(w => player.Position.DistanceTo(w));
                 var waypoint = player.CurrWpId == 0 ? nearestWps.FirstOrDefault() : zoneWaypoints.Where(x => x.ID == player.CurrWpId).FirstOrDefault();
-                //float currWpDist = player.CurrWp == null ? 100.0F : player.Position.DistanceTo(waypoint);
 
                 if (player.CurrWpId == 0)
                 {
@@ -90,54 +89,67 @@ namespace BloogBot.AI.SharedStates
                             Console.WriteLine($"WP: {nearestWps.ElementAtOrDefault(0).ID} COULDN'T be reached (should be same WP as Current Waypoint ID: {waypoint.ID}), selecting new WP...");
                         else
                             Console.WriteLine($"WP: {nearestWps.ElementAtOrDefault(0).ID} reached (should be same WP as Current Waypoint ID: {waypoint.ID}), selecting new WP...");
-                        if (player.LastWpId != waypoint.ID)
+
+                        // Check if player is higher level than waypoint maxlevel
+                        player.HasOverLeveled = player.Level >= waypoint.MaxLevel;
+                        if (player.HasOverLeveled)
                         {
-                            // Reset WP checking values
-                            player.DeathsAtWp = 0;
-                            player.WpStuckCount = 0;
-                            player.LastWpId = waypoint.ID;
-                            // Add to visited WPs and log to file
-                            player.AddWpToVisitedList(waypoint.ID);
-                            LogToFile(waypoint.ID + ",");
-                        }
-
-                        // Select new waypoint based on links
-                        string wpLinks = waypoint.Links.Replace(":0", "");
-                        if (wpLinks.EndsWith(" "))
-                            wpLinks = wpLinks.Remove(wpLinks.Length - 1);
-                        string[] linkSplit = wpLinks.Split(' ');
-                        //foreach (string link in linkSplit)
-                        //    Console.WriteLine("Found link: " + link);
-
-                        bool newWpFound = false;
-                        int linkSearchCount = 0;
-                        while (!newWpFound)
-                        {
-                            linkSearchCount++;
-                            int randLink = random.Next() % linkSplit.Length;
-                            //Console.WriteLine("randLink: " + randLink);
-                            var linkWp = hotspot.Waypoints.Where(x => x.ID == Int32.Parse(linkSplit[randLink])).FirstOrDefault();
-                            // TODO:
-                            // * Add maxlevels to each zone. If maxlevel reached,
-                            // find path to new zone and traverse the links...
-                            // Add function (startNode, destZone) and output link of WPs to reach new zone
-                            // Maybe use .npcb wp go XXX when leveled up / died too many times at current WP
-
-                            // Check level requirement
-                            if (linkWp.MinLevel <= player.Level && !blacklistedWPs.Contains(linkWp.ID))
+                            if (player.ForcedWpPath.Count == 0)
                             {
-                                //if (player.LastWpId != linkWp.ID && !player.HasVisitedWp(linkWp.ID))
-                                if (!player.HasVisitedWp(linkWp.ID))
+                                player.ForcedWpPath = ForcedWpPathViaDFS(waypoint);
+                                foreach (var wpInPath in player.ForcedWpPath)
+                                    Console.Write(wpInPath + ",");
+                                Console.WriteLine();
+                            }
+                            if (player.ForcedWpPath.First() == waypoint.ID)
+                                player.ForcedWpPath.Remove(player.ForcedWpPath.First());
+
+                            waypoint = hotspot.Waypoints.Where(x => x.ID == player.ForcedWpPath.First()).FirstOrDefault();
+                            player.ForcedWpPath.Remove(player.ForcedWpPath.First());
+                        }
+                        else
+                        {
+                            if (player.LastWpId != waypoint.ID)
+                            {
+                                // Reset WP checking values
+                                player.DeathsAtWp = 0;
+                                player.WpStuckCount = 0;
+                                player.LastWpId = waypoint.ID;
+                                // Add to visited WPs and log to file
+                                player.AddWpToVisitedList(waypoint.ID);
+                                LogToFile(waypoint.ID + ",");
+                            }
+
+                            // Select new waypoint based on links
+                            string wpLinks = waypoint.Links.Replace(":0", "");
+                            if (wpLinks.EndsWith(" "))
+                                wpLinks = wpLinks.Remove(wpLinks.Length - 1);
+                            string[] linkSplit = wpLinks.Split(' ');
+                            //foreach (string link in linkSplit)
+                            //    Console.WriteLine("Found link: " + link);
+
+                            bool newWpFound = false;
+                            int linkSearchCount = 0;
+                            while (!newWpFound)
+                            {
+                                linkSearchCount++;
+                                int randLink = random.Next() % linkSplit.Length;
+                                //Console.WriteLine("randLink: " + randLink);
+                                var linkWp = hotspot.Waypoints.Where(x => x.ID == Int32.Parse(linkSplit[randLink])).FirstOrDefault();
+
+                                // Check level requirement
+                                if (linkWp.MinLevel <= player.Level && !blacklistedWPs.Contains(linkWp.ID))
                                 {
-                                    waypoint = linkWp;
-                                    newWpFound = true;
-                                }
-                                else
-                                {
-                                    // This means that randLink is same as previously visited WP
-                                    // Choose it if no other links are suitable
-                                    if (linkSearchCount > 15)
+                                    //if (player.LastWpId != linkWp.ID && !player.HasVisitedWp(linkWp.ID))
+                                    if (!player.HasVisitedWp(linkWp.ID))
                                     {
+                                        waypoint = linkWp;
+                                        newWpFound = true;
+                                    }
+                                    else if (linkSearchCount > 15)
+                                    {
+                                        // This means that randLink is same as previously visited WP
+                                        // Choose it if no other links are suitable
                                         waypoint = linkWp;
                                         newWpFound = true;
                                     }
@@ -162,6 +174,47 @@ namespace BloogBot.AI.SharedStates
                 Console.WriteLine("Selected waypoint: " + waypoint.ToStringFull());
                 botStates.Push(new MoveToHotspotWaypointState(botStates, container, waypoint));
             }
+        }
+
+        public SortedSet<int> ForcedWpPathViaDFS(Position startPos)
+        {
+            var hotspot = container.GetCurrentHotspot();
+            var visited = new SortedSet<int>();
+            var stack = new Stack<Position>();
+            stack.Push(startPos);
+
+            while (stack.Count > 0)
+            {
+                var currentWaypoint = stack.Pop();
+
+                if (!visited.Contains(currentWaypoint.ID))
+                {
+                    visited.Add(currentWaypoint.ID);
+                    if (currentWaypoint.MaxLevel > player.Level && currentWaypoint.MinLevel <= player.Level)
+                    {
+                        Console.WriteLine("Found new WP matching player level: " + currentWaypoint.ToStringFull() + "\n");
+                        return visited;
+                    }
+                    string wpLinks = currentWaypoint.Links.Replace(":0", "");
+                    if (wpLinks.EndsWith(" "))
+                        wpLinks = wpLinks.Remove(wpLinks.Length - 1);
+                    string[] linkSplit = wpLinks.Split(' ');
+
+                    foreach (var linkWp in linkSplit)
+                    {
+                        int linkId = Int32.Parse(linkWp);
+                        if (!visited.Contains(linkId))
+                        {
+                            var linkedWaypoint = hotspot.Waypoints.Where(x => x.ID == linkId).FirstOrDefault();
+                            if (linkedWaypoint != null)
+                            {
+                                stack.Push(linkedWaypoint);
+                            }
+                        }
+                    }
+                }
+            }
+            return visited;
         }
 
         void LogToFile(string text)

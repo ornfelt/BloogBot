@@ -543,6 +543,32 @@ namespace BloogBot.Game.Objects
             }
         }
 
+        private static bool m_HasOverleveled;
+        public bool HasOverLeveled
+        {
+            get
+            {
+                return m_HasOverleveled;
+            }
+            set
+            {
+                m_HasOverleveled = value;
+            }
+        }
+
+        private static SortedSet<int> m_ForcedWpPath;
+        public SortedSet<int> ForcedWpPath
+        {
+            get
+            {
+                return m_ForcedWpPath;
+            }
+            set
+            {
+                m_ForcedWpPath = value;
+            }
+        }
+
         public bool HasVisitedWp(int id)
         {
             return visitedWps.Contains(id);

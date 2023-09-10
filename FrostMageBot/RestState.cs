@@ -61,6 +61,7 @@ namespace FrostMageBot
             {
                 if (player.ManaPercent < 20 && drinkItem == null)
                 {
+                    // Is this needed?
                     botStates.Pop();
                     botStates.Push(new ConjureItemsState(botStates, container));
                 }

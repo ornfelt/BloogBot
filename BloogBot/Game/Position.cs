@@ -14,7 +14,7 @@ namespace BloogBot.Game
         }
 
         [JsonConstructor]
-        public Position(float x, float y, float z, int id, string zone, int minlevel, string links)
+        public Position(float x, float y, float z, int id, string zone, int minlevel, int maxlevel, string links)
         {
             X = x;
             Y = y;
@@ -22,6 +22,7 @@ namespace BloogBot.Game
             ID = id;
             Zone = zone;
             MinLevel = minlevel;
+            MaxLevel = maxlevel;
             Links = links;
         }
 
@@ -41,6 +42,7 @@ namespace BloogBot.Game
         public int ID { get; }
         public string Zone { get; }
         public int MinLevel { get; }
+        public int MaxLevel { get; }
         public string Links { get; }
         
         public float DistanceTo(Position position)
@@ -80,6 +82,6 @@ namespace BloogBot.Game
         public XYZ ToXYZ() => new XYZ(X, Y, Z);
         
         public override string ToString() => $"X: {Math.Round(X, 2)}, Y: {Math.Round(Y, 2)}, Z: {Math.Round(Z, 2)}";
-        public string ToStringFull() => $"ID: {ID}, Zone: {Zone}, MinLevel: {MinLevel}, X: {Math.Round(X, 2)}, Y: {Math.Round(Y, 2)}, Z: {Math.Round(Z, 2)}, Links: {Links}";
+        public string ToStringFull() => $"ID: {ID}, Zone: {Zone}, MinLevel: {MinLevel}, MaxLevel: {MaxLevel}, X: {Math.Round(X, 2)}, Y: {Math.Round(Y, 2)}, Z: {Math.Round(Z, 2)}, Links: {Links}";
     }
 }

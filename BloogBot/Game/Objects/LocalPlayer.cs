@@ -14,7 +14,7 @@ namespace BloogBot.Game.Objects
             : base(pointer, guid, objectType)
         {
             RefreshSpells();
-            visitedWps = new List<int>();
+            m_VisitedWps = new List<int>();
         }
 
         readonly Random random = new Random();
@@ -40,8 +40,6 @@ namespace BloogBot.Game.Objects
         int turnCount;
         float amountPerTurn;
         Position turningToward;
-
-        private static List<int> visitedWps;
 
         public Class Class => (Class)MemoryManager.ReadByte((IntPtr)MemoryAddresses.LocalPlayerClass);
 
@@ -569,19 +567,22 @@ namespace BloogBot.Game.Objects
             }
         }
 
+        private static List<int> m_VisitedWps;
         public bool HasVisitedWp(int id)
         {
-            return visitedWps.Contains(id);
+            return m_VisitedWps.Contains(id);
         }
 
         public void AddWpToVisitedList(int id)
         {
-            if (visitedWps.Contains(id)) return;
-            visitedWps.Add(id);
+            if (m_VisitedWps.Contains(id)) return;
+            m_VisitedWps.Add(id);
             //if (visitedWps.Count > 100)
             //{
             //    visitedWps.RemoveAt(0);
             //}
         }
+
+        public List<int> VisitedWps { get { return m_VisitedWps; } }
     }
 }

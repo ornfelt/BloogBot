@@ -192,8 +192,7 @@ namespace BloogBot.AI.SharedStates
                 var currentId = currentPath[currentPath.Count - 1]; // Get the last element
 
                 var currentWaypoint = hotspot.Waypoints.Where(x => x.ID == currentId).FirstOrDefault();
-                if (currentWaypoint.MaxLevel > player.Level && currentWaypoint.MinLevel <= player.Level
-                    && !blacklistedWPs.Contains(currentWaypoint.ID))
+                if (currentWaypoint.MaxLevel > player.Level && currentWaypoint.MinLevel <= player.Level)
                 {
                     Console.WriteLine("Found new WP matching player level: " + currentWaypoint.ToStringFull() + "\n");
                     return currentPath;
@@ -202,8 +201,7 @@ namespace BloogBot.AI.SharedStates
                 // for those players so that they can move through the zones.
                 // Hotspot 1-4 are Azeroth WPs, 5 is Outland, 6 is Northrend
                 else if (currentWaypoint.Zone != player.CurrZone && ((hotspot.Id < 5 && player.Level >= 60) 
-                    || (hotspot.Id == 5 && player.Level >= 70) || (hotspot.Id == 6 && player.Level >= 80))
-                    && !blacklistedWPs.Contains(currentWaypoint.ID))
+                    || (hotspot.Id == 5 && player.Level >= 70) || (hotspot.Id == 6 && player.Level >= 80)))
                 {
                     // Try to visit new zones
                     bool currWpIsNewZone = true;
@@ -233,11 +231,15 @@ namespace BloogBot.AI.SharedStates
                     foreach (var linkWp in linkSplit)
                     {
                         int linkId = Int32.Parse(linkWp);
-                        if (!visited.Contains(linkId))
+                        // Blacklisted (not good link for bot)
+                        if (!(currentWaypoint.ID == 1360 && linkId == 1359))
                         {
-                            var newPath = new List<int>(currentPath);
-                            newPath.Add(linkId);
-                            queue.Enqueue(newPath);
+                            if (!visited.Contains(linkId))
+                            {
+                                var newPath = new List<int>(currentPath);
+                                newPath.Add(linkId);
+                                queue.Enqueue(newPath);
+                            }
                         }
                     }
                 }

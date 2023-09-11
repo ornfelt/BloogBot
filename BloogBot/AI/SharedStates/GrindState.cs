@@ -44,8 +44,8 @@ namespace BloogBot.AI.SharedStates
             else
             {
                 var hotspot = container.GetCurrentHotspot();
-                var waypointCount = hotspot.Waypoints.Length;
-                Console.WriteLine("Waypoint count: " + waypointCount);
+                //var waypointCount = hotspot.Waypoints.Length;
+                //Console.WriteLine("Waypoint count: " + waypointCount);
                 //var waypoint = hotspot.Waypoints[random.Next(0, waypointCount)]; // Old 
                 //var waypoint = zoneWaypoints.ElementAtOrDefault(random.Next() % zoneWaypoints.Count());
 
@@ -90,6 +90,17 @@ namespace BloogBot.AI.SharedStates
                         else
                             Console.WriteLine($"WP: {nearestWps.ElementAtOrDefault(0).ID} reached (should be same WP as Current Waypoint ID: {waypoint.ID}), selecting new WP...");
 
+                        if (player.LastWpId != waypoint.ID)
+                        {
+                            // Reset WP checking values
+                            player.DeathsAtWp = 0;
+                            player.WpStuckCount = 0;
+                            player.LastWpId = waypoint.ID;
+                            // Add to visited WPs and log to file
+                            player.VisitedWps.Add(waypoint.ID);
+                            LogToFile(waypoint.ID + ",");
+                        }
+
                         // Check if player is higher level than waypoint maxlevel
                         player.HasOverLeveled = player.Level >= waypoint.MaxLevel;
                         if (player.HasOverLeveled)
@@ -111,17 +122,6 @@ namespace BloogBot.AI.SharedStates
                         }
                         else
                         {
-                            if (player.LastWpId != waypoint.ID)
-                            {
-                                // Reset WP checking values
-                                player.DeathsAtWp = 0;
-                                player.WpStuckCount = 0;
-                                player.LastWpId = waypoint.ID;
-                                // Add to visited WPs and log to file
-                                player.AddWpToVisitedList(waypoint.ID);
-                                LogToFile(waypoint.ID + ",");
-                            }
-
                             // Select new waypoint based on links
                             string wpLinks = waypoint.Links.Replace(":0", "");
                             if (wpLinks.EndsWith(" "))
@@ -214,7 +214,7 @@ namespace BloogBot.AI.SharedStates
 
                     if (currWpIsNewZone)
                     {
-                        Console.WriteLine("Found new WP matching player level: " + currentWaypoint.ToStringFull() + "\n");
+                        Console.WriteLine("Found new WP matching player level (> hotspot maxlevel): " + currentWaypoint.ToStringFull() + "\n");
                         return currentPath;
                     }
                 }

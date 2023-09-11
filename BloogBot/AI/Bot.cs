@@ -68,6 +68,7 @@ namespace BloogBot.AI
                     ObjectManager.Player.DeathsAtWp = 0;
                     ObjectManager.Player.WpStuckCount = 0;
                     ObjectManager.Player.ForcedWpPath = new List<int>();
+                    ObjectManager.Player.VisitedWps = new HashSet<int>();
                 });
 
                 container.CheckForTravelPath(botStates, false);

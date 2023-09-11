@@ -44,8 +44,8 @@ namespace BloogBot.AI.SharedStates
             else
             {
                 var hotspot = container.GetCurrentHotspot();
-                //var waypointCount = hotspot.Waypoints.Length;
-                //Console.WriteLine("Waypoint count: " + waypointCount);
+                var waypointCount = hotspot.Waypoints.Length;
+                Console.WriteLine("Waypoint count: " + waypointCount);
                 //var waypoint = hotspot.Waypoints[random.Next(0, waypointCount)]; // Old 
                 //var waypoint = zoneWaypoints.ElementAtOrDefault(random.Next() % zoneWaypoints.Count());
 
@@ -96,7 +96,7 @@ namespace BloogBot.AI.SharedStates
                         {
                             if (player.ForcedWpPath.Count == 0)
                             {
-                                player.ForcedWpPath = ForcedWpPathViaDFS(waypoint);
+                                player.ForcedWpPath = ForcedWpPathViaBFS(waypoint.ID);
                                 foreach (var wpInPath in player.ForcedWpPath)
                                     Console.Write(wpInPath + ",");
                                 Console.WriteLine();
@@ -171,30 +171,34 @@ namespace BloogBot.AI.SharedStates
                     player.CurrZone = waypoint.Zone; // Update current zone
                     Console.WriteLine("Bot walking towards new zone!");
                 }
-                Console.WriteLine("Selected waypoint: " + waypoint.ToStringFull());
+                Console.WriteLine("Selected waypoint: " + waypoint.ToStringFull() + ", HasOverleveled: " + player.HasOverLeveled);
                 botStates.Push(new MoveToHotspotWaypointState(botStates, container, waypoint));
             }
         }
 
-        public SortedSet<int> ForcedWpPathViaDFS(Position startPos)
+        public List<int> ForcedWpPathViaBFS(int startId)
         {
             var hotspot = container.GetCurrentHotspot();
-            var visited = new SortedSet<int>();
-            var stack = new Stack<Position>();
-            stack.Push(startPos);
+            var visited = new HashSet<int>();
+            var queue = new Queue<List<int>>();
+            queue.Enqueue(new List<int> { startId });
 
-            while (stack.Count > 0)
+            while (queue.Count > 0)
             {
-                var currentWaypoint = stack.Pop();
+                var currentPath = queue.Dequeue();
+                var currentId = currentPath[currentPath.Count - 1]; // Get the last element
 
-                if (!visited.Contains(currentWaypoint.ID))
+                var currentWaypoint = hotspot.Waypoints.Where(x => x.ID == currentId).FirstOrDefault();
+                if (currentWaypoint.MaxLevel > player.Level && currentWaypoint.MinLevel <= player.Level)
                 {
-                    visited.Add(currentWaypoint.ID);
-                    if (currentWaypoint.MaxLevel > player.Level && currentWaypoint.MinLevel <= player.Level)
-                    {
-                        Console.WriteLine("Found new WP matching player level: " + currentWaypoint.ToStringFull() + "\n");
-                        return visited;
-                    }
+                    Console.WriteLine("Found new WP matching player level: " + currentWaypoint.ToStringFull() + "\n");
+                    return currentPath;
+                }
+
+                if (!visited.Contains(currentId))
+                {
+                    visited.Add(currentId);
+
                     string wpLinks = currentWaypoint.Links.Replace(":0", "");
                     if (wpLinks.EndsWith(" "))
                         wpLinks = wpLinks.Remove(wpLinks.Length - 1);
@@ -205,16 +209,14 @@ namespace BloogBot.AI.SharedStates
                         int linkId = Int32.Parse(linkWp);
                         if (!visited.Contains(linkId))
                         {
-                            var linkedWaypoint = hotspot.Waypoints.Where(x => x.ID == linkId).FirstOrDefault();
-                            if (linkedWaypoint != null)
-                            {
-                                stack.Push(linkedWaypoint);
-                            }
+                            var newPath = new List<int>(currentPath);
+                            newPath.Add(linkId);
+                            queue.Enqueue(newPath);
                         }
                     }
                 }
             }
-            return visited;
+            return null; // No path found
         }
 
         void LogToFile(string text)

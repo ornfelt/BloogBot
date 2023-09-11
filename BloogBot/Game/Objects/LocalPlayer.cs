@@ -556,8 +556,8 @@ namespace BloogBot.Game.Objects
             }
         }
 
-        private static SortedSet<int> m_ForcedWpPath;
-        public SortedSet<int> ForcedWpPath
+        private static List<int> m_ForcedWpPath;
+        public List<int> ForcedWpPath
         {
             get
             {

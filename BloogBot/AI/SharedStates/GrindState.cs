@@ -200,8 +200,8 @@ namespace BloogBot.AI.SharedStates
                 // Player could be above all WP maxlevels,so make an exception
                 // for those players so that they can move through the zones.
                 // Hotspot 1-4 are Azeroth WPs, 5 is Outland, 6 is Northrend
-                else if ((hotspot.Id < 5 && player.Level >= 60) || (hotspot.Id == 5 && player.Level >= 70) 
-                    || (hotspot.Id == 6 && player.Level >= 80))
+                else if (currentWaypoint.Zone != player.CurrZone && (hotspot.Id < 5 && player.Level >= 60) 
+                    || (hotspot.Id == 5 && player.Level >= 70) || (hotspot.Id == 6 && player.Level >= 80))
                 {
                     // Try to visit new zones
                     bool currWpIsNewZone = true;

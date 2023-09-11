@@ -18,7 +18,7 @@ namespace BloogBot.AI.SharedStates
         readonly IDependencyContainer container;
         readonly LocalPlayer player;
 
-        private static int[] blacklistedWPs = {1466, 1438, 1444, 1445, 1364, 1369, 1426, 1100, 993};
+        private static int[] blacklistedWPs = {1466, 1438, 1444, 1445, 1364, 1369, 1426, 1100, 993, 1359};
 
         public GrindState(Stack<IBotState> botStates, IDependencyContainer container)
         {
@@ -192,7 +192,8 @@ namespace BloogBot.AI.SharedStates
                 var currentId = currentPath[currentPath.Count - 1]; // Get the last element
 
                 var currentWaypoint = hotspot.Waypoints.Where(x => x.ID == currentId).FirstOrDefault();
-                if (currentWaypoint.MaxLevel > player.Level && currentWaypoint.MinLevel <= player.Level)
+                if (currentWaypoint.MaxLevel > player.Level && currentWaypoint.MinLevel <= player.Level
+                    && !blacklistedWPs.Contains(currentWaypoint.ID))
                 {
                     Console.WriteLine("Found new WP matching player level: " + currentWaypoint.ToStringFull() + "\n");
                     return currentPath;
@@ -201,7 +202,8 @@ namespace BloogBot.AI.SharedStates
                 // for those players so that they can move through the zones.
                 // Hotspot 1-4 are Azeroth WPs, 5 is Outland, 6 is Northrend
                 else if (currentWaypoint.Zone != player.CurrZone && (hotspot.Id < 5 && player.Level >= 60) 
-                    || (hotspot.Id == 5 && player.Level >= 70) || (hotspot.Id == 6 && player.Level >= 80))
+                    || (hotspot.Id == 5 && player.Level >= 70) || (hotspot.Id == 6 && player.Level >= 80)
+                    && !blacklistedWPs.Contains(currentWaypoint.ID))
                 {
                     // Try to visit new zones
                     bool currWpIsNewZone = true;

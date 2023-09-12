@@ -85,10 +85,7 @@ namespace BloogBot.AI.SharedStates
                     // Check if curr waypoint is reached
                     if (player.Position.DistanceTo(waypoint) < 3.0F || player.WpStuckCount > 20)
                     {
-                        if (player.WpStuckCount > 20)
-                            Console.WriteLine($"WP: {nearestWps.ElementAtOrDefault(0).ID} COULDN'T be reached (should be same WP as Current Waypoint ID: {waypoint.ID}), selecting new WP...");
-                        else
-                            Console.WriteLine($"WP: {nearestWps.ElementAtOrDefault(0).ID} reached (should be same WP as Current Waypoint ID: {waypoint.ID}), selecting new WP...");
+                        Console.WriteLine($"WP: {nearestWps.ElementAtOrDefault(0).ID}" + (player.WpStuckCount > 20 ? "COULDN'T be reached" : "reached") + "(should be same WP as Current Waypoint ID: {waypoint.ID}), selecting new WP...");
 
                         if (player.LastWpId != waypoint.ID)
                         {
@@ -109,18 +106,18 @@ namespace BloogBot.AI.SharedStates
                             {
                                 // Use a forced path to a new zone
                                 player.ForcedWpPath = ForcedWpPathViaBFS(waypoint.ID);
+                                // Remove first value since it's the same as the currently reached WP
+                                if (player.ForcedWpPath.First() == waypoint.ID) player.ForcedWpPath.Remove(player.ForcedWpPath.First());
                                 foreach (var wpInPath in player.ForcedWpPath)
                                     Console.Write(wpInPath != player.ForcedWpPath[player.ForcedWpPath.Count-1] ? wpInPath + " -> " : wpInPath + "\n");
                             }
-                            // Remove first value since it's the same as the currently reached WP
-                            if (player.ForcedWpPath.First() == waypoint.ID)
-                                player.ForcedWpPath.Remove(player.ForcedWpPath.First());
-
                             // Set new WP based on forced path
-                            if (player.WpStuckCount > 20)
+                            else if (player.WpStuckCount > 20)
                             {
                                 // If stuck on forcedwppath get new forcedwppath to new zone but make sure it's a new path
                                 player.ForcedWpPath = ForcedWpPathViaBFS(waypoint.ID, player.ForcedWpPath[player.ForcedWpPath.Count-1]);
+                                // Remove first value since it's the same as the currently reached WP
+                                if (player.ForcedWpPath.First() == waypoint.ID) player.ForcedWpPath.Remove(player.ForcedWpPath.First());
                                 foreach (var wpInPath in player.ForcedWpPath)
                                     Console.Write(wpInPath != player.ForcedWpPath[player.ForcedWpPath.Count-1] ? wpInPath + " -> " : wpInPath + "\n");
                             }

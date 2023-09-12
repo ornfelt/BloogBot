@@ -18,7 +18,8 @@ namespace BloogBot.AI.SharedStates
         readonly IDependencyContainer container;
         readonly LocalPlayer player;
 
-        private static int[] blacklistedWPs = {1466, 1438, 1444, 1445, 1364, 1369, 1426, 1100, 993, 1359};
+        //private static int[] blacklistedWPs = {1466, 1438, 1444, 1445, 1364, 1369, 1426, 1100, 993, 1359};
+        private static int[] blacklistedWPs = { 1466, 1438, 1444, 1445, 1364, 1369, 1426, 1100, 993 };
 
         public GrindState(Stack<IBotState> botStates, IDependencyContainer container)
         {
@@ -113,22 +114,9 @@ namespace BloogBot.AI.SharedStates
                             foreach (var wpInPath in player.ForcedWpPath)
                                 Console.Write(wpInPath != player.ForcedWpPath[player.ForcedWpPath.Count-1] ? wpInPath + " -> " : wpInPath + "\n\n");
                         }
-                        else
-                        {
-                            // Set LastWpId, add to visited WPs and log to file
-                            if (player.LastWpId != waypoint.ID)
-                            {
-                                player.LastWpId = waypoint.ID;
-                                player.VisitedWps.Add(waypoint.ID);
-                                LogToFile(waypoint.ID + ",");
-                            }
-                            // Current WP reached -> set new one
-                            waypoint = hotspot.Waypoints.Where(x => x.ID == player.ForcedWpPath.First()).FirstOrDefault();
-                            player.ForcedWpPath.Remove(player.ForcedWpPath.First());
-                        }
-                        // Reset WP checking values
-                        player.DeathsAtWp = 0;
-                        player.WpStuckCount = 0;
+                        // Set new WP
+                        waypoint = hotspot.Waypoints.Where(x => x.ID == player.ForcedWpPath.First()).FirstOrDefault();
+                        player.ForcedWpPath.Remove(player.ForcedWpPath.First());
                     }
                     else
                     {
@@ -167,6 +155,17 @@ namespace BloogBot.AI.SharedStates
                             }
                         }
                     }
+
+                    // Set LastWpId, add to visited WPs and log to file
+                    if (player.LastWpId != waypoint.ID)
+                    {
+                        player.LastWpId = waypoint.ID;
+                        player.VisitedWps.Add(waypoint.ID);
+                        LogToFile(waypoint.ID + ",");
+                    }
+                    // Reset WP checking values
+                    player.DeathsAtWp = 0;
+                    player.WpStuckCount = 0;
                 }
                 else
                 {
@@ -204,8 +203,8 @@ namespace BloogBot.AI.SharedStates
                 {
                     // Find new path to new zone
                     var lastEndWp = hotspot.Waypoints.Where(x => x.ID == lastEndId).FirstOrDefault();
-                    if (currentWaypoint.Zone == lastEndWp.Zone && !currentPath.Contains(lastEndId)
-                        && currentWaypoint.DistanceTo(lastEndWp) > (player.Position.DistanceTo(lastEndWp) + 10f))
+                    if (currentWaypoint.Zone == lastEndWp.Zone && 
+                        currentWaypoint.DistanceTo(lastEndWp) > (player.Position.DistanceTo(lastEndWp) + 10f))
                     {
                         Console.WriteLine("Found new path to new Zone! End WP: " + currentWaypoint.ToStringFull() + ", distance: " + currentWaypoint.DistanceTo(lastEndWp) + "\n");
                         return currentPath;
@@ -255,7 +254,8 @@ namespace BloogBot.AI.SharedStates
                     foreach (var linkWp in linkSplit)
                     {
                         int linkId = Int32.Parse(linkWp);
-                        if (!visited.Contains(linkId) && !blacklistedWPs.Contains(linkId))
+                        //if (!visited.Contains(linkId) && !blacklistedWPs.Contains(linkId))
+                        if (!visited.Contains(linkId) && linkId != lastEndId)
                         {
                             var newPath = new List<int>(currentPath);
                             newPath.Add(linkId);

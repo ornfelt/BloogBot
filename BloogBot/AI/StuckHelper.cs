@@ -30,6 +30,7 @@ namespace BloogBot.AI
             if (stuckDuration >= 1000)
             {
                 player.WpStuckCount++;
+                Console.WriteLine($"WpStuckCount: {player.WpStuckCount}");
                 stuckDuration = 0;
                 lastPosition = null;
                 botStates.Push(new StuckState(botStates, container));

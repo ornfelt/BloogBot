@@ -119,12 +119,14 @@ namespace BloogBot.AI.SharedStates
                             // Set new WP based on forced path
                             if (player.WpStuckCount > 20)
                             {
-                                // TODO: If stuck on forcedwppath,
-                                // Get new forcedwppath to player.ForcedWpPath[player.ForcedWpPath.Count-1]
-                                // BUT avoid currwp...
+                                // If stuck on forcedwppath get new forcedwppath to new zone but make sure it's a new path
+                                player.ForcedWpPath = ForcedWpPathViaBFS(waypoint.ID, player.ForcedWpPath[player.ForcedWpPath.Count-1]);
+                                foreach (var wpInPath in player.ForcedWpPath)
+                                    Console.Write(wpInPath != player.ForcedWpPath[player.ForcedWpPath.Count-1] ? wpInPath + " -> " : wpInPath + "\n");
                             }
                             else
                             {
+                                // Current WP reached -> set new one
                                 waypoint = hotspot.Waypoints.Where(x => x.ID == player.ForcedWpPath.First()).FirstOrDefault();
                                 player.ForcedWpPath.Remove(player.ForcedWpPath.First());
                             }
@@ -198,35 +200,56 @@ namespace BloogBot.AI.SharedStates
             {
                 currentPath = queue.Dequeue();
                 var currentId = currentPath[currentPath.Count - 1]; // Get the last element
-
                 var currentWaypoint = hotspot.Waypoints.Where(x => x.ID == currentId).FirstOrDefault();
-                if (currentWaypoint.MaxLevel > player.Level && currentWaypoint.MinLevel <= player.Level)
-                {
-                    Console.WriteLine("Found new WP matching player level: " + currentWaypoint.ToStringFull() + "\n");
-                    return currentPath;
-                }
-                // Player could be above all WP maxlevels,so make an exception
-                // for those players so that they can move through the zones.
-                // Hotspot 1-4 are Azeroth WPs, 5 is Outland, 6 is Northrend
-                else if (currentWaypoint.Zone != player.CurrZone && ((hotspot.Id < 5 && player.Level >= 60) 
-                    || (hotspot.Id == 5 && player.Level >= 70) || (hotspot.Id == 6 && player.Level >= 80)))
-                {
-                    // Try to visit new zones
-                    bool currWpIsNewZone = true;
-                    foreach(int visitedWpId in player.VisitedWps)
-                    {
-                        var visitedWp = hotspot.Waypoints.Where(x => x.ID == visitedWpId).FirstOrDefault();
-                        if (visitedWp.Zone == currentWaypoint.Zone)
-                            currWpIsNewZone = false;
-                    }
 
-                    if (currWpIsNewZone)
+                // If endId is set to something other than 0 we know the endId and that we should find another path.
+                // We do this by only returning paths that have more WPs with the new zone in it which effectively
+                // means new path to endId.
+                if (endId != 0 && currentWaypoint.ID == endId)
+                {
+                    var endWp = hotspot.Waypoints.Where(x => x.ID == endId).FirstOrDefault();
+                    foreach (int pathWpId in currentPath)
                     {
-                        Console.WriteLine("Found new WP matching player level (> hotspot maxlevel): " + currentWaypoint.ToStringFull() + "\n");
+                        var pathWp = hotspot.Waypoints.Where(x => x.ID == pathWpId).FirstOrDefault();
+                        if (pathWpId != endId && pathWp.Zone == endWp.Zone)
+                        {
+                            Console.WriteLine("Found new path to new Zone! End WP: " + currentWaypoint.ToStringFull() + "\n");
+                            return currentPath;
+                        }
+                    }
+                }
+                // If endId set to 0, look for a fresh path to new zone
+                else
+                {
+                    if (currentWaypoint.MaxLevel > player.Level && currentWaypoint.MinLevel <= player.Level)
+                    {
+                        Console.WriteLine("Found new WP matching player level: " + currentWaypoint.ToStringFull() + "\n");
                         return currentPath;
                     }
+                    // Player could be above all WP maxlevels,so make an exception
+                    // for those players so that they can move through the zones.
+                    // Hotspot 1-4 are Azeroth WPs, 5 is Outland, 6 is Northrend
+                    else if (currentWaypoint.Zone != player.CurrZone && ((hotspot.Id < 5 && player.Level >= 60)
+                        || (hotspot.Id == 5 && player.Level >= 70) || (hotspot.Id == 6 && player.Level >= 80)))
+                    {
+                        // Try to visit new zones
+                        bool currWpIsNewZone = true;
+                        foreach (int visitedWpId in player.VisitedWps)
+                        {
+                            var visitedWp = hotspot.Waypoints.Where(x => x.ID == visitedWpId).FirstOrDefault();
+                            if (visitedWp.Zone == currentWaypoint.Zone)
+                                currWpIsNewZone = false;
+                        }
+
+                        if (currWpIsNewZone)
+                        {
+                            Console.WriteLine("Found new WP matching player level (> hotspot maxlevel): " + currentWaypoint.ToStringFull() + "\n");
+                            return currentPath;
+                        }
+                    }
                 }
 
+                // Search and enqueue links
                 if (!visited.Contains(currentId))
                 {
                     visited.Add(currentId);

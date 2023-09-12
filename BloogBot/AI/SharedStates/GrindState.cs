@@ -43,146 +43,151 @@ namespace BloogBot.AI.SharedStates
             }
             else
             {
-                var hotspot = container.GetCurrentHotspot();
-                //var waypointCount = hotspot.Waypoints.Length;
-                //Console.WriteLine("Waypoint count: " + waypointCount);
-                //var waypoint = hotspot.Waypoints[random.Next(0, waypointCount)]; // Old 
-                //var waypoint = zoneWaypoints.ElementAtOrDefault(random.Next() % zoneWaypoints.Count());
+                HandleWpSelection();
+            }
+        }
 
-                // Check if no zone is set
-                if (player.CurrZone == "0")
+        private void HandleWpSelection()
+        {
+            var hotspot = container.GetCurrentHotspot();
+            //var waypointCount = hotspot.Waypoints.Length;
+            //Console.WriteLine("Waypoint count: " + waypointCount);
+            //var waypoint = hotspot.Waypoints[random.Next(0, waypointCount)]; // Old 
+            //var waypoint = zoneWaypoints.ElementAtOrDefault(random.Next() % zoneWaypoints.Count());
+
+            // Check if no zone is set
+            if (player.CurrZone == "0")
+            {
+                var nearestWp = hotspot.Waypoints.OrderBy(w => player.Position.DistanceTo(w)).FirstOrDefault();
+                player.CurrZone = nearestWp.Zone;
+                Console.WriteLine("No zone currently set. Setting zone based on nearest WP: " + player.CurrZone);
+            }
+            var zoneWaypoints = hotspot.Waypoints.Where(x => x.Zone == player.CurrZone);
+            var nearestWps = zoneWaypoints.OrderBy(w => player.Position.DistanceTo(w));
+            var waypoint = player.CurrWpId == 0 ? nearestWps.FirstOrDefault() : zoneWaypoints.Where(x => x.ID == player.CurrWpId).FirstOrDefault();
+
+            if (player.CurrWpId == 0)
+            {
+                // No current WP. Pick nearest WP
+                bool newWpFound = false;
+                waypoint = nearestWps.ElementAtOrDefault(0);
+                int wpCounter = 0;
+                while (!newWpFound)
                 {
-                    var nearestWp = hotspot.Waypoints.OrderBy(w => player.Position.DistanceTo(w)).FirstOrDefault();
-                    player.CurrZone = nearestWp.Zone;
-                    Console.WriteLine("No zone currently set. Setting zone based on nearest WP: " + player.CurrZone);
+                    wpCounter++;
+                    if (!blacklistedWPs.Contains(waypoint.ID))
+                        newWpFound = true;
+                    else
+                        waypoint = nearestWps.ElementAtOrDefault(wpCounter);
+
+                    if (wpCounter > 100) newWpFound = true;
                 }
-                var zoneWaypoints = hotspot.Waypoints.Where(x => x.Zone == player.CurrZone);
-                var nearestWps = zoneWaypoints.OrderBy(w => player.Position.DistanceTo(w));
-                var waypoint = player.CurrWpId == 0 ? nearestWps.FirstOrDefault() : zoneWaypoints.Where(x => x.ID == player.CurrWpId).FirstOrDefault();
-
-                if (player.CurrWpId == 0)
+                Console.WriteLine("No CurrWpId... Selecting new one");
+                // Log datetime to file to separate new bot sessions
+                LogToFile(DateTime.Now.ToString("dd/MM/yyyy HH:mm"));
+            }
+            else
+            {
+                // Check if curr waypoint is reached
+                if (player.Position.DistanceTo(waypoint) < 3.0F || player.WpStuckCount > 20)
                 {
-                    // No current WP. Pick nearest WP
-                    bool newWpFound = false;
-                    waypoint = nearestWps.ElementAtOrDefault(0);
-                    int wpCounter = 0;
-                    while (!newWpFound)
-                    {
-                        wpCounter++;
-                        if (!blacklistedWPs.Contains(waypoint.ID))
-                            newWpFound = true;
-                        else
-                            waypoint = nearestWps.ElementAtOrDefault(wpCounter);
+                    Console.WriteLine($"WP: {nearestWps.ElementAtOrDefault(0).ID}" + (player.WpStuckCount > 20 ? "COULDN'T be reached" : "reached") + "(should be same WP as Current Waypoint ID: {waypoint.ID}), selecting new WP...");
 
-                        if (wpCounter > 100) newWpFound = true;
+                    if (player.LastWpId != waypoint.ID)
+                    {
+                        // Reset WP checking values
+                        player.DeathsAtWp = 0;
+                        player.WpStuckCount = 0;
+                        player.LastWpId = waypoint.ID;
+                        // Add to visited WPs and log to file
+                        player.VisitedWps.Add(waypoint.ID);
+                        LogToFile(waypoint.ID + ",");
                     }
-                    Console.WriteLine("No CurrWpId... Selecting new one");
-                    // Log datetime to file to separate new bot sessions
-                    LogToFile(DateTime.Now.ToString("dd/MM/yyyy HH:mm"));
-                }
-                else
-                {
-                    // Check if curr waypoint is reached
-                    if (player.Position.DistanceTo(waypoint) < 3.0F || player.WpStuckCount > 20)
+
+                    // Check if player is higher level than waypoint maxlevel
+                    player.HasOverLeveled = player.Level >= waypoint.MaxLevel;
+                    if (player.HasOverLeveled)
                     {
-                        Console.WriteLine($"WP: {nearestWps.ElementAtOrDefault(0).ID}" + (player.WpStuckCount > 20 ? "COULDN'T be reached" : "reached") + "(should be same WP as Current Waypoint ID: {waypoint.ID}), selecting new WP...");
-
-                        if (player.LastWpId != waypoint.ID)
+                        if (player.ForcedWpPath.Count == 0)
                         {
-                            // Reset WP checking values
-                            player.DeathsAtWp = 0;
-                            player.WpStuckCount = 0;
-                            player.LastWpId = waypoint.ID;
-                            // Add to visited WPs and log to file
-                            player.VisitedWps.Add(waypoint.ID);
-                            LogToFile(waypoint.ID + ",");
+                            // Use a forced path to a new zone
+                            player.ForcedWpPath = ForcedWpPathViaBFS(waypoint.ID);
+                            // Remove first value since it's the same as the currently reached WP
+                            if (player.ForcedWpPath.First() == waypoint.ID) player.ForcedWpPath.Remove(player.ForcedWpPath.First());
+                            foreach (var wpInPath in player.ForcedWpPath)
+                                Console.Write(wpInPath != player.ForcedWpPath[player.ForcedWpPath.Count-1] ? wpInPath + " -> " : wpInPath + "\n");
                         }
-
-                        // Check if player is higher level than waypoint maxlevel
-                        player.HasOverLeveled = player.Level >= waypoint.MaxLevel;
-                        if (player.HasOverLeveled)
+                        // Set new WP based on forced path
+                        else if (player.WpStuckCount > 20)
                         {
-                            if (player.ForcedWpPath.Count == 0)
-                            {
-                                // Use a forced path to a new zone
-                                player.ForcedWpPath = ForcedWpPathViaBFS(waypoint.ID);
-                                // Remove first value since it's the same as the currently reached WP
-                                if (player.ForcedWpPath.First() == waypoint.ID) player.ForcedWpPath.Remove(player.ForcedWpPath.First());
-                                foreach (var wpInPath in player.ForcedWpPath)
-                                    Console.Write(wpInPath != player.ForcedWpPath[player.ForcedWpPath.Count-1] ? wpInPath + " -> " : wpInPath + "\n");
-                            }
-                            // Set new WP based on forced path
-                            else if (player.WpStuckCount > 20)
-                            {
-                                // If stuck on forcedwppath get new forcedwppath to new zone but make sure it's a new path
-                                player.ForcedWpPath = ForcedWpPathViaBFS(waypoint.ID, player.ForcedWpPath[player.ForcedWpPath.Count-1]);
-                                // Remove first value since it's the same as the currently reached WP
-                                if (player.ForcedWpPath.First() == waypoint.ID) player.ForcedWpPath.Remove(player.ForcedWpPath.First());
-                                foreach (var wpInPath in player.ForcedWpPath)
-                                    Console.Write(wpInPath != player.ForcedWpPath[player.ForcedWpPath.Count-1] ? wpInPath + " -> " : wpInPath + "\n");
-                            }
-                            else
-                            {
-                                // Current WP reached -> set new one
-                                waypoint = hotspot.Waypoints.Where(x => x.ID == player.ForcedWpPath.First()).FirstOrDefault();
-                                player.ForcedWpPath.Remove(player.ForcedWpPath.First());
-                            }
+                            // If stuck on forcedwppath get new forcedwppath to new zone but make sure it's a new path
+                            player.ForcedWpPath = ForcedWpPathViaBFS(waypoint.ID, player.ForcedWpPath[player.ForcedWpPath.Count-1]);
+                            // Remove first value since it's the same as the currently reached WP
+                            if (player.ForcedWpPath.First() == waypoint.ID) player.ForcedWpPath.Remove(player.ForcedWpPath.First());
+                            foreach (var wpInPath in player.ForcedWpPath)
+                                Console.Write(wpInPath != player.ForcedWpPath[player.ForcedWpPath.Count-1] ? wpInPath + " -> " : wpInPath + "\n");
                         }
                         else
                         {
-                            // Select new waypoint based on links
-                            string wpLinks = waypoint.Links.Replace(":0", "");
-                            if (wpLinks.EndsWith(" "))
-                                wpLinks = wpLinks.Remove(wpLinks.Length - 1);
-                            string[] linkSplit = wpLinks.Split(' ');
-                            //foreach (string link in linkSplit)
-                            //    Console.WriteLine("Found link: " + link);
-
-                            bool newWpFound = false;
-                            int linkSearchCount = 0;
-                            while (!newWpFound)
-                            {
-                                linkSearchCount++;
-                                int randLink = random.Next() % linkSplit.Length;
-                                //Console.WriteLine("randLink: " + randLink);
-                                var linkWp = hotspot.Waypoints.Where(x => x.ID == Int32.Parse(linkSplit[randLink])).FirstOrDefault();
-
-                                // Check level requirement
-                                if (linkWp.MinLevel <= player.Level && !blacklistedWPs.Contains(linkWp.ID))
-                                {
-                                    if (!player.HasVisitedWp(linkWp.ID))
-                                    {
-                                        waypoint = linkWp;
-                                        newWpFound = true;
-                                    }
-                                    else if (linkSearchCount > 15)
-                                    {
-                                        // This means that randLink is same as previously visited WP
-                                        // Choose it if no other links are suitable
-                                        waypoint = linkWp;
-                                        newWpFound = true;
-                                    }
-                                }
-                            }
+                            // Current WP reached -> set new one
+                            waypoint = hotspot.Waypoints.Where(x => x.ID == player.ForcedWpPath.First()).FirstOrDefault();
+                            player.ForcedWpPath.Remove(player.ForcedWpPath.First());
                         }
                     }
                     else
                     {
-                        Console.WriteLine($"CurrWP not reached yet. Distance: {player.Position.DistanceTo(waypoint)}, wpStuckCount: {player.WpStuckCount}");
-                        //player.wpStuckCount++; // This is increased in StuckHelper
+                        // Select new waypoint based on links
+                        string wpLinks = waypoint.Links.Replace(":0", "");
+                        if (wpLinks.EndsWith(" "))
+                            wpLinks = wpLinks.Remove(wpLinks.Length - 1);
+                        string[] linkSplit = wpLinks.Split(' ');
+                        //foreach (string link in linkSplit)
+                        //    Console.WriteLine("Found link: " + link);
+
+                        bool newWpFound = false;
+                        int linkSearchCount = 0;
+                        while (!newWpFound)
+                        {
+                            linkSearchCount++;
+                            int randLink = random.Next() % linkSplit.Length;
+                            //Console.WriteLine("randLink: " + randLink);
+                            var linkWp = hotspot.Waypoints.Where(x => x.ID == Int32.Parse(linkSplit[randLink])).FirstOrDefault();
+
+                            // Check level requirement
+                            if (linkWp.MinLevel <= player.Level && !blacklistedWPs.Contains(linkWp.ID))
+                            {
+                                if (!player.HasVisitedWp(linkWp.ID))
+                                {
+                                    waypoint = linkWp;
+                                    newWpFound = true;
+                                }
+                                else if (linkSearchCount > 15)
+                                {
+                                    // This means that randLink is same as previously visited WP
+                                    // Choose it if no other links are suitable
+                                    waypoint = linkWp;
+                                    newWpFound = true;
+                                }
+                            }
+                        }
                     }
                 }
-
-                player.CurrWpId = waypoint.ID;
-
-                if (player.CurrZone != waypoint.Zone)
+                else
                 {
-                    player.CurrZone = waypoint.Zone; // Update current zone
-                    Console.WriteLine("Bot walking towards new zone!");
+                    Console.WriteLine($"CurrWP not reached yet. Distance: {player.Position.DistanceTo(waypoint)}, wpStuckCount: {player.WpStuckCount}");
+                    //player.wpStuckCount++; // This is increased in StuckHelper
                 }
-                Console.WriteLine("Selected waypoint: " + waypoint.ToStringFull() + ", HasOverleveled: " + player.HasOverLeveled);
-                botStates.Push(new MoveToHotspotWaypointState(botStates, container, waypoint));
             }
+
+            player.CurrWpId = waypoint.ID;
+
+            if (player.CurrZone != waypoint.Zone)
+            {
+                player.CurrZone = waypoint.Zone; // Update current zone
+                Console.WriteLine("Bot walking towards new zone!");
+            }
+            Console.WriteLine("Selected waypoint: " + waypoint.ToStringFull() + ", HasOverleveled: " + player.HasOverLeveled);
+            botStates.Push(new MoveToHotspotWaypointState(botStates, container, waypoint));
         }
 
         public List<int> ForcedWpPathViaBFS(int startId, int endId = 0)

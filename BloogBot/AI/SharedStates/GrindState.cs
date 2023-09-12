@@ -89,50 +89,46 @@ namespace BloogBot.AI.SharedStates
             else
             {
                 // Check if curr waypoint is reached
-                if (player.Position.DistanceTo(waypoint) < 3.0F || player.WpStuckCount > 20)
+                if (player.Position.DistanceTo(waypoint) < 3.0F || player.WpStuckCount > 5)
                 {
-                    Console.WriteLine($"WP: {nearestWps.ElementAtOrDefault(0).ID}" + (player.WpStuckCount > 20 ? "COULDN'T be reached" : "reached") + "(should be same WP as Current Waypoint ID: {waypoint.ID}), selecting new WP...");
-
-                    if (player.LastWpId != waypoint.ID)
-                    {
-                        // Reset WP checking values
-                        player.DeathsAtWp = 0;
-                        player.WpStuckCount = 0;
-                        player.LastWpId = waypoint.ID;
-                        // Add to visited WPs and log to file
-                        player.VisitedWps.Add(waypoint.ID);
-                        LogToFile(waypoint.ID + ",");
-                    }
-
+                    Console.WriteLine($"WP: {waypoint.ID} " + (player.WpStuckCount > 5 ? "couldn't be reached" : "reached") + $" (should be the same as nearest WP: {nearestWps.ElementAtOrDefault(0).ID}), selecting new WP...");
                     // Check if player is higher level than waypoint maxlevel
                     player.HasOverLeveled = player.Level >= waypoint.MaxLevel;
                     if (player.HasOverLeveled)
                     {
-                        if (player.ForcedWpPath.Count == 0)
+                        // Set new WP based on forced path
+                        if (player.WpStuckCount > 5)
+                        {
+                            // If stuck on forcedwppath get new forcedwppath to new zone but make sure it's a new path
+                            player.ForcedWpPath = ForcedWpPathViaBFS(player.LastWpId, waypoint.ID);
+                            foreach (var wpInPath in player.ForcedWpPath)
+                                Console.Write(wpInPath != player.ForcedWpPath[player.ForcedWpPath.Count-1] ? wpInPath + " -> " : wpInPath + "\n\n");
+                        }
+                        else if (player.ForcedWpPath.Count == 0)
                         {
                             // Use a forced path to a new zone
                             player.ForcedWpPath = ForcedWpPathViaBFS(waypoint.ID);
                             // Remove first value since it's the same as the currently reached WP
                             if (player.ForcedWpPath.First() == waypoint.ID) player.ForcedWpPath.Remove(player.ForcedWpPath.First());
                             foreach (var wpInPath in player.ForcedWpPath)
-                                Console.Write(wpInPath != player.ForcedWpPath[player.ForcedWpPath.Count-1] ? wpInPath + " -> " : wpInPath + "\n");
-                        }
-                        // Set new WP based on forced path
-                        else if (player.WpStuckCount > 20)
-                        {
-                            // If stuck on forcedwppath get new forcedwppath to new zone but make sure it's a new path
-                            player.ForcedWpPath = ForcedWpPathViaBFS(waypoint.ID, player.ForcedWpPath[player.ForcedWpPath.Count-1]);
-                            // Remove first value since it's the same as the currently reached WP
-                            if (player.ForcedWpPath.First() == waypoint.ID) player.ForcedWpPath.Remove(player.ForcedWpPath.First());
-                            foreach (var wpInPath in player.ForcedWpPath)
-                                Console.Write(wpInPath != player.ForcedWpPath[player.ForcedWpPath.Count-1] ? wpInPath + " -> " : wpInPath + "\n");
+                                Console.Write(wpInPath != player.ForcedWpPath[player.ForcedWpPath.Count-1] ? wpInPath + " -> " : wpInPath + "\n\n");
                         }
                         else
                         {
+                            // Set LastWpId, add to visited WPs and log to file
+                            if (player.LastWpId != waypoint.ID)
+                            {
+                                player.LastWpId = waypoint.ID;
+                                player.VisitedWps.Add(waypoint.ID);
+                                LogToFile(waypoint.ID + ",");
+                            }
                             // Current WP reached -> set new one
                             waypoint = hotspot.Waypoints.Where(x => x.ID == player.ForcedWpPath.First()).FirstOrDefault();
                             player.ForcedWpPath.Remove(player.ForcedWpPath.First());
                         }
+                        // Reset WP checking values
+                        player.DeathsAtWp = 0;
+                        player.WpStuckCount = 0;
                     }
                     else
                     {
@@ -190,7 +186,7 @@ namespace BloogBot.AI.SharedStates
             botStates.Push(new MoveToHotspotWaypointState(botStates, container, waypoint));
         }
 
-        public List<int> ForcedWpPathViaBFS(int startId, int endId = 0)
+        public List<int> ForcedWpPathViaBFS(int startId, int lastEndId = 0)
         {
             var hotspot = container.GetCurrentHotspot();
             var visited = new HashSet<int>();
@@ -204,23 +200,18 @@ namespace BloogBot.AI.SharedStates
                 var currentId = currentPath[currentPath.Count - 1]; // Get the last element
                 var currentWaypoint = hotspot.Waypoints.Where(x => x.ID == currentId).FirstOrDefault();
 
-                // If endId is set to something other than 0 we know the endId and that we should find another path.
-                // We do this by only returning paths that have more WPs with the new zone in it which effectively
-                // means new path to endId.
-                if (endId != 0 && currentWaypoint.ID == endId)
+                if (lastEndId != 0)
                 {
-                    var endWp = hotspot.Waypoints.Where(x => x.ID == endId).FirstOrDefault();
-                    foreach (int pathWpId in currentPath)
+                    // Find new path to new zone
+                    var lastEndWp = hotspot.Waypoints.Where(x => x.ID == lastEndId).FirstOrDefault();
+                    if (currentWaypoint.Zone == lastEndWp.Zone && !currentPath.Contains(lastEndId)
+                        && currentWaypoint.DistanceTo(lastEndWp) > (player.Position.DistanceTo(lastEndWp) + 10f))
                     {
-                        var pathWp = hotspot.Waypoints.Where(x => x.ID == pathWpId).FirstOrDefault();
-                        if (pathWpId != endId && pathWp.Zone == endWp.Zone)
-                        {
-                            Console.WriteLine("Found new path to new Zone! End WP: " + currentWaypoint.ToStringFull() + "\n");
-                            return currentPath;
-                        }
+                        Console.WriteLine("Found new path to new Zone! End WP: " + currentWaypoint.ToStringFull() + ", distance: " + currentWaypoint.DistanceTo(lastEndWp) + "\n");
+                        return currentPath;
                     }
                 }
-                // If endId set to 0, look for a fresh path to new zone
+                // If endId is set to 0, look for a fresh path to new zone
                 else
                 {
                     if (currentWaypoint.MaxLevel > player.Level && currentWaypoint.MinLevel <= player.Level)
@@ -264,7 +255,7 @@ namespace BloogBot.AI.SharedStates
                     foreach (var linkWp in linkSplit)
                     {
                         int linkId = Int32.Parse(linkWp);
-                        if (!visited.Contains(linkId))
+                        if (!visited.Contains(linkId) && !blacklistedWPs.Contains(linkId))
                         {
                             var newPath = new List<int>(currentPath);
                             newPath.Add(linkId);

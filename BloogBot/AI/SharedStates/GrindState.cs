@@ -18,8 +18,7 @@ namespace BloogBot.AI.SharedStates
         readonly IDependencyContainer container;
         readonly LocalPlayer player;
 
-        //private static int[] blacklistedWPs = {1466, 1438, 1444, 1445, 1364, 1369, 1426, 1100, 993, 1359};
-        private static int[] blacklistedWPs = { 1466, 1438, 1444, 1445, 1364, 1369, 1426, 1100, 993 };
+        private static int[] blacklistedWPs = {1466, 1438, 1444, 1445, 1364, 1369, 1426, 1100, 993, 1359};
 
         public GrindState(Stack<IBotState> botStates, IDependencyContainer container)
         {
@@ -90,15 +89,23 @@ namespace BloogBot.AI.SharedStates
             else
             {
                 // Check if curr waypoint is reached
-                if (player.Position.DistanceTo(waypoint) < 3.0F || player.WpStuckCount > 5)
+                if (player.Position.DistanceTo(waypoint) < 3.0F || player.WpStuckCount > 10)
                 {
-                    Console.WriteLine($"WP: {waypoint.ID} " + (player.WpStuckCount > 5 ? "couldn't be reached" : "reached") + $" (should be the same as nearest WP: {nearestWps.ElementAtOrDefault(0).ID}), selecting new WP...");
+                    Console.WriteLine($"WP: {waypoint.ID} " + (player.WpStuckCount > 10 ? "couldn't be reached" : "reached") + $" (should be the same as nearest WP: {nearestWps.ElementAtOrDefault(0).ID}), selecting new WP...");
                     // Check if player is higher level than waypoint maxlevel
                     player.HasOverLeveled = player.Level >= waypoint.MaxLevel;
+
+                    if (player.Position.DistanceTo(waypoint) < 3.0F)
+                    {
+                        player.VisitedWps.Add(waypoint.ID);
+                        LogToFile(waypoint.ID + ",");
+                        player.LastWpId = waypoint.ID;
+                    }
+
                     if (player.HasOverLeveled)
                     {
                         // Set new WP based on forced path
-                        if (player.WpStuckCount > 5)
+                        if (player.WpStuckCount > 10)
                         {
                             // If stuck on forcedwppath get new forcedwppath to new zone but make sure it's a new path
                             player.ForcedWpPath = ForcedWpPathViaBFS(player.LastWpId, waypoint.ID);
@@ -156,13 +163,6 @@ namespace BloogBot.AI.SharedStates
                         }
                     }
 
-                    // Set LastWpId, add to visited WPs and log to file
-                    if (player.LastWpId != waypoint.ID)
-                    {
-                        player.LastWpId = waypoint.ID;
-                        player.VisitedWps.Add(waypoint.ID);
-                        LogToFile(waypoint.ID + ",");
-                    }
                     // Reset WP checking values
                     player.DeathsAtWp = 0;
                     player.WpStuckCount = 0;
@@ -254,8 +254,7 @@ namespace BloogBot.AI.SharedStates
                     foreach (var linkWp in linkSplit)
                     {
                         int linkId = Int32.Parse(linkWp);
-                        //if (!visited.Contains(linkId) && !blacklistedWPs.Contains(linkId))
-                        if (!visited.Contains(linkId) && linkId != lastEndId)
+                        if (!visited.Contains(linkId) && !blacklistedWPs.Contains(linkId) && linkId != lastEndId)
                         {
                             var newPath = new List<int>(currentPath);
                             newPath.Add(linkId);

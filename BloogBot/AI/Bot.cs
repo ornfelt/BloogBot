@@ -736,7 +736,7 @@ namespace BloogBot.AI
 #if USE_CUSTOM_CHANGES
                     await Task.Delay(100);
 #else
-                    await Task.Delay(25);
+                    await Task.Delay(50);
 #endif
 
                     container.Probe.UpdateLatency = $"{stopwatch.ElapsedMilliseconds}ms";

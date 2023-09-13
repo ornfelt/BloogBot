@@ -53,7 +53,7 @@ namespace ArmsWarriorBot
 #if USE_CUSTOM_CHANGES
             var aggressors = ObjectManager.Aggressors.ToList();
 #else
-            var aggressors = ObjectManager.Aggressors;
+            var aggressors = ObjectManager.Aggressors.ToList();
 #endif
 
             // Use these abilities when fighting any number of mobs.   

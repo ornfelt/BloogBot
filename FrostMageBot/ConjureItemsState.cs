@@ -62,7 +62,7 @@ namespace FrostMageBot
                 if (player.ManaPercent <= 70)
                     botStates.Push(new RestState(botStates, container));
 #else
-                if (player.ManaPercent <= 70 && !ObjectManager.IsGrouped)
+                if (player.ManaPercent <= 70)
                     botStates.Push(new RestState(botStates, container));
 #endif
 

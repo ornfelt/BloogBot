@@ -65,8 +65,6 @@ namespace BloogBot.Game
 
         static public bool IsLoggedIn => Functions.GetPlayerGuid() > 0;
 
-        static public bool IsGrouped => GetPartyMembers().Count() > 0;
-
         static public string ZoneText
         {
             // this is weird and throws an exception right after entering world,
@@ -199,8 +197,7 @@ namespace BloogBot.Game
                     u.TargetGuid == Pet?.Guid)
 #else
                     u.TargetGuid == Player?.Guid ||
-                    u.TargetGuid == Pet?.Guid ||
-                    GetPartyMembers().Any(p => u.TargetGuid == p.Guid))
+                    u.TargetGuid == Pet?.Guid)
 #endif
                 .Where(u =>
                     u.UnitReaction == UnitReaction.Hostile ||

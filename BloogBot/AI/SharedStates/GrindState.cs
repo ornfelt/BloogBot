@@ -107,12 +107,16 @@ namespace BloogBot.AI.SharedStates
                         {
                             // If stuck on forcedwppath get new forcedwppath to new zone but make sure it's a new path
                             if (player.WpStuckCount > 10)
+                            {
                                 player.BlackListedWps.Add(waypoint.ID);
-
-                            // Use a forced path to a new zone
-                            player.ForcedWpPath = ForcedWpPathViaBFS(waypoint.ID);
-                            // Remove first value since it's the same as the currently reached WP
-                            if (player.ForcedWpPath.First() == waypoint.ID) player.ForcedWpPath.Remove(player.ForcedWpPath.First());
+                                player.ForcedWpPath = ForcedWpPathViaBFS(player.LastWpId);
+                            }
+                            else
+                            {
+                                player.ForcedWpPath = ForcedWpPathViaBFS(waypoint.ID);
+                                // Remove first value since it's the same as the currently reached WP
+                                if (player.ForcedWpPath.First() == waypoint.ID) player.ForcedWpPath.Remove(player.ForcedWpPath.First());
+                            }
                             foreach (var wpInPath in player.ForcedWpPath)
                                 Console.Write(wpInPath != player.ForcedWpPath[player.ForcedWpPath.Count-1] ? wpInPath + " -> " : wpInPath + "\n\n");
                         }

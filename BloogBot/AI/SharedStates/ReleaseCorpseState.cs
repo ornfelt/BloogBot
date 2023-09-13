@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 
 namespace BloogBot.AI.SharedStates
 {
@@ -27,12 +28,10 @@ namespace BloogBot.AI.SharedStates
                 {
                     if (Wait.For("LeaveReleaseCorpseStateDelay", 2000))
                     {
-                        botStates.Pop();
+                        Thread.Sleep(500);
                         var player = ObjectManager.Player;
                         if (player.DeathsAtWp > 2)
                         {
-                            Console.WriteLine("Forcing teleport to linked WP after release due to deathcount > 2");
-
                             // Select new waypoint based on links
                             var hotspot = container.GetCurrentHotspot();
                             var waypoint = hotspot.Waypoints.Where(x => x.ID == player.CurrWpId).FirstOrDefault();
@@ -43,8 +42,10 @@ namespace BloogBot.AI.SharedStates
                             int randLink = random.Next() % linkSplit.Length;
                             var linkWp = hotspot.Waypoints.Where(x => x.ID == Int32.Parse(linkSplit[randLink])).FirstOrDefault();
 
+                            Console.WriteLine($"Forcing teleport to linked WP: {linkWp.ID} after release due to deathcount > 2");
                             ObjectManager.Player.LuaCall($"SendChatMessage('.npcb wp go {linkWp.ID}')");
                         }
+                        botStates.Pop();
                         return;
                     }
                 }

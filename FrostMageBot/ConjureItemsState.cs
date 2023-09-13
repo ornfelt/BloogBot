@@ -46,10 +46,10 @@ namespace FrostMageBot
         public void Update()
         {
             foodItem = Inventory.GetAllItems()
-                .FirstOrDefault(i => s_FoodNames.Contains(i.Info.Name));
+                .FirstOrDefault(i => s_FoodNames.Contains(i.Info.Name) || i.Info.Name == container.BotSettings.Food);
 
             drinkItem = Inventory.GetAllItems()
-                .FirstOrDefault(i => s_DrinkNames.Contains(i.Info.Name));
+                .FirstOrDefault(i => s_DrinkNames.Contains(i.Info.Name) || i.Info.Name == container.BotSettings.Drink);
 
             if (player.IsCasting)
                 return;

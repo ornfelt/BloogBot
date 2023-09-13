@@ -48,37 +48,11 @@ namespace BloogBot.AI.SharedStates
                 }
                 DiscordClientWrapper.SendMessage($"{player.Name} is stuck in the MoveToCorpseState. Stopping.");
                 // Might get stuck when moving towards safeWPs
-                if (stuckHelper.CheckIfStuck())
-                {
-                    var ran = random.Next(0, 4);
-                    if (ran == 0)
-                    {
-                        player.StartMovement(ControlBits.Front);
-                        player.StartMovement(ControlBits.StrafeLeft);
-                        player.Jump();
-                    }
-                    if (ran == 1)
-                    {
-                        player.StartMovement(ControlBits.Front);
-                        player.StartMovement(ControlBits.StrafeRight);
-                        player.Jump();
-                    }
-                    if (ran == 2)
-                    {
-                        player.StartMovement(ControlBits.Back);
-                        player.StartMovement(ControlBits.StrafeLeft);
-                        player.Jump();
-                    }
-                    if (ran == 3)
-                    {
-                        player.StartMovement(ControlBits.Back);
-                        player.StartMovement(ControlBits.StrafeRight);
-                        player.Jump();
-                    }
-                }
+                stuckHelper.CheckIfStuck();
 
                 var hotspot = container.GetCurrentHotspot();
-                // TODO? if stuck for a long time, get nearest WP and trace back to CurrWp and then go to corpse
+                // TODO? First try to generate path based on WP...
+                // Use stucktimer and movetocorpsepos as well...
                 var nearestWp = container
                     .Hotspots
                     .Where(h => h != null)
@@ -126,7 +100,6 @@ namespace BloogBot.AI.SharedStates
                     player.StopMovement(ControlBits.Front);
                 }
             }
-
             else
                 player.MoveToward(nextWaypoint);
         }

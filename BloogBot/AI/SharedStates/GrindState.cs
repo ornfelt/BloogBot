@@ -18,8 +18,6 @@ namespace BloogBot.AI.SharedStates
         readonly IDependencyContainer container;
         readonly LocalPlayer player;
 
-        private static int[] blacklistedWPs = {1466, 1438, 1444, 1445, 1364, 1369, 1426, 1100, 993, 1359};
-
         public GrindState(Stack<IBotState> botStates, IDependencyContainer container)
         {
             this.botStates = botStates;
@@ -75,7 +73,7 @@ namespace BloogBot.AI.SharedStates
                 while (!newWpFound)
                 {
                     wpCounter++;
-                    if (!blacklistedWPs.Contains(waypoint.ID))
+                    if (!player.BlackListedWps.Contains(waypoint.ID))
                         newWpFound = true;
                     else
                         waypoint = nearestWps.ElementAtOrDefault(wpCounter);
@@ -102,18 +100,15 @@ namespace BloogBot.AI.SharedStates
                         player.LastWpId = waypoint.ID;
                     }
 
+                    // Set new WP based on forced path if player has overleveled
                     if (player.HasOverLeveled)
                     {
-                        // Set new WP based on forced path
-                        if (player.WpStuckCount > 10)
+                        if (player.ForcedWpPath.Count == 0 || player.WpStuckCount > 10)
                         {
                             // If stuck on forcedwppath get new forcedwppath to new zone but make sure it's a new path
-                            player.ForcedWpPath = ForcedWpPathViaBFS(player.LastWpId, waypoint.ID);
-                            foreach (var wpInPath in player.ForcedWpPath)
-                                Console.Write(wpInPath != player.ForcedWpPath[player.ForcedWpPath.Count-1] ? wpInPath + " -> " : wpInPath + "\n\n");
-                        }
-                        else if (player.ForcedWpPath.Count == 0)
-                        {
+                            if (player.WpStuckCount > 10)
+                                player.BlackListedWps.Add(waypoint.ID);
+
                             // Use a forced path to a new zone
                             player.ForcedWpPath = ForcedWpPathViaBFS(waypoint.ID);
                             // Remove first value since it's the same as the currently reached WP
@@ -145,7 +140,7 @@ namespace BloogBot.AI.SharedStates
                             var linkWp = hotspot.Waypoints.Where(x => x.ID == Int32.Parse(linkSplit[randLink])).FirstOrDefault();
 
                             // Check level requirement
-                            if (linkWp.MinLevel <= player.Level && !blacklistedWPs.Contains(linkWp.ID))
+                            if (linkWp.MinLevel <= player.Level && !player.BlackListedWps.Contains(linkWp.ID))
                             {
                                 if (!player.HasVisitedWp(linkWp.ID))
                                 {
@@ -162,7 +157,6 @@ namespace BloogBot.AI.SharedStates
                             }
                         }
                     }
-
                     // Reset WP checking values
                     player.DeathsAtWp = 0;
                     player.WpStuckCount = 0;
@@ -185,7 +179,7 @@ namespace BloogBot.AI.SharedStates
             botStates.Push(new MoveToHotspotWaypointState(botStates, container, waypoint));
         }
 
-        public List<int> ForcedWpPathViaBFS(int startId, int lastEndId = 0)
+        public List<int> ForcedWpPathViaBFS(int startId)
         {
             var hotspot = container.GetCurrentHotspot();
             var visited = new HashSet<int>();
@@ -199,45 +193,30 @@ namespace BloogBot.AI.SharedStates
                 var currentId = currentPath[currentPath.Count - 1]; // Get the last element
                 var currentWaypoint = hotspot.Waypoints.Where(x => x.ID == currentId).FirstOrDefault();
 
-                if (lastEndId != 0)
+                if (currentWaypoint.MaxLevel > player.Level && currentWaypoint.MinLevel <= player.Level)
                 {
-                    // Find new path to new zone
-                    var lastEndWp = hotspot.Waypoints.Where(x => x.ID == lastEndId).FirstOrDefault();
-                    if (currentWaypoint.Zone == lastEndWp.Zone && 
-                        currentWaypoint.DistanceTo(lastEndWp) > (player.Position.DistanceTo(lastEndWp) + 10f))
-                    {
-                        Console.WriteLine("Found new path to new Zone! End WP: " + currentWaypoint.ToStringFull() + ", distance: " + currentWaypoint.DistanceTo(lastEndWp) + "\n");
-                        return currentPath;
-                    }
+                    Console.WriteLine("Found new WP matching player level: " + currentWaypoint.ToStringFull() + "\n");
+                    return currentPath;
                 }
-                // If endId is set to 0, look for a fresh path to new zone
-                else
+                // Player could be above all WP maxlevels,so make an exception
+                // for those players so that they can move through the zones.
+                // Hotspot 1-4 are Azeroth WPs, 5 is Outland, 6 is Northrend
+                else if (currentWaypoint.Zone != player.CurrZone && ((hotspot.Id < 5 && player.Level >= 60)
+                    || (hotspot.Id == 5 && player.Level >= 70) || (hotspot.Id == 6 && player.Level >= 80)))
                 {
-                    if (currentWaypoint.MaxLevel > player.Level && currentWaypoint.MinLevel <= player.Level)
+                    // Try to visit new zones
+                    bool currWpIsNewZone = true;
+                    foreach (int visitedWpId in player.VisitedWps)
                     {
-                        Console.WriteLine("Found new WP matching player level: " + currentWaypoint.ToStringFull() + "\n");
-                        return currentPath;
+                        var visitedWp = hotspot.Waypoints.Where(x => x.ID == visitedWpId).FirstOrDefault();
+                        if (visitedWp.Zone == currentWaypoint.Zone)
+                            currWpIsNewZone = false;
                     }
-                    // Player could be above all WP maxlevels,so make an exception
-                    // for those players so that they can move through the zones.
-                    // Hotspot 1-4 are Azeroth WPs, 5 is Outland, 6 is Northrend
-                    else if (currentWaypoint.Zone != player.CurrZone && ((hotspot.Id < 5 && player.Level >= 60)
-                        || (hotspot.Id == 5 && player.Level >= 70) || (hotspot.Id == 6 && player.Level >= 80)))
-                    {
-                        // Try to visit new zones
-                        bool currWpIsNewZone = true;
-                        foreach (int visitedWpId in player.VisitedWps)
-                        {
-                            var visitedWp = hotspot.Waypoints.Where(x => x.ID == visitedWpId).FirstOrDefault();
-                            if (visitedWp.Zone == currentWaypoint.Zone)
-                                currWpIsNewZone = false;
-                        }
 
-                        if (currWpIsNewZone)
-                        {
-                            Console.WriteLine("Found new WP matching player level (> hotspot maxlevel): " + currentWaypoint.ToStringFull() + "\n");
-                            return currentPath;
-                        }
+                    if (currWpIsNewZone)
+                    {
+                        Console.WriteLine("Found new WP matching player level (> hotspot maxlevel): " + currentWaypoint.ToStringFull() + "\n");
+                        return currentPath;
                     }
                 }
 
@@ -254,7 +233,7 @@ namespace BloogBot.AI.SharedStates
                     foreach (var linkWp in linkSplit)
                     {
                         int linkId = Int32.Parse(linkWp);
-                        if (!visited.Contains(linkId) && !blacklistedWPs.Contains(linkId) && linkId != lastEndId)
+                        if (!visited.Contains(linkId) && !player.BlackListedWps.Contains(linkId))
                         {
                             var newPath = new List<int>(currentPath);
                             newPath.Add(linkId);

@@ -571,7 +571,9 @@ namespace BloogBot.Game.Objects
         {
             return m_VisitedWps.Contains(id);
         }
-
         public HashSet<int> VisitedWps { get { return m_VisitedWps; } set { m_VisitedWps = value; } }
+
+        private static HashSet<int> m_BlackListedWps = new HashSet<int> { 1466, 1438, 1444, 1445, 1364, 1369, 1426, 1100, 993, 1359, 1614 };
+        public HashSet<int> BlackListedWps { get { return m_BlackListedWps; } set { m_BlackListedWps = value; } }
     }
 }

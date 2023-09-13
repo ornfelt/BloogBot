@@ -78,7 +78,7 @@ namespace BloogBot.AI.SharedStates
                 }
 
                 var hotspot = container.GetCurrentHotspot();
-                // TODO? pick wp that is somewhere central that won't require advanced mountain climbing
+                // TODO? if stuck for a long time, get nearest WP and trace back to CurrWp and then go to corpse
                 var nearestWp = container
                     .Hotspots
                     .Where(h => h != null)

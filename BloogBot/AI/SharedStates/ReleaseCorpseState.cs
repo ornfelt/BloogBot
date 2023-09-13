@@ -1,4 +1,5 @@
 ﻿using BloogBot.Game;
+using System;
 using System.Collections.Generic;
 
 namespace BloogBot.AI.SharedStates
@@ -25,6 +26,11 @@ namespace BloogBot.AI.SharedStates
                     if (Wait.For("LeaveReleaseCorpseStateDelay", 2000))
                     {
                         botStates.Pop();
+                        if (ObjectManager.Player.DeathsAtWp > 3)
+                        {
+                            Console.WriteLine("Forcing teleport to WP after release due to deathcount");
+                            ObjectManager.Player.LuaCall($"SendChatMessage('.npcb wp go {ObjectManager.Player.CurrWpId}')");
+                        }
                         return;
                     }
                 }

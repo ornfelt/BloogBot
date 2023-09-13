@@ -1,6 +1,7 @@
 ﻿using BloogBot.AI;
 using BloogBot.Game;
 using BloogBot.Game.Objects;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -75,12 +76,6 @@ namespace FrostMageBot
                 Thread.Sleep(200);
                 return;
             }
-            //else if (player.ManaPercent < 20 && drinkItem == null)
-            //{
-            //    // Is this needed?
-            //    botStates.Pop();
-            //    botStates.Push(new ConjureItemsState(botStates, container));
-            //}
 
             if (foodItem != null && !player.IsEating && player.HealthPercent < 80)
                 foodItem.Use();

@@ -65,6 +65,8 @@ namespace BloogBot.Game
 
         static public bool IsLoggedIn => Functions.GetPlayerGuid() > 0;
 
+        static public bool IsGrouped => GetPartyMembers().Count() > 0;
+
         static public string ZoneText
         {
             // this is weird and throws an exception right after entering world,

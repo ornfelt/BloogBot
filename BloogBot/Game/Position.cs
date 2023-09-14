@@ -102,7 +102,7 @@ namespace BloogBot.Game
         };
         private static string GetZoneName(Position position)
         {
-            return ZoneIdNameDict.ContainsKey(position.ID) ? ZoneIdNameDict[position.ID] : "Unknown Zone";
+            return ZoneIdNameDict.ContainsKey(Int32.Parse(position.Zone)) ? ZoneIdNameDict[position.ID] : "Unknown Zone";
         }
     }
 }

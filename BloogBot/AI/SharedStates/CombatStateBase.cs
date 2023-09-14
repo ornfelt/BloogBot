@@ -60,6 +60,7 @@ namespace BloogBot.AI.SharedStates
 
                 Console.WriteLine($"Forcing teleport to linked WP: {linkWp.ID} after release due to deathcount > 2");
                 player.LuaCall($"SendChatMessage('.npcb wp go {linkWp.ID}', 'GUILD', nil)");
+                player.DeathsAtWp = 0;
             }
 
             // melee classes occasionally end up in a weird state where they are too close to hit the mob,

@@ -40,7 +40,7 @@ namespace BloogBot.AI.SharedStates
             }
 
             if (stuckHelper.CheckIfStuck())
-                stuckCount++;
+                Console.WriteLine("stuckCount in MovetoCorpseState: " + stuckCount++);
 
             if (player.Position.DistanceTo2D(player.CorpsePosition) < 3)
             {
@@ -52,6 +52,7 @@ namespace BloogBot.AI.SharedStates
 
             if (HasReachedWpCloseToCorpse())
             {
+                player.StopAllMovement();
                 var nextWaypoint = Navigation.GetNextWaypoint(ObjectManager.MapId, player.Position, player.CorpsePosition, false);
 
                 if (player.Position.Z - nextWaypoint.Z > 5)
@@ -87,11 +88,11 @@ namespace BloogBot.AI.SharedStates
             var currWp = player.CurrWpId == 0 ? waypoint : hotspot.Waypoints.Where(x => x.ID == player.CurrWpId).FirstOrDefault();
 
             // This should return true if last WP in forcedwppath is reached (WP close to corpse)
-            if (player.Position.DistanceTo(wpCloseToCorpse) < 3)
+            if (player.Position.DistanceTo(wpCloseToCorpse) < 10)
                 return true;
 
             //if (player.ForcedWpPath.Count == 0 || player.WpStuckCount > 10)
-            if (player.ForcedWpPath.Count == 0)
+            if (player.ForcedWpPath.Count == 0 && currWp != wpCloseToCorpse)
             {
                 player.ForcedWpPath = ForcedWpPathToCorpse(waypoint.ID, wpCloseToCorpse.ID);
                 foreach (var wpInPath in player.ForcedWpPath)
@@ -100,14 +101,12 @@ namespace BloogBot.AI.SharedStates
             else if (player.Position.DistanceTo(currWp) < 3)
             {
                 // Set new WP
-                Console.WriteLine($"WP: {currWp.ID} reached. selecting new WP...");
-                waypoint = hotspot.Waypoints.Where(x => x.ID == player.ForcedWpPath.First()).FirstOrDefault();
+                currWp = hotspot.Waypoints.Where(x => x.ID == player.ForcedWpPath.First()).FirstOrDefault();
                 player.ForcedWpPath.Remove(player.ForcedWpPath.First());
             }
 
-            player.CurrWpId = waypoint.ID;
-            player.MoveToward(waypoint);
-            Console.WriteLine("Selected waypoint: " + waypoint.ToStringFull());
+            player.CurrWpId = currWp.ID;
+            player.MoveToward(currWp);
             return false;
         }
         

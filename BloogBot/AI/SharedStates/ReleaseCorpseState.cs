@@ -45,6 +45,7 @@ namespace BloogBot.AI.SharedStates
                             Console.WriteLine($"Forcing teleport to linked WP: {linkWp.ID} after release due to deathcount > 2");
                             ObjectManager.Player.LuaCall($"SendChatMessage('.npcb wp go {linkWp.ID}')");
                         }
+                        player.WpStuckCount = 0;
                         botStates.Pop();
                         return;
                     }

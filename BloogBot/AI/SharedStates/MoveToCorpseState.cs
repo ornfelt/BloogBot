@@ -100,12 +100,14 @@ namespace BloogBot.AI.SharedStates
             else if (player.Position.DistanceTo(currWp) < 3)
             {
                 // Set new WP
+                Console.WriteLine($"WP: {currWp.ID} reached. selecting new WP...");
                 waypoint = hotspot.Waypoints.Where(x => x.ID == player.ForcedWpPath.First()).FirstOrDefault();
                 player.ForcedWpPath.Remove(player.ForcedWpPath.First());
             }
 
             player.CurrWpId = waypoint.ID;
             player.MoveToward(waypoint);
+            Console.WriteLine("Selected waypoint: " + waypoint.ToStringFull());
             return false;
         }
         
@@ -125,10 +127,7 @@ namespace BloogBot.AI.SharedStates
 
                 // CurrWP should be close enough to corpse - return WP-based path to it
                 if (currentId == endId)
-                {
-                    Console.WriteLine("Found path to wp close to corpse!");
                     return currentPath;
-                }
 
                 // Search and enqueue links
                 if (!visited.Contains(currentId))

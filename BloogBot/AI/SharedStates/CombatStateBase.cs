@@ -46,6 +46,22 @@ namespace BloogBot.AI.SharedStates
 
         public bool Update()
         {
+            if (player.DeathsAtWp > 2 && player.CurrWpId != 0)
+            {
+                // Select new waypoint based on links
+                var hotspot = container.GetCurrentHotspot();
+                var waypoint = hotspot.Waypoints.Where(x => x.ID == player.CurrWpId).FirstOrDefault();
+                string wpLinks = waypoint.Links.Replace(":0", "");
+                if (wpLinks.EndsWith(" "))
+                    wpLinks = wpLinks.Remove(wpLinks.Length - 1);
+                string[] linkSplit = wpLinks.Split(' ');
+                int randLink = random.Next() % linkSplit.Length;
+                var linkWp = hotspot.Waypoints.Where(x => x.ID == Int32.Parse(linkSplit[randLink])).FirstOrDefault();
+
+                Console.WriteLine($"Forcing teleport to linked WP: {linkWp.ID} after release due to deathcount > 2");
+                player.LuaCall($"SendChatMessage('.npcb wp go {linkWp.ID}', 'GUILD', nil)");
+            }
+
             // melee classes occasionally end up in a weird state where they are too close to hit the mob,
             // so we backpedal a bit to correct the position
             if (backpedaling && Environment.TickCount - backpedalStartTime > 500)

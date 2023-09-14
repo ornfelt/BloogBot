@@ -39,69 +39,113 @@ namespace BloogBot.AI.SharedStates
                 initialized = true;
             }
 
-            if (stuckCount == 10)
-            {
-                if (!stuckWalkAround)
-                {
-                    Console.WriteLine("Stuck in MoveToCorpseState. Trying to find a walkaround...");
-                    stuckWalkAround = true;
-                }
-                DiscordClientWrapper.SendMessage($"{player.Name} is stuck in the MoveToCorpseState. Stopping.");
-                // Might get stuck when moving towards safeWPs
-                stuckHelper.CheckIfStuck();
-
-                var hotspot = container.GetCurrentHotspot();
-                // TODO? First try to generate path based on WP...
-                // Use stucktimer and movetocorpsepos as well...
-                var nearestWp = container
-                    .Hotspots
-                    .Where(h => h != null)
-                    .SelectMany(h => h.Waypoints)
-                    .OrderBy(w => player.Position.DistanceTo(w))
-                    .FirstOrDefault();
-                    player.MoveToward(nearestWp);
-
-                    if (player.Position.DistanceTo2D(nearestWp) < 5)
-                    {
-                        stuckWalkAround = false;
-                        stuckCount = 0;
-                    }
-
-                //while (botStates.Count > 0)
-                //    botStates.Pop();
-
-                if (stuckWalkAround)
-                    return;
-            }
-
             if (stuckHelper.CheckIfStuck())
                 stuckCount++;
 
             if (player.Position.DistanceTo2D(player.CorpsePosition) < 3)
             {
+                player.ForcedWpPath = new List<int>();
                 player.StopAllMovement();
                 botStates.Pop();
                 return;
             }
 
-            var nextWaypoint = Navigation.GetNextWaypoint(ObjectManager.MapId, player.Position, player.CorpsePosition, false);
-
-            if (player.Position.Z - nextWaypoint.Z > 5)
-                walkingOnWater = true;
-
-            if (walkingOnWater)
+            if (!HasReachedWpCloseToCorpse())
             {
-                if (!player.IsMoving)
-                    player.StartMovement(ControlBits.Front);
+                var nextWaypoint = Navigation.GetNextWaypoint(ObjectManager.MapId, player.Position, player.CorpsePosition, false);
 
-                if (player.Position.Z - nextWaypoint.Z < .05)
+                if (player.Position.Z - nextWaypoint.Z > 5)
+                    walkingOnWater = true;
+
+                if (walkingOnWater)
                 {
-                    walkingOnWater = false;
-                    player.StopMovement(ControlBits.Front);
+                    if (!player.IsMoving)
+                        player.StartMovement(ControlBits.Front);
+
+                    if (player.Position.Z - nextWaypoint.Z < .05)
+                    {
+                        walkingOnWater = false;
+                        player.StopMovement(ControlBits.Front);
+                    }
+                }
+                else
+                    player.MoveToward(nextWaypoint);
+            }
+
+            // Force teleport to corpse pos
+            if (stuckCount > 30)
+                player.LuaCall($"SendChatMessage('.go xyz {player.CorpsePosition.X} {player.CorpsePosition.Y} {player.CorpsePosition.Z}', 'GUILD', nil)");
+        }
+
+        // Try to move to corpse with a path based on WPs
+        public bool HasReachedWpCloseToCorpse()
+        {
+            var hotspot = container.GetCurrentHotspot();
+            var zoneWaypoints = hotspot.Waypoints.Where(x => x.Zone == player.CurrZone);
+            var nearestWps = zoneWaypoints.OrderBy(w => player.Position.DistanceTo(w));
+            var waypoint = nearestWps.FirstOrDefault();
+            var currWp = hotspot.Waypoints.Where(x => x.ID == player.CurrWpId).FirstOrDefault();
+
+            // This should return true if last WP in forcedwppath is reached (WP close to corpse)
+            if (player.ForcedWpPath.Count == 0 && player.Position.DistanceTo(currWp) < 3)
+                return true;
+
+            //if (player.ForcedWpPath.Count == 0 || player.WpStuckCount > 10)
+            if (player.ForcedWpPath.Count == 0)
+                player.ForcedWpPath = ForcedWpPathToCorpse(waypoint.ID, player.CurrWpId);
+            else if (player.Position.DistanceTo(currWp) < 3)
+            {
+                // Set new WP
+                waypoint = hotspot.Waypoints.Where(x => x.ID == player.ForcedWpPath.First()).FirstOrDefault();
+                player.ForcedWpPath.Remove(player.ForcedWpPath.First());
+                player.CurrWpId = waypoint.ID;
+            }
+
+            player.MoveToward(waypoint);
+            return false;
+        }
+        
+        public List<int> ForcedWpPathToCorpse(int startId, int endId)
+        {
+            var hotspot = container.GetCurrentHotspot();
+            var visited = new HashSet<int>();
+            var queue = new Queue<List<int>>();
+            queue.Enqueue(new List<int> { startId });
+            List<int> currentPath = null;
+
+            while (queue.Count > 0)
+            {
+                currentPath = queue.Dequeue();
+                var currentId = currentPath[currentPath.Count - 1]; // Get the last element
+                var currentWaypoint = hotspot.Waypoints.Where(x => x.ID == currentId).FirstOrDefault();
+
+                // CurrWP should be close enough to corpse - return WP-based path to it
+                if (currentId == endId)
+                    return currentPath;
+
+                // Search and enqueue links
+                if (!visited.Contains(currentId))
+                {
+                    visited.Add(currentId);
+
+                    string wpLinks = currentWaypoint.Links.Replace(":0", "");
+                    if (wpLinks.EndsWith(" "))
+                        wpLinks = wpLinks.Remove(wpLinks.Length - 1);
+                    string[] linkSplit = wpLinks.Split(' ');
+
+                    foreach (var linkWp in linkSplit)
+                    {
+                        int linkId = Int32.Parse(linkWp);
+                        if (!visited.Contains(linkId) && !player.BlackListedWps.Contains(linkId))
+                        {
+                            var newPath = new List<int>(currentPath);
+                            newPath.Add(linkId);
+                            queue.Enqueue(newPath);
+                        }
+                    }
                 }
             }
-            else
-                player.MoveToward(nextWaypoint);
+            return currentPath; // Return last currentPath set or null
         }
     }
 }

@@ -205,16 +205,13 @@ namespace BloogBot.AI
                             retrievingCorpse = false;
                         }
 
-                        // if the player has been stuck in the same state for more than 7 minutes
-                        if (Environment.TickCount - currentStateStartTime > 420000 && currentState != typeof(TravelState) && container.BotSettings.UseStuckInStateKillswitch)
+                        // if the player has been stuck in the same state for more than 5 minutes
+                        if (Environment.TickCount - currentStateStartTime > 300000 && currentState != typeof(TravelState) && container.BotSettings.UseStuckInStateKillswitch)
                         {
-                            // Force teleport to current WP
-                            Console.WriteLine($"Forcing teleport to WP: {player.CurrWpId}");
-                            player.LuaCall($"SendChatMessage('.npcb wp go {player.CurrWpId}')");
-                            //var msg = $"Hey, it's {player.Name}, and I need help! I've been stuck in the {currentState.Name} for over 5 minutes. I'm stopping for now.";
-                            //LogToFile(msg);
-                            //DiscordClientWrapper.SendMessage(msg);
-                            //Stop();
+                            var msg = $"Hey, it's {player.Name}, and I need help! I've been stuck in the {currentState.Name} for over 5 minutes. I'm stopping for now.";
+                            LogToFile(msg);
+                            DiscordClientWrapper.SendMessage(msg);
+                            Stop();
                             return;
                         }
                         if (botStates.Peek().GetType() != currentState)
@@ -223,16 +220,13 @@ namespace BloogBot.AI
                             currentStateStartTime = Environment.TickCount;
                         }
 
-                        // if the player has been stuck in the same position for more than 7 minutes
-                        if (Environment.TickCount - currentPositionStartTime >  420000 && container.BotSettings.UseStuckInPositionKillswitch)
+                        // if the player has been stuck in the same position for more than 5 minutes
+                        if (Environment.TickCount - currentPositionStartTime > 300000 && container.BotSettings.UseStuckInPositionKillswitch)
                         {
-                            // Force teleport to current WP
-                            Console.WriteLine($"Forcing teleport to WP: {player.CurrWpId}");
-                            player.LuaCall($"SendChatMessage('.npcb wp go {player.CurrWpId}')");
-                            //var msg = $"Hey, it's {player.Name}, and I need help! I've been stuck in the same position for over 5 minutes. I'm stopping for now.";
-                            //LogToFile(msg);
-                            //DiscordClientWrapper.SendMessage(msg);
-                            //Stop();
+                            var msg = $"Hey, it's {player.Name}, and I need help! I've been stuck in the same position for over 5 minutes. I'm stopping for now.";
+                            LogToFile(msg);
+                            DiscordClientWrapper.SendMessage(msg);
+                            Stop();
                             return;
                         }
                         if (player.Position.DistanceTo(currentPosition) > 10)
@@ -369,14 +363,16 @@ namespace BloogBot.AI
                             botStates.Push(new StuckState(botStates, container));
                         }
 
-                        // if the player has been stuck in the same state for more than 5 minutes
-                        if (Environment.TickCount - currentStateStartTime > 300000 && currentState != typeof(TravelState) && container.BotSettings.UseStuckInStateKillswitch)
+                        // if the player has been stuck in the same state for more than 7 minutes
+                        if (Environment.TickCount - currentStateStartTime > 420000 && currentState != typeof(TravelState) && container.BotSettings.UseStuckInStateKillswitch)
                         {
-                            var msg = $"Hey, it's {player.Name}, and I need help! I've been stuck in the {currentState.Name} for over 5 minutes. I'm stopping for now.";
+                            // Force teleport to current WP
+                            Console.WriteLine($"Forcing teleport to WP: {player.CurrWpId}");
+                            player.LuaCall($"SendChatMessage('.npcb wp go {player.CurrWpId}')");
+                            //var msg = $"Hey, it's {player.Name}, and I need help! I've been stuck in the {currentState.Name} for over 5 minutes. I'm stopping for now.";
                             //LogToFile(msg);
                             //DiscordClientWrapper.SendMessage(msg);
-                            Stop();
-                            Console.WriteLine($"Stopping bot due to being stuck in {currentState.Name}");
+                            //Stop();
                             return;
                         }
                         if (botStates.Peek().GetType() != currentState)
@@ -385,14 +381,16 @@ namespace BloogBot.AI
                             currentStateStartTime = Environment.TickCount;
                         }
 
-                        // if the player has been stuck in the same position for more than 5 minutes
-                        if (Environment.TickCount - currentPositionStartTime > 300000 && container.BotSettings.UseStuckInPositionKillswitch)
+                        // if the player has been stuck in the same position for more than 7 minutes
+                        if (Environment.TickCount - currentPositionStartTime >  420000 && container.BotSettings.UseStuckInPositionKillswitch)
                         {
-                            var msg = $"Hey, it's {player.Name}, and I need help! I've been stuck in the same position for over 5 minutes. I'm stopping for now.";
+                            // Force teleport to current WP
+                            Console.WriteLine($"Forcing teleport to WP: {player.CurrWpId}");
+                            player.LuaCall($"SendChatMessage('.npcb wp go {player.CurrWpId}')");
+                            //var msg = $"Hey, it's {player.Name}, and I need help! I've been stuck in the same position for over 5 minutes. I'm stopping for now.";
                             //LogToFile(msg);
                             //DiscordClientWrapper.SendMessage(msg);
-                            Stop();
-                            Console.WriteLine($"Stopping bot due to being stuck in {currentState.Name} for over 5 minutes");
+                            //Stop();
                             return;
                         }
                         if (player.Position.DistanceTo(currentPosition) > 10)
@@ -406,6 +404,7 @@ namespace BloogBot.AI
                         {
                             player.DeathsAtWp++;
                             Console.WriteLine($"Player died. DeathsAtWp: {player.DeathsAtWp}");
+                            player.ForcedWpPath = new List<int>();
                             //Console.WriteLine($"mainhandDurability: {Inventory.GetEquippedItem(EquipSlot.MainHand)?.DurabilityPercentage ?? 100}");
                             //Console.WriteLine($"offhandDurability: {Inventory.GetEquippedItem(EquipSlot.Ranged)?.DurabilityPercentage ?? 100}");
                             PopStackToBaseState();

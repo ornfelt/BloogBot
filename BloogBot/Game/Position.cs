@@ -83,7 +83,7 @@ namespace BloogBot.Game
         public XYZ ToXYZ() => new XYZ(X, Y, Z);
         
         public override string ToString() => $"X: {Math.Round(X, 2)}, Y: {Math.Round(Y, 2)}, Z: {Math.Round(Z, 2)}";
-        public string ToStringFull() => $"ID: {ID}, Zone: {GetZoneName(this)} ({Zone}), MinLevel: {MinLevel}, MaxLevel: {MaxLevel}, X: {Math.Round(X, 2)}, Y: {Math.Round(Y, 2)}, Z: {Math.Round(Z, 2)}, Links: {Links}";
+        public string ToStringFull() => $"ID: {ID}, Zone: {GetZoneName(Int32.Parse(Zone))} ({Zone}), MinLevel: {MinLevel}, MaxLevel: {MaxLevel}, X: {Math.Round(X, 2)}, Y: {Math.Round(Y, 2)}, Z: {Math.Round(Z, 2)}, Links: {Links}";
 
         private static readonly Dictionary<int, string> ZoneIdNameDict = new Dictionary<int, string>
         {
@@ -100,9 +100,9 @@ namespace BloogBot.Game
             {46, "Burning Steppes"}, {47, "The Hinterlands"}, {51, "Searing Gorge"}, {85, "Tirisfal Glades"},
             {130, "Silverpine Forest"}, {139, "Eastern Plaguelands"}, {267, "Hillsbrad Foothills"}
         };
-        private static string GetZoneName(Position position)
+        private static string GetZoneName(int zone)
         {
-            return ZoneIdNameDict.ContainsKey(Int32.Parse(position.Zone)) ? ZoneIdNameDict[position.ID] : "Unknown Zone";
+            return ZoneIdNameDict.ContainsKey(zone) ? ZoneIdNameDict[zone] : "Unknown Zone";
         }
     }
 }

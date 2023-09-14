@@ -59,7 +59,7 @@ namespace BloogBot.AI.SharedStates
                 var linkWp = hotspot.Waypoints.Where(x => x.ID == Int32.Parse(linkSplit[randLink])).FirstOrDefault();
 
                 Console.WriteLine($"Forcing teleport to linked WP: {linkWp.ID} after release due to deathcount > 2");
-                player.LuaCall($"SendChatMessage('.npcb wp go {linkWp.ID}', 'GUILD', nil)");
+                player.LuaCall($"SendChatMessage('.npcb wp go {linkWp.ID}')");
                 player.DeathsAtWp = 0;
             }
 

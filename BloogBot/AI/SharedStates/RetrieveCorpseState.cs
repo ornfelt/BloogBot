@@ -63,8 +63,7 @@ namespace BloogBot.AI.SharedStates
                     }
 
                     // Reslocations are > 300 so the threat search takes a long time to execute
-                    //Console.WriteLine("Reslocations: " + resLocs.Length);
-                    //Console.WriteLine("player.DeathsAtWp: " + player.DeathsAtWp);
+                    Console.WriteLine("Reslocations: " + resLocs.Length);
                     var maxDistance = 0f;
                     foreach (var resLoc in resLocs)
                     {

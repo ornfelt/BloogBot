@@ -19,7 +19,7 @@ namespace BloogBot.AI.SharedStates
 
         bool initialized;
 
-        bool stuckWalkAround;
+        private static bool s_HasReachedWpCloseToCorpse;
         static readonly Random random = new Random();
         
         public MoveToCorpseState(Stack<IBotState> botStates, IDependencyContainer container)
@@ -28,7 +28,7 @@ namespace BloogBot.AI.SharedStates
             this.container = container;
             player = ObjectManager.Player;
             stuckHelper = new StuckHelper(botStates, container);
-            stuckWalkAround = false;
+            s_HasReachedWpCloseToCorpse= false;
         }
 
         public void Update()
@@ -50,9 +50,10 @@ namespace BloogBot.AI.SharedStates
                 return;
             }
 
-            if (HasReachedWpCloseToCorpse())
+            if (!s_HasReachedWpCloseToCorpse)
+                s_HasReachedWpCloseToCorpse =HasReachedWpCloseToCorpse();
+            else
             {
-                player.StopAllMovement();
                 var nextWaypoint = Navigation.GetNextWaypoint(ObjectManager.MapId, player.Position, player.CorpsePosition, false);
 
                 if (player.Position.Z - nextWaypoint.Z > 5)
@@ -74,7 +75,7 @@ namespace BloogBot.AI.SharedStates
             }
 
             // Force teleport to corpse pos
-            if (stuckCount > 30)
+            if (stuckCount > 40)
                 player.LuaCall($"SendChatMessage('.go xyz {player.CorpsePosition.X} {player.CorpsePosition.Y} {player.CorpsePosition.Z}', 'GUILD', nil)");
         }
 
@@ -87,14 +88,15 @@ namespace BloogBot.AI.SharedStates
             var waypoint = nearestWps.FirstOrDefault();
             var currWp = player.CurrWpId == 0 ? waypoint : hotspot.Waypoints.Where(x => x.ID == player.CurrWpId).FirstOrDefault();
 
-            // This should return true if last WP in forcedwppath is reached (WP close to corpse)
-            if (player.Position.DistanceTo(wpCloseToCorpse) < 10)
+            // This should return true if last WP in forcedwppath is reached (WP close to corpse), or stuckCount > 20, or close to corpse
+            if (player.Position.DistanceTo(wpCloseToCorpse) < 10 || stuckCount > 20
+                || player.Position.DistanceTo2D(player.CorpsePosition) < 5)
                 return true;
 
-            //if (player.ForcedWpPath.Count == 0 || player.WpStuckCount > 10)
             if (player.ForcedWpPath.Count == 0 && currWp != wpCloseToCorpse)
             {
                 player.ForcedWpPath = ForcedWpPathToCorpse(waypoint.ID, wpCloseToCorpse.ID);
+                Console.WriteLine("New WP path (to corpse):");
                 foreach (var wpInPath in player.ForcedWpPath)
                     Console.Write(wpInPath != player.ForcedWpPath[player.ForcedWpPath.Count - 1] ? wpInPath + " -> " : wpInPath + "\n\n");
             }

@@ -117,6 +117,7 @@ namespace BloogBot.AI.SharedStates
                                 // Remove first value since it's the same as the currently reached WP
                                 if (player.ForcedWpPath.First() == waypoint.ID) player.ForcedWpPath.Remove(player.ForcedWpPath.First());
                             }
+                            Console.WriteLine("New WP path:");
                             foreach (var wpInPath in player.ForcedWpPath)
                                 Console.Write(wpInPath != player.ForcedWpPath[player.ForcedWpPath.Count-1] ? wpInPath + " -> " : wpInPath + "\n\n");
                         }

@@ -29,6 +29,7 @@ namespace BloogBot.AI.SharedStates
             player = ObjectManager.Player;
             stuckHelper = new StuckHelper(botStates, container);
             s_HasReachedWpCloseToCorpse= false;
+            stuckCount = 0;
         }
 
         public void Update()
@@ -51,7 +52,7 @@ namespace BloogBot.AI.SharedStates
             }
 
             if (!s_HasReachedWpCloseToCorpse)
-                s_HasReachedWpCloseToCorpse =HasReachedWpCloseToCorpse();
+                s_HasReachedWpCloseToCorpse = HasReachedWpCloseToCorpse();
             else
             {
                 var nextWaypoint = Navigation.GetNextWaypoint(ObjectManager.MapId, player.Position, player.CorpsePosition, false);
@@ -76,7 +77,9 @@ namespace BloogBot.AI.SharedStates
 
             // Force teleport to corpse pos
             if (stuckCount > 40)
-                player.LuaCall($"SendChatMessage('.go xyz {player.CorpsePosition.X} {player.CorpsePosition.Y} {player.CorpsePosition.Z}', 'GUILD', nil)");
+                player.LuaCall($"SendChatMessage('.go xyz {player.CorpsePosition.X.ToString().Replace(',', '.')}" +
+                    $" {player.CorpsePosition.Y.ToString().Replace(',', '.')}" +
+                    $" {player.CorpsePosition.Z.ToString().Replace(',', '.')}', 'GUILD', nil)");
         }
 
         // Try to move to corpse with a path based on WPs
@@ -89,8 +92,8 @@ namespace BloogBot.AI.SharedStates
             var currWp = player.CurrWpId == 0 ? waypoint : hotspot.Waypoints.Where(x => x.ID == player.CurrWpId).FirstOrDefault();
 
             // This should return true if last WP in forcedwppath is reached (WP close to corpse), or stuckCount > 20, or close to corpse
-            if (player.Position.DistanceTo(wpCloseToCorpse) < 10 || stuckCount > 20
-                || player.Position.DistanceTo2D(player.CorpsePosition) < 5)
+            if (player.Position.DistanceTo(wpCloseToCorpse) < 20 || stuckCount > 20
+                || player.Position.DistanceTo2D(player.CorpsePosition) < 20)
                 return true;
 
             if (player.ForcedWpPath.Count == 0 && currWp != wpCloseToCorpse)

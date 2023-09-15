@@ -369,6 +369,9 @@ namespace BloogBot.AI
                             // Force teleport to current WP
                             Console.WriteLine($"Forcing teleport to WP: {player.CurrWpId}");
                             player.LuaCall($"SendChatMessage('.npcb wp go {player.CurrWpId}')");
+                            botStates.Pop();
+                            botStates.Push(new GrindState(botStates, container));
+
                             //var msg = $"Hey, it's {player.Name}, and I need help! I've been stuck in the {currentState.Name} for over 5 minutes. I'm stopping for now.";
                             //LogToFile(msg);
                             //DiscordClientWrapper.SendMessage(msg);
@@ -387,6 +390,9 @@ namespace BloogBot.AI
                             // Force teleport to current WP
                             Console.WriteLine($"Forcing teleport to WP: {player.CurrWpId}");
                             player.LuaCall($"SendChatMessage('.npcb wp go {player.CurrWpId}')");
+                            botStates.Pop();
+                            botStates.Push(new GrindState(botStates, container));
+
                             //var msg = $"Hey, it's {player.Name}, and I need help! I've been stuck in the same position for over 5 minutes. I'm stopping for now.";
                             //LogToFile(msg);
                             //DiscordClientWrapper.SendMessage(msg);

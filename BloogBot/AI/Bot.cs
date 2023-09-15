@@ -373,7 +373,7 @@ namespace BloogBot.AI
                             //LogToFile(msg);
                             //DiscordClientWrapper.SendMessage(msg);
                             //Stop();
-                            return;
+                            //return;
                         }
                         if (botStates.Peek().GetType() != currentState)
                         {
@@ -391,7 +391,7 @@ namespace BloogBot.AI
                             //LogToFile(msg);
                             //DiscordClientWrapper.SendMessage(msg);
                             //Stop();
-                            return;
+                            //return;
                         }
                         if (player.Position.DistanceTo(currentPosition) > 10)
                         {

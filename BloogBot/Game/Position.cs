@@ -104,5 +104,10 @@ namespace BloogBot.Game
         {
             return ZoneIdNameDict.ContainsKey(zone) ? ZoneIdNameDict[zone] : "Unknown Zone";
         }
+
+        public string GetZoneName()
+        {
+            return GetZoneName(Int32.Parse(Zone));
+        }
     }
 }

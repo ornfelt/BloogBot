@@ -96,7 +96,7 @@ namespace BloogBot.AI.SharedStates
                     if (player.Position.DistanceTo(waypoint) < 3.0F)
                     {
                         player.VisitedWps.Add(waypoint.ID);
-                        LogToFile(waypoint.ID + ",");
+                        LogToFile(waypoint.ID + "  (" + waypoint.GetZoneName() + ")");
                         player.LastWpId = waypoint.ID;
                     }
 

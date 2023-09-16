@@ -28,7 +28,7 @@ namespace BloogBot.AI.SharedStates
             this.container = container;
             player = ObjectManager.Player;
             stuckHelper = new StuckHelper(botStates, container);
-            s_HasReachedWpCloseToCorpse= false;
+            s_HasReachedWpCloseToCorpse = false;
             stuckCount = 0;
         }
 

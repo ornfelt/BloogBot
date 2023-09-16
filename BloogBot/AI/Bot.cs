@@ -367,7 +367,7 @@ namespace BloogBot.AI
                         if (Environment.TickCount - currentStateStartTime > 420000 && currentState != typeof(TravelState) && container.BotSettings.UseStuckInStateKillswitch)
                         {
                             // Force teleport to current WP
-                            Console.WriteLine($"1Forcing teleport to WP: {player.CurrWpId}");
+                            Console.WriteLine($"Forcing teleport to WP: {player.CurrWpId} (UseStuckInStateKillswitch)!");
                             player.LuaCall($"SendChatMessage('.npcb wp go {player.CurrWpId}')");
                             botStates.Pop();
                             botStates.Push(new GrindState(botStates, container));
@@ -388,7 +388,7 @@ namespace BloogBot.AI
                         if (Environment.TickCount - currentPositionStartTime >  420000 && container.BotSettings.UseStuckInPositionKillswitch)
                         {
                             // Force teleport to current WP
-                            Console.WriteLine($"2Forcing teleport to WP: {player.CurrWpId}");
+                            Console.WriteLine($"Forcing teleport to WP: {player.CurrWpId} (UseStuckInPositionKillswitch)!");
                             player.LuaCall($"SendChatMessage('.npcb wp go {player.CurrWpId}')");
                             botStates.Pop();
                             botStates.Push(new GrindState(botStates, container));

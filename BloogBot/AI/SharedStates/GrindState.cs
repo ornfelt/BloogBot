@@ -89,7 +89,7 @@ namespace BloogBot.AI.SharedStates
                 // Check if curr waypoint is reached
                 if (player.Position.DistanceTo(waypoint) < 3.0F || player.WpStuckCount > 10)
                 {
-                    Console.WriteLine($"WP: {waypoint.ID} " + (player.WpStuckCount > 10 ? "couldn't be reached" : "reached") + $" (should be the same as nearest WP: {nearestWps.ElementAtOrDefault(0).ID}), selecting new WP...");
+                    Console.WriteLine($"WP: {waypoint.ID} " + (player.WpStuckCount > 10 ? "couldn't be reached" : "reached") + ", selecting new WP...");
                     // Check if player is higher level than waypoint maxlevel
                     player.HasOverLeveled = player.Level >= waypoint.MaxLevel;
 
@@ -110,6 +110,15 @@ namespace BloogBot.AI.SharedStates
                             {
                                 player.BlackListedWps.Add(waypoint.ID);
                                 player.ForcedWpPath = ForcedWpPathViaBFS(player.LastWpId);
+                                // Check if waypoint ID is the same as lastwpid
+                                // which means that the first WP of the new path can't be reached either
+                                // This effectively means that we've arrived at wpStuckCount twice without
+                                // progress. Therefore we force teleport to CurrWp.
+                                if (waypoint.ID == player.LastWpId)
+                                {
+                                    Console.WriteLine($"Forcing teleport to WP due to being stuck in new path: {waypoint.ID}");
+                                    player.LuaCall($"SendChatMessage('.npcb wp go {waypoint.ID}')");
+                                }
                             }
                             else
                             {

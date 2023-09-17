@@ -1,6 +1,7 @@
 ﻿using BloogBot.Game.Enums;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 
 namespace BloogBot.Game.Objects
@@ -477,94 +478,28 @@ namespace BloogBot.Game.Objects
 
         // Keep track of current zone
         private static string m_CurrZone;
-        public string CurrZone 
-        {
-            get
-            {
-                return m_CurrZone;
-            }
-            set
-            {
-                m_CurrZone = value;
-            }
-        }
+        public string CurrZone { get { return m_CurrZone; } set { m_CurrZone = value; } }
+
         // Keep track of current WP
         private static int m_CurrWpId;
-        public int CurrWpId 
-        {
-            get
-            {
-                return m_CurrWpId;
-            }
-            set
-            {
-                m_CurrWpId = value;
-            }
-        }
+        public int CurrWpId { get { return m_CurrWpId; } set { m_CurrWpId = value; } }
+
         // Keep track of last WP visited
         private static int m_LastWpId;
-        public int LastWpId 
-        {
-            get
-            {
-                return m_LastWpId;
-            }
-            set
-            {
-                m_LastWpId = value;
-            }
-        }
+        public int LastWpId { get { return m_LastWpId; } set { m_LastWpId = value; } }
+
         // Keep track of deaths at WP
         private static int m_DeathsAtWp;
-        public int DeathsAtWp
-        {
-            get
-            {
-                return m_DeathsAtWp;
-            }
-            set
-            {
-                m_DeathsAtWp = value;
-            }
-        }
+        public int DeathsAtWp { get { return m_DeathsAtWp; } set { m_DeathsAtWp = value; } }
+
         private static int m_WpStuckCount;
-        public int WpStuckCount
-        {
-            get
-            {
-                return m_WpStuckCount;
-            }
-            set
-            {
-                m_WpStuckCount = value;
-            }
-        }
+        public int WpStuckCount { get { return m_WpStuckCount; } set { m_WpStuckCount = value; } }
 
         private static bool m_HasOverleveled;
-        public bool HasOverLeveled
-        {
-            get
-            {
-                return m_HasOverleveled;
-            }
-            set
-            {
-                m_HasOverleveled = value;
-            }
-        }
+        public bool HasOverLeveled { get { return m_HasOverleveled; } set { m_HasOverleveled = value; } }
 
         private static List<int> m_ForcedWpPath;
-        public List<int> ForcedWpPath
-        {
-            get
-            {
-                return m_ForcedWpPath;
-            }
-            set
-            {
-                m_ForcedWpPath = value;
-            }
-        }
+        public List<int> ForcedWpPath { get { return m_ForcedWpPath; } set { m_ForcedWpPath = value; } }
 
         private static HashSet<int> m_VisitedWps;
         public bool HasVisitedWp(int id)
@@ -573,7 +508,7 @@ namespace BloogBot.Game.Objects
         }
         public HashSet<int> VisitedWps { get { return m_VisitedWps; } set { m_VisitedWps = value; } }
 
-        private static HashSet<int> m_BlackListedWps = new HashSet<int> {168, 993, 1100, 1359, 1364, 1369, 1426, 1438, 1444, 1445, 1456, 1462, 1463, 1464, 1465, 1466, 1614};
+        private static HashSet<int> m_BlackListedWps = new HashSet<int> {35, 168, 993, 1100, 1359, 1364, 1369, 1426, 1438, 1444, 1445, 1456, 1462, 1463, 1464, 1465, 1466, 1614};
         public HashSet<int> BlackListedWps { get { return m_BlackListedWps; } set { m_BlackListedWps = value; } }
     }
 }

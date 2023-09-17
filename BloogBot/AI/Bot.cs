@@ -4,6 +4,7 @@ using BloogBot.Game.Enums;
 using BloogBot.UI;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -16,6 +17,7 @@ namespace BloogBot.AI
     {
         readonly Stack<IBotState> botStates = new Stack<IBotState>();
         readonly Stopwatch stopwatch = new Stopwatch();
+        static readonly Random random = new Random();
 
         bool running;
         bool retrievingCorpse;

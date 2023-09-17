@@ -212,7 +212,7 @@ namespace BloogBot.AI.SharedStates
                     Console.WriteLine("Found new WP matching player level: " + currentWaypoint.ToStringFull() + "\n");
                     return currentPath;
                 }
-                // Player could be above all WP maxlevels,so make an exception
+                // Player could be above all WP maxlevels, so make an exception
                 // for those players so that they can move through the zones.
                 // Hotspot 1-4 are Azeroth WPs, 5 is Outland, 6 is Northrend
                 else if (currentWaypoint.Zone != player.CurrZone && ((hotspot.Id < 5 && player.Level >= 60)

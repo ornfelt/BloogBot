@@ -365,6 +365,7 @@ namespace BloogBot.AI
                             botStates.Push(new StuckState(botStates, container));
                         }
 
+                        var HasBeenForcedToTeleport = false;
                         // if the player has been stuck in the same state for more than 7 minutes
                         if (Environment.TickCount - currentStateStartTime > 420000 && currentState != typeof(TravelState) && container.BotSettings.UseStuckInStateKillswitch)
                         {
@@ -373,6 +374,7 @@ namespace BloogBot.AI
                             player.LuaCall($"SendChatMessage('.npcb wp go {player.CurrWpId}')");
                             botStates.Pop();
                             botStates.Push(new GrindState(botStates, container));
+                            HasBeenForcedToTeleport = true;
 
                             //var msg = $"Hey, it's {player.Name}, and I need help! I've been stuck in the {currentState.Name} for over 5 minutes. I'm stopping for now.";
                             //LogToFile(msg);
@@ -387,7 +389,8 @@ namespace BloogBot.AI
                         }
 
                         // if the player has been stuck in the same position for more than 7 minutes
-                        if (Environment.TickCount - currentPositionStartTime >  420000 && container.BotSettings.UseStuckInPositionKillswitch)
+                        //if (Environment.TickCount - currentPositionStartTime >  420000 && container.BotSettings.UseStuckInPositionKillswitch)
+                        if (!HasBeenForcedToTeleport && Environment.TickCount - currentPositionStartTime >  420000 && container.BotSettings.UseStuckInPositionKillswitch)
                         {
                             // Force teleport to current WP
                             Console.WriteLine($"Forcing teleport to WP: {player.CurrWpId} (UseStuckInPositionKillswitch)!");

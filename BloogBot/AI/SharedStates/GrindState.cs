@@ -121,11 +121,12 @@ namespace BloogBot.AI.SharedStates
                                 {
                                     Console.WriteLine($"Forcing teleport to WP due to being stuck in new path: {waypoint.ID}");
                                     player.LuaCall($"SendChatMessage('.npcb wp go {waypoint.ID}')");
+                                    player.ForcedWpPath = ForcedWpPathViaBFS(waypoint.ID);
                                 }
                                 else
                                 {
                                     player.BlackListedWps.Add(waypoint.ID);
-                                    player.ForcedWpPath = ForcedWpPathViaBFS(player.LastWpId);
+                                    player.ForcedWpPath = ForcedWpPathViaBFS(player.LastWpId == 0 ? waypoint.ID : player.LastWpId);
                                 }
                             }
                             else

@@ -107,21 +107,25 @@ namespace BloogBot.AI.SharedStates
                     // Set new WP based on forced path if player has overleveled
                     if (player.HasOverLeveled)
                     {
-                        if ((player.ForcedWpPath.Count == 0 || player.WpStuckCount > 10) && waypoint.ID != 2141)
+                        if (player.ForcedWpPath.Count == 0 || player.WpStuckCount > 10)
                         {
                             // If stuck on forcedwppath get new forcedwppath to new zone but make sure it's a new path
                             if (player.WpStuckCount > 10)
                             {
-                                player.BlackListedWps.Add(waypoint.ID);
-                                player.ForcedWpPath = ForcedWpPathViaBFS(player.LastWpId);
                                 // Check if waypoint ID is the same as lastwpid
                                 // which means that the first WP of the new path can't be reached either
                                 // This effectively means that we've arrived at wpStuckCount twice without
                                 // progress. Therefore we force teleport to CurrWp.
-                                if (waypoint.ID == player.LastWpId)
+                                // Also force teleport if stuck at WP 2141 (Thousand needles -> Tanaris).
+                                if (waypoint.ID == player.LastWpId || waypoint.ID == 2141)
                                 {
                                     Console.WriteLine($"Forcing teleport to WP due to being stuck in new path: {waypoint.ID}");
                                     player.LuaCall($"SendChatMessage('.npcb wp go {waypoint.ID}')");
+                                }
+                                else
+                                {
+                                    player.BlackListedWps.Add(waypoint.ID);
+                                    player.ForcedWpPath = ForcedWpPathViaBFS(player.LastWpId);
                                 }
                             }
                             else

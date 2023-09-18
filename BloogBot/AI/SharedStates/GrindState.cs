@@ -98,12 +98,16 @@ namespace BloogBot.AI.SharedStates
                         player.VisitedWps.Add(waypoint.ID);
                         LogToFile(waypoint.ID + "  (" + waypoint.GetZoneName() + ")");
                         player.LastWpId = waypoint.ID;
+
+                        if (player.CurrZone != waypoint.Zone)
+                            Console.WriteLine("Bot arrived at new zone!");
+                        player.CurrZone = waypoint.Zone; // Update current zone
                     }
 
                     // Set new WP based on forced path if player has overleveled
                     if (player.HasOverLeveled)
                     {
-                        if (player.ForcedWpPath.Count == 0 || player.WpStuckCount > 10)
+                        if ((player.ForcedWpPath.Count == 0 || player.WpStuckCount > 10) && waypoint.ID != 2141)
                         {
                             // If stuck on forcedwppath get new forcedwppath to new zone but make sure it's a new path
                             if (player.WpStuckCount > 10)
@@ -183,12 +187,6 @@ namespace BloogBot.AI.SharedStates
             }
 
             player.CurrWpId = waypoint.ID;
-
-            if (player.CurrZone != waypoint.Zone)
-            {
-                player.CurrZone = waypoint.Zone; // Update current zone
-                Console.WriteLine("Bot walking towards new zone!");
-            }
             Console.WriteLine("Selected waypoint: " + waypoint.ToStringFull() + ", HasOverleveled: " + player.HasOverLeveled);
             botStates.Push(new MoveToHotspotWaypointState(botStates, container, waypoint));
         }

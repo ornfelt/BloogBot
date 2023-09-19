@@ -126,6 +126,7 @@ namespace BloogBot.AI.SharedStates
                                 }
                                 else
                                 {
+                                    // TODO: force teleport if no other way to new zone?
                                     player.BlackListedWps.Add(waypoint.ID);
                                     player.ForcedWpPath = ForcedWpPathViaBFS(player.LastWpId);
                                 }

@@ -118,18 +118,23 @@ namespace BloogBot.AI.SharedStates
                                 // This effectively means that we've arrived at wpStuckCount twice without
                                 // progress. Therefore we force teleport to CurrWp.
                                 // Also force teleport if stuck at WP 2141 (Thousand needles -> Tanaris).
-                                if (waypoint.ID == player.LastWpId || waypoint.ID == 2141)
+                                if (waypoint.ID == player.LastWpId)
                                 {
-                                    Console.WriteLine($"Forcing teleport to WP due to being stuck in new path: {waypoint.ID}");
+                                    Console.WriteLine($"Forcing teleport to WP: {waypoint.ID} due to being stuck in new path.");
                                     player.LuaCall($"SendChatMessage('.npcb wp go {waypoint.ID}')");
-                                    player.ForcedWpPath = ForcedWpPathViaBFS(waypoint.ID);
                                 }
                                 else
                                 {
+                                    // Try to find a new path to the same new zone
                                     player.BlackListedWps.Add(waypoint.ID);
                                     player.ForcedWpPath = ForcedWpPathViaBFS(player.LastWpId);
-                                    //if (waypoint.Zone != player.CurrZone && player.ForcedWpPath[player.ForcedWpPath.Count-1].Zone)
-                                    // Remove from blacklistedwps and teleport to waypoint...
+                                    var newZoneWp = waypoints.Where(x => x.ID == player.ForcedWpPath[player.ForcedWpPath.Count - 1]).FirstOrDefault();
+                                    if (waypoint.Zone != player.CurrZone && waypoint.Zone != newZoneWp.Zone)
+                                    {
+                                        Console.WriteLine($"Forcing teleport to WP: {waypoint.ID} due to being stuck in new path and couldn't find another path to the same new zone.");
+                                        player.BlackListedWps.Remove(waypoint.ID);
+                                        player.LuaCall($"SendChatMessage('.npcb wp go {waypoint.ID}')");
+                                    }
                                 }
                             }
                             else

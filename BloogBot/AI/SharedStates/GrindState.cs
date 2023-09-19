@@ -60,9 +60,10 @@ namespace BloogBot.AI.SharedStates
                 player.CurrZone = nearestWp.Zone;
                 Console.WriteLine("No zone currently set. Setting zone based on nearest WP: " + player.CurrZone);
             }
-            var zoneWaypoints = hotspot.Waypoints.Where(x => x.Zone == player.CurrZone);
-            var nearestWps = zoneWaypoints.OrderBy(w => player.Position.DistanceTo(w));
-            var waypoint = player.CurrWpId == 0 ? nearestWps.FirstOrDefault() : zoneWaypoints.Where(x => x.ID == player.CurrWpId).FirstOrDefault();
+            //var zoneWaypoints = hotspot.Waypoints.Where(x => x.Zone == player.CurrZone);
+            var waypoints = hotspot.Waypoints;
+            var nearestWps = waypoints.OrderBy(w => player.Position.DistanceTo(w));
+            var waypoint = player.CurrWpId == 0 ? nearestWps.FirstOrDefault() : waypoints.Where(x => x.ID == player.CurrWpId).FirstOrDefault();
 
             if (player.CurrWpId == 0)
             {
@@ -126,7 +127,7 @@ namespace BloogBot.AI.SharedStates
                                 else
                                 {
                                     player.BlackListedWps.Add(waypoint.ID);
-                                    player.ForcedWpPath = ForcedWpPathViaBFS(player.LastWpId == 0 ? waypoint.ID : player.LastWpId);
+                                    player.ForcedWpPath = ForcedWpPathViaBFS(player.LastWpId);
                                 }
                             }
                             else

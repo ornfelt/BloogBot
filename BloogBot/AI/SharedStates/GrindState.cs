@@ -126,9 +126,10 @@ namespace BloogBot.AI.SharedStates
                                 }
                                 else
                                 {
-                                    // TODO: force teleport if no other way to new zone?
                                     player.BlackListedWps.Add(waypoint.ID);
                                     player.ForcedWpPath = ForcedWpPathViaBFS(player.LastWpId);
+                                    //if (waypoint.Zone != player.CurrZone && player.ForcedWpPath[player.ForcedWpPath.Count-1].Zone)
+                                    // Remove from blacklistedwps and teleport to waypoint...
                                 }
                             }
                             else

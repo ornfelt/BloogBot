@@ -129,7 +129,12 @@ namespace BloogBot.AI
             return potentialTargets.FirstOrDefault();
         }
 
-        public Hotspot GetCurrentHotspot() => BotSettings.GrindingHotspot;
+        //public Hotspot GetCurrentHotspot() => BotSettings.GrindingHotspot;
+        public Hotspot GetCurrentHotspot()
+        {
+            int mapId = Convert.ToInt32(ObjectManager.MapId);
+            return Hotspots.ElementAt(mapId) == null ? BotSettings.GrindingHotspot : Hotspots.ElementAt(mapId);
+        }
 
         public void CheckForTravelPath(Stack<IBotState> botStates, bool reverse, bool needsToRest = true)
         {

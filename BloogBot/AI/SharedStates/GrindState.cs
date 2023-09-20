@@ -122,6 +122,7 @@ namespace BloogBot.AI.SharedStates
                                 {
                                     Console.WriteLine($"Forcing teleport to WP: {waypoint.ID} due to being stuck in new path.");
                                     player.LuaCall($"SendChatMessage('.npcb wp go {waypoint.ID}')");
+                                    player.ForcedWpPath = ForcedWpPathViaBFS(waypoint.ID);
                                 }
                                 else
                                 {

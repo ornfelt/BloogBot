@@ -127,13 +127,18 @@ namespace BloogBot.AI.SharedStates
                                 {
                                     // Try to find a new path to the same new zone
                                     player.BlackListedWps.Add(waypoint.ID);
+                                    var lastNewZoneWp = waypoints.Where(x => x.ID == player.ForcedWpPath[player.ForcedWpPath.Count - 1]).FirstOrDefault();
+                                    var prevForcedWpPath = player.ForcedWpPath;
+                                    // Find new path to zone
                                     player.ForcedWpPath = ForcedWpPathViaBFS(player.LastWpId);
                                     var newZoneWp = waypoints.Where(x => x.ID == player.ForcedWpPath[player.ForcedWpPath.Count - 1]).FirstOrDefault();
-                                    if (waypoint.Zone != player.CurrZone && waypoint.Zone != newZoneWp.Zone)
+                                    // Check if new wp path leads to the same new zone as previously, otherwise force teleport
+                                    if (lastNewZoneWp.Zone != newZoneWp.Zone)
                                     {
                                         Console.WriteLine($"Forcing teleport to WP: {waypoint.ID} due to being stuck in new path and couldn't find another path to the same new zone.");
                                         player.BlackListedWps.Remove(waypoint.ID);
                                         player.LuaCall($"SendChatMessage('.npcb wp go {waypoint.ID}')");
+                                        player.ForcedWpPath = prevForcedWpPath;
                                     }
                                 }
                             }

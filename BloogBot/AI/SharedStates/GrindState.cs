@@ -128,13 +128,13 @@ namespace BloogBot.AI.SharedStates
                                 {
                                     // Try to find a new path to the same new zone
                                     player.BlackListedWps.Add(waypoint.ID);
-                                    var lastNewZoneWp = waypoints.Where(x => x.ID == player.ForcedWpPath[player.ForcedWpPath.Count - 1]).FirstOrDefault();
+                                    var lastNewZone = player.ForcedWpPath.Count > 0 ? waypoints.Where(x => x.ID == player.ForcedWpPath[player.ForcedWpPath.Count - 1]).FirstOrDefault().Zone : "0";
                                     var prevForcedWpPath = player.ForcedWpPath;
                                     // Find new path to zone
                                     player.ForcedWpPath = ForcedWpPathViaBFS(player.LastWpId);
                                     var newZoneWp = waypoints.Where(x => x.ID == player.ForcedWpPath[player.ForcedWpPath.Count - 1]).FirstOrDefault();
                                     // Check if new wp path leads to the same new zone as previously, otherwise force teleport
-                                    if (lastNewZoneWp.Zone != newZoneWp.Zone)
+                                    if (lastNewZone != newZoneWp.Zone)
                                     {
                                         Console.WriteLine($"Forcing teleport to WP: {waypoint.ID} due to being stuck in new path and couldn't find another path to the same new zone.");
                                         player.BlackListedWps.Remove(waypoint.ID);
@@ -145,6 +145,7 @@ namespace BloogBot.AI.SharedStates
                             }
                             else
                             {
+                                // If ForcedWpPath is empty
                                 player.ForcedWpPath = ForcedWpPathViaBFS(waypoint.ID);
                                 // Remove first value since it's the same as the currently reached WP
                                 if (player.ForcedWpPath.First() == waypoint.ID) player.ForcedWpPath.Remove(player.ForcedWpPath.First());

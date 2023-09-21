@@ -108,6 +108,7 @@ namespace BloogBot.AI.SharedStates
                     // Set new WP based on forced path if player has overleveled
                     if (player.HasOverLeveled)
                     {
+                        var stayOnWp = false;
                         if (player.ForcedWpPath.Count == 0 || player.WpStuckCount > 10)
                         {
                             // If stuck on forcedwppath get new forcedwppath to new zone but make sure it's a new path
@@ -140,6 +141,7 @@ namespace BloogBot.AI.SharedStates
                                         player.BlackListedWps.Remove(waypoint.ID);
                                         player.LuaCall($"SendChatMessage('.npcb wp go {waypoint.ID}')");
                                         player.ForcedWpPath = prevForcedWpPath;
+                                        stayOnWp = true;
                                     }
                                 }
                             }
@@ -155,8 +157,11 @@ namespace BloogBot.AI.SharedStates
                                 Console.Write(wpInPath != player.ForcedWpPath[player.ForcedWpPath.Count-1] ? wpInPath + " -> " : wpInPath + "\n\n");
                         }
                         // Set new WP
-                        waypoint = hotspot.Waypoints.Where(x => x.ID == player.ForcedWpPath.First()).FirstOrDefault();
-                        player.ForcedWpPath.Remove(player.ForcedWpPath.First());
+                        if (!stayOnWp)
+                        {
+                            waypoint = hotspot.Waypoints.Where(x => x.ID == player.ForcedWpPath.First()).FirstOrDefault();
+                            player.ForcedWpPath.Remove(player.ForcedWpPath.First());
+                        }
                     }
                     else
                     {

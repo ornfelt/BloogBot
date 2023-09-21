@@ -67,7 +67,7 @@ namespace BloogBot.AI.SharedStates
 
             if (player.CurrWpId == 0)
             {
-                // No current WP. Pick nearest WP
+                // No current WP -> pick nearest WP
                 bool newWpFound = false;
                 waypoint = nearestWps.ElementAtOrDefault(0);
                 int wpCounter = 0;

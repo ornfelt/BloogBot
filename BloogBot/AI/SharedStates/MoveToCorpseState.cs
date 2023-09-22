@@ -52,7 +52,7 @@ namespace BloogBot.AI.SharedStates
             }
 
             if (!s_HasReachedWpCloseToCorpse)
-                s_HasReachedWpCloseToCorpse = HasReachedWpCloseToCorpse();
+                s_HasReachedWpCloseToCorpse = HasReachedWpCloseToCorpseInternal();
             else
             {
                 var nextWaypoint = Navigation.GetNextWaypoint(ObjectManager.MapId, player.Position, player.CorpsePosition, false);
@@ -83,7 +83,7 @@ namespace BloogBot.AI.SharedStates
         }
 
         // Try to move to corpse with a path based on WPs
-        public bool HasReachedWpCloseToCorpse()
+        public bool HasReachedWpCloseToCorpseInternal()
         {
             var hotspot = container.GetCurrentHotspot();
             var nearestWps = hotspot.Waypoints.OrderBy(w => player.Position.DistanceTo(w));
@@ -115,7 +115,7 @@ namespace BloogBot.AI.SharedStates
             return false;
         }
         
-        public List<int> ForcedWpPathToCorpse(int startId, int endId)
+        private List<int> ForcedWpPathToCorpse(int startId, int endId)
         {
             var hotspot = container.GetCurrentHotspot();
             var visited = new HashSet<int>();
@@ -157,5 +157,6 @@ namespace BloogBot.AI.SharedStates
             }
             return currentPath; // Return last currentPath set or null
         }
+        public bool HasReachedWpCloseToCorpse { get { return s_HasReachedWpCloseToCorpse; } set { s_HasReachedWpCloseToCorpse = value; } }
     }
 }

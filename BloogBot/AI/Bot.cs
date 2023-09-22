@@ -427,7 +427,9 @@ namespace BloogBot.AI
 
                             botStates.Push(container.CreateRestState(botStates, container));
                             botStates.Push(new RetrieveCorpseState(botStates, container));
-                            botStates.Push(new MoveToCorpseState(botStates, container));
+                            MoveToCorpseState moveToCorpseState = new MoveToCorpseState(botStates, container);
+                            moveToCorpseState.HasReachedWpCloseToCorpse = false;
+                            botStates.Push(moveToCorpseState);
                             botStates.Push(new ReleaseCorpseState(botStates, container));
                         }
 

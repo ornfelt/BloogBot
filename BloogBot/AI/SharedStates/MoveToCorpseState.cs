@@ -52,7 +52,10 @@ namespace BloogBot.AI.SharedStates
             }
 
             if (!s_HasReachedWpCloseToCorpse)
+            {
                 s_HasReachedWpCloseToCorpse = HasReachedWpCloseToCorpse();
+                Console.WriteLine("HasReachedWpCloseToCorpse!");
+            }
 
             if (s_HasReachedWpCloseToCorpse)
             {

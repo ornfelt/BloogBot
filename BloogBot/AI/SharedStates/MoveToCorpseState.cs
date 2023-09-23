@@ -19,7 +19,6 @@ namespace BloogBot.AI.SharedStates
 
         bool initialized;
 
-        private static bool s_HasReachedWpCloseToCorpse;
         static readonly Random random = new Random();
         
         public MoveToCorpseState(Stack<IBotState> botStates, IDependencyContainer container)
@@ -28,7 +27,6 @@ namespace BloogBot.AI.SharedStates
             this.container = container;
             player = ObjectManager.Player;
             stuckHelper = new StuckHelper(botStates, container);
-            s_HasReachedWpCloseToCorpse = false;
             stuckCount = 0;
         }
 
@@ -51,9 +49,10 @@ namespace BloogBot.AI.SharedStates
                 return;
             }
 
-            if (!s_HasReachedWpCloseToCorpse)
-                s_HasReachedWpCloseToCorpse = HasReachedWpCloseToCorpseInternal();
-            else
+            if (!player.HasReachedWpCloseToCorpse)
+                player.HasReachedWpCloseToCorpse = HasReachedWpCloseToCorpse();
+
+            if (player.HasReachedWpCloseToCorpse)
             {
                 var nextWaypoint = Navigation.GetNextWaypoint(ObjectManager.MapId, player.Position, player.CorpsePosition, false);
 
@@ -83,7 +82,7 @@ namespace BloogBot.AI.SharedStates
         }
 
         // Try to move to corpse with a path based on WPs
-        public bool HasReachedWpCloseToCorpseInternal()
+        public bool HasReachedWpCloseToCorpse()
         {
             var hotspot = container.GetCurrentHotspot();
             var nearestWps = hotspot.Waypoints.OrderBy(w => player.Position.DistanceTo(w));
@@ -157,6 +156,5 @@ namespace BloogBot.AI.SharedStates
             }
             return currentPath; // Return last currentPath set or null
         }
-        public bool HasReachedWpCloseToCorpse { get { return s_HasReachedWpCloseToCorpse; } set { s_HasReachedWpCloseToCorpse = value; } }
     }
 }

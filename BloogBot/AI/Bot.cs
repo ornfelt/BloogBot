@@ -9,6 +9,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace BloogBot.AI
@@ -424,12 +425,11 @@ namespace BloogBot.AI
                             container.RunningErrands = true;
 
                             container.DisableTeleportChecker = true;
+                            player.HasReachedWpCloseToCorpse = false;
 
                             botStates.Push(container.CreateRestState(botStates, container));
                             botStates.Push(new RetrieveCorpseState(botStates, container));
-                            MoveToCorpseState moveToCorpseState = new MoveToCorpseState(botStates, container);
-                            moveToCorpseState.HasReachedWpCloseToCorpse = false;
-                            botStates.Push(moveToCorpseState);
+                            botStates.Push(new MoveToCorpseState(botStates, container));
                             botStates.Push(new ReleaseCorpseState(botStates, container));
                         }
 

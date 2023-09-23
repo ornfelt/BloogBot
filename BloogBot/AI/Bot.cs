@@ -425,7 +425,7 @@ namespace BloogBot.AI
                             container.RunningErrands = true;
 
                             container.DisableTeleportChecker = true;
-                            player.HasReachedWpCloseToCorpse = false;
+                            player.CurrWpId = 0;
 
                             botStates.Push(container.CreateRestState(botStates, container));
                             botStates.Push(new RetrieveCorpseState(botStates, container));

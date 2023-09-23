@@ -18,6 +18,7 @@ namespace BloogBot.AI.SharedStates
         int stuckCount;
 
         bool initialized;
+        private static bool s_HasReachedWpCloseToCorpse;
 
         static readonly Random random = new Random();
         
@@ -27,6 +28,7 @@ namespace BloogBot.AI.SharedStates
             this.container = container;
             player = ObjectManager.Player;
             stuckHelper = new StuckHelper(botStates, container);
+            s_HasReachedWpCloseToCorpse = false;
             stuckCount = 0;
         }
 
@@ -49,10 +51,10 @@ namespace BloogBot.AI.SharedStates
                 return;
             }
 
-            if (!player.HasReachedWpCloseToCorpse)
-                player.HasReachedWpCloseToCorpse = HasReachedWpCloseToCorpse();
+            if (!s_HasReachedWpCloseToCorpse)
+                s_HasReachedWpCloseToCorpse = HasReachedWpCloseToCorpse();
 
-            if (player.HasReachedWpCloseToCorpse)
+            if (s_HasReachedWpCloseToCorpse)
             {
                 var nextWaypoint = Navigation.GetNextWaypoint(ObjectManager.MapId, player.Position, player.CorpsePosition, false);
 

@@ -436,29 +436,42 @@ namespace BloogBot.AI
                         var currentHotspot = container.GetCurrentHotspot();
 
                         // if equipment needs to be repaired
-                        //int mainhandDurability = Inventory.GetEquippedItem(EquipSlot.MainHand)?.DurabilityPercentage ?? 100;
-                        //int offhandDurability = Inventory.GetEquippedItem(EquipSlot.Ranged)?.DurabilityPercentage ?? 100;
+                        int mainhandDurability = Inventory.GetEquippedItem(EquipSlot.MainHand)?.DurabilityPercentage ?? 100;
+                        int offhandDurability = Inventory.GetEquippedItem(EquipSlot.Ranged)?.DurabilityPercentage ?? 100;
+                        // Also check legs since weapon might be heirloom
+                        int legsDurability = Inventory.GetEquippedItem(EquipSlot.Legs)?.DurabilityPercentage ?? 100;
 
                         // offhand throwns don't have durability, but instead register `-2147483648`.
                         // This is a workaround to prevent that from causing us to get caught in a loop.
                         // We default to a durability value of 100 for items that are null because 100 will register them as not needing repaired.
-                        //if ((mainhandDurability <= 20 && mainhandDurability > -1 || (offhandDurability <= 20 && offhandDurability > -1)) && currentHotspot.RepairVendor != null && !container.RunningErrands)
-                        //{
-                        //    ShapeshiftToHumanForm(container);
-                        //    PopStackToBaseState();
+                        if ((legsDurability <= 20 || (mainhandDurability <= 20 && mainhandDurability > -1 || (offhandDurability <= 20 && offhandDurability > -1))) && currentHotspot.RepairVendor != null && !container.RunningErrands)
+                        {
+                            ShapeshiftToHumanForm(container);
+                            PopStackToBaseState();
 
-                        //    container.RunningErrands = true;
+                            Console.WriteLine($"Bot needs to repair!");
+                            if (currentHotspot.Id == 1)
+                                player.LuaCall($"SendChatMessage('.npcb wp go 31')"); // Kalimdor horde repair
+                            else if (currentHotspot.Id == 2)
+                                player.LuaCall($"SendChatMessage('.npcb wp go 34')"); // Kalimdor alliance repair
+                            else if (currentHotspot.Id == 3)
+                                player.LuaCall($"SendChatMessage('.npcb wp go 4')"); // EK horde repair
+                            else if (currentHotspot.Id == 4)
+                                player.LuaCall($"SendChatMessage('.npcb wp go 13')"); // EK alliance repair
+                            player.CurrWpId = 0;
 
-                        //    if (currentHotspot.TravelPath != null)
-                        //    {
-                        //        botStates.Push(new TravelState(botStates, container, currentHotspot.TravelPath.Waypoints, 0));
-                        //        botStates.Push(new MoveToPositionState(botStates, container, currentHotspot.TravelPath.Waypoints[0]));
-                        //    }
+                            container.RunningErrands = true;
 
-                        //    botStates.Push(new RepairEquipmentState(botStates, container, currentHotspot.RepairVendor.Name));
-                        //    botStates.Push(new MoveToPositionState(botStates, container, currentHotspot.RepairVendor.Position));
-                        //    container.CheckForTravelPath(botStates, true);
-                        //}
+                            if (currentHotspot.TravelPath != null)
+                            {
+                                botStates.Push(new TravelState(botStates, container, currentHotspot.TravelPath.Waypoints, 0));
+                                botStates.Push(new MoveToPositionState(botStates, container, currentHotspot.TravelPath.Waypoints[0]));
+                            }
+
+                            botStates.Push(new RepairEquipmentState(botStates, container, currentHotspot.RepairVendor.Name));
+                            botStates.Push(new MoveToPositionState(botStates, container, currentHotspot.RepairVendor.Position));
+                            container.CheckForTravelPath(botStates, true);
+                        }
 
                         // if inventory is full
                         //if (Inventory.CountFreeSlots(false) == 0 && currentHotspot.Innkeeper != null && !container.RunningErrands)

@@ -1,0 +1,22 @@
+PRAGMA foreign_keys=OFF;
+BEGIN TRANSACTION;
+-- CREATE TABLE [Npcs](
+-- 	[Name] [text] NOT NULL,
+-- 	[IsInnkeeper] [bit] NOT NULL,
+-- 	[SellsAmmo] [bit] NOT NULL,
+-- 	[Repairs] [bit] NOT NULL,
+-- 	[Quest] [bit] NOT NULL,
+-- 	[Horde] [bit] NOT NULL,
+-- 	[Alliance] [bit] NOT NULL,
+-- 	[PositionX] [numeric](18, 0) NOT NULL,
+-- 	[PositionY] [numeric](18, 0) NOT NULL,
+-- 	[PositionZ] [numeric](18, 0) NOT NULL,
+-- 	[Zone] [text] NOT NULL,
+-- 	[Id] [integer] PRIMARY KEY AUTOINCREMENT NOT NULL
+-- );
+DELETE FROM Npcs WHERE `ID` IN (1, 2, 3, 4); 
+INSERT INTO Npcs VALUES('Trayexir',0,0,1,0,1,0,-769.14999999999995594,-4948.5299999999998732,22.849089999999998568,'Durotar',1);
+INSERT INTO Npcs VALUES('Jeena Featherbow',0,0,1,0,0,1,9821.9799999999999329,968.83099999999995333,1308.7770000000000791,'Teldrassil',2);
+INSERT INTO Npcs VALUES('Archibald Kava',0,0,1,0,1,0,1859.3900000000001426,1568.8199999999998368,94.315150000000009811,'Tirisfal Glades',3);
+INSERT INTO Npcs VALUES('Dermot Johns',0,0,1,0,0,1,-8897.7100000000000079,-115.32800000000000828,81.841129999999999711,'Elwynn Forest',4);
+COMMIT;

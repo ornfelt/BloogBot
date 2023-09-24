@@ -151,7 +151,7 @@ namespace BloogBot.AI.SharedStates
                     foreach (var linkWp in linkSplit)
                     {
                         int linkId = Int32.Parse(linkWp);
-                        if (!visited.Contains(linkId) && !player.BlackListedWps.Contains(linkId))
+                        if (!visited.Contains(linkId))
                         {
                             var newPath = new List<int>(currentPath);
                             newPath.Add(linkId);

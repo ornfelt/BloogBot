@@ -185,7 +185,8 @@ namespace BloogBot.AI.SharedStates
                             // Check level requirement
                             if (linkWp.MinLevel <= player.Level && !player.BlackListedWps.Contains(linkWp.ID))
                             {
-                                if (!player.HasVisitedWp(linkWp.ID) && linkWp.MinLevel <= player.Level && linkWp.MaxLevel > player.Level)
+                                //if (!player.HasVisitedWp(linkWp.ID) && linkWp.MinLevel <= player.Level && linkWp.MaxLevel > player.Level)
+                                if (linkWp.MinLevel <= player.Level && linkWp.MaxLevel > player.Level)
                                 {
                                     waypoint = linkWp;
                                     newWpFound = true;

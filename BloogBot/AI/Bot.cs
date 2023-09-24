@@ -82,7 +82,7 @@ namespace BloogBot.AI
                 Logger.Log(e);
             }
         }
-        
+
         public void Travel(IDependencyContainer container, bool reverseTravelPath, Action callback)
         {
             try
@@ -136,7 +136,7 @@ namespace BloogBot.AI
             }
         }
 
-        public void StartPowerlevel(IDependencyContainer container,Action stopCallback)
+        public void StartPowerlevel(IDependencyContainer container, Action stopCallback)
         {
             this.stopCallback = stopCallback;
 
@@ -357,20 +357,39 @@ namespace BloogBot.AI
                             retrievingCorpse = false;
                         }
 
-                        // Enter stuck state if player has been in combatstate for more than 2 min
-                        if (Environment.TickCount - currentStateStartTime > 120000 && currentState == typeof(CombatStateBase))
+                        var HasBeenForcedToTeleport = false;
+                        // if the player has been stuck in combat for more than 3 minutes
+                        if (Environment.TickCount - currentStateStartTime > 180000 && currentState.IsSubclassOf(typeof(CombatStateBase)))
                         {
-                            Console.WriteLine($"Stopping bot due to being stuck in {currentState.Name} for 1 minute. Entering Stuckstate");
-                            player.StopAllMovement();
+                            // Blacklist current target
+                            var target = player.Target;
+                            if (target != null)
+                            {
+                                if (Repository.BlacklistedMobExists(target.Guid))
+                                    Console.WriteLine("Error: Tried to blacklist target that's already blacklisted");
+                                else
+                                {
+                                    Repository.AddBlacklistedMob(target.Guid);
+                                    container.Probe.BlacklistedMobIds.Add(target.Guid);
+                                }
+                            }
+
+                            // Force teleport to current WP
+                            if (player.CurrWpId == 0)
+                                player.CurrWpId = container.GetCurrentHotspot().Waypoints.OrderBy(w => player.Position.DistanceTo(w)).FirstOrDefault().ID;
+                            Console.WriteLine($"Forcing teleport to WP: {player.CurrWpId} (Stuck in combat state - target blacklisted)!");
+                            player.LuaCall($"SendChatMessage('.npcb wp go {player.CurrWpId}')");
                             botStates.Pop();
-                            botStates.Push(new StuckState(botStates, container));
+                            botStates.Push(new GrindState(botStates, container));
+                            HasBeenForcedToTeleport = true;
                         }
 
-                        var HasBeenForcedToTeleport = false;
                         // if the player has been stuck in the same state for more than 7 minutes
                         if (Environment.TickCount - currentStateStartTime > 420000 && currentState != typeof(TravelState) && container.BotSettings.UseStuckInStateKillswitch)
                         {
                             // Force teleport to current WP
+                            if (player.CurrWpId == 0)
+                                player.CurrWpId = container.GetCurrentHotspot().Waypoints.OrderBy(w => player.Position.DistanceTo(w)).FirstOrDefault().ID;
                             Console.WriteLine($"Forcing teleport to WP: {player.CurrWpId} (UseStuckInStateKillswitch)!");
                             player.LuaCall($"SendChatMessage('.npcb wp go {player.CurrWpId}')");
                             botStates.Pop();
@@ -391,9 +410,11 @@ namespace BloogBot.AI
 
                         // if the player has been stuck in the same position for more than 7 minutes
                         //if (Environment.TickCount - currentPositionStartTime >  420000 && container.BotSettings.UseStuckInPositionKillswitch)
-                        if (!HasBeenForcedToTeleport && Environment.TickCount - currentPositionStartTime >  420000 && container.BotSettings.UseStuckInPositionKillswitch)
+                        if (!HasBeenForcedToTeleport && Environment.TickCount - currentPositionStartTime > 420000 && container.BotSettings.UseStuckInPositionKillswitch)
                         {
                             // Force teleport to current WP
+                            if (player.CurrWpId == 0)
+                                player.CurrWpId = container.GetCurrentHotspot().Waypoints.OrderBy(w => player.Position.DistanceTo(w)).FirstOrDefault().ID;
                             Console.WriteLine($"Forcing teleport to WP: {player.CurrWpId} (UseStuckInPositionKillswitch)!");
                             player.LuaCall($"SendChatMessage('.npcb wp go {player.CurrWpId}')");
                             botStates.Pop();
@@ -500,7 +521,7 @@ namespace BloogBot.AI
                         else
                             Console.WriteLine("Bot states empty...");
                     });
-                    
+
                     await Task.Delay(50);
 
                     container.Probe.UpdateLatency = $"{stopwatch.ElapsedMilliseconds}ms";

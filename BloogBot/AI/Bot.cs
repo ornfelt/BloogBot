@@ -465,7 +465,7 @@ namespace BloogBot.AI
                         // offhand throwns don't have durability, but instead register `-2147483648`.
                         // This is a workaround to prevent that from causing us to get caught in a loop.
                         // We default to a durability value of 100 for items that are null because 100 will register them as not needing repaired.
-                        if ((legsDurability <= 20 || (mainhandDurability <= 20 && mainhandDurability > -1 || (offhandDurability <= 20 && offhandDurability > -1))) && currentHotspot.RepairVendor != null && !container.RunningErrands)
+                        if ((legsDurability <= 15 || (mainhandDurability <= 20 && mainhandDurability > -1 || (offhandDurability <= 20 && offhandDurability > -1))) && currentHotspot.RepairVendor != null && !container.RunningErrands)
                         {
                             ShapeshiftToHumanForm(container);
                             PopStackToBaseState();

@@ -377,8 +377,11 @@ namespace BloogBot.AI
                             // Force teleport to current WP
                             if (player.CurrWpId == 0)
                                 player.CurrWpId = container.GetCurrentHotspot().Waypoints.OrderBy(w => player.Position.DistanceTo(w)).FirstOrDefault().ID;
+                            if (random.Next(0, 2) == 0)
+                                player.CurrWpId = container.GetCurrentHotspot().Waypoints.OrderBy(w => player.Position.DistanceTo(w)).ElementAtOrDefault(1).ID;
                             Console.WriteLine($"Forcing teleport to WP: {player.CurrWpId} (Stuck in combat state - target blacklisted)!");
                             player.LuaCall($"SendChatMessage('.npcb wp go {player.CurrWpId}')");
+                            player.SetTarget(player.Guid);
                             botStates.Pop();
                             botStates.Push(new GrindState(botStates, container));
                             HasBeenForcedToTeleport = true;

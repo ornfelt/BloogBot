@@ -9,6 +9,7 @@ namespace BloogBot
 {
     public unsafe class Navigation
     {
+        private static Random rand = new Random();
         [DllImport("kernel32.dll")]
         static extern IntPtr LoadLibrary(string lpFileName);
 
@@ -69,8 +70,8 @@ namespace BloogBot
             var path = CalculatePath(mapId, start, end, straightPath);
             if (path.Length <= 1)
             {
-                if (!ObjectManager.Player.IsSwimming && !ObjectManager.Player.IsFalling)
-                    Logger.Log($"Problem building path for mapId \"{mapId}\". Returning destination as next waypoint...");
+                //if (!ObjectManager.Player.IsSwimming && !ObjectManager.Player.IsFalling && rand.Next(100) == 1)
+                //    Logger.Log($"Problem building path for mapId \"{mapId}\". Returning destination as next waypoint...");
                 return end;
             }
 

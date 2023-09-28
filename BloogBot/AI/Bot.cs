@@ -525,7 +525,7 @@ namespace BloogBot.AI
                             Console.WriteLine("Bot states empty...");
                     });
 
-                    await Task.Delay(50);
+                    await Task.Delay(100);
 
                     container.Probe.UpdateLatency = $"{stopwatch.ElapsedMilliseconds}ms";
                 }

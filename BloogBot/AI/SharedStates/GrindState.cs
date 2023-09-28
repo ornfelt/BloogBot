@@ -27,6 +27,12 @@ namespace BloogBot.AI.SharedStates
 
         public void Update()
         {
+            if (player.Health <= 0 || player.InGhostForm)
+            {
+                botStates.Pop();
+                return;
+            }
+
             var enemyTarget = container.FindClosestTarget();
 
             // 4 scenarios:
@@ -154,7 +160,7 @@ namespace BloogBot.AI.SharedStates
                             }
                             Console.WriteLine("New WP path:");
                             foreach (var wpInPath in player.ForcedWpPath)
-                                Console.Write(wpInPath != player.ForcedWpPath[player.ForcedWpPath.Count-1] ? wpInPath + " -> " : wpInPath + "\n\n");
+                                Console.Write(wpInPath != player.ForcedWpPath[player.ForcedWpPath.Count - 1] ? wpInPath + " -> " : wpInPath + "\n\n");
                         }
                         // Set new WP
                         if (!stayOnWp)

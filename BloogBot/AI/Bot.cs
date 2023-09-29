@@ -1,6 +1,7 @@
 ﻿using BloogBot.AI.SharedStates;
 using BloogBot.Game;
 using BloogBot.Game.Enums;
+using BloogBot.Game.Objects;
 using BloogBot.UI;
 using System;
 using System.Collections.Generic;
@@ -390,15 +391,7 @@ namespace BloogBot.AI
                         // if the player has been stuck in the same state for more than 7 minutes
                         if (Environment.TickCount - currentStateStartTime > 420000 && currentState != typeof(TravelState) && container.BotSettings.UseStuckInStateKillswitch)
                         {
-                            // Force teleport to current WP
-                            if (player.CurrWpId == 0)
-                                player.CurrWpId = container.GetCurrentHotspot().Waypoints.OrderBy(w => player.Position.DistanceTo(w)).FirstOrDefault().ID;
-                            Console.WriteLine($"Forcing teleport to WP: {player.CurrWpId} (UseStuckInStateKillswitch)!");
-                            player.LuaCall($"SendChatMessage('.npcb wp go {player.CurrWpId}')");
-                            botStates.Pop();
-                            botStates.Push(new GrindState(botStates, container));
-                            HasBeenForcedToTeleport = true;
-
+                            HandleBotStuck(container, player, true);
                             //var msg = $"Hey, it's {player.Name}, and I need help! I've been stuck in the {currentState.Name} for over 5 minutes. I'm stopping for now.";
                             //LogToFile(msg);
                             //DiscordClientWrapper.SendMessage(msg);
@@ -415,20 +408,14 @@ namespace BloogBot.AI
                         //if (Environment.TickCount - currentPositionStartTime >  420000 && container.BotSettings.UseStuckInPositionKillswitch)
                         if (!HasBeenForcedToTeleport && Environment.TickCount - currentPositionStartTime > 420000 && container.BotSettings.UseStuckInPositionKillswitch)
                         {
-                            // Force teleport to current WP
-                            if (player.CurrWpId == 0)
-                                player.CurrWpId = container.GetCurrentHotspot().Waypoints.OrderBy(w => player.Position.DistanceTo(w)).FirstOrDefault().ID;
-                            Console.WriteLine($"Forcing teleport to WP: {player.CurrWpId} (UseStuckInPositionKillswitch)!");
-                            player.LuaCall($"SendChatMessage('.npcb wp go {player.CurrWpId}')");
-                            botStates.Pop();
-                            botStates.Push(new GrindState(botStates, container));
-
+                            HandleBotStuck(container, player, false);
                             //var msg = $"Hey, it's {player.Name}, and I need help! I've been stuck in the same position for over 5 minutes. I'm stopping for now.";
                             //LogToFile(msg);
                             //DiscordClientWrapper.SendMessage(msg);
                             //Stop();
                             //return;
                         }
+
                         if (player.Position.DistanceTo(currentPosition) > 10)
                         {
                             currentPosition = player.Position;
@@ -441,8 +428,6 @@ namespace BloogBot.AI
                             player.DeathsAtWp++;
                             Console.WriteLine($"Player died. DeathsAtWp: {player.DeathsAtWp}");
                             player.ForcedWpPath = new List<int>();
-                            //Console.WriteLine($"mainhandDurability: {Inventory.GetEquippedItem(EquipSlot.MainHand)?.DurabilityPercentage ?? 100}");
-                            //Console.WriteLine($"offhandDurability: {Inventory.GetEquippedItem(EquipSlot.Ranged)?.DurabilityPercentage ?? 100}");
                             PopStackToBaseState();
 
                             retrievingCorpse = true;
@@ -537,7 +522,29 @@ namespace BloogBot.AI
             Console.WriteLine("End of loop");
         }
 
-        void LogToFile(string text)
+        private void HandleBotStuck(IDependencyContainer container, LocalPlayer player, bool StuckInState)
+        {
+            // Force teleport to current WP, or to corpse if dead
+            if (player.Health <= 0 || player.InGhostForm)
+            {
+                // Force teleport to corpse
+                Console.WriteLine($"Forcing teleport to corpse " + (StuckInState ? "(UseStuckInStateKillswitch)" : "(UseStuckInPositionKillswitch)"));
+                player.LuaCall($"SendChatMessage('.go xyz {player.CorpsePosition.X.ToString().Replace(',', '.')}" +
+                    $" {player.CorpsePosition.Y.ToString().Replace(',', '.')}" +
+                    $" {player.CorpsePosition.Z.ToString().Replace(',', '.')}', 'GUILD', nil)");
+            }
+            else
+            {
+                if (player.CurrWpId == 0)
+                    player.CurrWpId = container.GetCurrentHotspot().Waypoints.OrderBy(w => player.Position.DistanceTo(w)).FirstOrDefault().ID;
+                Console.WriteLine($"Forcing teleport to WP: {player.CurrWpId} " + (StuckInState ? "(UseStuckInStateKillswitch)" : "(UseStuckInPositionKillswitch)"));
+                player.LuaCall($"SendChatMessage('.npcb wp go {player.CurrWpId}')");
+                botStates.Pop();
+                botStates.Push(new GrindState(botStates, container));
+            }
+        }
+
+        private void LogToFile(string text)
         {
             var dir = Path.GetDirectoryName(Assembly.GetAssembly(typeof(MainViewModel)).CodeBase);
             var path = new UriBuilder(dir).Path;

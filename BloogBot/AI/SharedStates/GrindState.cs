@@ -27,12 +27,6 @@ namespace BloogBot.AI.SharedStates
 
         public void Update()
         {
-            if (player.Health <= 0 || player.InGhostForm)
-            {
-                botStates.Pop();
-                return;
-            }
-
             var enemyTarget = container.FindClosestTarget();
 
             // 4 scenarios:

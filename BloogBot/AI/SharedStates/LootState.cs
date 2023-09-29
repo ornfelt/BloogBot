@@ -108,7 +108,7 @@ namespace BloogBot.AI.SharedStates
                 if (itemQuality == ItemQuality.Rare || itemQuality == ItemQuality.Epic)
                     DiscordClientWrapper.SendItemNotification(player.Name, itemQuality, itemToLoot.ItemId);
 
-                if (itemToLoot.IsCoins
+                if (itemToLoot != null && itemToLoot.IsCoins
                     || ((string.IsNullOrWhiteSpace(container.BotSettings.LootExcludedNames) || !container.BotSettings.LootExcludedNames.Split('|').Any(en => itemToLoot.Info.Name.Contains(en)))
                     && (poorQualityCondition || commonQualityCondition || uncommonQualityCondition || other)))
                 {

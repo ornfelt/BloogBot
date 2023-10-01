@@ -24,6 +24,8 @@ namespace BloogBot.AI.SharedStates
 
         public void Update()
         {
+            if (player.IsCasting)
+                return;
             stuckHelper.CheckIfStuck();
 
             if ((container.FindClosestTarget() != null && 

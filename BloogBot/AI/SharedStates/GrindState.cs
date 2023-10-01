@@ -211,6 +211,10 @@ namespace BloogBot.AI.SharedStates
                     //player.wpStuckCount++; // This is increased in StuckHelper
                 }
             }
+            // Try to mount
+            string MountName = "white polar bear";
+            if (player.Level >= 40 && !player.IsMounted)
+                player.LuaCall($"CastSpellByName('{MountName}')");
 
             player.CurrWpId = waypoint.ID;
             Console.WriteLine("Selected waypoint: " + waypoint.ToStringFull() + ", HasOverleveled: " + player.HasOverLeveled);

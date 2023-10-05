@@ -103,6 +103,7 @@ namespace BloogBot.AI.SharedStates
                         if (player.CurrZone != waypoint.Zone)
                             Console.WriteLine("Bot arrived at new zone!");
                         player.CurrZone = waypoint.Zone; // Update current zone
+                        player.HasBeenStuckAtWp = false;
                     }
 
                     // Set new WP based on forced path if player has overleveled
@@ -165,38 +166,48 @@ namespace BloogBot.AI.SharedStates
                     }
                     else
                     {
-                        // Select new waypoint based on links
-                        string wpLinks = waypoint.Links.Replace(":0", "");
-                        if (wpLinks.EndsWith(" "))
-                            wpLinks = wpLinks.Remove(wpLinks.Length - 1);
-                        string[] linkSplit = wpLinks.Split(' ');
-                        //foreach (string link in linkSplit)
-                        //    Console.WriteLine("Found link: " + link);
-
-                        bool newWpFound = false;
-                        int linkSearchCount = 0;
-                        while (!newWpFound)
+                        if (player.WpStuckCount > 10 && player.HasBeenStuckAtWp)
                         {
-                            linkSearchCount++;
-                            int randLink = random.Next() % linkSplit.Length;
-                            //Console.WriteLine("randLink: " + randLink);
-                            var linkWp = hotspot.Waypoints.Where(x => x.ID == Int32.Parse(linkSplit[randLink])).FirstOrDefault();
+                            Console.WriteLine($"Forcing teleport to WP: {waypoint.ID} due to being stuck in new path.");
+                            player.LuaCall($"SendChatMessage('.npcb wp go {waypoint.ID}')");
+                        }
+                        else
+                        {
+                            if (player.WpStuckCount > 10)
+                                player.HasBeenStuckAtWp = true;
+                            // Select new waypoint based on links
+                            string wpLinks = waypoint.Links.Replace(":0", "");
+                            if (wpLinks.EndsWith(" "))
+                                wpLinks = wpLinks.Remove(wpLinks.Length - 1);
+                            string[] linkSplit = wpLinks.Split(' ');
+                            //foreach (string link in linkSplit)
+                            //    Console.WriteLine("Found link: " + link);
 
-                            // Check level requirement
-                            if (linkWp.MinLevel <= player.Level && !player.BlackListedWps.Contains(linkWp.ID))
+                            bool newWpFound = false;
+                            int linkSearchCount = 0;
+                            while (!newWpFound)
                             {
-                                //if (!player.HasVisitedWp(linkWp.ID) && linkWp.MinLevel <= player.Level && linkWp.MaxLevel > player.Level)
-                                if (linkWp.MinLevel <= player.Level && linkWp.MaxLevel > player.Level)
+                                linkSearchCount++;
+                                int randLink = random.Next() % linkSplit.Length;
+                                //Console.WriteLine("randLink: " + randLink);
+                                var linkWp = hotspot.Waypoints.Where(x => x.ID == Int32.Parse(linkSplit[randLink])).FirstOrDefault();
+
+                                // Check level requirement
+                                if (linkWp.MinLevel <= player.Level && !player.BlackListedWps.Contains(linkWp.ID))
                                 {
-                                    waypoint = linkWp;
-                                    newWpFound = true;
-                                }
-                                else if (linkSearchCount > 15)
-                                {
-                                    // This means that randLink is same as previously visited WP
-                                    // Choose it if no other links are suitable
-                                    waypoint = linkWp;
-                                    newWpFound = true;
+                                    //if (!player.HasVisitedWp(linkWp.ID) && linkWp.MinLevel <= player.Level && linkWp.MaxLevel > player.Level)
+                                    if (linkWp.MinLevel <= player.Level && linkWp.MaxLevel > player.Level)
+                                    {
+                                        waypoint = linkWp;
+                                        newWpFound = true;
+                                    }
+                                    else if (linkSearchCount > 15)
+                                    {
+                                        // This means that randLink is same as previously visited WP
+                                        // Choose it if no other links are suitable
+                                        waypoint = linkWp;
+                                        newWpFound = true;
+                                    }
                                 }
                             }
                         }

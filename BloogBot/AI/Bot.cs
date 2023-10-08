@@ -469,74 +469,77 @@ namespace BloogBot.AI
                             }
                         }
 
-                        var currentHotspot = container.GetCurrentHotspot();
-
-                        // if equipment needs to be repaired
-                        int mainhandDurability = Inventory.GetEquippedItem(EquipSlot.MainHand)?.DurabilityPercentage ?? 100;
-                        int offhandDurability = Inventory.GetEquippedItem(EquipSlot.Ranged)?.DurabilityPercentage ?? 100;
-                        // Also check legs since weapon might be heirloom
-                        int legsDurability = Inventory.GetEquippedItem(EquipSlot.Legs)?.DurabilityPercentage ?? 100;
-
-                        // offhand throwns don't have durability, but instead register `-2147483648`.
-                        // This is a workaround to prevent that from causing us to get caught in a loop.
-                        // We default to a durability value of 100 for items that are null because 100 will register them as not needing repaired.
-                        if ((legsDurability <= 10 || (mainhandDurability <= 20 && mainhandDurability > -1 || (offhandDurability <= 20 && offhandDurability > -1))) && currentHotspot.RepairVendor != null && !container.RunningErrands)
+                        if (!PlayerInBg())
                         {
-                            ShapeshiftToHumanForm(container);
-                            PopStackToBaseState();
+                            var currentHotspot = container.GetCurrentHotspot();
 
-                            Console.WriteLine($"Bot needs to repair!");
-                            if (currentHotspot.Id == 1)
-                                player.LuaCall($"SendChatMessage('.npcb wp go 31')"); // Kalimdor horde repair
-                            else if (currentHotspot.Id == 2)
-                                player.LuaCall($"SendChatMessage('.npcb wp go 34')"); // Kalimdor alliance repair
-                            else if (currentHotspot.Id == 3)
-                                player.LuaCall($"SendChatMessage('.npcb wp go 4')"); // EK horde repair
-                            else if (currentHotspot.Id == 4)
-                                player.LuaCall($"SendChatMessage('.npcb wp go 13')"); // EK alliance repair
-                            else if (currentHotspot.Id == 5)
-                                player.LuaCall($"SendChatMessage('.npcb wp go 2578')"); // Outland horde repair
-                            else if (currentHotspot.Id == 6)
-                                player.LuaCall($"SendChatMessage('.npcb wp go 2601')"); // Outland alliance repair
-                            else if (currentHotspot.Id == 7)
-                                player.LuaCall($"SendChatMessage('.npcb wp go 2730')"); // Northrend horde repair
-                            else if (currentHotspot.Id == 8)
-                                player.LuaCall($"SendChatMessage('.npcb wp go 2703')"); // Northrend alliance repair
+                            // if equipment needs to be repaired
+                            int mainhandDurability = Inventory.GetEquippedItem(EquipSlot.MainHand)?.DurabilityPercentage ?? 100;
+                            int offhandDurability = Inventory.GetEquippedItem(EquipSlot.Ranged)?.DurabilityPercentage ?? 100;
+                            // Also check legs since weapon might be heirloom
+                            int legsDurability = Inventory.GetEquippedItem(EquipSlot.Legs)?.DurabilityPercentage ?? 100;
 
-                            player.CurrWpId = 0;
-                            player.WpStuckCount = 0;
-
-                            container.RunningErrands = true;
-
-                            if (currentHotspot.TravelPath != null)
+                            // offhand throwns don't have durability, but instead register `-2147483648`.
+                            // This is a workaround to prevent that from causing us to get caught in a loop.
+                            // We default to a durability value of 100 for items that are null because 100 will register them as not needing repaired.
+                            if ((legsDurability <= 10 || (mainhandDurability <= 20 && mainhandDurability > -1 || (offhandDurability <= 20 && offhandDurability > -1))) && currentHotspot.RepairVendor != null && !container.RunningErrands)
                             {
-                                botStates.Push(new TravelState(botStates, container, currentHotspot.TravelPath.Waypoints, 0));
-                                botStates.Push(new MoveToPositionState(botStates, container, currentHotspot.TravelPath.Waypoints[0]));
+                                ShapeshiftToHumanForm(container);
+                                PopStackToBaseState();
+
+                                Console.WriteLine($"Bot needs to repair!");
+                                if (currentHotspot.Id == 1)
+                                    player.LuaCall($"SendChatMessage('.npcb wp go 31')"); // Kalimdor horde repair
+                                else if (currentHotspot.Id == 2)
+                                    player.LuaCall($"SendChatMessage('.npcb wp go 34')"); // Kalimdor alliance repair
+                                else if (currentHotspot.Id == 3)
+                                    player.LuaCall($"SendChatMessage('.npcb wp go 4')"); // EK horde repair
+                                else if (currentHotspot.Id == 4)
+                                    player.LuaCall($"SendChatMessage('.npcb wp go 13')"); // EK alliance repair
+                                else if (currentHotspot.Id == 5)
+                                    player.LuaCall($"SendChatMessage('.npcb wp go 2578')"); // Outland horde repair
+                                else if (currentHotspot.Id == 6)
+                                    player.LuaCall($"SendChatMessage('.npcb wp go 2601')"); // Outland alliance repair
+                                else if (currentHotspot.Id == 7)
+                                    player.LuaCall($"SendChatMessage('.npcb wp go 2730')"); // Northrend horde repair
+                                else if (currentHotspot.Id == 8)
+                                    player.LuaCall($"SendChatMessage('.npcb wp go 2703')"); // Northrend alliance repair
+
+                                player.CurrWpId = 0;
+                                player.WpStuckCount = 0;
+
+                                container.RunningErrands = true;
+
+                                if (currentHotspot.TravelPath != null)
+                                {
+                                    botStates.Push(new TravelState(botStates, container, currentHotspot.TravelPath.Waypoints, 0));
+                                    botStates.Push(new MoveToPositionState(botStates, container, currentHotspot.TravelPath.Waypoints[0]));
+                                }
+
+                                botStates.Push(new RepairEquipmentState(botStates, container, currentHotspot.RepairVendor.Name));
+                                botStates.Push(new MoveToPositionState(botStates, container, currentHotspot.RepairVendor.Position));
+                                container.CheckForTravelPath(botStates, true);
                             }
 
-                            botStates.Push(new RepairEquipmentState(botStates, container, currentHotspot.RepairVendor.Name));
-                            botStates.Push(new MoveToPositionState(botStates, container, currentHotspot.RepairVendor.Position));
-                            container.CheckForTravelPath(botStates, true);
+                            // if inventory is full
+                            //if (Inventory.CountFreeSlots(false) == 0 && currentHotspot.Innkeeper != null && !container.RunningErrands)
+                            //{
+                            //    ShapeshiftToHumanForm(container);
+                            //    PopStackToBaseState();
+
+                            //    container.RunningErrands = true;
+
+                            //    if (currentHotspot.TravelPath != null)
+                            //    {
+                            //        botStates.Push(new TravelState(botStates, container, currentHotspot.TravelPath.Waypoints, 0));
+                            //        botStates.Push(new MoveToPositionState(botStates, container, currentHotspot.TravelPath.Waypoints[0]));
+                            //    }
+                            //    
+                            //    botStates.Push(new SellItemsState(botStates, container, currentHotspot.Innkeeper.Name));
+                            //    botStates.Push(new MoveToPositionState(botStates, container, currentHotspot.Innkeeper.Position));
+                            //    container.CheckForTravelPath(botStates, true);
+                            //}
                         }
-
-                        // if inventory is full
-                        //if (Inventory.CountFreeSlots(false) == 0 && currentHotspot.Innkeeper != null && !container.RunningErrands)
-                        //{
-                        //    ShapeshiftToHumanForm(container);
-                        //    PopStackToBaseState();
-
-                        //    container.RunningErrands = true;
-
-                        //    if (currentHotspot.TravelPath != null)
-                        //    {
-                        //        botStates.Push(new TravelState(botStates, container, currentHotspot.TravelPath.Waypoints, 0));
-                        //        botStates.Push(new MoveToPositionState(botStates, container, currentHotspot.TravelPath.Waypoints[0]));
-                        //    }
-                        //    
-                        //    botStates.Push(new SellItemsState(botStates, container, currentHotspot.Innkeeper.Name));
-                        //    botStates.Push(new MoveToPositionState(botStates, container, currentHotspot.Innkeeper.Position));
-                        //    container.CheckForTravelPath(botStates, true);
-                        //}
 
                         if (botStates.Count > 0)
                         {

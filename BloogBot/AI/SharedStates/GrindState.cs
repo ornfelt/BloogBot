@@ -62,9 +62,6 @@ namespace BloogBot.AI.SharedStates
             }
             //var zoneWaypoints = hotspot.Waypoints.Where(x => x.Zone == player.CurrZone);
             var waypoints = hotspot.Waypoints;
-            Console.WriteLine("THIS WPs zones: ");
-            foreach (var wp in waypoints.GroupBy(x => x.Zone).ToList())
-                Console.WriteLine(wp.Key);
             var nearestWps = waypoints.OrderBy(w => player.Position.DistanceTo(w));
             var waypoint = player.CurrWpId == 0 ? nearestWps.FirstOrDefault() : waypoints.Where(x => x.ID == player.CurrWpId).FirstOrDefault();
 

@@ -99,6 +99,10 @@ namespace BloogBot.AI.SharedStates
         {
             SetCTA();
             int bg = rand.Next(3);
+            if (player.Level < 20)
+                bg = 0;
+            else if (player.Level < 50)
+                bg = 0;
             int bgQueueIndex = bg;
 
             if (bg == 0)

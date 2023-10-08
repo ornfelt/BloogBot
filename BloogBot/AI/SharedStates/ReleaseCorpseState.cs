@@ -26,9 +26,14 @@ namespace BloogBot.AI.SharedStates
                     ObjectManager.Player.ReleaseCorpse();
                 else
                 {
-                    if (Wait.For("LeaveReleaseCorpseStateDelay", 2000))
+                    var mapId = ObjectManager.MapId;
+                    if ((mapId == 30 || mapId == 489 || mapId == 529 || mapId == 559) && (Wait.For("LeaveReleaseCorpseStateDelay", 30000) || ObjectManager.Player.Health > 100))
                     {
-                        ObjectManager.Player.WpStuckCount = 0;
+                        botStates.Pop();
+                        return;
+                    }
+                    else if (Wait.For("LeaveReleaseCorpseStateDelay", 2000))
+                    {
                         botStates.Pop();
                         return;
                     }

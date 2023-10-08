@@ -16,7 +16,7 @@ namespace BloogBot.AI.SharedStates
 
         readonly Stack<IBotState> botStates;
         readonly IDependencyContainer container;
-        readonly LocalPlayer player;
+        LocalPlayer player;
 
         public GrindState(Stack<IBotState> botStates, IDependencyContainer container)
         {
@@ -48,6 +48,7 @@ namespace BloogBot.AI.SharedStates
         private void HandleWpSelection()
         {
             var hotspot = container.GetCurrentHotspot();
+            player = ObjectManager.Player;
             //var waypointCount = hotspot.Waypoints.Length;
             //Console.WriteLine("Waypoint count: " + waypointCount);
             //var waypoint = hotspot.Waypoints[random.Next(0, waypointCount)]; // Old 
@@ -68,6 +69,7 @@ namespace BloogBot.AI.SharedStates
             if (player.CurrWpId == 0)
             {
                 // No current WP -> pick nearest WP
+                Console.WriteLine("No CurrWpId... Selecting new one");
                 bool newWpFound = false;
                 waypoint = nearestWps.ElementAtOrDefault(0);
                 int wpCounter = 0;
@@ -81,7 +83,6 @@ namespace BloogBot.AI.SharedStates
 
                     if (wpCounter > 100) newWpFound = true;
                 }
-                Console.WriteLine("No CurrWpId... Selecting new one");
                 // Log datetime to file to separate new bot sessions
                 LogToFile(DateTime.Now.ToString("dd/MM/yyyy HH:mm"));
             }
@@ -106,8 +107,8 @@ namespace BloogBot.AI.SharedStates
                         player.HasBeenStuckAtWp = false;
 
                         // Random chance to queue for BG (if not in BG already)
-                        if (random.Next(99)+1 < 10 && !HotspotIsBg(hotspot.Id) && player.Level >= 10)
-                        //if (true && !HotspotIsBg(hotspot.Id))
+                        //if (random.Next(99)+1 < 10 && !HotspotIsBg(hotspot.Id) && player.Level >= 10)
+                        if (true && !HotspotIsBg(hotspot.Id))
                             botStates.Push(new BattlegroundQueueState(botStates, container));
                     }
 
@@ -241,6 +242,8 @@ namespace BloogBot.AI.SharedStates
             // Try to mount
             string MountName = "white polar bear";
             if (!HotspotIsBg(hotspot.Id) && player.Level >= 40 && !player.IsMounted)
+                player.LuaCall($"CastSpellByName('{MountName}')");
+            else if (HotspotIsBg(hotspot.Id) && !player.IsMounted)
                 player.LuaCall($"CastSpellByName('{MountName}')");
 
             player.CurrWpId = waypoint.ID;

@@ -456,6 +456,7 @@ namespace BloogBot.AI
 
                             container.DisableTeleportChecker = true;
                             player.CurrWpId = 0;
+                            player.WpStuckCount = 0;
 
                             botStates.Push(container.CreateRestState(botStates, container));
                             if (PlayerInBg())
@@ -501,7 +502,9 @@ namespace BloogBot.AI
                                 player.LuaCall($"SendChatMessage('.npcb wp go 2730')"); // Northrend horde repair
                             else if (currentHotspot.Id == 8)
                                 player.LuaCall($"SendChatMessage('.npcb wp go 2703')"); // Northrend alliance repair
+
                             player.CurrWpId = 0;
+                            player.WpStuckCount = 0;
 
                             container.RunningErrands = true;
 

@@ -4,6 +4,7 @@ using BloogBot.Game.Enums;
 using BloogBot.Game.Objects;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 
 namespace BloogBot.AI
@@ -92,6 +93,7 @@ namespace BloogBot.AI
             if (threat != null)
                 return threat;
 
+            var mapId = ObjectManager.MapId;
             var potentialTargetsList = ObjectManager.Units
                 // only consider units that are not null, and whose name and position are not null
                 .Where(u => u != null && u.Name != null && u.Position != null)
@@ -111,6 +113,8 @@ namespace BloogBot.AI
                 .Where(u => string.IsNullOrWhiteSpace(BotSettings.TargetingExcludedNames) || !BotSettings.TargetingExcludedNames.Split('|').Any(m => u.Name != null && u.Name.Contains(m)))
                 // filter units by unit reactions as specified in targeting settings
                 .Where(u => BotSettings.UnitReactions.Count == 0 || BotSettings.UnitReactions.Contains(u.UnitReaction.ToString()))
+                // Skip Neutral enemies in BG
+                .Where(u => !((mapId == 30 || mapId == 489 || mapId == 529 || mapId == 559) && u.UnitReaction == UnitReaction.Neutral))
                 // filter units by creature type as specified in targeting settings. also include things like totems and slimes.
                 .Where(u => BotSettings.CreatureTypes.Count == 0 || u.CreatureType == CreatureType.Mechanical || (u.CreatureType == CreatureType.Totem && u.Position.DistanceTo(ObjectManager.Player?.Position) <= 20) || BotSettings.CreatureTypes.Contains(u.CreatureType.ToString()) || oozeNames.Contains(u.Name))
                 // filter by the level range specified in targeting settings
@@ -129,7 +133,27 @@ namespace BloogBot.AI
             return potentialTargets.FirstOrDefault();
         }
 
-        public Hotspot GetCurrentHotspot() => BotSettings.GrindingHotspot;
+        //public Hotspot GetCurrentHotspot() => BotSettings.GrindingHotspot;
+        public Hotspot GetCurrentHotspot()
+        {
+            if (ObjectManager.MapId == 1 && BotSettings.GrindingHotspot.Id > 2)
+                return Hotspots.Where(h => h != null && h.Id == 1).FirstOrDefault(); // Kalimdor horde
+            else if (ObjectManager.MapId == 0 && (BotSettings.GrindingHotspot.Id != 3 && BotSettings.GrindingHotspot.Id != 4))
+                return Hotspots.Where(h => h != null && h.Id == 3).FirstOrDefault(); // EK horde
+            else if (ObjectManager.MapId == 530 && (BotSettings.GrindingHotspot.Id != 5 && BotSettings.GrindingHotspot.Id != 6))
+                return Hotspots.Where(h => h != null && h.Id == 5).FirstOrDefault(); // Outland horde
+            else if (ObjectManager.MapId == 571 && (BotSettings.GrindingHotspot.Id != 7 && BotSettings.GrindingHotspot.Id != 8))
+                return Hotspots.Where(h => h != null && h.Id == 7).FirstOrDefault(); // Northrend horde
+            else if (ObjectManager.MapId == 489 && BotSettings.GrindingHotspot.Id != 9)
+                return Hotspots.Where(h => h != null && h.Id == 9).FirstOrDefault(); // WSG
+            else if (ObjectManager.MapId == 529 && BotSettings.GrindingHotspot.Id != 10)
+                return Hotspots.Where(h => h != null && h.Id == 10).FirstOrDefault(); // AB
+            else if (ObjectManager.MapId == 30 && BotSettings.GrindingHotspot.Id != 11)
+                return Hotspots.Where(h => h != null && h.Id == 11).FirstOrDefault(); // AV
+            else if (ObjectManager.MapId == 559 && BotSettings.GrindingHotspot.Id != 12)
+                return Hotspots.Where(h => h != null && h.Id == 12).FirstOrDefault(); // Nagrand Arena
+            return BotSettings.GrindingHotspot; // Default
+        }
 
         public void CheckForTravelPath(Stack<IBotState> botStates, bool reverse, bool needsToRest = true)
         {

@@ -508,10 +508,19 @@ namespace BloogBot.Game.Objects
         }
         public HashSet<int> VisitedWps { get { return m_VisitedWps; } set { m_VisitedWps = value; } }
 
-        private static HashSet<int> m_BlackListedWps = new HashSet<int> {35, 118, 168, 993, 1100, 1359, 1364, 1369, 1426, 1438, 1444, 1445, 1456, 1462, 1463, 1464, 1465, 1466, 1566, 1614};
+        private static HashSet<int> m_BlackListedWps = new HashSet<int> {35, 118, 168, 993, 1093, 1094, 1100, 1359, 1364, 1369, 1426, 1438, 1444, 1445, 1456, 1462, 1463, 1464, 1465, 1466, 1566, 1614};
         public HashSet<int> BlackListedWps { get { return m_BlackListedWps; } set { m_BlackListedWps = value; } }
 
         private static bool m_HasBeenStuckAtWp;
         public bool HasBeenStuckAtWp { get { return m_HasBeenStuckAtWp; } set { m_HasBeenStuckAtWp = value; } }
+
+        private static bool m_HasJoinedBg;
+        public bool HasJoinedBg { get { return m_HasJoinedBg; } set { m_HasJoinedBg = value; } }
+
+        private static bool m_HasEnteredNewMap;
+        public bool HasEnteredNewMap { get { return m_HasEnteredNewMap; } set { m_HasEnteredNewMap = value; } }
+
+        private static uint m_LastKnownMapId;
+        public uint LastKnownMapId { get { return m_LastKnownMapId; } set { m_LastKnownMapId = value; } }
     }
 }

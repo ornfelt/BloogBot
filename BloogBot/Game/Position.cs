@@ -45,7 +45,7 @@ namespace BloogBot.Game
         public int MinLevel { get; }
         public int MaxLevel { get; }
         public string Links { get; }
-        
+
         public float DistanceTo(Position position)
         {
             var deltaX = X - position.X;
@@ -81,7 +81,7 @@ namespace BloogBot.Game
             new Position(a.X * n, a.Y * n, a.Z * n);
 
         public XYZ ToXYZ() => new XYZ(X, Y, Z);
-        
+
         public override string ToString() => $"X: {Math.Round(X, 2)}, Y: {Math.Round(Y, 2)}, Z: {Math.Round(Z, 2)}";
         public string ToStringFull() => $"ID: {ID}, Zone: {GetZoneName(Int32.Parse(Zone))} ({Zone}), MinLevel: {MinLevel}, MaxLevel: {MaxLevel}, X: {Math.Round(X, 2)}, Y: {Math.Round(Y, 2)}, Z: {Math.Round(Z, 2)}, Links: {Links}";
 
@@ -98,8 +98,18 @@ namespace BloogBot.Game
             {28, "Western Plaguelands"}, {33, "Stranglethorn Vale"}, {36, "Alterac Mountains"}, {38, "Loch Modan"},
             {40, "Westfall"}, {41, "Deadwind Pass"}, {44, "Redridge Mountains"}, {45, "Arathi Highlands"},
             {46, "Burning Steppes"}, {47, "The Hinterlands"}, {51, "Searing Gorge"}, {85, "Tirisfal Glades"},
-            {130, "Silverpine Forest"}, {139, "Eastern Plaguelands"}, {267, "Hillsbrad Foothills"}
+            {130, "Silverpine Forest"}, {139, "Eastern Plaguelands"}, {267, "Hillsbrad Foothills"},
+            { 65, "Dragonblight" }, { 66, "Zul'Drak" }, { 67, "The Storm Peaks" }, { 210, "Icecrown" }, { 394, "Grizzly Hills" },
+            { 495, "Howling Fjord" }, { 2817, "Crystalsong Forest" }, { 3277, "Warsong Gulch" }, { 3483, "Hellfire Peninsula" },
+            { 3518, "Nagrand" }, { 3519, "Terokkar Forest" }, { 3520, "Shadowmoon Valley" }, { 3521, "Zangarmarsh" },
+            { 3522, "Blade's Edge Mountains" }, { 3523, "Netherstorm" }, { 3524, "Azuremyst Isle" }, { 3525, "Bloodmyst Isle" },
+            { 3526, "Ammen Vale" }, { 3527, "Crash Site" }, { 3528, "Silverline Lake" }, { 3529, "Nestlewood Thicket" },
+            { 3530, "Shadow Ridge" }, { 3531, "Skulking Row" }, { 3532, "Dawning Lane" }, { 3533, "Ruins of Silvermoon" },
+            { 3534, "Feth's Way" }, { 3535, "Hellfire Citadel" }, { 3536, "Thrallmar" }, { 3537, "Borean Tundra" },
+            { 3698, "Nagrand Arena" }, { 3703, "Shattrath City" }, { 3711, "Sholazar Basin" },
+            { 2597, "Alterac Valley" }, { 3358, "Arathi Basin" }
         };
+
         private static string GetZoneName(int zone)
         {
             return ZoneIdNameDict.ContainsKey(zone) ? ZoneIdNameDict[zone] : "Unknown Zone";

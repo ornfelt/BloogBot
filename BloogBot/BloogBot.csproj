@@ -128,6 +128,7 @@
     <Compile Include="AI\IBotState.cs" />
     <Compile Include="AI\IDependencyContainer.cs" />
     <Compile Include="AI\PlayerTracker.cs" />
+    <Compile Include="AI\SharedStates\BattlegroundQueueState.cs" />
     <Compile Include="AI\SharedStates\BuyItemsState.cs" />
     <Compile Include="AI\SharedStates\CombatStateBase.cs" />
     <Compile Include="AI\SharedStates\EquipArmorState.cs" />

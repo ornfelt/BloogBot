@@ -22,6 +22,17 @@ namespace BloogBot.Game.Objects
         public ulong TargetGuid => MemoryManager.ReadUlong(GetDescriptorPtr() + MemoryAddresses.WoWUnit_TargetGuidOffset);
 
         public int Health => MemoryManager.ReadInt(GetDescriptorPtr() + MemoryAddresses.WoWUnit_HealthOffset);
+        //public int Health
+        //{
+        //    get
+        //    {
+        //        Console.WriteLine("Fetching health... GetDescPtr: " + GetDescriptorPtr());
+        //        Console.WriteLine("healthOffset: " + MemoryAddresses.WoWUnit_HealthOffset);
+        //        int health = MemoryManager.ReadInt(GetDescriptorPtr() + MemoryAddresses.WoWUnit_HealthOffset);
+        //        Console.WriteLine("Health: " + health);
+        //        return health;
+        //    }
+        //}
 
         public int MaxHealth => MemoryManager.ReadInt(GetDescriptorPtr() + MemoryAddresses.WoWUnit_MaxHealthOffset);
 

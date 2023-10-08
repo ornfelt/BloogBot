@@ -62,6 +62,9 @@ namespace BloogBot.AI.SharedStates
             }
             //var zoneWaypoints = hotspot.Waypoints.Where(x => x.Zone == player.CurrZone);
             var waypoints = hotspot.Waypoints;
+            Console.WriteLine("THIS WPs zones: ");
+            foreach (var wp in waypoints.GroupBy(x => x.Zone).ToList())
+                Console.WriteLine(wp.Key);
             var nearestWps = waypoints.OrderBy(w => player.Position.DistanceTo(w));
             var waypoint = player.CurrWpId == 0 ? nearestWps.FirstOrDefault() : waypoints.Where(x => x.ID == player.CurrWpId).FirstOrDefault();
 
@@ -92,7 +95,7 @@ namespace BloogBot.AI.SharedStates
                 {
                     Console.WriteLine($"WP: {waypoint.ID} " + (player.WpStuckCount > 10 ? "couldn't be reached" : "reached") + ", selecting new WP...");
                     // Check if player is higher level than waypoint maxlevel
-                    player.HasOverLeveled = player.Level >= waypoint.MaxLevel;
+                    player.HasOverLeveled = !HotspotIsBg(hotspot.Id) && player.Level > waypoint.MaxLevel;
 
                     if (player.Position.DistanceTo(waypoint) < 3.0F)
                     {
@@ -104,6 +107,11 @@ namespace BloogBot.AI.SharedStates
                             Console.WriteLine("Bot arrived at new zone!");
                         player.CurrZone = waypoint.Zone; // Update current zone
                         player.HasBeenStuckAtWp = false;
+
+                        // Random chance to queue for BG (if not in BG already)
+                        //if (random.Next(99)+1 < 5 && !HotspotIsBg(hotspot.Id))
+                        if (true && !HotspotIsBg(hotspot.Id))
+                            botStates.Push(new BattlegroundQueueState(botStates, container));
                     }
 
                     // Set new WP based on forced path if player has overleveled
@@ -224,12 +232,17 @@ namespace BloogBot.AI.SharedStates
             }
             // Try to mount
             string MountName = "white polar bear";
-            if (player.Level >= 40 && !player.IsMounted)
+            if (!HotspotIsBg(hotspot.Id) && player.Level >= 40 && !player.IsMounted)
                 player.LuaCall($"CastSpellByName('{MountName}')");
 
             player.CurrWpId = waypoint.ID;
             Console.WriteLine("Selected waypoint: " + waypoint.ToStringFull() + ", HasOverleveled: " + player.HasOverLeveled);
             botStates.Push(new MoveToHotspotWaypointState(botStates, container, waypoint));
+        }
+
+        private bool HotspotIsBg(int hotspotId)
+        {
+            return (hotspotId > 8 && hotspotId < 13);
         }
 
         public List<int> ForcedWpPathViaBFS(int startId)
@@ -253,9 +266,10 @@ namespace BloogBot.AI.SharedStates
                 }
                 // Player could be above all WP maxlevels, so make an exception
                 // for those players so that they can move through the zones.
-                // Hotspot 1-4 are Azeroth WPs, 5 is Outland, 6 is Northrend
+                // Hotspot 1-4 are Azeroth WPs, 5,6 Outland, and 7,8 Northrend
                 else if (currentWaypoint.Zone != player.CurrZone && ((hotspot.Id < 5 && player.Level >= 60)
-                    || (hotspot.Id == 5 && player.Level >= 70) || (hotspot.Id == 6 && player.Level >= 80)))
+                    || ((hotspot.Id == 5 || hotspot.Id == 6) && player.Level >= 70) 
+                    || ((hotspot.Id == 7 || hotspot.Id == 8) && player.Level >= 80)))
                 {
                     // Try to visit new zones
                     bool currWpIsNewZone = true;

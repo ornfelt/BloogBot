@@ -57,23 +57,7 @@ namespace BloogBot.AI
 
                 ThreadSynchronizer.RunOnMainThread(() =>
                 {
-                    currentLevel = ObjectManager.Player.Level;
-
-                    botStates.Push(new GrindState(botStates, container));
-
-                    currentState = botStates.Peek().GetType();
-                    currentStateStartTime = Environment.TickCount;
-                    currentPosition = ObjectManager.Player.Position;
-                    currentPositionStartTime = Environment.TickCount;
-                    teleportCheckPosition = ObjectManager.Player.Position;
-                    ObjectManager.Player.CurrWpId = 0;
-                    ObjectManager.Player.LastWpId = 0;
-                    ObjectManager.Player.CurrZone = "0";
-                    ObjectManager.Player.DeathsAtWp = 0;
-                    ObjectManager.Player.WpStuckCount = 0;
-                    ObjectManager.Player.ForcedWpPath = new List<int>();
-                    ObjectManager.Player.VisitedWps = new HashSet<int>();
-                    ObjectManager.Player.HasBeenStuckAtWp = false;
+                    ResetValues(container);
                 });
 
                 container.CheckForTravelPath(botStates, false);
@@ -83,6 +67,28 @@ namespace BloogBot.AI
             {
                 Logger.Log(e);
             }
+        }
+
+        private void ResetValues(IDependencyContainer container)
+        {
+            currentLevel = ObjectManager.Player.Level;
+            botStates.Push(new GrindState(botStates, container));
+            currentState = botStates.Peek().GetType();
+            currentStateStartTime = Environment.TickCount;
+            currentPosition = ObjectManager.Player.Position;
+            currentPositionStartTime = Environment.TickCount;
+            teleportCheckPosition = ObjectManager.Player.Position;
+            ObjectManager.Player.CurrWpId = 0;
+            ObjectManager.Player.LastWpId = 0;
+            ObjectManager.Player.CurrZone = "0";
+            ObjectManager.Player.DeathsAtWp = 0;
+            ObjectManager.Player.WpStuckCount = 0;
+            ObjectManager.Player.ForcedWpPath = new List<int>();
+            ObjectManager.Player.VisitedWps = new HashSet<int>();
+            ObjectManager.Player.HasBeenStuckAtWp = false;
+            ObjectManager.Player.HasJoinedBg = false;
+            ObjectManager.Player.HasOverLeveled = false;
+            ObjectManager.Player.LastKnownMapId = ObjectManager.MapId;
         }
 
         public void Travel(IDependencyContainer container, bool reverseTravelPath, Action callback)
@@ -303,7 +309,6 @@ namespace BloogBot.AI
 
         async void StartInternal(IDependencyContainer container)
         {
-            var player = ObjectManager.Player;
             while (running)
             {
                 try
@@ -312,17 +317,35 @@ namespace BloogBot.AI
 
                     ThreadSynchronizer.RunOnMainThread(() =>
                     {
+                        var player = ObjectManager.Player;
+                        if (player.HasJoinedBg && Wait.For("BGDelay", 30000))
+                            player.HasJoinedBg = false;
+                        else if (player.HasJoinedBg)
+                            return;
+
+                        if (ObjectManager.MapId != player.LastKnownMapId)
+                        {
+                            Console.WriteLine("Bot entered new map... Restarting bot!");
+                            //Stop();
+                            ObjectManager.KillswitchTriggered = false;
+                            //Start(container, stopCallback);
+                            ResetValues(container);
+                            player.LastKnownMapId = ObjectManager.MapId;
+                        }
+
                         if (botStates.Count() == 0)
                         {
                             Stop();
                             return;
                         }
 
-
-                        if (player.Level > currentLevel)
+                        if (!PlayerInBg())
                         {
-                            currentLevel = player.Level;
-                            DiscordClientWrapper.SendMessage($"Ding! {player.Name} is now level {player.Level}!");
+                            if (player.Level > currentLevel)
+                            {
+                                currentLevel = player.Level;
+                                DiscordClientWrapper.SendMessage($"Ding! {player.Name} is now level {player.Level}!");
+                            }
                         }
 
                         player.AntiAfk();
@@ -438,9 +461,14 @@ namespace BloogBot.AI
                             player.CurrWpId = 0;
 
                             botStates.Push(container.CreateRestState(botStates, container));
-                            botStates.Push(new RetrieveCorpseState(botStates, container));
-                            botStates.Push(new MoveToCorpseState(botStates, container));
-                            botStates.Push(new ReleaseCorpseState(botStates, container));
+                            if (PlayerInBg())
+                                botStates.Push(new ReleaseCorpseState(botStates, container));
+                            else
+                            {
+                                botStates.Push(new RetrieveCorpseState(botStates, container));
+                                botStates.Push(new MoveToCorpseState(botStates, container));
+                                botStates.Push(new ReleaseCorpseState(botStates, container));
+                            }
                         }
 
                         var currentHotspot = container.GetCurrentHotspot();
@@ -468,6 +496,14 @@ namespace BloogBot.AI
                                 player.LuaCall($"SendChatMessage('.npcb wp go 4')"); // EK horde repair
                             else if (currentHotspot.Id == 4)
                                 player.LuaCall($"SendChatMessage('.npcb wp go 13')"); // EK alliance repair
+                            else if (currentHotspot.Id == 5)
+                                player.LuaCall($"SendChatMessage('.npcb wp go 2578')"); // Outland horde repair
+                            else if (currentHotspot.Id == 6)
+                                player.LuaCall($"SendChatMessage('.npcb wp go 2601')"); // Outland alliance repair
+                            else if (currentHotspot.Id == 7)
+                                player.LuaCall($"SendChatMessage('.npcb wp go 2730')"); // Northrend horde repair
+                            else if (currentHotspot.Id == 8)
+                                player.LuaCall($"SendChatMessage('.npcb wp go 2703')"); // Northrend alliance repair
                             player.CurrWpId = 0;
 
                             container.RunningErrands = true;
@@ -543,6 +579,12 @@ namespace BloogBot.AI
                 botStates.Pop();
                 botStates.Push(new GrindState(botStates, container));
             }
+        }
+
+        private bool PlayerInBg()
+        {
+            var mapId = ObjectManager.MapId;
+            return (mapId == 30 || mapId == 489 || mapId == 529 || mapId == 559);
         }
 
         private void LogToFile(string text)

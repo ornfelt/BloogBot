@@ -106,7 +106,7 @@ namespace BloogBot.AI.SharedStates
                         player.HasBeenStuckAtWp = false;
 
                         // Random chance to queue for BG (if not in BG already)
-                        if (random.Next(99)+1 < 10 && !HotspotIsBg(hotspot.Id))
+                        if (random.Next(99)+1 < 10 && !HotspotIsBg(hotspot.Id) && player.Level >= 10)
                         //if (true && !HotspotIsBg(hotspot.Id))
                             botStates.Push(new BattlegroundQueueState(botStates, container));
                     }
@@ -197,21 +197,32 @@ namespace BloogBot.AI.SharedStates
                                 //Console.WriteLine("randLink: " + randLink);
                                 var linkWp = hotspot.Waypoints.Where(x => x.ID == Int32.Parse(linkSplit[randLink])).FirstOrDefault();
 
-                                // Check level requirement
-                                if (linkWp.MinLevel <= player.Level && !player.BlackListedWps.Contains(linkWp.ID))
+                                if (HotspotIsBg(hotspot.Id))
                                 {
-                                    //if (!player.HasVisitedWp(linkWp.ID) && linkWp.MinLevel <= player.Level && linkWp.MaxLevel > player.Level)
-                                    if (linkWp.MinLevel <= player.Level && linkWp.MaxLevel > player.Level)
+                                    if (!player.BlackListedWps.Contains(linkWp.ID))
                                     {
-                                        waypoint = linkWp;
-                                        newWpFound = true;
+                                            waypoint = linkWp;
+                                            newWpFound = true;
                                     }
-                                    else if (linkSearchCount > 15)
+                                }
+                                else
+                                {
+                                    // Check level requirement
+                                    if (linkWp.MinLevel <= player.Level && !player.BlackListedWps.Contains(linkWp.ID))
                                     {
-                                        // This means that randLink is same as previously visited WP
-                                        // Choose it if no other links are suitable
-                                        waypoint = linkWp;
-                                        newWpFound = true;
+                                        //if (!player.HasVisitedWp(linkWp.ID) && linkWp.MinLevel <= player.Level && linkWp.MaxLevel > player.Level)
+                                        if (linkWp.MinLevel <= player.Level && linkWp.MaxLevel > player.Level)
+                                        {
+                                            waypoint = linkWp;
+                                            newWpFound = true;
+                                        }
+                                        else if (linkSearchCount > 15)
+                                        {
+                                            // This means that randLink is same as previously visited WP
+                                            // Choose it if no other links are suitable
+                                            waypoint = linkWp;
+                                            newWpFound = true;
+                                        }
                                     }
                                 }
                             }

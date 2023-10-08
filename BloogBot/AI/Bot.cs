@@ -339,13 +339,10 @@ namespace BloogBot.AI
                             return;
                         }
 
-                        if (!PlayerInBg())
+                        if (!PlayerInBg() && player.Level > currentLevel)
                         {
-                            if (player.Level > currentLevel)
-                            {
-                                currentLevel = player.Level;
-                                DiscordClientWrapper.SendMessage($"Ding! {player.Name} is now level {player.Level}!");
-                            }
+                            currentLevel = player.Level;
+                            DiscordClientWrapper.SendMessage($"Ding! {player.Name} is now level {player.Level}!");
                         }
 
                         player.AntiAfk();

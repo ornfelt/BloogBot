@@ -322,6 +322,7 @@ namespace BloogBot.AI
                             player.HasJoinedBg = false;
                         else if (player.HasJoinedBg)
                             return;
+                        // If in BG, check if match has ended through Lua...
 
                         if (ObjectManager.MapId != player.LastKnownMapId)
                         {

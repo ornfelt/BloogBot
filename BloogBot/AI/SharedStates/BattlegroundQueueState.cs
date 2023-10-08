@@ -136,7 +136,12 @@ namespace BloogBot.AI.SharedStates
             if (player.Level < 70)
             {
                 if (bg == 0)
-                    bgQueueIndex = 1;
+                {
+                    if (!abCTA && !avCTA)
+                        bgQueueIndex = 1;
+                    else
+                        bgQueueIndex = 2;
+                }
                 else if (bg == 1)
                 {
                     if (abCTA)

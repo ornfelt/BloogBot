@@ -40,52 +40,43 @@ namespace BloogBot.AI.SharedStates
                 return;
             }
 
-            if (currentState == QueueStates.PVPFrameOpened && Wait.For("QueueDelay", 1500))
+            if (currentState == QueueStates.PVPFrameOpened && Wait.For("PVPFrameOpenedDelay", 1500))
             {
                 player.LuaCall($"PVPParentFrameTab2:Click()");
                 currentState = QueueStates.PVPTabOpened;
                 return;
             }
 
-            if (currentState == QueueStates.PVPTabOpened && Wait.For("QueueDelay", 1500))
+            if (currentState == QueueStates.PVPTabOpened && Wait.For("PVPTabOpenedDelay", 1500))
             {
                 player.LuaCall($"PVPBattlegroundFrame.selectedBG = {RandBgQueueIndex()}");
                 currentState = QueueStates.BgChosen;
                 return;
             }
 
-            if (currentState == QueueStates.BgChosen && Wait.For("QueueDelay", 1500))
+            if (currentState == QueueStates.BgChosen && Wait.For("BgChosenDelay", 1500))
             {
                 player.LuaCall($"TogglePVPFrame()");
                 currentState = QueueStates.PVPFrameToggled;
                 return;
             }
 
-            if (currentState == QueueStates.PVPFrameToggled && Wait.For("QueueDelay", 1500))
+            if (currentState == QueueStates.PVPFrameToggled && Wait.For("PVPFrameToggledDelay", 1500))
             {
                 player.LuaCall($"TogglePVPFrame()");
                 currentState = QueueStates.PVPFrameToggledAgain;
                 return;
             }
 
-            if (currentState == QueueStates.PVPFrameToggledAgain && Wait.For("QueueDelay", 1500))
+            if (currentState == QueueStates.PVPFrameToggledAgain && Wait.For("PVPFrameToggledAgainDelay", 1500))
             {
                 player.LuaCall($"JoinBattlefield(0,0)");
                 currentState = QueueStates.Queued;
                 return;
             }
 
-            if (currentState == QueueStates.Queued && Wait.For("QueueDelay", 5000))
+            if (currentState == QueueStates.Queued && Wait.For("QueuedDelay", 5000))
             {
-                player.LuaCall("StaticPopup1Button1:Click()");
-                player.LuaCall("TogglePVPFrame()");
-                currentState = QueueStates.Joined;
-                return;
-            }
-
-            if (currentState == QueueStates.Joined && Wait.For("QueueDelay", 2000))
-            {
-                // Try join again
                 player.LuaCall("StaticPopup1Button1:Click()");
                 player.HasJoinedBg = true;
                 botStates.Pop();
@@ -127,10 +118,12 @@ namespace BloogBot.AI.SharedStates
                 bg = 0;
             int bgQueueIndex = bg;
 
+            bool isLowLevel = player.Level < 70;
+
             if (bg == 0)
             {
                 // WSG
-                if (otherCTA || abCTA || avCTA)
+                if ((!isLowLevel && (otherCTA || abCTA || avCTA)) || isLowLevel && (!abCTA && !avCTA))
                     bgQueueIndex = 3;
                 else
                     bgQueueIndex = 2;
@@ -138,7 +131,7 @@ namespace BloogBot.AI.SharedStates
             else if (bg == 1)
             {
                 // AB
-                if (otherCTA || avCTA)
+                if ((!isLowLevel && (otherCTA || avCTA)) || isLowLevel && avCTA)
                     bgQueueIndex = 4;
                 else if (abCTA)
                     bgQueueIndex = 2;
@@ -148,39 +141,12 @@ namespace BloogBot.AI.SharedStates
             else
             {
                 // AV
-                if (otherCTA)
+                if (!isLowLevel && otherCTA)
                     bgQueueIndex = 5;
                 else if (avCTA)
                     bgQueueIndex = 2;
                 else
                     bgQueueIndex = 4;
-            }
-            // If low level
-            if (player.Level < 70)
-            {
-                if (bg == 0)
-                {
-                    if (!abCTA && !avCTA)
-                        bgQueueIndex = 3;
-                    else
-                        bgQueueIndex = 2;
-                }
-                else if (bg == 1)
-                {
-                    if (avCTA)
-                        bgQueueIndex = 4;
-                    else if (abCTA)
-                        bgQueueIndex = 2;
-                    else
-                        bgQueueIndex = 3;
-                }
-                else
-                {
-                    if (avCTA)
-                        bgQueueIndex = 2;
-                    else
-                        bgQueueIndex = 4;
-                }
             }
 
             Console.WriteLine($"Queueing for bg: {bg}, bgQueueIndex: {bgQueueIndex}");
@@ -221,7 +187,6 @@ namespace BloogBot.AI.SharedStates
         BgChosen,
         PVPFrameToggled,
         PVPFrameToggledAgain,
-        Queued,
-        Joined,
+        Queued
     }
 }

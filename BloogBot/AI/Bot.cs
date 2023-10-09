@@ -320,17 +320,22 @@ namespace BloogBot.AI
                         var player = ObjectManager.Player;
 
                         // BG checks
+                        var playerInBg = IsPlayerInBg();
                         if (player.HasJoinedBg && Wait.For("JoinedBGDelay", 30000))
                             player.HasJoinedBg = false;
                         else if (player.HasJoinedBg)
-                            return;
+                        {
+                            if (!playerInBg)
+                                player.LuaCall($"StaticPopup1Button1:Click()"); // Try to join again
+                            if (!player.IsInCombat) // Return if not in combat
+                                return;
+                        }
 
                         if (player.HasLeftBg && Wait.For("LeftBGDelay", 6000))
                             player.HasLeftBg = false;
                         else if (player.HasLeftBg)
                             return;
 
-                        var playerInBg = IsPlayerInBg();
                         // If in BG, check if it has ended
                         if (playerInBg)
                         {
@@ -613,10 +618,7 @@ namespace BloogBot.AI
             var result = player.LuaCallWithResults($"{{0}} = GetBattlefieldWinner()");
 
             if (result.Length > 0)
-            {
-                Console.WriteLine("result: " + result[0]);
                 return result[0] == "0" || result[0] == "1";
-            }
             else
                 return false;
         }

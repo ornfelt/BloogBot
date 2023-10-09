@@ -33,6 +33,7 @@ namespace BloogBot.AI.SharedStates
             {
                 player.StopAllMovement();
                 player.LuaCall($"TogglePVPFrame()");
+                player.LuaCall($"PVPBattlegroundFrame.selectedBG = {5}");
                 currentState = QueueStates.PVPFrameOpened;
                 return;
             }
@@ -75,6 +76,7 @@ namespace BloogBot.AI.SharedStates
             if (currentState == QueueStates.Queued && Wait.For("QueueDelay", 5000))
             {
                 player.LuaCall($"StaticPopup1Button1:Click()");
+                player.LuaCall($"TogglePVPFrame()");
                 player.HasJoinedBg = true;
                 botStates.Pop();
                 return;

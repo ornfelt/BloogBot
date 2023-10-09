@@ -22,27 +22,20 @@ namespace BloogBot.AI.SharedStates
         {
             if (Wait.For("StartReleaseCorpseStateDelay", 1000))
             {
-                if (!ObjectManager.Player.InGhostForm)
+                if (!ObjectManager.Player.InGhostForm && ObjectManager.Player.Health <= 0)
                     ObjectManager.Player.ReleaseCorpse();
+                else if (!ObjectManager.Player.InGhostForm && ObjectManager.Player.Health > 0)
+                {
+                    botStates.Pop();
+                    return;
+                }
                 else
                 {
                     var mapId = ObjectManager.MapId;
-                    // If in BG
-                    if (mapId == 30 || mapId == 489 || mapId == 529 || mapId == 559)
+                    if (Wait.For("LeaveReleaseCorpseStateDelay", (mapId == 30 || mapId == 489 || mapId == 529 || mapId == 559) ? 30000 : 2000))
                     {
-                        if (Wait.For("LeaveReleaseCorpseStateDelay", 30000) || !ObjectManager.Player.InGhostForm)
-                        {
-                            botStates.Pop();
-                            return;
-                        }
-                    }
-                    else
-                    {
-                        if (Wait.For("LeaveReleaseCorpseStateDelay", 2000))
-                        {
-                            botStates.Pop();
-                            return;
-                        }
+                        botStates.Pop();
+                        return;
                     }
                 }
             }

@@ -318,11 +318,28 @@ namespace BloogBot.AI
                     ThreadSynchronizer.RunOnMainThread(() =>
                     {
                         var player = ObjectManager.Player;
-                        if (player.HasJoinedBg && Wait.For("BGDelay", 30000))
+
+                        // BG checks
+                        if (player.HasJoinedBg && Wait.For("JoinedBGDelay", 30000))
                             player.HasJoinedBg = false;
                         else if (player.HasJoinedBg)
                             return;
-                        // If in BG, check if match has ended through Lua...
+
+                        if (player.HasLeftBg && Wait.For("LeftBGDelay", 6000))
+                            player.HasLeftBg = false;
+                        else if (player.HasLeftBg)
+                            return;
+
+                        var playerInBg = IsPlayerInBg();
+                        // If in BG, check if it has ended
+                        if (playerInBg)
+                        {
+                            if (IsBgFinished(player))
+                            {
+                                player.LuaCall($"LeaveBattlefield()");
+                                player.HasLeftBg = true;
+                            }
+                        }
 
                         if (ObjectManager.MapId != player.LastKnownMapId)
                         {
@@ -340,7 +357,7 @@ namespace BloogBot.AI
                             return;
                         }
 
-                        if (!PlayerInBg() && player.Level > currentLevel)
+                        if (!playerInBg && player.Level > currentLevel)
                         {
                             currentLevel = player.Level;
                             DiscordClientWrapper.SendMessage($"Ding! {player.Name} is now level {player.Level}!");
@@ -460,7 +477,7 @@ namespace BloogBot.AI
                             player.WpStuckCount = 0;
 
                             botStates.Push(container.CreateRestState(botStates, container));
-                            if (PlayerInBg())
+                            if (playerInBg)
                                 botStates.Push(new ReleaseCorpseState(botStates, container));
                             else
                             {
@@ -470,7 +487,7 @@ namespace BloogBot.AI
                             }
                         }
 
-                        if (!PlayerInBg())
+                        if (!playerInBg)
                         {
                             var currentHotspot = container.GetCurrentHotspot();
 
@@ -585,10 +602,23 @@ namespace BloogBot.AI
             }
         }
 
-        private bool PlayerInBg()
+        private bool IsPlayerInBg()
         {
             var mapId = ObjectManager.MapId;
             return (mapId == 30 || mapId == 489 || mapId == 529 || mapId == 559);
+        }
+
+        private bool IsBgFinished(LocalPlayer player)
+        {
+            var result = player.LuaCallWithResults($"{{0}} = GetBattlefieldWinner()");
+
+            if (result.Length > 0)
+            {
+                Console.WriteLine("result: " + result[0]);
+                return result[0] == "0" || result[0] == "1";
+            }
+            else
+                return false;
         }
 
         private void LogToFile(string text)

@@ -200,10 +200,17 @@ namespace BloogBot.AI.SharedStates
 
                                 if (HotspotIsBg(hotspot.Id))
                                 {
-                                    if (!player.BlackListedWps.Contains(linkWp.ID))
+                                    if (!player.BlackListedWps.Contains(linkWp.ID) && !player.HasVisitedWp(linkWp.ID))
                                     {
                                             waypoint = linkWp;
                                             newWpFound = true;
+                                    }
+                                    else if (linkSearchCount > 15)
+                                    {
+                                        // This means that randLink is same as previously visited WP
+                                        // Choose it if no other links are suitable
+                                        waypoint = linkWp;
+                                        newWpFound = true;
                                     }
                                 }
                                 else

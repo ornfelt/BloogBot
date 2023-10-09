@@ -517,6 +517,9 @@ namespace BloogBot.Game.Objects
         private static bool m_HasJoinedBg;
         public bool HasJoinedBg { get { return m_HasJoinedBg; } set { m_HasJoinedBg = value; } }
 
+        private static bool m_HasLeftBg;
+        public bool HasLeftBg { get { return m_HasLeftBg; } set { m_HasLeftBg = value; } }
+
         private static uint m_LastKnownMapId;
         public uint LastKnownMapId { get { return m_LastKnownMapId; } set { m_LastKnownMapId = value; } }
     }

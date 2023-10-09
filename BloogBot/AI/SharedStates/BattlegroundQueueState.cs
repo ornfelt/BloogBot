@@ -78,6 +78,8 @@ namespace BloogBot.AI.SharedStates
             if (currentState == QueueStates.Queued && Wait.For("QueuedDelay", 5000))
             {
                 player.LuaCall("StaticPopup1Button1:Click()");
+                player.LuaCall("StaticPopup1Button1:Click()");
+                player.LuaCall("StaticPopup1Button1:Click()");
                 player.HasJoinedBg = true;
                 botStates.Pop();
                 return;

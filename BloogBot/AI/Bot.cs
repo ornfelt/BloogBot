@@ -337,6 +337,8 @@ namespace BloogBot.AI
                             if (IsBgFinished(player))
                             {
                                 player.LuaCall("LeaveBattlefield()");
+                                player.LuaCall("LeaveBattlefield()");
+                                player.LuaCall("LeaveBattlefield()");
                                 player.HasLeftBg = true;
                             }
                         }

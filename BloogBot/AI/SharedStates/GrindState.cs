@@ -65,6 +65,8 @@ namespace BloogBot.AI.SharedStates
             var waypoints = hotspot.Waypoints;
             var nearestWps = waypoints.OrderBy(w => player.Position.DistanceTo(w));
             var waypoint = player.CurrWpId == 0 ? nearestWps.FirstOrDefault() : waypoints.Where(x => x.ID == player.CurrWpId).FirstOrDefault();
+            if (waypoint == null)
+                waypoint = nearestWps.FirstOrDefault();
 
             if (player.CurrWpId == 0)
             {

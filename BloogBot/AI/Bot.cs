@@ -330,11 +330,6 @@ namespace BloogBot.AI
                         else if (player.HasLeftBg)
                             return;
 
-                        if (player.HasEnteredNewMap && Wait.For("NewMapDelay", 3000))
-                            player.HasEnteredNewMap = false;
-                        else if (player.HasEnteredNewMap)
-                            return;
-
                         var playerInBg = IsPlayerInBg();
                         // If in BG, check if it has ended
                         if (playerInBg)
@@ -354,7 +349,6 @@ namespace BloogBot.AI
                             //Start(container, stopCallback);
                             ResetValues(container);
                             player.LastKnownMapId = ObjectManager.MapId;
-                            player.HasEnteredNewMap = true;
                         }
 
                         if (botStates.Count() == 0)

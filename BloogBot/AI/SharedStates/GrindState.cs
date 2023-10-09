@@ -65,15 +65,13 @@ namespace BloogBot.AI.SharedStates
             var waypoints = hotspot.Waypoints;
             var nearestWps = waypoints.OrderBy(w => player.Position.DistanceTo(w));
             var waypoint = player.CurrWpId == 0 ? nearestWps.FirstOrDefault() : waypoints.Where(x => x.ID == player.CurrWpId).FirstOrDefault();
-            if (waypoint == null)
-                waypoint = nearestWps.FirstOrDefault();
 
             if (player.CurrWpId == 0)
             {
                 // No current WP -> pick nearest WP
                 Console.WriteLine("No CurrWpId... Selecting new one");
                 bool newWpFound = false;
-                waypoint = nearestWps.ElementAtOrDefault(0);
+                waypoint = nearestWps.FirstOrDefault();
                 int wpCounter = 0;
                 while (!newWpFound)
                 {
@@ -85,6 +83,8 @@ namespace BloogBot.AI.SharedStates
 
                     if (wpCounter > 100) newWpFound = true;
                 }
+                if (waypoint == null)
+                    waypoint = nearestWps.FirstOrDefault();
                 // Log datetime to file to separate new bot sessions
                 LogToFile(DateTime.Now.ToString("dd/MM/yyyy HH:mm"));
             }
@@ -278,8 +278,6 @@ namespace BloogBot.AI.SharedStates
                 currentPath = queue.Dequeue();
                 var currentId = currentPath[currentPath.Count - 1]; // Get the last element
                 var currentWaypoint = hotspot.Waypoints.Where(x => x.ID == currentId).FirstOrDefault();
-                if (currentWaypoint == null)
-                    Console.WriteLine("CURRENT WAYPOINT NULL IN FORCEDWPPATHVIABFS");
 
                 if (currentWaypoint.MaxLevel > player.Level && currentWaypoint.MinLevel <= player.Level)
                 {

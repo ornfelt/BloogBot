@@ -75,10 +75,10 @@ namespace BloogBot.AI.SharedStates
                 return;
             }
 
-            if (currentState == QueueStates.Queued && Wait.For("QueuedDelay", 5000))
+            if (currentState == QueueStates.Queued && Wait.For("QueuedDelay", 3000))
             {
-                player.LuaCall("StaticPopup1Button1:Click()");
-                player.LuaCall("StaticPopup1Button1:Click()");
+                Console.WriteLine("Joining queue...");
+                player.LuaCall($"StaticPopup1Button1:Click()");
                 player.HasJoinedBg = true;
                 botStates.Pop();
                 return;
@@ -91,6 +91,7 @@ namespace BloogBot.AI.SharedStates
             {
                 botStates.Pop();
                 botStates.Push(new GrindState(botStates, container));
+                Console.WriteLine("Player in combat... Aborting BG queue");
                 return true;
             }
             return false;

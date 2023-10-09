@@ -327,24 +327,23 @@ namespace BloogBot.AI
                         {
                             if (!playerInBg)
                                 player.LuaCall($"StaticPopup1Button1:Click()"); // Try to join again
-                            if (!player.IsInCombat) // Return if not in combat
-                                return;
+                            return;
+                        }
+
+                        // If in BG, check if it has ended
+                        if (playerInBg)
+                        {
+                            if (IsBgFinished(player) || player.HasLeftBg)
+                            {
+                                player.LuaCall("LeaveBattlefield()");
+                                player.HasLeftBg = true;
+                            }
                         }
 
                         if (player.HasLeftBg && Wait.For("LeftBGDelay", 6000))
                             player.HasLeftBg = false;
                         else if (player.HasLeftBg)
                             return;
-
-                        // If in BG, check if it has ended
-                        if (playerInBg)
-                        {
-                            if (IsBgFinished(player))
-                            {
-                                player.LuaCall($"LeaveBattlefield()");
-                                player.HasLeftBg = true;
-                            }
-                        }
 
                         if (ObjectManager.MapId != player.LastKnownMapId)
                         {

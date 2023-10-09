@@ -29,6 +29,9 @@ namespace BloogBot.AI.SharedStates
 
         public void Update()
         {
+            if (CheckCombat())
+                return;
+
             if (currentState == QueueStates.Initial)
             {
                 player.StopAllMovement();
@@ -81,6 +84,17 @@ namespace BloogBot.AI.SharedStates
                 botStates.Pop();
                 return;
             }
+        }
+
+        private bool CheckCombat()
+        {
+            if (player.IsInCombat)
+            {
+                botStates.Pop();
+                botStates.Push(new GrindState(botStates, container));
+                return true;
+            }
+            return false;
         }
 
         private bool CheckCTA(string startTime, long occurence, long length)

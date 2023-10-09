@@ -325,8 +325,7 @@ namespace BloogBot.AI
                             player.HasJoinedBg = false;
                         else if (player.HasJoinedBg)
                         {
-                            if (!playerInBg)
-                                player.LuaCall("StaticPopup1Button1:Click()"); // Try to join again
+                            Console.WriteLine("Waiting for BG Delay...");
                             return;
                         }
 

@@ -36,7 +36,6 @@ namespace BloogBot.AI.SharedStates
             {
                 player.StopAllMovement();
                 player.LuaCall($"TogglePVPFrame()");
-                player.LuaCall($"PVPBattlegroundFrame.selectedBG = {5}");
                 currentState = QueueStates.PVPFrameOpened;
                 return;
             }
@@ -78,8 +77,16 @@ namespace BloogBot.AI.SharedStates
 
             if (currentState == QueueStates.Queued && Wait.For("QueueDelay", 5000))
             {
-                player.LuaCall($"StaticPopup1Button1:Click()");
-                player.LuaCall($"TogglePVPFrame()");
+                player.LuaCall("StaticPopup1Button1:Click()");
+                player.LuaCall("TogglePVPFrame()");
+                currentState = QueueStates.Joined;
+                return;
+            }
+
+            if (currentState == QueueStates.Joined && Wait.For("QueueDelay", 2000))
+            {
+                // Try join again
+                player.LuaCall("StaticPopup1Button1:Click()");
                 player.HasJoinedBg = true;
                 botStates.Pop();
                 return;
@@ -132,7 +139,7 @@ namespace BloogBot.AI.SharedStates
             {
                 // AB
                 if (otherCTA || avCTA)
-                    bgQueueIndex = 3;
+                    bgQueueIndex = 4;
                 else if (abCTA)
                     bgQueueIndex = 2;
                 else
@@ -154,25 +161,25 @@ namespace BloogBot.AI.SharedStates
                 if (bg == 0)
                 {
                     if (!abCTA && !avCTA)
-                        bgQueueIndex = 1;
+                        bgQueueIndex = 3;
                     else
                         bgQueueIndex = 2;
                 }
                 else if (bg == 1)
                 {
-                    if (abCTA)
-                        bgQueueIndex = 1;
-                    else if (avCTA)
-                        bgQueueIndex = 3;
-                    else
+                    if (avCTA)
+                        bgQueueIndex = 4;
+                    else if (abCTA)
                         bgQueueIndex = 2;
+                    else
+                        bgQueueIndex = 3;
                 }
                 else
                 {
                     if (avCTA)
-                        bgQueueIndex = 1;
+                        bgQueueIndex = 2;
                     else
-                        bgQueueIndex = 3;
+                        bgQueueIndex = 4;
                 }
             }
 
@@ -215,5 +222,6 @@ namespace BloogBot.AI.SharedStates
         PVPFrameToggled,
         PVPFrameToggledAgain,
         Queued,
+        Joined,
     }
 }

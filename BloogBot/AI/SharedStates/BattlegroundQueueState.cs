@@ -13,7 +13,7 @@ namespace BloogBot.AI.SharedStates
     {
         readonly Stack<IBotState> botStates;
         readonly IDependencyContainer container;
-        readonly LocalPlayer player;
+        LocalPlayer player;
         private QueueStates currentState;
         private bool otherCTA, avCTA, abCTA;
         private static Random rand = new Random();
@@ -31,6 +31,7 @@ namespace BloogBot.AI.SharedStates
         {
             if (CheckCombat())
                 return;
+            player = ObjectManager.Player;
 
             if (currentState == QueueStates.Initial)
             {
@@ -77,8 +78,8 @@ namespace BloogBot.AI.SharedStates
 
             if (currentState == QueueStates.Queued && Wait.For("QueuedDelay", 3000))
             {
-                Console.WriteLine("Joining queue...");
                 player.LuaCall($"StaticPopup1Button1:Click()");
+                player.LuaCallWithResults($"StaticPopup1Button1:Click()");
                 player.HasJoinedBg = true;
                 botStates.Pop();
                 return;
@@ -91,7 +92,6 @@ namespace BloogBot.AI.SharedStates
             {
                 botStates.Pop();
                 botStates.Push(new GrindState(botStates, container));
-                Console.WriteLine("Player in combat... Aborting BG queue");
                 return true;
             }
             return false;

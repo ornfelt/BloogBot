@@ -323,14 +323,7 @@ namespace BloogBot.AI
                         if (player.HasJoinedBg && Wait.For("JoinedBGDelay", 30000))
                             player.HasJoinedBg = false;
                         else if (player.HasJoinedBg)
-                        {
-                            if (!IsPlayerInBg())
-                            {
-                                Console.WriteLine("Player not in BG (in JoinedBGDelay...");
-                                player.LuaCall($"StaticPopup1Button1:Click()");
-                            }
                             return;
-                        }
 
                         if (player.HasLeftBg && Wait.For("LeftBGDelay", 25000))
                             player.HasLeftBg = false;
@@ -344,7 +337,7 @@ namespace BloogBot.AI
                             if (IsBgFinished(player))
                             {
                                 player.LuaCall("LeaveBattlefield()");
-                                player.LuaCall("LeaveBattlefield()");
+                                player.LuaCallWithResults("LeaveBattlefield()");
                                 player.HasLeftBg = true;
                             }
                         }

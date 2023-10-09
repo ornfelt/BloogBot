@@ -278,6 +278,8 @@ namespace BloogBot.AI.SharedStates
                 currentPath = queue.Dequeue();
                 var currentId = currentPath[currentPath.Count - 1]; // Get the last element
                 var currentWaypoint = hotspot.Waypoints.Where(x => x.ID == currentId).FirstOrDefault();
+                if (currentWaypoint == null)
+                    Console.WriteLine("CURRENT WAYPOINT NULL IN FORCEDWPPATHVIABFS");
 
                 if (currentWaypoint.MaxLevel > player.Level && currentWaypoint.MinLevel <= player.Level)
                 {

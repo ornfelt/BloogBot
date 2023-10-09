@@ -508,7 +508,7 @@ namespace BloogBot.Game.Objects
         }
         public HashSet<int> VisitedWps { get { return m_VisitedWps; } set { m_VisitedWps = value; } }
 
-        private static HashSet<int> m_BlackListedWps = new HashSet<int> {35, 118, 168, 993, 1093, 1094, 1100, 1359, 1364, 1369, 1426, 1438, 1444, 1445, 1456, 1462, 1463, 1464, 1465, 1466, 1566, 1614, 2388};
+        private static HashSet<int> m_BlackListedWps = new HashSet<int> {35, 118, 168, 993, 1093, 1094, 1100, 1180, 1359, 1364, 1369, 1426, 1438, 1444, 1445, 1456, 1462, 1463, 1464, 1465, 1466, 1566, 1614, 2388};
         public HashSet<int> BlackListedWps { get { return m_BlackListedWps; } set { m_BlackListedWps = value; } }
 
         private static bool m_HasBeenStuckAtWp;

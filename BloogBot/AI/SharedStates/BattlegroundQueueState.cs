@@ -79,7 +79,6 @@ namespace BloogBot.AI.SharedStates
             {
                 player.LuaCall("StaticPopup1Button1:Click()");
                 player.LuaCall("StaticPopup1Button1:Click()");
-                player.LuaCall("StaticPopup1Button1:Click()");
                 player.HasJoinedBg = true;
                 botStates.Pop();
                 return;

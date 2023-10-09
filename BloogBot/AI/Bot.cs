@@ -325,7 +325,7 @@ namespace BloogBot.AI
                         else if (player.HasJoinedBg)
                             return;
 
-                        if (player.HasLeftBg && Wait.For("LeftBGDelay", 5000))
+                        if (player.HasLeftBg && Wait.For("LeftBGDelay", 25000))
                             player.HasLeftBg = false;
                         else if (player.HasLeftBg)
                             return;
@@ -336,7 +336,6 @@ namespace BloogBot.AI
                         {
                             if (IsBgFinished(player))
                             {
-                                player.LuaCall("LeaveBattlefield()");
                                 player.LuaCall("LeaveBattlefield()");
                                 player.LuaCall("LeaveBattlefield()");
                                 player.HasLeftBg = true;

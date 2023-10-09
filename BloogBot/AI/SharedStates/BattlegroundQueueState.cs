@@ -76,7 +76,7 @@ namespace BloogBot.AI.SharedStates
                 return;
             }
 
-            if (currentState == QueueStates.Queued && Wait.For("QueuedDelay", 3000))
+            if (currentState == QueueStates.Queued && Wait.For("QueuedDelay", 5000))
             {
                 //player.LuaCall($"StaticPopup1Button1:Click()");
                 //player.LuaCall($"StaticPopup1Button1:Click(LeftButton, true)");

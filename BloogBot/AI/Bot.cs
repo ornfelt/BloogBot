@@ -320,34 +320,31 @@ namespace BloogBot.AI
                         var player = ObjectManager.Player;
 
                         // BG checks
-                        var playerInBg = IsPlayerInBg();
                         if (player.HasJoinedBg && Wait.For("JoinedBGDelay", 30000))
                             player.HasJoinedBg = false;
                         else if (player.HasJoinedBg)
-                        {
-                            Console.WriteLine("Waiting for BG Delay...");
-                            if (!playerInBg)
-                            {
-                                player.LuaCall("StaticPopup1Button1:Click()");
-                                Console.WriteLine("Playing not in BG yet... Trying to join again");
-                            }
                             return;
-                        }
 
+                        if (player.HasLeftBg && Wait.For("LeftBGDelay", 5000))
+                            player.HasLeftBg = false;
+                        else if (player.HasLeftBg)
+                            return;
+
+                        if (player.HasEnteredNewMap && Wait.For("NewMapDelay", 3000))
+                            player.HasEnteredNewMap = false;
+                        else if (player.HasEnteredNewMap)
+                            return;
+
+                        var playerInBg = IsPlayerInBg();
                         // If in BG, check if it has ended
                         if (playerInBg)
                         {
-                            if (IsBgFinished(player) || player.HasLeftBg)
+                            if (IsBgFinished(player))
                             {
                                 player.LuaCall("LeaveBattlefield()");
                                 player.HasLeftBg = true;
                             }
                         }
-
-                        if (player.HasLeftBg && Wait.For("LeftBGDelay", 6000))
-                            player.HasLeftBg = false;
-                        else if (player.HasLeftBg)
-                            return;
 
                         if (ObjectManager.MapId != player.LastKnownMapId)
                         {
@@ -357,6 +354,7 @@ namespace BloogBot.AI
                             //Start(container, stopCallback);
                             ResetValues(container);
                             player.LastKnownMapId = ObjectManager.MapId;
+                            player.HasEnteredNewMap = true;
                         }
 
                         if (botStates.Count() == 0)

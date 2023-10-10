@@ -522,5 +522,8 @@ namespace BloogBot.Game.Objects
 
         private static uint m_LastKnownMapId;
         public uint LastKnownMapId { get { return m_LastKnownMapId; } set { m_LastKnownMapId = value; } }
+
+        private static HashSet<ulong> m_BlackListedNeutralTargets = new HashSet<ulong> {};
+        public HashSet<ulong> BlackListedNeutralTargets { get { return m_BlackListedNeutralTargets; } set { m_BlackListedNeutralTargets = value; } }
     }
 }

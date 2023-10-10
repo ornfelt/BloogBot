@@ -130,7 +130,25 @@ namespace BloogBot.AI
             var potentialTargets = potentialTargetsList
                 .OrderBy(u => u.Position.DistanceTo(ObjectManager.Player?.Position));
 
-            return potentialTargets.FirstOrDefault();
+            return potentialTargets.FirstOrDefault(x => CanAttackTarget(x.Guid));
+            //return potentialTargets.FirstOrDefault();
+        }
+
+        private bool CanAttackTarget(ulong targetGuid)
+        {
+            var player = ObjectManager.Player;
+            if (player.BlackListedNeutralTargets.Contains(targetGuid))
+                return false;
+            player.SetTarget(targetGuid);
+            var result = player.LuaCallWithResults($"{{0}} = UnitCanAttack('player', 'target')");
+
+            if (result.Length > 0)
+                return result[0] == "1";
+            else
+            {
+                player.BlackListedNeutralTargets.Add(targetGuid);
+                return false;
+            }
         }
 
         //public Hotspot GetCurrentHotspot() => BotSettings.GrindingHotspot;

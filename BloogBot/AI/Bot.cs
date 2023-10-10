@@ -407,15 +407,7 @@ namespace BloogBot.AI
                             // Blacklist current target
                             var target = player.Target;
                             if (target != null)
-                            {
-                                if (Repository.BlacklistedMobExists(target.Guid))
-                                    Console.WriteLine("Error: Tried to blacklist target that's already blacklisted");
-                                else
-                                {
-                                    Repository.AddBlacklistedMob(target.Guid);
-                                    container.Probe.BlacklistedMobIds.Add(target.Guid);
-                                }
-                            }
+                                player.BlackListedNeutralTargets.Add(target.Guid);
 
                             // Force teleport to current WP
                             if (player.CurrWpId == 0)

@@ -363,6 +363,7 @@ namespace BloogBot.AI
                             currentLevel = player.Level;
                             DiscordClientWrapper.SendMessage($"Ding! {player.Name} is now level {player.Level}!");
                             Console.WriteLine($"Ding! {player.Name} is now level {player.Level}!");
+                            //PrintAndLog($"Ding! {player.Name} is now level {player.Level}!");
                         }
 
                         player.AntiAfk();

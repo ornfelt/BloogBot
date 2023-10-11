@@ -43,7 +43,7 @@ namespace FrostMageBot
             if (player.IsCasting)
                 return;
 
-            if (target.TappedByOther || !CanAttackTarget() || container.FindClosestTarget()?.Guid != target.Guid)
+            if (target.TappedByOther || container.FindClosestTarget()?.Guid != target.Guid)
             {
                 player.StopAllMovement();
                 botStates.Pop();
@@ -75,22 +75,6 @@ namespace FrostMageBot
             {
                 var nextWaypoint = Navigation.GetNextWaypoint(ObjectManager.MapId, player.Position, target.Position, false);
                 player.MoveToward(nextWaypoint);
-            }
-        }
-
-        private bool CanAttackTarget()
-        {
-            var player = ObjectManager.Player;
-            if (player.Target != target)
-                player.SetTarget(target.Guid);
-            var result = player.LuaCallWithResults($"{{0}} = UnitCanAttack('player', 'target')");
-
-            if (result.Length > 0)
-                return result[0] == "1";
-            else
-            {
-                player.BlackListedNeutralTargets.Add(target.Guid);
-                return false;
             }
         }
     }

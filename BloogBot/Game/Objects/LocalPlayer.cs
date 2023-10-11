@@ -517,13 +517,88 @@ namespace BloogBot.Game.Objects
         private static bool m_HasJoinedBg;
         public bool HasJoinedBg { get { return m_HasJoinedBg; } set { m_HasJoinedBg = value; } }
 
-        private static bool m_HasLeftBg;
-        public bool HasLeftBg { get { return m_HasLeftBg; } set { m_HasLeftBg = value; } }
+        private static bool m_HasEnteredNewMap;
+        public bool HasEnteredNewMap { get { return m_HasEnteredNewMap; } set { m_HasEnteredNewMap = value; } }
 
         private static uint m_LastKnownMapId;
         public uint LastKnownMapId { get { return m_LastKnownMapId; } set { m_LastKnownMapId = value; } }
 
         private static HashSet<ulong> m_BlackListedNeutralTargets = new HashSet<ulong> {};
         public HashSet<ulong> BlackListedNeutralTargets { get { return m_BlackListedNeutralTargets; } set { m_BlackListedNeutralTargets = value; } }
+
+        private static Dictionary<int, string> m_HotspotRepairDict = new Dictionary<int, string>
+        {
+            { 1, ".npcb wp go 31" },     // Kalimdor horde repair
+            { 2, ".npcb wp go 34" },     // Kalimdor alliance repair
+            { 3, ".npcb wp go 4" },      // EK horde repair
+            { 4, ".npcb wp go 13" },     // EK alliance repair
+            { 5, ".npcb wp go 2578" },   // Outland horde repair
+            { 6, ".npcb wp go 2601" },   // Outland alliance repair
+            { 7, ".npcb wp go 2730" },   // Northrend horde repair
+            { 8, ".npcb wp go 2703" }    // Northrend alliance repair
+        };
+        public Dictionary<int, string> HotspotRepairDict => m_HotspotRepairDict;
+
+        private static Dictionary<int, string> m_LevelItemsDict = new Dictionary<int, string>
+        {
+            {10, "SendChatMessage('.additem 10047'); SendChatMessage('.additem 8350');"},
+            {12, "SendChatMessage('.additem 14025');"},
+            {14, "SendChatMessage('.additem 2583');"},
+            {15, "SendChatMessage('.additem 21934'); SendChatMessage('.additem 12977');"},
+            {16, "SendChatMessage('.additem 12984');"},
+            {17, "SendChatMessage('.additem 1974');"},
+            {20, "SendChatMessage('.additem 21566'); SendChatMessage('.additem 38383'); SendChatMessage('.additem 6463');"},
+            {24, "SendChatMessage('.additem 7048');"},
+            {28, "SendChatMessage('.additem 9448');"},
+            {29, "SendChatMessage('.additem 9395');"},
+            {30, "SendChatMessage('.additem 18586'); SendChatMessage('.additem 7691'); SendChatMessage('.additem 2277');"},
+            {31, "SendChatMessage('.additem 29157'); SendChatMessage('.additem 4743');"},
+            {32, "SendChatMessage('.additem 13105'); SendChatMessage('.additem 7514');"},
+            {33, "SendChatMessage('.additem 10578'); SendChatMessage('.additem 18427');"},
+            {37, "SendChatMessage('.additem 13064');"},
+            {40, "SendChatMessage('.additem 10019');"},
+            {41, "SendChatMessage('.additem 9433');"},
+            {42, "SendChatMessage('.additem 13102');"},
+            {43, "SendChatMessage('.additem 6440');"},
+            {44, "SendChatMessage('.additem 17755');"},
+            {45, "SendChatMessage('.additem 9484'); SendChatMessage('.additem 10629');"},
+            {52, "SendChatMessage('.additem 16703');"},
+            {55, "SendChatMessage('.additem 13170'); SendChatMessage('.additem 23126'); SendChatMessage('.additem 13001');"},
+            {58, "SendChatMessage('.additem 18102'); SendChatMessage('.additem 19105'); SendChatMessage('.additem 22408');"},
+            {59, "SendChatMessage('.additem 22339'); SendChatMessage('.additem 13141'); SendChatMessage('.additem 20697');"},
+            {60, "SendChatMessage('.additem 20716'); SendChatMessage('.additem 13965'); SendChatMessage('.additem 28040');"}
+        };
+        public Dictionary<int, string> LevelItemsDict => m_LevelItemsDict;
+
+        private static Dictionary<int, string> m_EquipLevelItemsDict = new Dictionary<int, string>
+        {
+            {10, "EquipItemByName(10047); EquipItemByName(8350);"},
+            {12, "EquipItemByName(14025);"},
+            {14, "EquipItemByName(2583);"},
+            {15, "EquipItemByName(21934); EquipItemByName(12977);"},
+            {16, "EquipItemByName(12984);"},
+            {17, "EquipItemByName(1974);"},
+            {20, "EquipItemByName(21566); EquipItemByName(38383); EquipItemByName(6463);"},
+            {24, "EquipItemByName(7048);"},
+            {28, "EquipItemByName(9448);"},
+            {29, "EquipItemByName(9395);"},
+            {30, "EquipItemByName(18586); EquipItemByName(7691); EquipItemByName(2277);"},
+            {31, "EquipItemByName(29157); EquipItemByName(4743);"},
+            {32, "EquipItemByName(13105); EquipItemByName(7514);"},
+            {33, "EquipItemByName(10578); EquipItemByName(18427);"},
+            {37, "EquipItemByName(13064);"},
+            {40, "EquipItemByName(10019);"},
+            {41, "EquipItemByName(9433);"},
+            {42, "EquipItemByName(13102);"},
+            {43, "EquipItemByName(6440);"},
+            {44, "EquipItemByName(17755);"},
+            {45, "EquipItemByName(9484); EquipItemByName(10629);"},
+            {52, "EquipItemByName(16703);"},
+            {55, "EquipItemByName(13170); EquipItemByName(23126); EquipItemByName(13001);"},
+            {58, "EquipItemByName(18102); EquipItemByName(19105); EquipItemByName(22408);"},
+            {59, "EquipItemByName(22339); EquipItemByName(13141); EquipItemByName(20697);"},
+            {60, "EquipItemByName(20716); EquipItemByName(13965); EquipItemByName(28040);"}
+        };
+        public Dictionary<int, string> EquipLevelItemsDict => m_EquipLevelItemsDict;
     }
 }

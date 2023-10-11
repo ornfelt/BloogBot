@@ -325,9 +325,9 @@ namespace BloogBot.AI
                         else if (player.HasJoinedBg)
                             return;
 
-                        if (player.HasLeftBg && Wait.For("LeftBGDelay", 15000))
-                            player.HasLeftBg = false;
-                        else if (player.HasLeftBg)
+                        if (player.HasEnteredNewMap && Wait.For("LeftBGDelay", 15000))
+                            player.HasEnteredNewMap = false;
+                        else if (player.HasEnteredNewMap)
                             return;
 
                         var playerInBg = IsPlayerInBg();
@@ -338,7 +338,7 @@ namespace BloogBot.AI
                             {
                                 player.LuaCall("LeaveBattlefield()");
                                 player.LuaCallWithResults("LeaveBattlefield()");
-                                player.HasLeftBg = true;
+                                player.HasEnteredNewMap = true;
                             }
                         }
 
@@ -364,6 +364,7 @@ namespace BloogBot.AI
                             DiscordClientWrapper.SendMessage($"Ding! {player.Name} is now level {player.Level}!");
                             Console.WriteLine($"Ding! {player.Name} is now level {player.Level}!");
                             //PrintAndLog($"Ding! {player.Name} is now level {player.Level}!");
+                            HandleLevelUp(container, player);
                         }
 
                         player.AntiAfk();
@@ -501,22 +502,7 @@ namespace BloogBot.AI
                                 PopStackToBaseState();
 
                                 Console.WriteLine($"Bot needs to repair!");
-                                if (currentHotspot.Id == 1)
-                                    player.LuaCall($"SendChatMessage('.npcb wp go 31')"); // Kalimdor horde repair
-                                else if (currentHotspot.Id == 2)
-                                    player.LuaCall($"SendChatMessage('.npcb wp go 34')"); // Kalimdor alliance repair
-                                else if (currentHotspot.Id == 3)
-                                    player.LuaCall($"SendChatMessage('.npcb wp go 4')"); // EK horde repair
-                                else if (currentHotspot.Id == 4)
-                                    player.LuaCall($"SendChatMessage('.npcb wp go 13')"); // EK alliance repair
-                                else if (currentHotspot.Id == 5)
-                                    player.LuaCall($"SendChatMessage('.npcb wp go 2578')"); // Outland horde repair
-                                else if (currentHotspot.Id == 6)
-                                    player.LuaCall($"SendChatMessage('.npcb wp go 2601')"); // Outland alliance repair
-                                else if (currentHotspot.Id == 7)
-                                    player.LuaCall($"SendChatMessage('.npcb wp go 2730')"); // Northrend horde repair
-                                else if (currentHotspot.Id == 8)
-                                    player.LuaCall($"SendChatMessage('.npcb wp go 2703')"); // Northrend alliance repair
+                                player.LuaCall($"SendChatMessage('{player.HotspotRepairDict[currentHotspot.Id]}')");
 
                                 player.CurrWpId = 0;
                                 player.WpStuckCount = 0;
@@ -573,6 +559,35 @@ namespace BloogBot.AI
                 }
             }
             Console.WriteLine("End of loop");
+        }
+
+        private void HandleLevelUp(IDependencyContainer container, LocalPlayer player)
+        {
+            // Handle spells
+
+            //  Handle equipment
+            if (player.LevelItemsDict.TryGetValue(player.Level, out string addItemsCommand))
+            {
+
+            }
+            if (player.EquipLevelItemsDict.TryGetValue(player.Level, out string equipItemsCommand))
+            {
+
+            }
+
+            // Handle talents
+
+            // Handle teleport
+            if (player.Level == 60)
+            {
+                player.LuaCall($"SendChatMessage('.npcb wp go 2583')"); // Teleport to Outland
+                player.HasEnteredNewMap = true;
+            }
+            else if (player.Level == 70)
+            {
+                player.LuaCall($"SendChatMessage('.npcb wp go 2706')"); // Teleport to Northrend
+                player.HasEnteredNewMap = true;
+            }
         }
 
         private void HandleBotStuck(IDependencyContainer container, LocalPlayer player, bool StuckInState)

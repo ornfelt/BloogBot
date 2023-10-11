@@ -114,9 +114,9 @@ namespace BloogBot.AI
                 // filter units by unit reactions as specified in targeting settings
                 .Where(u => BotSettings.UnitReactions.Count == 0 || BotSettings.UnitReactions.Contains(u.UnitReaction.ToString()))
                 // Skip Neutral enemies in BG
-                //.Where(u => !((mapId == 30 || mapId == 489 || mapId == 529 || mapId == 559) && u.UnitReaction == UnitReaction.Neutral))
-                // Skip Neutral for now...
-                .Where(u => !(u.UnitReaction == UnitReaction.Neutral))
+                .Where(u => !((mapId == 30 || mapId == 489 || mapId == 529 || mapId == 559) && u.UnitReaction == UnitReaction.Neutral))
+                // Always skip Neutral
+                //.Where(u => !(u.UnitReaction == UnitReaction.Neutral))
                 // filter units by creature type as specified in targeting settings. also include things like totems and slimes.
                 .Where(u => BotSettings.CreatureTypes.Count == 0 || u.CreatureType == CreatureType.Mechanical || (u.CreatureType == CreatureType.Totem && u.Position.DistanceTo(ObjectManager.Player?.Position) <= 20) || BotSettings.CreatureTypes.Contains(u.CreatureType.ToString()) || oozeNames.Contains(u.Name))
                 // filter by the level range specified in targeting settings

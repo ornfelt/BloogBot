@@ -149,6 +149,13 @@ namespace BloogBot.AI.SharedStates
             if (player.TargetGuid != target.Guid)
                 player.SetTarget(target.Guid);
 
+            if (!CanAttackTarget())
+            {
+                CleanUp();
+                return true;
+            }
+
+
             // ensure we're facing the target
             if (!player.IsFacing(target.Position))
                 player.Face(target.Position);
@@ -193,6 +200,20 @@ namespace BloogBot.AI.SharedStates
             }
 
             return false;
+        }
+
+        private bool CanAttackTarget()
+        {
+            var player = ObjectManager.Player;
+            var result = player.LuaCallWithResults($"{{0}} = UnitCanAttack('player', 'target')");
+
+            if (result.Length > 0)
+                return result[0] == "1";
+            else
+            {
+                player.BlackListedNeutralTargets.Add(target.Guid);
+                return false;
+            }
         }
 
         public void TryCastSpell(string name, int minRange, int maxRange, bool condition = true, Action callback = null, bool castOnSelf = false) =>

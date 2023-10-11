@@ -141,17 +141,7 @@ namespace BloogBot.AI
             var player = ObjectManager.Player;
             if (player.BlackListedNeutralTargets.Contains(targetGuid))
                 return false;
-            return true; // Below seems to make client crash when run too often?
-            //player.SetTarget(targetGuid);
-            //var result = player.LuaCallWithResults($"{{0}} = UnitCanAttack('player', 'target')");
-
-            //if (result.Length > 0)
-            //    return result[0] == "1";
-            //else
-            //{
-            //    player.BlackListedNeutralTargets.Add(targetGuid);
-            //    return false;
-            //}
+            return true;
         }
 
         //public Hotspot GetCurrentHotspot() => BotSettings.GrindingHotspot;

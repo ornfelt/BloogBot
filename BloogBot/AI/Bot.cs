@@ -564,18 +564,21 @@ namespace BloogBot.AI
         private void HandleLevelUp(IDependencyContainer container, LocalPlayer player)
         {
             // Handle spells
+            //if (player.LevelSpellsDict.TryGetValue(player.Level, out List<int> spellIds))
+            //{
+            //    player.LuaCall(string.Join(" ", spellIds.Select(id => $"SendChatMessage('.learn {id}');")));
+            //}
 
-            //  Handle equipment
-            if (player.LevelItemsDict.TryGetValue(player.Level, out string addItemsCommand))
+            // Handle equipment
+            if (player.LevelItemsDict.TryGetValue(player.Level, out List<int> itemIds))
             {
-
-            }
-            if (player.EquipLevelItemsDict.TryGetValue(player.Level, out string equipItemsCommand))
-            {
-
+                player.LuaCall(string.Join(" ", itemIds.Select(id => $"SendChatMessage('.additem {id}');")));
+                player.LuaCall(string.Join(" ", itemIds.Select(id => $"EquipItemByName({id}); StaticPopup1Button1:Click();")));
             }
 
             // Handle talents
+            // https://wowwiki-archive.fandom.com/wiki/API_LearnTalent
+            //player.LuaCall($"LearnTalent(x,x);");
 
             // Handle teleport
             if (player.Level == 60)

@@ -267,10 +267,6 @@ namespace BloogBot.AI.SharedStates
             var hotspot = container.GetCurrentHotspot();
             var visited = new HashSet<int>();
             var queue = new Queue<List<int>>();
-            // Null check
-            if (hotspot.Waypoints.Where(x => x.ID == startId).FirstOrDefault() == null)
-                startId = hotspot.Waypoints.OrderBy(w => player.Position.DistanceTo(w)).FirstOrDefault().ID;
-
             queue.Enqueue(new List<int> { startId });
             List<int> currentPath = null;
 

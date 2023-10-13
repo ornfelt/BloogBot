@@ -115,9 +115,7 @@ namespace BloogBot.AI.SharedStates
         {
             SetCTA();
             int bg = rand.Next(3);
-            if (player.Level < 20)
-                bg = 0;
-            else if (player.Level < 50)
+            if (player.Level < 50)
                 bg = 0;
             int bgQueueIndex = bg;
 
@@ -152,6 +150,8 @@ namespace BloogBot.AI.SharedStates
                     bgQueueIndex = 4;
             }
 
+            if (player.Level < 20)
+                bgQueueIndex = 3;
             Console.WriteLine($"Queueing for bg: {bg}, bgQueueIndex: {bgQueueIndex}");
             return bgQueueIndex;
         }

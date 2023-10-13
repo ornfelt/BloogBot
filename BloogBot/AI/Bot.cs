@@ -320,7 +320,10 @@ namespace BloogBot.AI
                         var player = ObjectManager.Player;
                         // Short delay
                         if (player.ShouldWaitForShortDelay && Wait.For("ShortDelay", 600))
+                        {
                             player.ShouldWaitForShortDelay = false;
+                            HandleLevelUp(player, true); // Try again just in case
+                        }
                         else if (player.ShouldWaitForShortDelay)
                             return;
 
@@ -376,7 +379,7 @@ namespace BloogBot.AI
                             DiscordClientWrapper.SendMessage($"Ding! {player.Name} is now level {player.Level}!");
                             Console.WriteLine($"Ding! {player.Name} is now level {player.Level}!");
                             //PrintAndLog($"Ding! {player.Name} is now level {player.Level}!");
-                            HandleLevelUp(player);
+                            HandleLevelUp(player, true);
                         }
 
                         player.AntiAfk();
@@ -573,14 +576,14 @@ namespace BloogBot.AI
             Console.WriteLine("End of loop");
         }
 
-        private void HandleLevelUp(LocalPlayer player)
+        private void HandleLevelUp(LocalPlayer player, bool shouldAddItems)
         {
             // Handle spells
             if (player.LevelSpellsDict.TryGetValue(player.Level, out List<int> spellIds))
                 player.LuaCall(string.Join(" ", spellIds.Select(id => $"SendChatMessage('.player learn {player.Name} {id}');")));
 
             // Handle equipment
-            if (player.LevelItemsDict.TryGetValue(player.Level, out List<int> itemIds))
+            if (shouldAddItems && player.LevelItemsDict.TryGetValue(player.Level, out List<int> itemIds))
             {
                 player.LuaCall(string.Join(" ", itemIds.Select(id => $"SendChatMessage('.additem {id}');")));
                 player.HasItemsToEquip = true;

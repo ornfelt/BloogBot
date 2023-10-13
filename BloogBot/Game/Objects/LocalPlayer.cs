@@ -508,7 +508,7 @@ namespace BloogBot.Game.Objects
         }
         public HashSet<int> VisitedWps { get { return m_VisitedWps; } set { m_VisitedWps = value; } }
 
-        private static HashSet<int> m_BlackListedWps = new HashSet<int> {35, 118, 168, 993, 1093, 1094, 1100, 1180, 1359, 1364, 1369, 1426, 1438, 1444, 1445, 1456, 1462, 1463, 1464, 1465, 1466, 1566, 1614, 2388, 2571, 5057};
+        private static HashSet<int> m_BlackListedWps = new HashSet<int> {35, 118, 168, 993, 1093, 1094, 1100, 1180, 1359, 1364, 1369, 1426, 1438, 1444, 1445, 1456, 1462, 1463, 1464, 1465, 1466, 1566, 1614, 2388, 2571, 5057, 5069};
         public HashSet<int> BlackListedWps { get { return m_BlackListedWps; } set { m_BlackListedWps = value; } }
 
         private static bool m_HasBeenStuckAtWp;
@@ -520,11 +520,36 @@ namespace BloogBot.Game.Objects
         private static bool m_HasEnteredNewMap;
         public bool HasEnteredNewMap { get { return m_HasEnteredNewMap; } set { m_HasEnteredNewMap = value; } }
 
+        private static bool m_ShouldWaitForShortDelay;
+        public bool ShouldWaitForShortDelay { get { return m_ShouldWaitForShortDelay; } set { m_ShouldWaitForShortDelay = value; } }
+        
+        private static bool m_HasItemsToEquip;
+        public bool HasItemsToEquip { get { return m_HasItemsToEquip; } set { m_HasItemsToEquip = value; } }
+
         private static uint m_LastKnownMapId;
         public uint LastKnownMapId { get { return m_LastKnownMapId; } set { m_LastKnownMapId = value; } }
 
-        private static HashSet<ulong> m_BlackListedNeutralTargets = new HashSet<ulong> {};
-        public HashSet<ulong> BlackListedNeutralTargets { get { return m_BlackListedNeutralTargets; } set { m_BlackListedNeutralTargets = value; } }
+        private static HashSet<ulong> m_BlackListedTargets = new HashSet<ulong> {};
+        public HashSet<ulong> BlackListedTargets { get { return m_BlackListedTargets; } set { m_BlackListedTargets = value; } }
+
+        public List<string> FoodNames { get { return s_FoodNames; } set { s_FoodNames = value; } }
+        private static List<string> s_FoodNames = new List<string> 
+        {
+            "Conjured Cinnamon Roll", "Conjured Croissant", "Conjured Pumpernickel", 
+            "Conjured Rye", "Conjured Muffin", "Conjured Sourdough", 
+            "Conjured Mana Pie", "Conjured Sweet Roll", "Conjured Bread", 
+            "Conjured Mana Strudel", "Conjured Mana Biscuit"
+        };
+
+        public List<string> DrinkNames { get { return s_DrinkNames; } set { s_DrinkNames = value; } }
+        private static List<string> s_DrinkNames = new List<string>
+        {
+            "Conjured Crystal Water", "Conjured Purified Water", "Conjured Fresh Water",
+            "Conjured Spring Water", "Conjured Water", "Conjured Mineral Water",
+            "Conjured Sparkling Water", "Conjured Glacier Water",
+            "Conjured Mountain Spring Water", "Conjured Mana Strudel",
+            "Conjured Mana Biscuit", "Conjured Mana Pie"
+        };
 
         private static Dictionary<int, string> m_HotspotRepairDict = new Dictionary<int, string>
         {
@@ -542,7 +567,7 @@ namespace BloogBot.Game.Objects
         public Dictionary<int, List<int>> LevelItemsDict => m_LevelItemsDict;
         private static Dictionary<int, List<int>> m_LevelItemsDict = new Dictionary<int, List<int>>
         {
-            {10, new List<int> { 6659, 3344 }}, {12, new List<int> { 14025 }}, {14, new List<int> { 2583 }}, 
+            {10, new List<int> { 6659, 3344 }}, {12, new List<int> { 6378 }}, {14, new List<int> { 2583 }}, 
             {15, new List<int> { 21934, 12977 }}, {16, new List<int> { 12984 }}, {17, new List<int> { 1974 }},
             {20, new List<int> { 21566, 38383 }}, {21, new List<int> { 6463 }}, {24, new List<int> { 7048 }},
             {28, new List<int> { 9448 }}, {29, new List<int> { 9395 }}, {30, new List<int> { 18586, 7691 }},
@@ -556,6 +581,41 @@ namespace BloogBot.Game.Objects
             {68, new List<int> { 27948, 30932 }}, {69, new List<int> { 27784, 38257 }}, {70, new List<int> { 27746, 38250 }},
             {71, new List<int> { 27683, 27885 }}, {72, new List<int> { 35657, 44365 }}, {73, new List<int> { 40758, 35663 }},
             {74, new List<int> { 43160, 39649 }}, {77, new List<int> { 35679, 38613 }}, {78, new List<int> { 37038, 37113 }}
+        };
+
+        public Dictionary<int, List<int>> LevelSpellsDict => m_LevelSpellsDict;
+        private static Dictionary<int, List<int>> m_LevelSpellsDict = new Dictionary<int, List<int>>
+        {
+            {6, new List<int> { 143, 587 }}, {12, new List<int> { 145, 604, 597 }}, {14, new List<int> { 1460, 837, 2137 }},
+            {20, new List<int> { 12051, 7322 }}, {22, new List<int> { 990, 2138, 6143 }}, {24, new List<int> { 8450, 2139 }},
+            {26, new List<int> { 120, 865, 8406 }}, {28, new List<int> { 1461 }}, {30, new List<int> { 7302, 8412, 8401, 8457 }},
+            {32, new List<int> { 6129, 8407, 8461 }}, {34, new List<int> { 6117, 8492 }}, {36, new List<int> { 8451, 8402 }},
+            {38, new List<int> { 8413, 8408 }}, {40, new List<int> { 7320, 6131, 8458 }}, {42, new List<int> { 8462, 10144, 10148, 10156, 10159 }},
+            {44, new List<int> { 10179 }}, {46, new List<int> { 22782, 10197 }}, {48, new List<int> { 10173, 10149 }},
+            {50, new List<int> { 10219, 10160, 10161, 10180 }}, {54, new List<int> { 10150, 10199 }},
+            {56, new List<int> { 10157, 10181 }}, {58, new List<int> { 22783, 13033 }}, {61, new List<int> { 27078 }},
+            {63, new List<int> { 27071 }}, {64, new List<int> { 27134 }}, {65, new List<int> { 27087 }}, {66, new List<int> { 27070 }},
+            {67, new List<int> { 33944, 27088 }}, {69, new List<int> { 27124, 27125, 27072 }}, {70, new List<int> { 27079, 27126 }},
+            {71, new List<int> { 43023 }}, {74, new List<int> { 42832, 42872 }}, {75, new List<int> { 42917, 43038 }},
+            {76, new List<int> { 43015 }}, {78, new List<int> { 42833, 43010, 42842 }}, {79, new List<int> { 43008, 43024, 42931 }},
+            {80, new List<int> { 42995, 42873 }}
+        };
+
+        public Dictionary<int, string> LevelTalentsDict => m_LevelTalentsDict;
+        private static Dictionary<int, string> m_LevelTalentsDict = new Dictionary<int, string>
+        {
+            {10, "3, 2"}, {11, "3, 2"}, {12, "3, 2"}, {13, "3, 2"}, {14, "3, 2"}, {15, "3, 4"},
+            {16, "3, 4"}, {17, "3, 4"}, {18, "3, 6"}, {19, "3, 6"}, {20, "3, 6"}, {21, "3, 9"},
+            {22, "3, 8"}, {23, "3, 8"}, {24, "3, 8"}, {25, "3, 13"}, {26, "3, 13"}, {27, "3, 13"},
+            {28, "3, 12"}, {29, "3, 12"}, {30, "3, 12"}, {31, "3, 14"}, {32, "3, 5"}, {33, "3, 5"},
+            {34, "3, 7"}, {35, "3, 7"}, {36, "3, 7"}, {37, "3, 17"}, {38, "3, 17"}, {39, "3, 16"},
+            {40, "3, 20"}, {41, "3, 16"}, {42, "3, 16"}, {43, "3, 21"}, {44, "3, 21"}, {45, "3, 21"},
+            {46, "3, 21"}, {47, "3, 21"}, {48, "3, 22"}, {49, "3, 22"}, {50, "3, 25"}, {51, "3, 26"},
+            {52, "3, 26"}, {53, "3, 26"}, {54, "3, 23"}, {55, "3, 23"}, {56, "3, 27"}, {57, "3, 27"},
+            {58, "3, 27"}, {59, "3, 27"}, {60, "3, 27"}, {61, "3, 18"}, {62, "3, 18"}, {63, "3, 18"},
+            {64, "3, 19"}, {65, "3, 19"}, {66, "3, 28"}, {67, "3, 15"}, {68, "3, 15"}, {69, "3, 15"},
+            {70, "2, 2"}, {71, "2, 2"}, {72, "2, 2"}, {73, "2, 1"}, {74, "2, 1"}, {75, "3, 3"},
+            {76, "3, 3"}, {77, "3, 3"}, {78, "3, 1"}, {79, "3, 1"}, {80, "3, 1"}
         };
     }
 }

@@ -115,8 +115,8 @@ namespace BloogBot.AI
                 .Where(u => BotSettings.UnitReactions.Count == 0 || BotSettings.UnitReactions.Contains(u.UnitReaction.ToString()))
                 // Skip Neutral enemies in BG
                 //.Where(u => !((mapId == 30 || mapId == 489 || mapId == 529 || mapId == 559) && u.UnitReaction == UnitReaction.Neutral))
-                // Always skip neutral
-                .Where(u => !(u.UnitReaction == UnitReaction.Neutral))
+                // Always skip neutral (when above level 12)
+                .Where(u => !(ObjectManager.Player?.Level > 12 && u.UnitReaction == UnitReaction.Neutral))
                 // filter units by creature type as specified in targeting settings. also include things like totems and slimes.
                 .Where(u => BotSettings.CreatureTypes.Count == 0 || u.CreatureType == CreatureType.Mechanical || (u.CreatureType == CreatureType.Totem && u.Position.DistanceTo(ObjectManager.Player?.Position) <= 20) || BotSettings.CreatureTypes.Contains(u.CreatureType.ToString()) || oozeNames.Contains(u.Name))
                 // filter by the level range specified in targeting settings
@@ -139,7 +139,7 @@ namespace BloogBot.AI
         private bool CanAttackTarget(ulong targetGuid)
         {
             var player = ObjectManager.Player;
-            if (player.BlackListedNeutralTargets.Contains(targetGuid))
+            if (player.BlackListedTargets.Contains(targetGuid))
                 return false;
             return true; // Below seems to make client crash when run too often?
             //player.SetTarget(targetGuid);

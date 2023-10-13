@@ -318,14 +318,19 @@ namespace BloogBot.AI
                     ThreadSynchronizer.RunOnMainThread(() =>
                     {
                         var player = ObjectManager.Player;
+                        // Short delay
+                        if (player.ShouldWaitForShortDelay && Wait.For("ShortDelay", 600))
+                            player.ShouldWaitForShortDelay = false;
+                        else if (player.ShouldWaitForShortDelay)
+                            return;
 
-                        // BG checks
+                        // BG / new map delays
                         if (player.HasJoinedBg && Wait.For("JoinedBGDelay", 30000))
                             player.HasJoinedBg = false;
                         else if (player.HasJoinedBg)
                             return;
 
-                        if (player.HasEnteredNewMap && Wait.For("LeftBGDelay", 15000))
+                        if (player.HasEnteredNewMap && Wait.For("EnteredNewMapDelay", 15000))
                             player.HasEnteredNewMap = false;
                         else if (player.HasEnteredNewMap)
                             return;
@@ -358,13 +363,20 @@ namespace BloogBot.AI
                             return;
                         }
 
-                        if (!playerInBg && player.Level > currentLevel)
+                        if (!player.IsInCombat && player.HasItemsToEquip)
+                        {
+                            if (player.LevelItemsDict.TryGetValue(player.Level, out List<int> itemIds))
+                                player.LuaCall(string.Join(" ", itemIds.Select(id => $"EquipItemByName({id}); StaticPopup1Button1:Click();")));
+                            player.HasItemsToEquip = false;
+                        }
+
+                        if (!playerInBg && !player.IsInCombat && player.Level > currentLevel)
                         {
                             currentLevel = player.Level;
                             DiscordClientWrapper.SendMessage($"Ding! {player.Name} is now level {player.Level}!");
                             Console.WriteLine($"Ding! {player.Name} is now level {player.Level}!");
                             //PrintAndLog($"Ding! {player.Name} is now level {player.Level}!");
-                            HandleLevelUp(container, player);
+                            HandleLevelUp(player);
                         }
 
                         player.AntiAfk();
@@ -408,7 +420,7 @@ namespace BloogBot.AI
                             // Blacklist current target
                             var target = player.Target;
                             if (target != null)
-                                player.BlackListedNeutralTargets.Add(target.Guid);
+                                player.BlackListedTargets.Add(target.Guid);
 
                             // Force teleport to current WP
                             if (player.CurrWpId == 0)
@@ -561,25 +573,26 @@ namespace BloogBot.AI
             Console.WriteLine("End of loop");
         }
 
-        private void HandleLevelUp(IDependencyContainer container, LocalPlayer player)
+        private void HandleLevelUp(LocalPlayer player)
         {
             // Handle spells
-            //if (player.LevelSpellsDict.TryGetValue(player.Level, out List<int> spellIds))
-            //{
-            //    player.LuaCall(string.Join(" ", spellIds.Select(id => $"SendChatMessage('.learn {id}');")));
-            //}
+            if (player.LevelSpellsDict.TryGetValue(player.Level, out List<int> spellIds))
+                player.LuaCall(string.Join(" ", spellIds.Select(id => $"SendChatMessage('.player learn {player.Name} {id}');")));
 
             // Handle equipment
             if (player.LevelItemsDict.TryGetValue(player.Level, out List<int> itemIds))
             {
                 player.LuaCall(string.Join(" ", itemIds.Select(id => $"SendChatMessage('.additem {id}');")));
-                player.LuaCall(string.Join(" ", itemIds.Select(id => $"EquipItemByName({id}); StaticPopup1Button1:Click();")));
+                player.HasItemsToEquip = true;
+                player.ShouldWaitForShortDelay = true;
             }
 
             // Handle talents
             // https://wowwiki-archive.fandom.com/wiki/API_LearnTalent
-            //player.LuaCall($"LearnTalent(x,x);");
+            if (player.LevelTalentsDict.TryGetValue(player.Level, out string talentIndex))
+                player.LuaCall($"LearnTalent({talentIndex});");
 
+            // Add delay before this
             // Handle teleport
             if (player.Level == 60)
             {

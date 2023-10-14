@@ -322,7 +322,7 @@ namespace BloogBot.AI
                         if (player.ShouldWaitForShortDelay && Wait.For("ShortDelay", 600))
                         {
                             player.ShouldWaitForShortDelay = false;
-                            HandleLevelUp(player, false); // Try again just in case
+                            HandleLevelUp(player, true); // Try again just in case
                         }
                         else if (player.ShouldWaitForShortDelay)
                             return;
@@ -379,7 +379,7 @@ namespace BloogBot.AI
                             DiscordClientWrapper.SendMessage($"Ding! {player.Name} is now level {player.Level}!");
                             Console.WriteLine($"Ding! {player.Name} is now level {player.Level}!");
                             //PrintAndLog($"Ding! {player.Name} is now level {player.Level}!");
-                            HandleLevelUp(player, true);
+                            HandleLevelUp(player, false);
                         }
 
                         player.AntiAfk();

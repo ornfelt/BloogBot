@@ -578,6 +578,14 @@ namespace BloogBot.AI
 
         private void HandleLevelUp(LocalPlayer player, bool isSecondTry)
         {
+            // Handle equipment
+            if (!isSecondTry && player.LevelItemsDict.TryGetValue(player.Level, out List<int> itemIds))
+            {
+                player.LuaCall(string.Join(" ", itemIds.Select(id => $"SendChatMessage('.additem {id}');")));
+                player.HasItemsToEquip = true;
+                player.ShouldWaitForShortDelay = true;
+            }
+
             // Handle spells
             if (player.LevelSpellsDict.TryGetValue(player.Level, out List<int> spellIds))
                 player.LuaCall(string.Join(" ", spellIds.Select(id => $"SendChatMessage('.player learn {player.Name} {id}');")));
@@ -589,14 +597,6 @@ namespace BloogBot.AI
 
             if (isSecondTry)
                 return;
-
-            // Handle equipment
-            if (player.LevelItemsDict.TryGetValue(player.Level, out List<int> itemIds))
-            {
-                player.LuaCall(string.Join(" ", itemIds.Select(id => $"SendChatMessage('.additem {id}');")));
-                player.HasItemsToEquip = true;
-                player.ShouldWaitForShortDelay = true;
-            }
 
             // Handle teleport
             if (player.Level == 60)

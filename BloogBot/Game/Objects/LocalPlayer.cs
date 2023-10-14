@@ -586,19 +586,24 @@ namespace BloogBot.Game.Objects
         public Dictionary<int, List<int>> LevelSpellsDict => m_LevelSpellsDict;
         private static Dictionary<int, List<int>> m_LevelSpellsDict = new Dictionary<int, List<int>>
         {
-            {6, new List<int> { 143, 587 }}, {12, new List<int> { 145, 604, 597 }}, {14, new List<int> { 1460, 837, 2137 }},
-            {20, new List<int> { 12051, 7322 }}, {22, new List<int> { 990, 2138, 6143 }}, {24, new List<int> { 8450, 2139 }},
-            {26, new List<int> { 120, 865, 8406 }}, {28, new List<int> { 1461 }}, {30, new List<int> { 7302, 8412, 8401, 8457 }},
-            {32, new List<int> { 6129, 8407, 8461 }}, {34, new List<int> { 6117, 8492 }}, {36, new List<int> { 8451, 8402 }},
-            {38, new List<int> { 8413, 8408 }}, {40, new List<int> { 7320, 6131, 8458 }}, {42, new List<int> { 8462, 10144, 10148, 10156, 10159 }},
+            {4, new List<int> { 5504 }}, {6, new List<int> { 143, 587 }}, {10, new List<int> { 5505 }},
+            {12, new List<int> { 145, 604, 597 }}, {14, new List<int> { 1460, 837, 2137 }},
+            {20, new List<int> { 5506, 7322, 12051 }}, {22, new List<int> { 990, 2138, 6143 }},
+            {24, new List<int> { 8450, 2139 }}, {26, new List<int> { 120, 865, 8406 }},
+            {28, new List<int> { 1461 }}, {30, new List<int> { 6127, 7302, 8412 }},
+            {31, new List<int> { 8401, 8457 }}, {32, new List<int> { 6129, 8407, 8461 }},
+            {34, new List<int> { 6117, 8492 }}, {36, new List<int> { 8451, 8402 }},
+            {38, new List<int> { 8413, 8408 }}, {40, new List<int> { 10138, 33389, 33392, 54753 }},
+            {41, new List<int> { 7320, 6131, 8458 }}, {42, new List<int> { 8462, 10144, 10148, 10156, 10159 }},
             {44, new List<int> { 10179 }}, {46, new List<int> { 22782, 10197 }}, {48, new List<int> { 10173, 10149 }},
-            {50, new List<int> { 10219, 10160, 10161, 10180 }}, {54, new List<int> { 10150, 10199 }},
-            {56, new List<int> { 10157, 10181 }}, {58, new List<int> { 22783, 13033 }}, {61, new List<int> { 27078 }},
-            {63, new List<int> { 27071 }}, {64, new List<int> { 27134 }}, {65, new List<int> { 27087 }}, {66, new List<int> { 27070 }},
-            {67, new List<int> { 33944, 27088 }}, {69, new List<int> { 27124, 27125, 27072 }}, {70, new List<int> { 27079, 27126 }},
-            {71, new List<int> { 43023 }}, {74, new List<int> { 42832, 42872 }}, {75, new List<int> { 42917, 43038 }},
-            {76, new List<int> { 43015 }}, {78, new List<int> { 42833, 43010, 42842 }}, {79, new List<int> { 43008, 43024, 42931 }},
-            {80, new List<int> { 42995, 42873 }}
+            {50, new List<int> { 10219, 10160, 10161, 10180 }}, {51, new List<int> { 10139 }},
+            {54, new List<int> { 10150, 10199 }}, {56, new List<int> { 10157, 10181 }}, {58, new List<int> { 22783, 13033 }},
+            {60, new List<int> { 10140 }}, {61, new List<int> { 27078 }}, {63, new List<int> { 27071 }},
+            {64, new List<int> { 27134 }}, {65, new List<int> { 27087, 37420 }}, {66, new List<int> { 27070 }},
+            {67, new List<int> { 33944, 27088 }}, {69, new List<int> { 27124, 27125, 27072 }},
+            {70, new List<int> { 27079, 27090, 27126 }}, {71, new List<int> { 43023 }}, {74, new List<int> { 42832, 42872 }},
+            {75, new List<int> { 42917, 43038 }}, {76, new List<int> { 43015 }}, {78, new List<int> { 42833, 43010, 42842 }},
+            {79, new List<int> { 43008, 43024, 42931 }}, {80, new List<int> { 42995, 42873 }}
         };
 
         public Dictionary<int, string> LevelTalentsDict => m_LevelTalentsDict;

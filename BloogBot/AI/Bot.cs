@@ -576,26 +576,28 @@ namespace BloogBot.AI
             Console.WriteLine("End of loop");
         }
 
-        private void HandleLevelUp(LocalPlayer player, bool shouldAddItems)
+        private void HandleLevelUp(LocalPlayer player, bool isSecondTry)
         {
             // Handle spells
             if (player.LevelSpellsDict.TryGetValue(player.Level, out List<int> spellIds))
                 player.LuaCall(string.Join(" ", spellIds.Select(id => $"SendChatMessage('.player learn {player.Name} {id}');")));
-
-            // Handle equipment
-            if (shouldAddItems && player.LevelItemsDict.TryGetValue(player.Level, out List<int> itemIds))
-            {
-                player.LuaCall(string.Join(" ", itemIds.Select(id => $"SendChatMessage('.additem {id}');")));
-                player.HasItemsToEquip = true;
-                player.ShouldWaitForShortDelay = true;
-            }
 
             // Handle talents
             // https://wowwiki-archive.fandom.com/wiki/API_LearnTalent
             if (player.LevelTalentsDict.TryGetValue(player.Level, out string talentIndex))
                 player.LuaCall($"LearnTalent({talentIndex});");
 
-            // Add delay before this
+            if (isSecondTry)
+                return;
+
+            // Handle equipment
+            if (player.LevelItemsDict.TryGetValue(player.Level, out List<int> itemIds))
+            {
+                player.LuaCall(string.Join(" ", itemIds.Select(id => $"SendChatMessage('.additem {id}');")));
+                player.HasItemsToEquip = true;
+                player.ShouldWaitForShortDelay = true;
+            }
+
             // Handle teleport
             if (player.Level == 60)
             {

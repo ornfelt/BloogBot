@@ -333,7 +333,7 @@ namespace BloogBot.AI
                         else if (player.HasJoinedBg)
                             return;
 
-                        if (player.HasEnteredNewMap && Wait.For("EnteredNewMapDelay", 15000))
+                        if (player.HasEnteredNewMap && Wait.For("EnteredNewMapDelay", 16000))
                             player.HasEnteredNewMap = false;
                         else if (player.HasEnteredNewMap)
                             return;
@@ -631,6 +631,8 @@ namespace BloogBot.AI
                 botStates.Pop();
                 botStates.Push(new GrindState(botStates, container));
             }
+            if (IsPlayerInBg())
+                player.LuaCall("StaticPopup1Button1:Click();");
         }
 
         private bool IsPlayerInBg()

@@ -43,7 +43,7 @@ namespace BloogBot.AI.SharedStates
             if (stuckHelper.CheckIfStuck())
                 Console.WriteLine("stuckCount in MovetoCorpseState: " + stuckCount++);
 
-            if (player.Position.DistanceTo2D(player.CorpsePosition) < 3)
+            if (player.Position.DistanceTo2D(player.CorpsePosition) < 3 || player.Health > 0)
             {
                 player.ForcedWpPath = new List<int>();
                 player.StopAllMovement();

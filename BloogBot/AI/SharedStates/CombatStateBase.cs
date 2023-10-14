@@ -107,7 +107,7 @@ namespace BloogBot.AI.SharedStates
                         var nextWaypoint = Navigation.GetNextWaypoint(ObjectManager.MapId, player.Position, target.Position, false);
                         player.MoveToward(nextWaypoint);
                     }
-                    if (loopTimer > 250)
+                    if (loopTimer > 200)
                         loopTimer = 0;
                     return true;
                 }

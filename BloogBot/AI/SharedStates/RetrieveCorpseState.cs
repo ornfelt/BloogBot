@@ -31,6 +31,11 @@ namespace BloogBot.AI.SharedStates
 
         public void Update()
         {
+            if (player.Health > 0)
+            {
+                botStates.Pop();
+                return;
+            }
             if (!initialized)
             {
                 // corpse position is wrong immediately after releasing, so we wait for 5s.

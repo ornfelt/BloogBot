@@ -439,8 +439,8 @@ namespace BloogBot.AI
                             HasBeenForcedToTeleport = true;
                         }
 
-                        // if the player has been stuck in the same state for more than 7 minutes
-                        if (Environment.TickCount - currentStateStartTime > 420000 && currentState != typeof(TravelState) && container.BotSettings.UseStuckInStateKillswitch)
+                        // if the player has been stuck in the same state for more than 5 minutes
+                        if (Environment.TickCount - currentStateStartTime > 300000 && currentState != typeof(TravelState) && container.BotSettings.UseStuckInStateKillswitch)
                         {
                             HandleBotStuck(container, player, true);
                             //var msg = $"Hey, it's {player.Name}, and I need help! I've been stuck in the {currentState.Name} for over 5 minutes. I'm stopping for now.";
@@ -455,9 +455,9 @@ namespace BloogBot.AI
                             currentStateStartTime = Environment.TickCount;
                         }
 
-                        // if the player has been stuck in the same position for more than 7 minutes
+                        // if the player has been stuck in the same position for more than 5 minutes
                         //if (Environment.TickCount - currentPositionStartTime >  420000 && container.BotSettings.UseStuckInPositionKillswitch)
-                        if (!HasBeenForcedToTeleport && Environment.TickCount - currentPositionStartTime > 420000 && container.BotSettings.UseStuckInPositionKillswitch)
+                        if (!HasBeenForcedToTeleport && Environment.TickCount - currentPositionStartTime > 300000 && container.BotSettings.UseStuckInPositionKillswitch)
                         {
                             HandleBotStuck(container, player, false);
                             //var msg = $"Hey, it's {player.Name}, and I need help! I've been stuck in the same position for over 5 minutes. I'm stopping for now.";
@@ -615,7 +615,7 @@ namespace BloogBot.AI
         private void HandleBotStuck(IDependencyContainer container, LocalPlayer player, bool StuckInState)
         {
             // Force teleport to current WP, or to corpse if dead
-            if (player.Health <= 0 || player.InGhostForm)
+            if (player.Health <= 1 || player.InGhostForm)
             {
                 // Force teleport to corpse
                 Console.WriteLine($"Forcing teleport to corpse " + (StuckInState ? "(UseStuckInStateKillswitch)" : "(UseStuckInPositionKillswitch)"));
@@ -632,8 +632,7 @@ namespace BloogBot.AI
                 botStates.Pop();
                 botStates.Push(new GrindState(botStates, container));
             }
-            if (IsPlayerInBg())
-                player.LuaCall("StaticPopup1Button1:Click();");
+            player.LuaCall("StaticPopup1Button1:Click();"); // Required if stuck at release point in BG
         }
 
         private bool IsPlayerInBg()

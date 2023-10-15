@@ -15,7 +15,7 @@ namespace BloogBot.AI.SharedStates
         readonly IDependencyContainer container;
         LocalPlayer player;
         private QueueStates currentState;
-        private bool otherCTA, avCTA, abCTA;
+        private bool otherCTA, eyeCTA, strandCTA, isleCTA, avCTA, abCTA;
         private static Random rand = new Random();
 
         public BattlegroundQueueState(
@@ -114,31 +114,31 @@ namespace BloogBot.AI.SharedStates
         private int RandBgQueueIndex()
         {
             SetCTA();
+            int playerLevel = player.Level;
             int bg = rand.Next(3);
-            if (player.Level < 50)
-                bg = 0;
+            if (playerLevel < 20)
+                bg = 0; // Only WSG if level < 20
+            else if (playerLevel < 45 && bg == 2)
+                bg  = rand.Next(2); // Only WSG or AB if level < 45
+
             int bgQueueIndex = bg;
-
-            bool isLowLevel = player.Level < 70;
-
             if (bg == 0)
             {
                 // WSG
-                if (!isLowLevel && (otherCTA || abCTA || avCTA))
+                if (((playerLevel == 80) && (otherCTA || abCTA || avCTA)) ||
+                    playerLevel < 20 || (playerLevel < 45) && !abCTA && !avCTA)
                     bgQueueIndex = 3;
-                else if (isLowLevel && (abCTA || avCTA))
+                else if (playerLevel < 80)
                     bgQueueIndex = 4;
-                else if (isLowLevel)
-                    bgQueueIndex = 3;
                 else
                     bgQueueIndex = 2;
             }
             else if (bg == 1)
             {
                 // AB
-                if ((!isLowLevel && (otherCTA || avCTA)) || isLowLevel && avCTA)
+                if ((playerLevel == 80 && (otherCTA || avCTA)) || (playerLevel < 45 && !abCTA))
                     bgQueueIndex = 4;
-                else if (abCTA)
+                else if (playerLevel == 80 && abCTA)
                     bgQueueIndex = 2;
                 else
                     bgQueueIndex = 3;
@@ -146,21 +146,16 @@ namespace BloogBot.AI.SharedStates
             else
             {
                 // AV
-                if (!isLowLevel && otherCTA)
+                if ((playerLevel == 80 && otherCTA) || (playerLevel >= 45 && !avCTA))
                     bgQueueIndex = 5;
-                else if (avCTA)
+                else if (playerLevel == 80 && avCTA)
                     bgQueueIndex = 2;
+                else if (avCTA)
+                    bgQueueIndex = 3;
                 else
                     bgQueueIndex = 4;
             }
 
-            if (player.Level < 20)
-                bgQueueIndex = 3;
-            else if (player.Level < 45)
-            {
-                if (bg == 1 && !abCTA)
-                    bgQueueIndex = 4;
-            }
             Console.WriteLine($"Queueing for bg: {bg}, bgQueueIndex: {bgQueueIndex}");
             return bgQueueIndex;
         }
@@ -180,11 +175,11 @@ namespace BloogBot.AI.SharedStates
             // AB: 285
             abCTA = CheckCTA("2010-04-23 18:00:00", occurence, length);
             // EYE: 353
-            bool eyeCTA = CheckCTA("2010-04-30 18:00:00", occurence, length);
+            eyeCTA = CheckCTA("2010-04-30 18:00:00", occurence, length);
             // Strand: 400
-            bool strandCTA = CheckCTA("2010-04-09 18:00:00", occurence, length);
+            strandCTA = CheckCTA("2010-04-09 18:00:00", occurence, length);
             // Isle: 420
-            bool isleCTA = CheckCTA("2010-04-16 18:00:00", occurence, length);
+            isleCTA = CheckCTA("2010-04-16 18:00:00", occurence, length);
 
             otherCTA = (eyeCTA || strandCTA || isleCTA);
             Console.WriteLine($"abCTA: {abCTA}, avCTA: {avCTA}, otherCTA: {otherCTA}");

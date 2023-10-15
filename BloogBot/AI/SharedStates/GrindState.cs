@@ -129,7 +129,9 @@ namespace BloogBot.AI.SharedStates
                                 {
                                     Console.WriteLine($"Forcing teleport to WP: {waypoint.ID} due to being stuck in new path.");
                                     player.LuaCall($"SendChatMessage('.npcb wp go {waypoint.ID}')");
-                                    player.ForcedWpPath = ForcedWpPathViaBFS(waypoint.ID);
+                                    player.ForcedWpPath = ForcedWpPathViaBFS(waypoint.ID, false);
+                                    if (player.ForcedWpPath == null)
+                                        player.ForcedWpPath = ForcedWpPathViaBFS(waypoint.ID, true);
                                 }
                                 else
                                 {
@@ -138,7 +140,9 @@ namespace BloogBot.AI.SharedStates
                                     var lastNewZone = player.ForcedWpPath.Count > 0 ? waypoints.Where(x => x.ID == player.ForcedWpPath[player.ForcedWpPath.Count - 1]).FirstOrDefault().Zone : "0";
                                     var prevForcedWpPath = player.ForcedWpPath;
                                     // Find new path to zone
-                                    player.ForcedWpPath = ForcedWpPathViaBFS(player.LastWpId);
+                                    player.ForcedWpPath = ForcedWpPathViaBFS(player.LastWpId, false);
+                                    if (player.ForcedWpPath == null)
+                                        player.ForcedWpPath = ForcedWpPathViaBFS(player.LastWpId, true);
                                     var newZoneWp = waypoints.Where(x => x.ID == player.ForcedWpPath[player.ForcedWpPath.Count - 1]).FirstOrDefault();
                                     // Check if new wp path leads to the same new zone as previously, otherwise force teleport
                                     if (lastNewZone != newZoneWp.Zone)
@@ -154,7 +158,10 @@ namespace BloogBot.AI.SharedStates
                             else
                             {
                                 // If ForcedWpPath is empty
-                                player.ForcedWpPath = ForcedWpPathViaBFS(waypoint.ID);
+                                player.ForcedWpPath = ForcedWpPathViaBFS(waypoint.ID, false);
+                                if (player.ForcedWpPath == null)
+                                    player.ForcedWpPath = ForcedWpPathViaBFS(waypoint.ID, true);
+
                                 // Remove first value since it's the same as the currently reached WP
                                 if (player.ForcedWpPath.First() == waypoint.ID) player.ForcedWpPath.Remove(player.ForcedWpPath.First());
                             }
@@ -262,7 +269,7 @@ namespace BloogBot.AI.SharedStates
             return (hotspotId > 8 && hotspotId < 13);
         }
 
-        public List<int> ForcedWpPathViaBFS(int startId)
+        public List<int> ForcedWpPathViaBFS(int startId, bool ignoreBlacklistedWps)
         {
             var hotspot = container.GetCurrentHotspot();
             var visited = new HashSet<int>();
@@ -276,7 +283,10 @@ namespace BloogBot.AI.SharedStates
                 var currentId = currentPath[currentPath.Count - 1]; // Get the last element
                 var currentWaypoint = hotspot.Waypoints.Where(x => x.ID == currentId).FirstOrDefault();
                 if (currentWaypoint == null)
+                {
                     Console.WriteLine("Current WP is null (ForcedWpPathViaBFS), ID: " + currentId + ", startId: " + startId);
+                    return null;
+                }
 
                 if (currentWaypoint.MaxLevel > player.Level && currentWaypoint.MinLevel <= player.Level)
                 {
@@ -319,7 +329,7 @@ namespace BloogBot.AI.SharedStates
                     foreach (var linkWp in linkSplit)
                     {
                         int linkId = Int32.Parse(linkWp);
-                        if (!visited.Contains(linkId) && !player.BlackListedWps.Contains(linkId))
+                        if (!visited.Contains(linkId) && (ignoreBlacklistedWps || !player.BlackListedWps.Contains(linkId)))
                         {
                             var newPath = new List<int>(currentPath);
                             newPath.Add(linkId);

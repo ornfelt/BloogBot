@@ -115,17 +115,7 @@ namespace BloogBot.AI.SharedStates
         {
             SetCTA();
             int playerLevel = player.Level;
-            int bg = rand.Next(3);
-            if (playerLevel < 20)
-                bg = 0; // Only WSG if level < 20
-            else if (playerLevel < 51 && bg == 2)
-                bg  = rand.Next(2); // Only WSG or AB if level < 45
-
-            // 20 or above = AB
-            // 51 or above = AV
-            // 61 or above = EYE (here first will start being at index 2)
-            // 71 or above = strand
-            // 80 = random bgs
+            int bg = (playerLevel < 20) ? 0 : (playerLevel < 51) ? rand.Next(2) : rand.Next(3);
 
             int bgQueueIndex = bg;
 
@@ -135,102 +125,29 @@ namespace BloogBot.AI.SharedStates
             }
             else if (playerLevel < 51)
             {
-                if (bg == 0)
-                {
-                    if (!abCTA)
-                        bgQueueIndex = 3;
-                    else
-                        bgQueueIndex = 4;
-                }
-                else if (bg == 1)
-                {
-                    if (abCTA)
-                        bgQueueIndex = 3;
-                    else
-                        bgQueueIndex = 4;
-                }
+                bgQueueIndex = (bg == 0 && !abCTA) || (bg == 1 && abCTA) ? 3 : 4;
             }
             else if (playerLevel < 61)
             {
-                if (bg == 0)
-                {
-                    if (!abCTA && !avCTA)
-                        bgQueueIndex = 3;
-                    else
-                        bgQueueIndex = 4;
-                }
-                else if (bg == 1)
-                {
-                    if (abCTA)
-                        bgQueueIndex = 3;
-                    else if (avCTA)
-                        bgQueueIndex = 5;
-                    else
-                        bgQueueIndex = 4;
-                }
-                else if (bg == 2)
-                {
-                    if (avCTA)
-                        bgQueueIndex = 3;
-                    else
-                        bgQueueIndex = 5;
-                }
+                bgQueueIndex = (bg == 0 && !abCTA && !avCTA) ? 3 : (bg == 1 && avCTA) || (bg == 2 && avCTA) ? 5 : 4;
             }
             else if (playerLevel < 71)
             {
-                if (bg == 0)
-                {
-                    if (!abCTA && !avCTA && !eyeCTA)
-                        bgQueueIndex = 2;
-                    else
-                        bgQueueIndex = 3;
-                }
-                else if (bg == 1)
-                {
-                    if (abCTA)
-                        bgQueueIndex = 2;
-                    else if (avCTA || eyeCTA)
-                        bgQueueIndex = 4;
-                    else
-                        bgQueueIndex = 3;
-                }
-                else if (bg == 2)
-                {
-                    if (avCTA)
-                        bgQueueIndex = 2;
-                    else
-                        bgQueueIndex = 4;
-                }
+                bgQueueIndex = (bg == 0 && !abCTA && !avCTA && !eyeCTA) ? 2 : (bg == 1 && (avCTA || eyeCTA)) || (bg == 2 && avCTA) ? 4 : 3;
             }
             else
             {
                 if (bg == 0)
                 {
-                    // WSG
-                    if (otherCTA || abCTA || avCTA)
-                        bgQueueIndex = 3;
-                    else
-                        bgQueueIndex = 2;
+                    bgQueueIndex = otherCTA || abCTA || avCTA ? 3 : 2;
                 }
                 else if (bg == 1)
                 {
-                    // AB
-                    if (otherCTA || avCTA)
-                        bgQueueIndex = 4;
-                    else if (abCTA)
-                        bgQueueIndex = 2;
-                    else
-                        bgQueueIndex = 3;
+                    bgQueueIndex = otherCTA || avCTA ? 4 : abCTA ? 2 : 3;
                 }
                 else
                 {
-                    // AV
-                    if (otherCTA)
-                        bgQueueIndex = 5;
-                    else if (avCTA)
-                        bgQueueIndex = 2;
-                    else
-                        bgQueueIndex = 4;
+                    bgQueueIndex = otherCTA ? 5 : avCTA ? 2 : 4;
                 }
             }
 

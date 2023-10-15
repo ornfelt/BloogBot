@@ -124,7 +124,11 @@ namespace BloogBot.AI.SharedStates
             if (bg == 0)
             {
                 // WSG
-                if ((!isLowLevel && (otherCTA || abCTA || avCTA)) || isLowLevel && (abCTA || avCTA))
+                if (!isLowLevel && (otherCTA || abCTA || avCTA))
+                    bgQueueIndex = 3;
+                else if (isLowLevel && (abCTA || avCTA))
+                    bgQueueIndex = 4;
+                else if (isLowLevel)
                     bgQueueIndex = 3;
                 else
                     bgQueueIndex = 2;
@@ -152,6 +156,11 @@ namespace BloogBot.AI.SharedStates
 
             if (player.Level < 20)
                 bgQueueIndex = 3;
+            else if (player.Level < 45)
+            {
+                if (bg == 1 && !abCTA)
+                    bgQueueIndex = 4;
+            }
             Console.WriteLine($"Queueing for bg: {bg}, bgQueueIndex: {bgQueueIndex}");
             return bgQueueIndex;
         }

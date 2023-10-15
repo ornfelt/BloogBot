@@ -57,7 +57,7 @@ namespace BloogBot.AI
 
                 ThreadSynchronizer.RunOnMainThread(() =>
                 {
-                    ResetValues(container);
+                    ResetValues(container, true);
                 });
 
                 container.CheckForTravelPath(botStates, false);
@@ -69,9 +69,10 @@ namespace BloogBot.AI
             }
         }
 
-        private void ResetValues(IDependencyContainer container)
+        private void ResetValues(IDependencyContainer container, bool resetLevel)
         {
-            currentLevel = ObjectManager.Player.Level;
+            if (resetLevel)
+                currentLevel = ObjectManager.Player.Level;
             botStates.Push(new GrindState(botStates, container));
             currentState = botStates.Peek().GetType();
             currentStateStartTime = Environment.TickCount;
@@ -356,7 +357,7 @@ namespace BloogBot.AI
                             //Stop();
                             ObjectManager.KillswitchTriggered = false;
                             //Start(container, stopCallback);
-                            ResetValues(container);
+                            ResetValues(container, false);
                             player.LastKnownMapId = ObjectManager.MapId;
                         }
 

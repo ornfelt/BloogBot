@@ -588,7 +588,7 @@ namespace BloogBot.Game.Objects
         public Dictionary<int, List<int>> LevelSpellsDict => m_LevelSpellsDict;
         private static Dictionary<int, List<int>> m_LevelSpellsDict = new Dictionary<int, List<int>>
         {
-            {3, new List<int> { 1459 }}, {4, new List<int> { 116, 5504 }}, {6, new List<int> { 143, 587 }},
+            {3, new List<int> { 1459 }}, {4, new List<int> { 116, 5504 }}, {6, new List<int> { 143, 2136, 587 }},
             {8, new List<int> { 205 }}, {10, new List<int> { 5505 }}, {12, new List<int> { 145, 604, 597 }},
             {14, new List<int> { 1460, 837, 2137 }}, {20, new List<int> { 5506, 7322, 12051 }},
             {22, new List<int> { 990, 2138, 6143 }}, {24, new List<int> { 8450, 2139 }},

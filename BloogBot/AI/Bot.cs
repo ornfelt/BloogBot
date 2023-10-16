@@ -522,6 +522,7 @@ namespace BloogBot.AI
 
                                 player.CurrWpId = 0;
                                 player.WpStuckCount = 0;
+                                player.VisitedWps = new HashSet<int>();
 
                                 container.RunningErrands = true;
 

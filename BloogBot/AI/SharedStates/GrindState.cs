@@ -289,7 +289,7 @@ namespace BloogBot.AI.SharedStates
                 }
 
                 if (currentWaypoint.MaxLevel > player.Level && currentWaypoint.MinLevel <= player.Level
-                    && player.LastWpId != currentId)
+                    && !player.HasVisitedWp(currentId))
                 {
                     Console.WriteLine("Found new WP matching player level: " + currentWaypoint.ToStringFull() + "\n");
                     return currentPath;

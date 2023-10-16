@@ -51,12 +51,15 @@ namespace BloogBot.AI
 
         public IEnumerable<Hotspot> Hotspots { get; }
 
+        private const string BotFriend = "Lazarus";
+
         // this is broken up into multiple sub-expressions to improve readability and debuggability
         public WoWUnit FindThreat()
         {
+            var botFriend = ObjectManager.Units.Where(u => u.Name == BotFriend).FirstOrDefault();
             var potentialThreats = ObjectManager.Units
                 .Where(u =>
-                    (u.IsInCombat && u.UnitReaction == UnitReaction.Hostile) || // Required to help npcbots (also add Lazarus to excluded targets)
+                    (botFriend != null && u.TargetGuid == botFriend.Guid) || // Required to help npcbots
                     u.TargetGuid == ObjectManager.Player.Guid ||
                     u.TargetGuid == ObjectManager.Pet?.Guid &&
                     !Probe.BlacklistedMobIds.Contains(u.Guid));
@@ -95,6 +98,8 @@ namespace BloogBot.AI
                 return threat;
 
             var mapId = ObjectManager.MapId;
+            if (!BotSettings.TargetingExcludedNames.Contains(BotFriend))
+                BotSettings.TargetingExcludedNames += "|" + BotFriend;
             var potentialTargetsList = ObjectManager.Units
                 // only consider units that are not null, and whose name and position are not null
                 .Where(u => u != null && u.Name != null && u.Position != null)

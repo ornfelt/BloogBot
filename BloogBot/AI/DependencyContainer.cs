@@ -59,7 +59,7 @@ namespace BloogBot.AI
             var botFriend = ObjectManager.Units.Where(u => u.Name == BotFriend).FirstOrDefault();
             var potentialThreats = ObjectManager.Units
                 .Where(u =>
-                    (botFriend != null && u.TargetGuid == botFriend.Guid) || // Required to help npcbots
+                    (botFriend != null && u.TargetGuid == botFriend.Guid && u.Guid != botFriend.Guid) || // Required to help npcbots
                     u.TargetGuid == ObjectManager.Player.Guid ||
                     u.TargetGuid == ObjectManager.Pet?.Guid &&
                     !Probe.BlacklistedMobIds.Contains(u.Guid));

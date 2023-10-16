@@ -121,7 +121,8 @@ namespace BloogBot.AI.SharedStates
             }
 
             // see if somebody else stole the mob we were targeting
-            if (target.TappedByOther || player.Health <= 0)
+            //if (target.TappedByOther || player.Health <= 0)
+            if (player.Health <= 0)
             {
                 CleanUp();
                 return true;
@@ -130,7 +131,8 @@ namespace BloogBot.AI.SharedStates
             // when killing certain summoned units (like totems), our local reference to target will still have 100% health even after the totem is destroyed
             // so we need to lookup the target again in the object manager, and if it's null, we can assume it's dead and leave combat.
             var checkTarget = ObjectManager.Units.FirstOrDefault(u => u.Guid == target.Guid);
-            if (target.Health == 0 || target.TappedByOther || checkTarget == null)
+            //if (target.Health == 0 || target.TappedByOther || checkTarget == null)
+            if (target.Health == 0 || checkTarget == null)
             {
                 player.StopAllMovement();
 

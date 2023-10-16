@@ -43,7 +43,8 @@ namespace FrostMageBot
             if (player.IsCasting)
                 return;
 
-            if (target.TappedByOther || container.FindClosestTarget()?.Guid != target.Guid)
+            //if (target.TappedByOther || container.FindClosestTarget()?.Guid != target.Guid)
+            if (container.FindClosestTarget()?.Guid != target.Guid)
             {
                 player.StopAllMovement();
                 botStates.Pop();

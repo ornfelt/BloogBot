@@ -99,8 +99,6 @@ namespace BloogBot.AI
                 .Where(u => u != null && u.Name != null && u.Position != null)
                 // only consider living units whose health is > 0
                 .Where(u => u.Health > 0)
-                // only consider units that have not already been tapped by another played
-                .Where(u => !u.TappedByOther)
                 // exclude units that are pets of another unit
                 .Where(u => !u.IsPet)
                 // only consider units that have not been blacklisted

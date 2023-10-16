@@ -56,6 +56,7 @@ namespace BloogBot.AI
         {
             var potentialThreats = ObjectManager.Units
                 .Where(u =>
+                    (u.IsInCombat && u.UnitReaction == UnitReaction.Hostile) || // Required to help npcbots (also add Lazarus to excluded targets)
                     u.TargetGuid == ObjectManager.Player.Guid ||
                     u.TargetGuid == ObjectManager.Pet?.Guid &&
                     !Probe.BlacklistedMobIds.Contains(u.Guid));

@@ -589,8 +589,8 @@ namespace BloogBot.Game.Objects
         private static Dictionary<int, List<int>> m_LevelSpellsDict = new Dictionary<int, List<int>>
         {
             {3, new List<int> { 1459 }}, {4, new List<int> { 116, 5504 }}, {6, new List<int> { 143, 2136, 587 }},
-            {8, new List<int> { 205 }}, {10, new List<int> { 5505 }}, {12, new List<int> { 145, 604, 597 }},
-            {14, new List<int> { 1460, 837, 2137 }}, {20, new List<int> { 5506, 7322, 12051 }},
+            {8, new List<int> { 205 }}, {10, new List<int> { 122, 5505, 7300 }}, {12, new List<int> { 145, 604, 597 }},
+            {14, new List<int> { 1460, 837, 2137 }}, {18, new List<int> { 3140 }}, {20, new List<int> { 5506, 7301, 7322, 12051 }},
             {22, new List<int> { 990, 2138, 6143 }}, {24, new List<int> { 8450, 2139 }},
             {26, new List<int> { 120, 865, 8406 }}, {28, new List<int> { 1461 }},
             {30, new List<int> { 6127, 7302, 8412 }}, {31, new List<int> { 8401, 8457 }},
@@ -600,7 +600,7 @@ namespace BloogBot.Game.Objects
             {42, new List<int> { 8462, 10144, 10148, 10156, 10159 }}, {44, new List<int> { 10179 }},
             {46, new List<int> { 22782, 10197 }}, {48, new List<int> { 10173, 10149 }},
             {50, new List<int> { 10219, 10160, 10161, 10180 }}, {51, new List<int> { 10139 }},
-            {54, new List<int> { 10150, 10199 }}, {56, new List<int> { 10157, 10181 }},
+            {54, new List<int> { 10230, 10150, 10199 }}, {56, new List<int> { 10157, 10181 }},
             {58, new List<int> { 22783, 13033 }}, {60, new List<int> { 10140, 25304 }},
             {61, new List<int> { 27078 }}, {63, new List<int> { 27071 }}, {64, new List<int> { 27134 }},
             {65, new List<int> { 27087, 37420 }}, {66, new List<int> { 27070 }},

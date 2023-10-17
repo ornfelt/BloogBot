@@ -564,53 +564,6 @@ namespace BloogBot.Game.Objects
         };
         public Dictionary<int, string> HotspotRepairDict => m_HotspotRepairDict;
 
-        public Dictionary<int, List<int>> LevelItemsDict => m_LevelItemsDict;
-        private static Dictionary<int, List<int>> m_LevelItemsDict = new Dictionary<int, List<int>>
-        {
-            {10, new List<int> { 6659, 3344 }}, {12, new List<int> { 6378 }}, {14, new List<int> { 2583 }}, 
-            {15, new List<int> { 21934, 12977 }}, {16, new List<int> { 12984 }}, {17, new List<int> { 1974 }},
-            {20, new List<int> { 21566, 38383 }}, {21, new List<int> { 6463 }}, {24, new List<int> { 7048 }},
-            {28, new List<int> { 9448 }}, {29, new List<int> { 9395 }}, {30, new List<int> { 18586, 7691 }},
-            {31, new List<int> { 29157, 4743 }}, {32, new List<int> { 13105, 7514 }},
-            {33, new List<int> { 10578, 2277 }}, {34, new List<int> { 18427 }}, {37, new List<int> { 13064 }},
-            {40, new List<int> { 10019 }}, {41, new List<int> { 9433 }}, {42, new List<int> { 13102 }},
-            {43, new List<int> { 6440 }}, {44, new List<int> { 17755 }}, {45, new List<int> { 9484, 10629 }},
-            {52, new List<int> { 16703 }}, {55, new List<int> { 13170, 23126 }}, {56, new List<int> { 13001 }},
-            {58, new List<int> { 18102, 19105, 22408 }}, {59, new List<int> { 22339, 13141, 20697 }},
-            {61, new List<int> { 20716, 13965, 28040 }}, {64, new List<int> { 29315 }},
-            {65, new List<int> { 27410 }}, {66, new List<int> { 27440 }}, {67, new List<int> { 30368, 29813 }},
-            {68, new List<int> { 27948, 30932 }}, {69, new List<int> { 27784, 38257 }},
-            {71, new List<int> { 27462, 27683, 27885 }}, {72, new List<int> { 35657, 38250, 44365 }},
-            {73, new List<int> { 40758, 35663 }}, {74, new List<int> { 43160, 39649 }},
-            {77, new List<int> { 35679, 38613 }}, {78, new List<int> { 37038, 37113 }}
-        };
-
-        public Dictionary<int, List<int>> LevelSpellsDict => m_LevelSpellsDict;
-        private static Dictionary<int, List<int>> m_LevelSpellsDict = new Dictionary<int, List<int>>
-        {
-            {3, new List<int> { 1459 }}, {4, new List<int> { 116, 5504 }}, {6, new List<int> { 143, 2136, 587 }},
-            {8, new List<int> { 205 }}, {10, new List<int> { 122, 5505, 7300 }}, {12, new List<int> { 145, 604, 597 }},
-            {14, new List<int> { 1460, 837, 2137 }}, {18, new List<int> { 3140 }}, {20, new List<int> { 5506, 7301, 7322, 12051 }},
-            {22, new List<int> { 990, 2138, 6143 }}, {24, new List<int> { 8450, 2139 }},
-            {26, new List<int> { 120, 865, 8406 }}, {28, new List<int> { 1461 }},
-            {30, new List<int> { 6127, 7302, 8412 }}, {31, new List<int> { 8401, 8457 }},
-            {32, new List<int> { 6129, 8407, 8461 }}, {34, new List<int> { 6117, 8492 }},
-            {36, new List<int> { 8451, 8402 }}, {38, new List<int> { 8413, 8408 }},
-            {40, new List<int> { 10138, 33389, 33392, 54753 }}, {41, new List<int> { 7320, 6131, 8458 }},
-            {42, new List<int> { 8462, 10144, 10148, 10156, 10159 }}, {44, new List<int> { 10179 }},
-            {46, new List<int> { 22782, 10197 }}, {48, new List<int> { 10173, 10149 }},
-            {50, new List<int> { 10219, 10160, 10161, 10180 }}, {51, new List<int> { 10139 }},
-            {54, new List<int> { 10230, 10150, 10199 }}, {56, new List<int> { 10157, 10181 }},
-            {58, new List<int> { 22783, 13033 }}, {60, new List<int> { 10140, 25304 }},
-            {61, new List<int> { 27078 }}, {63, new List<int> { 27071 }}, {64, new List<int> { 27134 }},
-            {65, new List<int> { 27087, 37420 }}, {66, new List<int> { 27070 }},
-            {67, new List<int> { 33944, 27088 }}, {69, new List<int> { 27124, 27125, 27072 }},
-            {70, new List<int> { 27079, 27090, 27126, 38697 }}, {71, new List<int> { 43023 }},
-            {74, new List<int> { 42832, 42872 }}, {75, new List<int> { 42841, 42917, 43038 }},
-            {76, new List<int> { 43015 }}, {78, new List<int> { 42833, 43010, 42842 }},
-            {79, new List<int> { 42842, 43008, 43024, 42931 }}, {80, new List<int> { 42995, 42873 }}
-        };
-
         public Dictionary<int, string> LevelTalentsDict => m_LevelTalentsDict;
         private static Dictionary<int, string> m_LevelTalentsDict = new Dictionary<int, string>
         {
@@ -635,5 +588,103 @@ namespace BloogBot.Game.Objects
                 .SelectMany(kv => kv.Value)
                 .ToList();
         }
+
+        public Dictionary<int, List<int>> LevelSpellsDict => m_LevelSpellsDict;
+
+        private static Dictionary<int, List<int>> m_LevelSpellsDict = new Dictionary<int, List<int>>
+        {
+            {3, new List<int> { 1459 }}, // Arcane Intellect R1
+            {4, new List<int> { 116, 5504 }}, // Frostbolt R1, Conjure Water R1
+            {6, new List<int> { 143, 2136, 587 }}, // Fireball R2, Fire Blast R1, Conjure Food R1
+            {8, new List<int> { 205 }}, // Frostbolt R2
+            {10, new List<int> { 122, 5505, 7300 }}, // Frost Nova R1, Conjure Water R2, Frost Armor R2
+            {12, new List<int> { 145, 597, 604, }}, // Fireball R3, Conjure Food R2, Dampen Magic R1
+            {14, new List<int> { 1460, 837, 2137 }}, // Arcane Intellect R2, Frostbolt R3, Fire Blast R2
+            {18, new List<int> { 3140 }}, // Fireball R4
+            {20, new List<int> { 5506, 7301, 7322, 12051 }}, // Conjure Water R3, Frost Armor R3, Frostbolt R4, Evocation
+            {22, new List<int> { 990, 2138, 6143 }}, // Conjure Food R3, Fire Blast R3, Frost Ward R1
+            {24, new List<int> { 8450, 2139 }}, // Dampen Magic R2, Counterspell
+            {26, new List<int> { 120, 865, 8406 }}, // Cone of Cold R1, Frost Nova R2, Frostbolt R5
+            {28, new List<int> { 1461 }}, // Arcane Intellect R3
+            {30, new List<int> { 6127, 7302, 8412 }}, // Conjure Water R4, Ice Armor R1, Fire Blast R4
+            {31, new List<int> { 8401, 8457 }}, // Fireball R6, Fire Ward R2
+            {32, new List<int> { 6129, 8407, 8461 }}, // Conjure Food R4, Frostbolt R6, Frost Ward R2
+            {34, new List<int> { 6117, 8492 }}, // Mage Armor R1, Cone of Cold R2
+            {36, new List<int> { 8451, 8402 }}, // Dampen Magic R3, Fireball R7
+            {38, new List<int> { 8413, 8408 }}, // Fire Blast R5, Frostbolt R7
+            {40, new List<int> { 10138, 33389, 33392, 54753 }}, // Conjure Water R5, Apprentice Riding, Journeyman Riding, White Polar Bear
+            {41, new List<int> { 7320, 6131, 8458 }}, // Ice Armor R2, Frost Nova R3, Fire Ward R3
+            {42, new List<int> { 8462, 10144, 10148, 10156, 10159 }}, // Frost Ward R3, Conjure Food R5, Fireball R8, Arcane Intellect R4, Cone of Cold R3
+            {44, new List<int> { 10179 }}, // Frostbolt R8
+            {46, new List<int> { 22782, 10197 }}, // Mage Armor R2, Fire Blast R6
+            {48, new List<int> { 10173, 10149 }}, // Dampen Magic R4, Fireball R9
+            {50, new List<int> { 10219, 10160, 10161, 10180 }}, // Ice Armor R3, Cone of Cold R4, Cone of Cold R5, Frostbolt R9
+            {51, new List<int> { 10139 }}, // Conjure Water R6
+            {54, new List<int> { 10230, 10150, 10199 }}, // Frost Nova R4, Fireball R10, Fire Blast R7
+            {56, new List<int> { 10157, 10181 }}, // Arcane Intellect R5, Frostbolt R10
+            {58, new List<int> { 22783, 13033 }}, // Mage Armor R3, Ice Barrier R4
+            {60, new List<int> { 10140, 25304 }}, // Conjure Water R7, Frostbolt R11
+            {61, new List<int> { 27078 }}, // Fire Blast R8
+            {63, new List<int> { 27071 }}, // Frostbolt R12
+            {64, new List<int> { 27134 }}, // Ice Barrier R5
+            {65, new List<int> { 27087, 37420 }}, // Cone of Cold R6, Conjure Water R8
+            {66, new List<int> { 27070 }}, // Fireball R13
+            {67, new List<int> { 33944, 27088 }}, // Dampen Magic R6, Frost Nova R5
+            {69, new List<int> { 27124, 27125, 27072 }}, // Ice Armor R5, Mage Armor R4, Frostbolt R13
+            {70, new List<int> { 27079, 27090, 27126, 38697 }}, // Fire Blast R9, Conjure Water R9, Arcane Intellect R6, Frostbolt R14
+            {71, new List<int> { 43023 }}, // Mage Armor R5
+            {74, new List<int> { 42832, 42872 }}, // Fireball R15, Fire Blast R10
+            {75, new List<int> { 42841, 42917, 43038 }}, // Frostbolt R15, Frost Nova R6, Ice Barrier R7
+            {76, new List<int> { 43015 }}, // Dampen Magic R7
+            {78, new List<int> { 42833, 43010, 42842 }}, // Fireball R16, Fire Ward R7, Frostbolt R16
+            {79, new List<int> { 42842, 43008, 43024, 42931 }}, // Frostbolt R17, Ice Armor R6, Mage Armor R6, Cone of Cold R8
+            {80, new List<int> { 42995, 42873 }} // Arcane Intellect R7, Fire Blast R11
+        };
+
+        public Dictionary<int, List<int>> LevelItemsDict => m_LevelItemsDict;
+        private static Dictionary<int, List<int>> m_LevelItemsDict = new Dictionary<int, List<int>>
+        {
+            {10, new List<int> { 6659, 3344 }}, // Legs, Waist
+            {12, new List<int> { 6378 }}, // Back
+            {14, new List<int> { 2583 }}, // Feet
+            {15, new List<int> { 21934, 12977 }}, // Neck, Hands
+            {16, new List<int> { 12984 }}, // Wand
+            {17, new List<int> { 1974 }}, // Wrist
+            {20, new List<int> { 21566, 38383 }}, // Trinket, Trinket
+            {21, new List<int> { 6463 }}, // Finger
+            {24, new List<int> { 7048 }}, // Head
+            {28, new List<int> { 9448 }}, // Wrist
+            {29, new List<int> { 9395 }}, // Hands
+            {30, new List<int> { 18586, 7691 }}, // Finger, Head
+            {31, new List<int> { 29157, 4743 }}, // Finger, Neck
+            {32, new List<int> { 13105, 7514 }}, // Waist, Wand
+            {33, new List<int> { 10578, 2277 }}, // Feet, Legs
+            {34, new List<int> { 18427 }}, // Back
+            {37, new List<int> { 13064 }}, // Wand
+            {40, new List<int> { 10019 }}, // Hands
+            {41, new List<int> { 9433 }}, // Wrist
+            {42, new List<int> { 13102 }}, // Head
+            {43, new List<int> { 6440 }}, // Finger
+            {44, new List<int> { 17755 }}, // Waist
+            {45, new List<int> { 9484, 10629 }}, // Legs, Feet
+            {52, new List<int> { 16703 }}, // Wrist
+            {55, new List<int> { 13170, 23126 }}, // Legs, Waist
+            {56, new List<int> { 13001 }}, // Finger
+            {58, new List<int> { 18102, 19105, 22408 }}, // Feet, Head, Wand
+            {59, new List<int> { 22339, 13141, 20697 }}, // Finger, Neck, Back
+            {61, new List<int> { 20716, 13965, 28040 }}, // Hands, Trinket, Trinket
+            {64, new List<int> { 29315 }}, // Hands
+            {65, new List<int> { 27410 }}, // Head
+            {66, new List<int> { 27440 }}, // Neck
+            {67, new List<int> { 30368, 29813 }}, // Feet, Back
+            {68, new List<int> { 27948, 30932 }}, // Legs, Waist
+            {69, new List<int> { 27784, 38257 }}, // Finger, Trinket
+            {71, new List<int> { 27462, 27683, 27885 }}, // Wrist, Trinket, Wand
+            {72, new List<int> { 35657, 38250, 44365 }}, // Feet, Finger, Hands
+            {73, new List<int> { 40758, 35663 }}, // Head, Waist
+            {74, new List<int> { 43160, 39649 }}, // Legs, Finger
+            {77, new List<int> { 35679, 38613 }}, // Head, Neck
+            {78, new List<int> { 37038, 37113 }} // Wand, Wrist
+        };
     }
 }

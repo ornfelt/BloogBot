@@ -107,7 +107,7 @@ namespace BloogBot.AI.SharedStates
                         player.HasBeenStuckAtWp = false;
 
                         // Random chance to queue for BG (if not in BG already)
-                        if (!HotspotIsBg(hotspot.Id) && random.Next(99)+1 < (player.HasOverLeveled ? 5 : 30) && player.Level >= 10 && !player.IsInCombat)
+                        if (!HotspotIsBg(hotspot.Id) && random.Next(99)+1 < (player.HasOverLeveled ? 0 : 10) && player.Level >= 10 && !player.IsInCombat)
                             botStates.Push(new BattlegroundQueueState(botStates, container));
                     }
 

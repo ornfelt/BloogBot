@@ -120,11 +120,11 @@ namespace BloogBot.AI.SharedStates
             int bgQueueIndex = bg;
 
             if (playerLevel < 20)
-                bgQueueIndex = 3;
+                bgQueueIndex = 2;
             else if (playerLevel < 51)
-                bgQueueIndex = (bg == 0 && !abCTA) || (bg == 1 && abCTA) ? 3 : 4;
+                bgQueueIndex = (bg == 0 && !abCTA) || (bg == 1 && abCTA) ? 2 : 3;
             else if (playerLevel < 61)
-                bgQueueIndex = (bg == 0 && !abCTA && !avCTA) ? 3 : (bg == 1 && avCTA) || (bg == 2 && avCTA) ? 5 : 4;
+                bgQueueIndex = (bg == 0 && !abCTA && !avCTA) ? 2 : (bg == 1 && avCTA) || (bg == 2 && avCTA) ? 4 : 3;
             else if (playerLevel < 71)
                 bgQueueIndex = (bg == 0 && !abCTA && !avCTA && !eyeCTA) ? 2 : (bg == 1 && (avCTA || eyeCTA)) || (bg == 2 && avCTA) ? 4 : 3;
             else

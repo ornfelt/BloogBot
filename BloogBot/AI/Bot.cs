@@ -5,12 +5,10 @@ using BloogBot.Game.Objects;
 using BloogBot.UI;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace BloogBot.AI
@@ -72,7 +70,12 @@ namespace BloogBot.AI
         private void ResetValues(IDependencyContainer container, bool resetLevel)
         {
             if (resetLevel)
+            {
+                // First time starting bot
                 currentLevel = ObjectManager.Player.Level;
+                // Log datetime to file to separate new bot sessions
+                LogToFile("VisitedWanderNodes.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm"));
+            }
             botStates.Push(new GrindState(botStates, container));
             currentState = botStates.Peek().GetType();
             currentStateStartTime = Environment.TickCount;
@@ -661,6 +664,28 @@ namespace BloogBot.AI
             if (File.Exists(file))
             {
                 using (var sw = File.AppendText(file))
+                {
+                    sw.WriteLine(text);
+                }
+            }
+        }
+
+        private void LogToFile(string fileName, string text)
+        {
+            var dir = Path.GetDirectoryName(Assembly.GetAssembly(typeof(MainViewModel)).CodeBase);
+            var path = new UriBuilder(dir).Path;
+            var file = Path.Combine(path, fileName);
+            string altFileName = "C:\\local\\VisitedWanderNodes.txt";
+            if (File.Exists(file))
+            {
+                using (var sw = File.AppendText(file))
+                {
+                    sw.WriteLine(text);
+                }
+            }
+            else if (File.Exists(altFileName))
+            {
+                using (var sw = File.AppendText(altFileName))
                 {
                     sw.WriteLine(text);
                 }

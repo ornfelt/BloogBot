@@ -3,7 +3,6 @@ using BloogBot.Game.Objects;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Windows.Markup;
 using System.IO;
 using System.Reflection;
 using BloogBot.UI;
@@ -79,12 +78,10 @@ namespace BloogBot.AI.SharedStates
                     if (!player.BlackListedWps.Contains(waypoint.ID))
                         newWpFound = true;
                     else
-                        waypoint = nearestWps.ElementAtOrDefault(wpCounter);
+                        waypoint = nearestWps.ElementAtOrDefault(wpCounter) == null ? waypoint : nearestWps.ElementAtOrDefault(wpCounter);
 
                     if (wpCounter > 100) newWpFound = true;
                 }
-                // Log datetime to file to separate new bot sessions
-                LogToFile(DateTime.Now.ToString("dd/MM/yyyy HH:mm"));
             }
             else
             {
@@ -107,6 +104,7 @@ namespace BloogBot.AI.SharedStates
                         player.HasBeenStuckAtWp = false;
 
                         // Random chance to queue for BG (if not in BG already)
+                        // TODO: Add arena skirmish with go creature and then go back via npcbot wp go {wp}
                         if (!HotspotIsBg(hotspot.Id) && random.Next(99)+1 < (player.HasOverLeveled ? 0 : 10) && player.Level >= 10 && !player.IsInCombat)
                             botStates.Push(new BattlegroundQueueState(botStates, container));
                     }

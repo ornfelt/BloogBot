@@ -522,9 +522,15 @@ namespace BloogBot.Game.Objects
 
         private static bool m_ShouldWaitForShortDelay;
         public bool ShouldWaitForShortDelay { get { return m_ShouldWaitForShortDelay; } set { m_ShouldWaitForShortDelay = value; } }
+
+        private static bool m_ShouldWaitForTeleportDelay;
+        public bool ShouldWaitForTeleportDelay { get { return m_ShouldWaitForTeleportDelay; } set { m_ShouldWaitForTeleportDelay = value; } }
         
         private static bool m_HasItemsToEquip;
         public bool HasItemsToEquip { get { return m_HasItemsToEquip; } set { m_HasItemsToEquip = value; } }
+
+        private static bool m_ShouldTeleportToLastWp;
+        public bool ShouldTeleportToLastWp { get { return m_ShouldTeleportToLastWp; } set { m_ShouldTeleportToLastWp = value; } }
 
         private static uint m_LastKnownMapId;
         public uint LastKnownMapId { get { return m_LastKnownMapId; } set { m_LastKnownMapId = value; } }
@@ -686,5 +692,7 @@ namespace BloogBot.Game.Objects
             {77, new List<int> { 35679, 38613 }}, // Head, Neck
             {78, new List<int> { 37038, 37113 }} // Wand, Wrist
         };
+
+        public string BotFriend = "Lazarus";
     }
 }

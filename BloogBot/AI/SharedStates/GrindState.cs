@@ -96,17 +96,19 @@ namespace BloogBot.AI.SharedStates
                     {
                         player.VisitedWps.Add(waypoint.ID);
                         LogToFile(waypoint.ID + "  (" + waypoint.GetZoneName() + ")");
-                        player.LastWpId = waypoint.ID;
+                        if (ObjectManager.MapId != 559)
+                            player.LastWpId = waypoint.ID;
 
                         if (player.CurrZone != waypoint.Zone)
                             Console.WriteLine("Bot arrived at new zone!");
                         player.CurrZone = waypoint.Zone; // Update current zone
                         player.HasBeenStuckAtWp = false;
 
-                        // Random chance to queue for BG (if not in BG already)
-                        // TODO: Add arena skirmish with go creature and then go back via npcbot wp go {wp}
+                        // Random chance to queue for BG or arena (if not in one already)
                         if (!HotspotIsBg(hotspot.Id) && random.Next(99)+1 < (player.HasOverLeveled ? 0 : 10) && player.Level >= 10 && !player.IsInCombat)
                             botStates.Push(new BattlegroundQueueState(botStates, container));
+                        else if (!HotspotIsBg(hotspot.Id) && random.Next(99)+1 < (player.HasOverLeveled ? 0 : 2) && player.Level >= 10 && !player.IsInCombat)
+                            botStates.Push(new ArenaSkirmishQueueState(botStates, container));
                     }
 
                     // Set new WP based on forced path if player has overleveled

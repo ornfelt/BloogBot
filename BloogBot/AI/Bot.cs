@@ -75,6 +75,7 @@ namespace BloogBot.AI
                 currentLevel = ObjectManager.Player.Level;
                 // Log datetime to file to separate new bot sessions
                 LogToFile("VisitedWanderNodes.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm"));
+                ObjectManager.Player.LastWpId = 0;
             }
             botStates.Push(new GrindState(botStates, container));
             currentState = botStates.Peek().GetType();
@@ -83,7 +84,6 @@ namespace BloogBot.AI
             currentPositionStartTime = Environment.TickCount;
             teleportCheckPosition = ObjectManager.Player.Position;
             ObjectManager.Player.CurrWpId = 0;
-            ObjectManager.Player.LastWpId = 0;
             ObjectManager.Player.CurrZone = "0";
             ObjectManager.Player.DeathsAtWp = 0;
             ObjectManager.Player.WpStuckCount = 0;
@@ -342,12 +342,26 @@ namespace BloogBot.AI
                         else if (player.HasEnteredNewMap)
                             return;
 
+                        if (player.ShouldWaitForTeleportDelay && Wait.For("TeleportDelay", 5000))
+                            player.ShouldWaitForTeleportDelay = false;
+                        else if (player.ShouldWaitForTeleportDelay)
+                            return;
+
+                        if (player.ShouldTeleportToLastWp)
+                        {
+                            player.LuaCall($"SendChatMessage('.npcb wp go {player.LastWpId}')");
+                            player.ShouldTeleportToLastWp = false;
+                            player.ShouldWaitForTeleportDelay = true;
+                        }
+
                         var playerInBg = IsPlayerInBg();
                         // If in BG, check if it has ended
                         if (playerInBg)
                         {
                             if (IsBgFinished(player))
                             {
+                                if (ObjectManager.MapId == 559)
+                                    player.ShouldTeleportToLastWp = true;
                                 player.LuaCall("LeaveBattlefield()");
                                 player.LuaCallWithResults("LeaveBattlefield()");
                                 player.HasEnteredNewMap = true;
@@ -470,6 +484,14 @@ namespace BloogBot.AI
                             //return;
                         }
 
+                        // Stop if stuck in state for 30 min
+                        if (Environment.TickCount - currentStateStartTime > 1800000)
+                        {
+                            Console.WriteLine("Stopping bot due to being stuck in state for more than 30 min");
+                            Stop();
+                            return;
+                        }
+
                         if (player.Position.DistanceTo(currentPosition) > 10)
                         {
                             currentPosition = player.Position;
@@ -493,7 +515,10 @@ namespace BloogBot.AI
 
                             botStates.Push(container.CreateRestState(botStates, container));
                             if (playerInBg)
-                                botStates.Push(new ReleaseCorpseState(botStates, container));
+                            {
+                                if (ObjectManager.MapId != 559)
+                                    botStates.Push(new ReleaseCorpseState(botStates, container));
+                            }
                             else
                             {
                                 botStates.Push(new RetrieveCorpseState(botStates, container));

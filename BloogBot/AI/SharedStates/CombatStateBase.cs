@@ -121,7 +121,7 @@ namespace BloogBot.AI.SharedStates
             }
 
             // see if somebody else stole the mob we were targeting
-            if (target.TappedByOther || player.Health <= 0)
+            if (target.TappedByOther || player.Health <= 0 || target.Name == player.BotFriend)
             {
                 CleanUp();
                 return true;

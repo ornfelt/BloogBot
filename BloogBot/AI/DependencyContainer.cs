@@ -51,16 +51,15 @@ namespace BloogBot.AI
 
         public IEnumerable<Hotspot> Hotspots { get; }
 
-        private const string BotFriend = "Lazarus";
-
         // this is broken up into multiple sub-expressions to improve readability and debuggability
         public WoWUnit FindThreat()
         {
-            var botFriend = ObjectManager.Units.Where(u => u.Name == BotFriend).FirstOrDefault();
+            var player = ObjectManager.Player;
+            var botFriend = ObjectManager.Units.Where(u => u.Name == player.BotFriend).FirstOrDefault();
             var potentialThreats = ObjectManager.Units
                 .Where(u =>
                     (botFriend != null && u.TargetGuid == botFriend.Guid && u.Guid != botFriend.Guid) || // Required to help npcbots
-                    u.TargetGuid == ObjectManager.Player.Guid ||
+                    u.TargetGuid == player.Guid ||
                     u.TargetGuid == ObjectManager.Pet?.Guid &&
                     !Probe.BlacklistedMobIds.Contains(u.Guid));
 
@@ -71,7 +70,7 @@ namespace BloogBot.AI
             potentialThreats = ObjectManager.Units
                 .Where(u =>
                     u.CreatureType == CreatureType.Totem &&
-                    u.Position.DistanceTo(ObjectManager.Player.Position) <= 20 &&
+                    u.Position.DistanceTo(player.Position) <= 20 &&
                     u.UnitReaction == UnitReaction.Hostile);
 
             if (potentialThreats.Any())
@@ -80,7 +79,7 @@ namespace BloogBot.AI
             // find stoneclaw totems? for some reason the above will not find these.
             potentialThreats = ObjectManager.Units
                 .Where(u =>
-                    u.Position.DistanceTo(ObjectManager.Player.Position) < 10 &&
+                    u.Position.DistanceTo(player.Position) < 10 &&
                     Convert.ToBoolean(ObjectManager.Units.FirstOrDefault(ou => ou.Guid == u.TargetGuid)?.Name?.Contains("Stoneclaw Totem")) &&
                     u.IsInCombat);
 
@@ -93,13 +92,14 @@ namespace BloogBot.AI
         // this is broken up into multiple sub-expressions to improve readability and debuggability
         public WoWUnit FindClosestTarget()
         {
+            var player = ObjectManager.Player;
             var threat = FindThreat();
             if (threat != null)
                 return threat;
 
             var mapId = ObjectManager.MapId;
-            if (!BotSettings.TargetingExcludedNames.Contains(BotFriend))
-                BotSettings.TargetingExcludedNames += "|" + BotFriend;
+            if (!BotSettings.TargetingExcludedNames.Contains(player.BotFriend))
+                BotSettings.TargetingExcludedNames += "|" + player.BotFriend;
             var potentialTargetsList = ObjectManager.Units
                 // only consider units that are not null, and whose name and position are not null
                 .Where(u => u != null && u.Name != null && u.Position != null)
@@ -120,11 +120,11 @@ namespace BloogBot.AI
                 // Skip Neutral enemies in BG
                 //.Where(u => !((mapId == 30 || mapId == 489 || mapId == 529 || mapId == 559) && u.UnitReaction == UnitReaction.Neutral))
                 // Always skip neutral (when above level 12)
-                .Where(u => !(ObjectManager.Player?.Level > 12 && u.UnitReaction == UnitReaction.Neutral))
+                .Where(u => !(player?.Level > 12 && u.UnitReaction == UnitReaction.Neutral))
                 // filter units by creature type as specified in targeting settings. also include things like totems and slimes.
-                .Where(u => BotSettings.CreatureTypes.Count == 0 || u.CreatureType == CreatureType.Mechanical || (u.CreatureType == CreatureType.Totem && u.Position.DistanceTo(ObjectManager.Player?.Position) <= 20) || BotSettings.CreatureTypes.Contains(u.CreatureType.ToString()) || oozeNames.Contains(u.Name))
+                .Where(u => BotSettings.CreatureTypes.Count == 0 || u.CreatureType == CreatureType.Mechanical || (u.CreatureType == CreatureType.Totem && u.Position.DistanceTo(player?.Position) <= 20) || BotSettings.CreatureTypes.Contains(u.CreatureType.ToString()) || oozeNames.Contains(u.Name))
                 // filter by the level range specified in targeting settings
-                .Where(u => u.Level <= ObjectManager.Player?.Level + BotSettings.LevelRangeMax && u.Level >= ObjectManager.Player?.Level - BotSettings.LevelRangeMin)
+                .Where(u => u.Level <= player?.Level + BotSettings.LevelRangeMax && u.Level >= player?.Level - BotSettings.LevelRangeMin)
                 // exclude certain factions known to cause targeting issues (like neutral, non attackable NPCs in town)
                 .Where(u => u.FactionId != 71 && u.FactionId != 85 && u.FactionId != 474 && u.FactionId != 475 && u.FactionId != 1475)
                 // exclude units with the UNIT_FLAG_NON_ATTACKABLE flag
@@ -134,7 +134,7 @@ namespace BloogBot.AI
                 .ToList();
 
             var potentialTargets = potentialTargetsList
-                .OrderBy(u => u.Position.DistanceTo(ObjectManager.Player?.Position));
+                .OrderBy(u => u.Position.DistanceTo(player?.Position));
 
             return potentialTargets.FirstOrDefault(x => CanAttackTarget(x.Guid));
             //return potentialTargets.FirstOrDefault();

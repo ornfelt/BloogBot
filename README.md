@@ -99,6 +99,7 @@ My changes:
   "LootUncommon": false,
   "GrindingHotspotId": 1,
   *Turn off autoloot!
+  *Rare loot is turned of for now in LootState (only epics are looted)
   
   Also see:
   TargetingExcludedNames, Food, Drink

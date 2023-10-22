@@ -626,10 +626,11 @@ namespace BloogBot.Game.Objects
             {48, new List<int> { 10173, 10149 }}, // Dampen Magic R4, Fireball R9
             {50, new List<int> { 10219, 10160, 10161, 10180 }}, // Ice Armor R3, Cone of Cold R4, Cone of Cold R5, Frostbolt R9
             {51, new List<int> { 10139 }}, // Conjure Water R6
+            {52, new List<int> { 10145 }}, // Conjure Food R6
             {54, new List<int> { 10230, 10150, 10199 }}, // Frost Nova R4, Fireball R10, Fire Blast R7
             {56, new List<int> { 10157, 10181 }}, // Arcane Intellect R5, Frostbolt R10
             {58, new List<int> { 22783, 13033 }}, // Mage Armor R3, Ice Barrier R4
-            {60, new List<int> { 10140, 25304 }}, // Conjure Water R7, Frostbolt R11
+            {60, new List<int> { 10140, 10151, 25304, 25306, 28612 }}, // Conjure Water R7, Fireball R11, Frostbolt R11, Fireball R12, Conjure Food R7
             {61, new List<int> { 27078 }}, // Fire Blast R8
             {63, new List<int> { 27071 }}, // Frostbolt R12
             {64, new List<int> { 27134 }}, // Ice Barrier R5
@@ -637,7 +638,7 @@ namespace BloogBot.Game.Objects
             {66, new List<int> { 27070 }}, // Fireball R13
             {67, new List<int> { 33944, 27088 }}, // Dampen Magic R6, Frost Nova R5
             {69, new List<int> { 27124, 27125, 27072 }}, // Ice Armor R5, Mage Armor R4, Frostbolt R13
-            {70, new List<int> { 27079, 27090, 27126, 38697 }}, // Fire Blast R9, Conjure Water R9, Arcane Intellect R6, Frostbolt R14
+            {70, new List<int> { 27079, 27090, 27126, 33717, 38692, 38697 }}, // Fire Blast R9, Conjure Water R9, Arcane Intellect R6, Conjure Food R8, Fireball R14, Frostbolt R14
             {71, new List<int> { 43023 }}, // Mage Armor R5
             {74, new List<int> { 42832, 42872 }}, // Fireball R15, Fire Blast R10
             {75, new List<int> { 42841, 42917, 43038 }}, // Frostbolt R15, Frost Nova R6, Ice Barrier R7

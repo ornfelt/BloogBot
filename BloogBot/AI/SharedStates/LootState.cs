@@ -114,8 +114,6 @@ namespace BloogBot.AI.SharedStates
                 {
                     if (itemQuality == ItemQuality.Epic) // Only loot epics to not clutter bag
                         itemToLoot.Loot();
-                    else
-                        Console.WriteLine("Skipping looting item with itemQuality: " + itemQuality);
                 }
 
                 lootIndex++;

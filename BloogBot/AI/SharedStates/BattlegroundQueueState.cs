@@ -124,9 +124,13 @@ namespace BloogBot.AI.SharedStates
             else if (playerLevel < 51)
                 bgQueueIndex = (bg == 0 && !abCTA) || (bg == 1 && abCTA) ? 2 : 3;
             else if (playerLevel < 61)
-                bgQueueIndex = (bg == 0 && !abCTA && !avCTA) ? 2 : (bg == 1 && avCTA) || (bg == 2 && avCTA) ? 4 : 3;
+                bgQueueIndex = bg == 0 ? (!abCTA && !avCTA ? 2 : 3) :
+                       bg == 1 ? (abCTA ? 2 : 3) :
+                                 (avCTA ? 2 : 4);
             else if (playerLevel < 71)
-                bgQueueIndex = (bg == 0 && !abCTA && !avCTA && !eyeCTA) ? 2 : (bg == 1 && (avCTA || eyeCTA)) || (bg == 2 && avCTA) ? 4 : 3;
+                bgQueueIndex = bg == 0 ? (!abCTA && !avCTA && !eyeCTA ? 2 : 3) :
+                       bg == 1 ? (abCTA ? 2 : (eyeCTA || avCTA ? 4 : 3)) :
+                                 (avCTA ? 2 : (eyeCTA ? 5 : 4));
             else
                 bgQueueIndex = bg == 0 ? (otherCTA || abCTA || avCTA ? 3 : 2) :
                        bg == 1 ? (otherCTA || avCTA ? 4 : abCTA ? 2 : 3) :

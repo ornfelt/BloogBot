@@ -484,14 +484,6 @@ namespace BloogBot.AI
                             //return;
                         }
 
-                        // Stop if stuck in state for 30 min
-                        if (Environment.TickCount - currentStateStartTime > 1800000)
-                        {
-                            Console.WriteLine("Stopping bot due to being stuck in state for more than 30 min");
-                            Stop();
-                            return;
-                        }
-
                         if (player.Position.DistanceTo(currentPosition) > 10)
                         {
                             currentPosition = player.Position;

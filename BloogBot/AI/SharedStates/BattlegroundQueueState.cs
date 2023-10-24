@@ -50,7 +50,18 @@ namespace BloogBot.AI.SharedStates
 
             if (currentState == QueueStates.PVPTabOpened && Wait.For("PVPTabOpenedDelay", 1500))
             {
-                player.LuaCall($"PVPBattlegroundFrame.selectedBG = {RandBgQueueIndex()}");
+                // player.LuaCall($"PVPBattlegroundFrame.selectedBG = {RandBgQueueIndex()}"); // Old
+                // Guaranteed correct queue index
+                Dictionary<int, string> battlegroundNames = new Dictionary<int, string>
+                {
+                    { 0, "Warsong Gulch" },
+                    { 1, "Arathi Basin" },
+                    { 2, "Alterac Valley" }
+                };
+                 player.LuaCall($"for i=1,GetNumBattlegroundTypes()do local name,_,_,_,_=GetBattlegroundInfo(i)if name=='{battlegroundNames[RandBgQueueIndex()]}'then PVPBattlegroundFrame.selectedBG = i end end");
+                // You can also just JoinBattlefield directly:
+                //run for i=1,GetNumBattlegroundTypes()do local name,_,_,_,_=GetBattlegroundInfo(i)if name=="Warsong Gulch"then JoinBattlefield(i)end end
+
                 currentState = QueueStates.BgChosen;
                 return;
             }
@@ -119,6 +130,7 @@ namespace BloogBot.AI.SharedStates
 
             int bgQueueIndex = bg;
 
+            // This works 90% of the time
             if (playerLevel < 20)
                 bgQueueIndex = 2;
             else if (playerLevel < 51)
@@ -137,7 +149,8 @@ namespace BloogBot.AI.SharedStates
                                  (otherCTA ? 5 : avCTA ? 2 : 4);
 
             Console.WriteLine($"Queueing for bg: {bg}, bgQueueIndex: {bgQueueIndex}");
-            return bgQueueIndex;
+            return bg;
+            //return bgQueueIndex;
         }
 
         void SetCTA()

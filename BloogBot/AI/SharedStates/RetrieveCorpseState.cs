@@ -31,6 +31,7 @@ namespace BloogBot.AI.SharedStates
 
         public void Update()
         {
+            player.WpStuckCount = 0; // Reset WpStuckCount
             if (!player.InGhostForm)
             {
                 botStates.Pop();

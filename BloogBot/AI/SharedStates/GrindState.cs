@@ -90,7 +90,7 @@ namespace BloogBot.AI.SharedStates
                 {
                     Console.WriteLine($"WP: {waypoint.ID} " + (player.WpStuckCount > 10 ? "couldn't be reached" : "reached") + ", selecting new WP...");
                     // Check if player is higher level than waypoint maxlevel
-                    player.HasOverLeveled = !HotspotIsBg(hotspot.Id) && player.Level > waypoint.MaxLevel;
+                    player.HasOverLeveled = !HotspotIsBg(hotspot.Id) && player.Level >= waypoint.MaxLevel;
 
                     if (player.Position.DistanceTo(waypoint) < 3.0F)
                     {
@@ -107,7 +107,7 @@ namespace BloogBot.AI.SharedStates
                         // Random chance to queue for BG or arena (if not in one already)
                         if (!HotspotIsBg(hotspot.Id) && random.Next(99)+1 < (player.HasOverLeveled ? 0 : 10) && player.Level >= 10 && !player.IsInCombat)
                             botStates.Push(new BattlegroundQueueState(botStates, container));
-                        else if (!HotspotIsBg(hotspot.Id) && random.Next(99)+1 < (player.HasOverLeveled ? 0 : 2) && player.Level >= 10 && !player.IsInCombat)
+                        else if (!HotspotIsBg(hotspot.Id) && random.Next(99)+1 < (player.HasOverLeveled ? 0 : 5) && player.Level >= 20 && !player.IsInCombat)
                             botStates.Push(new ArenaSkirmishQueueState(botStates, container));
                     }
 
@@ -289,7 +289,7 @@ namespace BloogBot.AI.SharedStates
                 }
 
                 if (currentWaypoint.MaxLevel > player.Level && currentWaypoint.MinLevel <= player.Level
-                    && !player.HasVisitedWp(currentId))
+                    && (ignoreBlacklistedWps || !player.HasVisitedWp(currentId)))
                 {
                     Console.WriteLine("Found new WP matching player level: " + currentWaypoint.ToStringFull() + "\n");
                     return currentPath;

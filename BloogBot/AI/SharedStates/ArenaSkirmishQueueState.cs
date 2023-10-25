@@ -34,10 +34,11 @@ namespace BloogBot.AI.SharedStates
                 player.StopAllMovement();
                 player.LuaCall($"SendChatMessage('.go creature {(IsAlly() ? "68938": "4762")}')");
                 currentState = ArenaQueueStates.BotTeleported;
+                player.ShouldWaitForTeleportDelay = true;
                 return;
             }
 
-            if (currentState == ArenaQueueStates.BotTeleported && Wait.For("BotTeleportedDelay", 4500))
+            if (currentState == ArenaQueueStates.BotTeleported && Wait.For("BotTeleportedDelay", 1500))
             {
                 var arenaNpc = ObjectManager.Units.Where(u => u.Name == (IsAlly() ? "Beka Zipwhistle" : "Zeggon Botsnap")).FirstOrDefault();
                 if (arenaNpc != null)

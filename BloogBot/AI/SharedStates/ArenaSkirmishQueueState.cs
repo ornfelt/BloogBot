@@ -25,8 +25,6 @@ namespace BloogBot.AI.SharedStates
 
         public void Update()
         {
-            if (CheckCombat())
-                return;
             player = ObjectManager.Player;
 
             if (currentState == ArenaQueueStates.Initial)
@@ -40,7 +38,8 @@ namespace BloogBot.AI.SharedStates
 
             if (currentState == ArenaQueueStates.BotTeleported && Wait.For("BotTeleportedDelay", 1500))
             {
-                var arenaNpc = ObjectManager.Units.Where(u => u.Name == (IsAlly() ? "Beka Zipwhistle" : "Zeggon Botsnap")).FirstOrDefault();
+                bool isAlly = IsAlly();
+                var arenaNpc = ObjectManager.Units.Where(u => u.Name == (isAlly ? "Beka Zipwhistle" : "Zeggon Botsnap")).FirstOrDefault();
                 if (arenaNpc != null)
                     player.SetTarget(arenaNpc.Guid);
                 currentState = ArenaQueueStates.NpcTargeted;
@@ -79,17 +78,6 @@ namespace BloogBot.AI.SharedStates
         {
             // TODO: determine faction
             Console.WriteLine($"Player faction: {player.FactionId}");
-            return false;
-        }
-
-        private bool CheckCombat()
-        {
-            if (player.IsInCombat)
-            {
-                botStates.Pop();
-                botStates.Push(new GrindState(botStates, container));
-                return true;
-            }
             return false;
         }
     }

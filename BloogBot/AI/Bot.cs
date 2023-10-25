@@ -368,14 +368,15 @@ namespace BloogBot.AI
                             }
                         }
 
-                        if (ObjectManager.MapId != player.LastKnownMapId)
+                        var mapId = ObjectManager.MapId;
+                        if ((currentState != typeof(ArenaSkirmishQueueState) || mapId == 559) && mapId != player.LastKnownMapId)
                         {
                             Console.WriteLine("Bot entered new map... Restarting bot!");
                             //Stop();
                             ObjectManager.KillswitchTriggered = false;
                             //Start(container, stopCallback);
                             ResetValues(container, false);
-                            player.LastKnownMapId = ObjectManager.MapId;
+                            player.LastKnownMapId = mapId;
                         }
 
                         if (botStates.Count() == 0)

@@ -535,6 +535,9 @@ namespace BloogBot.Game.Objects
         private static uint m_LastKnownMapId;
         public uint LastKnownMapId { get { return m_LastKnownMapId; } set { m_LastKnownMapId = value; } }
 
+        private static uint m_StuckInStateOrPosCount;
+        public uint StuckInStateOrPosCount { get { return m_StuckInStateOrPosCount; } set { m_StuckInStateOrPosCount = value; } }
+
         private static HashSet<ulong> m_BlackListedTargets = new HashSet<ulong> {};
         public HashSet<ulong> BlackListedTargets { get { return m_BlackListedTargets; } set { m_BlackListedTargets = value; } }
 

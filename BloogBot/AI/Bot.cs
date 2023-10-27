@@ -87,6 +87,7 @@ namespace BloogBot.AI
             ObjectManager.Player.CurrZone = "0";
             ObjectManager.Player.DeathsAtWp = 0;
             ObjectManager.Player.WpStuckCount = 0;
+            ObjectManager.Player.StuckInStateOrPosCount = 0;
             ObjectManager.Player.ForcedWpPath = new List<int>();
             ObjectManager.Player.VisitedWps = new HashSet<int>();
             ObjectManager.Player.HasBeenStuckAtWp = false;
@@ -655,6 +656,15 @@ namespace BloogBot.AI
                 botStates.Push(new GrindState(botStates, container));
             }
             player.LuaCall("StaticPopup1Button1:Click();"); // Required if stuck at release point in BG
+
+            player.StuckInStateOrPosCount += 1;
+            if (player.StuckInStateOrPosCount > 50)
+            {
+                Stop();
+                Console.WriteLine("Bot stuck in state or pos for more than 50 times. Exiting bot...");
+                System.Environment.Exit(1); // Console app
+                //System.Windows.Forms.Application.Exit(); // // WinForms app
+            }
         }
 
         private bool IsPlayerInBg()

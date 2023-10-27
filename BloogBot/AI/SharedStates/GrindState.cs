@@ -48,6 +48,7 @@ namespace BloogBot.AI.SharedStates
         {
             var hotspot = container.GetCurrentHotspot();
             player = ObjectManager.Player;
+            player.StuckInStateOrPosCount = 0;
             //var waypointCount = hotspot.Waypoints.Length;
             //Console.WriteLine("Waypoint count: " + waypointCount);
             //var waypoint = hotspot.Waypoints[random.Next(0, waypointCount)]; // Old 

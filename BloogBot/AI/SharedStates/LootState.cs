@@ -112,8 +112,10 @@ namespace BloogBot.AI.SharedStates
                     || ((string.IsNullOrWhiteSpace(container.BotSettings.LootExcludedNames) || !container.BotSettings.LootExcludedNames.Split('|').Any(en => itemToLoot.Info.Name.Contains(en)))
                     && (poorQualityCondition || commonQualityCondition || uncommonQualityCondition || other)))
                 {
-                    if (itemQuality == ItemQuality.Epic) // Only loot epics to not clutter bag
+                    if (itemQuality == ItemQuality.Epic || itemToLoot.IsCoins) // Only loot epics / coins to not clutter bag
                         itemToLoot.Loot();
+                    else
+                        Console.WriteLine($"Skip looting item with quality: {itemQuality}");
                 }
 
                 lootIndex++;

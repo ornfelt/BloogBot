@@ -48,6 +48,8 @@ namespace BloogBot.AI.SharedStates
         {
             var hotspot = container.GetCurrentHotspot();
             player = ObjectManager.Player;
+            var isInBg = HotspotIsBg(hotspot.Id);
+            var playerLevel = player.Level;
             player.StuckInStateOrPosCount = 0;
             //var waypointCount = hotspot.Waypoints.Length;
             //Console.WriteLine("Waypoint count: " + waypointCount);
@@ -91,7 +93,7 @@ namespace BloogBot.AI.SharedStates
                 {
                     Console.WriteLine($"WP: {waypoint.ID} " + (player.WpStuckCount > 10 ? "couldn't be reached" : "reached") + ", selecting new WP...");
                     // Check if player is higher level than waypoint maxlevel
-                    player.HasOverLeveled = !HotspotIsBg(hotspot.Id) && player.Level >= waypoint.MaxLevel;
+                    player.HasOverLeveled = !isInBg && playerLevel >= waypoint.MaxLevel;
 
                     if (player.Position.DistanceTo(waypoint) < 3.0F)
                     {
@@ -106,10 +108,24 @@ namespace BloogBot.AI.SharedStates
                         player.HasBeenStuckAtWp = false;
 
                         // Random chance to queue for BG or arena (if not in one already)
-                        if (!HotspotIsBg(hotspot.Id) && random.Next(99)+1 < (player.HasOverLeveled ? 0 : 10) && player.Level >= 10 && !player.IsInCombat)
+                        if (!isInBg && random.Next(99)+1 < (player.HasOverLeveled ? 0 : 10) && playerLevel >= 10 && !player.IsInCombat)
                             botStates.Push(new BattlegroundQueueState(botStates, container));
-                        else if (!HotspotIsBg(hotspot.Id) && random.Next(99)+1 < (player.HasOverLeveled ? 0 : 5) && player.Level >= 20 && !player.IsInCombat)
+                        else if (!isInBg && random.Next(99)+1 < (player.HasOverLeveled ? 0 : 5) && playerLevel >= 20 && !player.IsInCombat)
                             botStates.Push(new ArenaSkirmishQueueState(botStates, container));
+                        if (!isInBg && playerLevel != 80)
+                        {
+                            // Check if bot needs to teleport to outland / northrend. This should only occur if bot somehow doesn't manage to tp back after arena skirmish
+                            if (playerLevel >= 70 && hotspot.Id != 7 && hotspot.Id != 8)
+                            {
+                                player.LuaCall($"SendChatMessage('.npcb wp go 2706')"); // Teleport to Northrend
+                                player.HasEnteredNewMap = true;
+                            }
+                            else if (playerLevel >= 60 && hotspot.Id != 5 && hotspot.Id != 6)
+                            {
+                                player.LuaCall($"SendChatMessage('.npcb wp go 2583')"); // Teleport to Outland
+                                player.HasEnteredNewMap = true;
+                            }
+                        }
                     }
 
                     // Set new WP based on forced path if player has overleveled
@@ -205,7 +221,7 @@ namespace BloogBot.AI.SharedStates
                                 //Console.WriteLine("randLink: " + randLink);
                                 var linkWp = hotspot.Waypoints.Where(x => x.ID == Int32.Parse(linkSplit[randLink])).FirstOrDefault();
 
-                                if (HotspotIsBg(hotspot.Id))
+                                if (isInBg)
                                 {
                                     if (!player.BlackListedWps.Contains(linkWp.ID) && !player.HasVisitedWp(linkWp.ID))
                                     {
@@ -223,10 +239,10 @@ namespace BloogBot.AI.SharedStates
                                 else
                                 {
                                     // Check level requirement
-                                    if (linkWp.MinLevel <= player.Level && !player.BlackListedWps.Contains(linkWp.ID))
+                                    if (linkWp.MinLevel <= playerLevel && !player.BlackListedWps.Contains(linkWp.ID))
                                     {
                                         //if (!player.HasVisitedWp(linkWp.ID) && linkWp.MinLevel <= player.Level && linkWp.MaxLevel > player.Level)
-                                        if (linkWp.MinLevel <= player.Level && linkWp.MaxLevel > player.Level)
+                                        if (linkWp.MinLevel <= playerLevel && linkWp.MaxLevel > playerLevel)
                                         {
                                             waypoint = linkWp;
                                             newWpFound = true;
@@ -248,16 +264,13 @@ namespace BloogBot.AI.SharedStates
                     player.WpStuckCount = 0;
                 }
                 else
-                {
                     Console.WriteLine($"CurrWP not reached yet. Distance: {player.Position.DistanceTo(waypoint)}, wpStuckCount: {player.WpStuckCount}");
-                    //player.wpStuckCount++; // This is increased in StuckHelper
-                }
             }
             // Try to mount
             string MountName = "white polar bear";
-            if (!HotspotIsBg(hotspot.Id) && player.Level >= 40 && !player.IsMounted)
+            if (!isInBg && playerLevel >= 40 && !player.IsMounted)
                 player.LuaCall($"CastSpellByName('{MountName}')");
-            else if (HotspotIsBg(hotspot.Id) && !player.IsMounted)
+            else if (isInBg && !player.IsMounted)
                 player.LuaCall($"CastSpellByName('{MountName}')");
 
             player.CurrWpId = waypoint.ID;

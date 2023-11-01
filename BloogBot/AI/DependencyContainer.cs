@@ -160,25 +160,58 @@ namespace BloogBot.AI
             //}
         }
 
+        private Hotspot GetHotspotById(int id)
+        {
+            return Hotspots.FirstOrDefault(h => h != null && h.Id == id);
+        }
+
         //public Hotspot GetCurrentHotspot() => BotSettings.GrindingHotspot;
         public Hotspot GetCurrentHotspot()
         {
-            if (ObjectManager.MapId == 1 && BotSettings.GrindingHotspot.Id > 2)
-                return Hotspots.Where(h => h != null && h.Id == 1).FirstOrDefault(); // Kalimdor horde
-            else if (ObjectManager.MapId == 0 && (BotSettings.GrindingHotspot.Id != 3 && BotSettings.GrindingHotspot.Id != 4))
-                return Hotspots.Where(h => h != null && h.Id == 3).FirstOrDefault(); // EK horde
-            else if (ObjectManager.MapId == 530 && (BotSettings.GrindingHotspot.Id != 5 && BotSettings.GrindingHotspot.Id != 6))
-                return Hotspots.Where(h => h != null && h.Id == 5).FirstOrDefault(); // Outland horde
-            else if (ObjectManager.MapId == 571 && (BotSettings.GrindingHotspot.Id != 7 && BotSettings.GrindingHotspot.Id != 8))
-                return Hotspots.Where(h => h != null && h.Id == 7).FirstOrDefault(); // Northrend horde
-            else if (ObjectManager.MapId == 489 && BotSettings.GrindingHotspot.Id != 9)
-                return Hotspots.Where(h => h != null && h.Id == 9).FirstOrDefault(); // WSG
-            else if (ObjectManager.MapId == 529 && BotSettings.GrindingHotspot.Id != 10)
-                return Hotspots.Where(h => h != null && h.Id == 10).FirstOrDefault(); // AB
-            else if (ObjectManager.MapId == 30 && BotSettings.GrindingHotspot.Id != 11)
-                return Hotspots.Where(h => h != null && h.Id == 11).FirstOrDefault(); // AV
-            else if (ObjectManager.MapId == 559 && BotSettings.GrindingHotspot.Id != 12)
-                return Hotspots.Where(h => h != null && h.Id == 12).FirstOrDefault(); // Nagrand Arena
+            // Hard-coded logic based on Hotspot Id, default is hotspot from settings
+            switch (ObjectManager.MapId)
+            {
+                case 1:
+                    if (BotSettings.GrindingHotspot.Id > 2)
+                        return GetHotspotById(1); // Kalimdor horde
+                    break;
+
+                case 0:
+                    if (BotSettings.GrindingHotspot.Id != 3 && BotSettings.GrindingHotspot.Id != 4)
+                        return GetHotspotById(3); // EK horde
+                    break;
+
+                case 530:
+                    if (BotSettings.GrindingHotspot.Id != 5 && BotSettings.GrindingHotspot.Id != 6)
+                        return GetHotspotById(5); // Outland horde
+                    break;
+
+                case 571:
+                    if (BotSettings.GrindingHotspot.Id != 7 && BotSettings.GrindingHotspot.Id != 8)
+                        return GetHotspotById(7); // Northrend horde
+                    break;
+
+                case 489:
+                    if (BotSettings.GrindingHotspot.Id != 9)
+                        return GetHotspotById(9); // WSG
+                    break;
+
+                case 529:
+                    if (BotSettings.GrindingHotspot.Id != 10)
+                        return GetHotspotById(10); // AB
+                    break;
+
+                case 30:
+                    if (BotSettings.GrindingHotspot.Id != 11)
+                        return GetHotspotById(11); // AV
+                    break;
+
+                case 559:
+                    if (BotSettings.GrindingHotspot.Id != 12)
+                        return GetHotspotById(12); // Nagrand Arena
+                    break;
+            }
+
             return BotSettings.GrindingHotspot; // Default
         }
 

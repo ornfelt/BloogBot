@@ -57,7 +57,7 @@ namespace BloogBot.AI.SharedStates
 
             if (currentState == ArenaQueueStates.NpcInteractedWith && Wait.For("NpcInteractedWithDelay", 1500))
             {
-                int bgQueueIndex = rand.Next(2) + 1;
+                int bgQueueIndex = rand.Next(3) + 1;
                 Console.WriteLine($"Queueing for arena: {bgQueueIndex}");
                 player.LuaCall($"JoinBattlefield({bgQueueIndex},0)");
                 currentState = ArenaQueueStates.ArenaQueued;

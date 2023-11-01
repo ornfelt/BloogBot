@@ -10,6 +10,8 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using System.Net;
+using System.Net.Mail;
 
 namespace BloogBot.AI
 {
@@ -400,6 +402,33 @@ namespace BloogBot.AI
                             Console.WriteLine($"Ding! {player.Name} is now level {player.Level}!");
                             //PrintAndLog($"Ding! {player.Name} is now level {player.Level}!");
                             HandleLevelUp(player, false);
+
+                            // Send mail to notify about levelup
+                            var fromAddress = new MailAddress("from_mail", "from_name");
+                            var toAddress = new MailAddress("to_mail", "to_name");
+                            const string fromPassword = "pass";
+                            const string subject = "Bot leveled up!";
+                            string body = $"Bot {player.Name} reached level {currentLevel}\nCurrent WP: " +
+                                $"{container.GetCurrentHotspot().Waypoints.Where(h => h.ID == player.CurrWpId).FirstOrDefault().ToStringFull()}";
+
+                            var smtp = new SmtpClient
+                            {
+                                Host = "smtp.gmail.com", // For Gmail, use "smtp.gmail.com"
+                                Port = 587, // For SSL: 465, For TLS/STARTTLS: 587
+                                EnableSsl = true,
+                                DeliveryMethod = SmtpDeliveryMethod.Network,
+                                UseDefaultCredentials = false,
+                                Credentials = new NetworkCredential(fromAddress.Address, fromPassword)
+                            };
+
+                            using (var message = new MailMessage(fromAddress, toAddress)
+                            {
+                                Subject = subject,
+                                Body = body
+                            })
+                            {
+                                smtp.Send(message);
+                            }
                         }
 
                         player.AntiAfk();
@@ -602,8 +631,9 @@ namespace BloogBot.AI
 
         private void HandleLevelUp(LocalPlayer player, bool isSecondTry)
         {
+            var playerLevel = player.Level;
             // Handle equipment
-            if (!isSecondTry && player.LevelItemsDict.TryGetValue(player.Level, out List<int> itemIds))
+            if (!isSecondTry && player.LevelItemsDict.TryGetValue(playerLevel, out List<int> itemIds))
             {
                 player.LuaCall(string.Join(" ", itemIds.Select(id => $"SendChatMessage('.additem {id}');")));
                 player.HasItemsToEquip = true;
@@ -611,24 +641,24 @@ namespace BloogBot.AI
             }
 
             // Handle spells
-            if (player.LevelSpellsDict.TryGetValue(player.Level, out List<int> spellIds))
+            if (player.LevelSpellsDict.TryGetValue(playerLevel, out List<int> spellIds))
                 player.LuaCall(string.Join(" ", spellIds.Select(id => $"SendChatMessage('.player learn {player.Name} {id}');")));
 
             // Handle talents
             // https://wowwiki-archive.fandom.com/wiki/API_LearnTalent
-            if (player.LevelTalentsDict.TryGetValue(player.Level, out string talentIndex))
+            if (player.LevelTalentsDict.TryGetValue(playerLevel, out string talentIndex))
                 player.LuaCall($"LearnTalent({talentIndex});");
 
             if (isSecondTry)
                 return;
 
             // Handle teleport
-            if (player.Level == 60)
+            if (playerLevel == 60)
             {
                 player.LuaCall($"SendChatMessage('.npcb wp go 2583')"); // Teleport to Outland
                 player.HasEnteredNewMap = true;
             }
-            else if (player.Level == 70)
+            else if (playerLevel == 70)
             {
                 player.LuaCall($"SendChatMessage('.npcb wp go 2706')"); // Teleport to Northrend
                 player.HasEnteredNewMap = true;

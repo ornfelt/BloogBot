@@ -409,7 +409,7 @@ namespace BloogBot.AI
                             const string fromPassword = "pass";
                             const string subject = "Bot leveled up!";
                             string body = $"Bot {player.Name} reached level {currentLevel}\nCurrent WP: " +
-                                $"{container.GetCurrentHotspot().Waypoints.Where(h => h.ID == player.CurrWpId).FirstOrDefault().ToStringFull()}";
+                                $"{(player.CurrWpId == 0 ? "0" : container.GetCurrentHotspot().Waypoints.Where(h => h.ID == player.CurrWpId).FirstOrDefault().ToStringFull())}";
 
                             var smtp = new SmtpClient
                             {

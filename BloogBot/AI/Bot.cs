@@ -403,31 +403,35 @@ namespace BloogBot.AI
                             //PrintAndLog($"Ding! {player.Name} is now level {player.Level}!");
                             HandleLevelUp(player, false);
 
-                            // Send mail to notify about levelup
-                            var fromAddress = new MailAddress("from_mail", "from_name");
-                            var toAddress = new MailAddress("to_mail", "to_name");
-                            const string fromPassword = "pass";
-                            const string subject = "Bot leveled up!";
-                            string body = $"Bot {player.Name} reached level {currentLevel}\nCurrent WP: " +
-                                $"{(player.CurrWpId == 0 ? "0" : container.GetCurrentHotspot().Waypoints.Where(h => h.ID == player.CurrWpId).FirstOrDefault().ToStringFull())}";
+                            var shouldSendMail = false;
+                            if (shouldSendMail)
+                            {
+                                // Send mail to notify about levelup
+                                var fromAddress = new MailAddress("from_mail", "from_name");
+                                var toAddress = new MailAddress("to_mail", "to_name");
+                                const string fromPassword = "pass";
+                                const string subject = "Bot leveled up!";
+                                string body = $"Bot {player.Name} reached level {currentLevel}\nCurrent WP: " +
+                                    $"{(player.CurrWpId == 0 ? "0" : container.GetCurrentHotspot().Waypoints.Where(h => h.ID == player.CurrWpId).FirstOrDefault().ToStringFull())}";
 
-                            var smtp = new SmtpClient
-                            {
-                                Host = "smtp.gmail.com", // For Gmail, use "smtp.gmail.com"
-                                Port = 587, // For SSL: 465, For TLS/STARTTLS: 587
-                                EnableSsl = true,
-                                DeliveryMethod = SmtpDeliveryMethod.Network,
-                                UseDefaultCredentials = false,
-                                Credentials = new NetworkCredential(fromAddress.Address, fromPassword)
-                            };
+                                var smtp = new SmtpClient
+                                {
+                                    Host = "smtp.gmail.com", // For Gmail, use "smtp.gmail.com"
+                                    Port = 587, // For SSL: 465, For TLS/STARTTLS: 587
+                                    EnableSsl = true,
+                                    DeliveryMethod = SmtpDeliveryMethod.Network,
+                                    UseDefaultCredentials = false,
+                                    Credentials = new NetworkCredential(fromAddress.Address, fromPassword)
+                                };
 
-                            using (var message = new MailMessage(fromAddress, toAddress)
-                            {
-                                Subject = subject,
-                                Body = body
-                            })
-                            {
-                                smtp.Send(message);
+                                using (var message = new MailMessage(fromAddress, toAddress)
+                                {
+                                    Subject = subject,
+                                    Body = body
+                                })
+                                {
+                                    smtp.Send(message);
+                                }
                             }
                         }
 
@@ -475,12 +479,7 @@ namespace BloogBot.AI
                                 player.BlackListedTargets.Add(target.Guid);
 
                             // Force teleport to current WP
-                            if (player.CurrWpId == 0)
-                                player.CurrWpId = container.GetCurrentHotspot().Waypoints.OrderBy(w => player.Position.DistanceTo(w)).FirstOrDefault().ID;
-                            if (random.Next(0, 2) == 0)
-                                player.CurrWpId = container.GetCurrentHotspot().Waypoints.OrderBy(w => player.Position.DistanceTo(w)).ElementAtOrDefault(1).ID;
-                            Console.WriteLine($"Forcing teleport to WP: {player.CurrWpId} (Stuck in combat state - target blacklisted)!");
-                            player.LuaCall($"SendChatMessage('.npcb wp go {player.CurrWpId}')");
+                            ForceTeleport(container, player, "Stuck in combat state - target blacklisted)!");
                             player.SetTarget(player.Guid);
                             botStates.Pop();
                             botStates.Push(new GrindState(botStates, container));
@@ -488,7 +487,7 @@ namespace BloogBot.AI
                         }
 
                         // if the player has been stuck in the same state for more than 5 minutes
-                        if (Environment.TickCount - currentStateStartTime > 300000 && currentState != typeof(TravelState) && container.BotSettings.UseStuckInStateKillswitch)
+                        if ((Environment.TickCount - currentStateStartTime > 300000 && currentState != typeof(TravelState) && container.BotSettings.UseStuckInStateKillswitch) || player.WpStuckCount > 200)
                         {
                             HandleBotStuck(container, player, true);
                             //var msg = $"Hey, it's {player.Name}, and I need help! I've been stuck in the {currentState.Name} for over 5 minutes. I'm stopping for now.";
@@ -678,10 +677,7 @@ namespace BloogBot.AI
             }
             else
             {
-                if (player.CurrWpId == 0)
-                    player.CurrWpId = container.GetCurrentHotspot().Waypoints.OrderBy(w => player.Position.DistanceTo(w)).FirstOrDefault().ID;
-                Console.WriteLine($"Forcing teleport to WP: {player.CurrWpId} " + (StuckInState ? "(UseStuckInStateKillswitch)" : "(UseStuckInPositionKillswitch)"));
-                player.LuaCall($"SendChatMessage('.npcb wp go {player.CurrWpId}')");
+                ForceTeleport(container, player, (StuckInState ? "(UseStuckInStateKillswitch)" : "(UseStuckInPositionKillswitch)"));
                 botStates.Pop();
                 botStates.Push(new GrindState(botStates, container));
             }
@@ -695,6 +691,16 @@ namespace BloogBot.AI
                 System.Environment.Exit(1); // Console app
                 //System.Windows.Forms.Application.Exit(); // // WinForms app
             }
+        }
+
+        private void ForceTeleport(IDependencyContainer container, LocalPlayer player, string reason)
+        {
+            if (player.CurrWpId == 0)
+                player.CurrWpId = container.GetCurrentHotspot().Waypoints.OrderBy(w => player.Position.DistanceTo(w)).FirstOrDefault().ID;
+            if (random.Next(0, 2) == 0)
+                player.CurrWpId = container.GetCurrentHotspot().Waypoints.OrderBy(w => player.Position.DistanceTo(w)).ElementAtOrDefault(1).ID;
+            Console.WriteLine($"Forcing teleport to WP: {player.CurrWpId} ({reason})!");
+            player.LuaCall($"SendChatMessage('.npcb wp go {player.CurrWpId}')");
         }
 
         private bool IsPlayerInBg()

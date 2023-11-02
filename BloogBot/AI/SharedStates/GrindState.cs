@@ -272,7 +272,7 @@ namespace BloogBot.AI.SharedStates
                     player.LuaCall($"SendChatMessage('.npcb wp go 2706')"); // Teleport to Northrend
                     player.HasEnteredNewMap = true;
                 }
-                else if (playerLevel >= 60 && hotspotId != 5 && hotspotId != 6)
+                else if (playerLevel >= 60 && playerLevel < 70 && hotspotId != 5 && hotspotId != 6)
                 {
                     player.LuaCall($"SendChatMessage('.npcb wp go 2583')"); // Teleport to Outland
                     player.HasEnteredNewMap = true;

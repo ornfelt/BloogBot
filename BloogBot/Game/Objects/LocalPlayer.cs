@@ -512,7 +512,7 @@ namespace BloogBot.Game.Objects
             35, 118, 168, 300, 320, 359, 993, 1093, 1094, 1100, 1180, 
             1359, 1364, 1369, 1426, 1438, 1444, 1445, 1456, 1462, 1463, 
             1464, 1465, 1466, 1566, 1614, 2388, 2571, 2584, 5057, 5060, 
-            5068, 5069 };
+            5068, 5069, 5070 };
         public HashSet<int> BlackListedWps { get { return m_BlackListedWps; } set { m_BlackListedWps = value; } }
 
         private static bool m_HasBeenStuckAtWp;

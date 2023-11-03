@@ -7,40 +7,127 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
+/// <summary>
+/// This namespace contains the classes and functionality for the Frost Mage Bot.
+/// </summary>
 namespace FrostMageBot
 {
+    /// <summary>
+    /// Represents a combat state in the game. Inherits from CombatStateBase and implements IBotState.
+    /// </summary>
+    /// <summary>
+    /// Represents a combat state in the game. Inherits from CombatStateBase and implements IBotState.
+    /// </summary>
     class CombatState : CombatStateBase, IBotState
     {
+        /// <summary>
+        /// The Lua script for casting the "Shoot" spell if the action with ID 11 is not set to auto-repeat.
+        /// </summary>
         const string WandLuaScript = "if IsAutoRepeatAction(11) == nil then CastSpellByName('Shoot') end";
 
+        /// <summary>
+        /// An array of strings representing the targets that are affected by the Fire Ward.
+        /// </summary>
         readonly string[] FireWardTargets = new[] { "Fire", "Flame", "Infernal", "Searing", "Hellcaller", "Dragon", "Whelp" };
+        /// <summary>
+        /// The targets that are affected by Frost Ward.
+        /// </summary>
         readonly string[] FrostWardTargets = new[] { "Ice", "Frost" };
 
+        /// <summary>
+        /// Represents the constant string "Cold Snap".
+        /// </summary>
         const string ColdSnap = "Cold Snap";
+        /// <summary>
+        /// Represents the spell "Cone of Cold".
+        /// </summary>
         const string ConeOfCold = "Cone of Cold";
+        /// <summary>
+        /// Represents the name of the counterspell.
+        /// </summary>
         const string Counterspell = "Counterspell";
+        /// <summary>
+        /// Represents the constant string "Evocation".
+        /// </summary>
         const string Evocation = "Evocation";
+        /// <summary>
+        /// Represents a constant string value for "Fireball".
+        /// </summary>
         const string Fireball = "Fireball";
+        /// <summary>
+        /// Represents the constant string "Fire Blast".
+        /// </summary>
         const string FireBlast = "Fire Blast";
+        /// <summary>
+        /// Represents the constant string "Fire Ward".
+        /// </summary>
         const string FireWard = "Fire Ward";
+        /// <summary>
+        /// Represents the constant string "Frost Nova".
+        /// </summary>
         const string FrostNova = "Frost Nova";
+        /// <summary>
+        /// Represents the constant string "Frost Ward".
+        /// </summary>
         const string FrostWard = "Frost Ward";
+        /// <summary>
+        /// Represents the constant value "Frostbite".
+        /// </summary>
         const string Frostbite = "Frostbite";
+        /// <summary>
+        /// The constant string representing the spell "Frostbolt".
+        /// </summary>
         const string Frostbolt = "Frostbolt";
+        /// <summary>
+        /// Represents the constant string "Ice Barrier".
+        /// </summary>
         const string IceBarrier = "Ice Barrier";
+        /// <summary>
+        /// Represents the constant string "Icy Veins".
+        /// </summary>
         const string IcyVeins = "Icy Veins";
+        /// <summary>
+        /// Represents the constant string value for "Summon Water Elemental".
+        /// </summary>
         const string SummonWaterElemental = "Summon Water Elemental";
 
+        /// <summary>
+        /// Represents a readonly instance of the LocalPlayer class.
+        /// </summary>
         readonly LocalPlayer player;
+        /// <summary>
+        /// Represents a read-only World of Warcraft unit target.
+        /// </summary>
         readonly WoWUnit target;
+        /// <summary>
+        /// Gets or sets the value of the nuke.
+        /// </summary>
         readonly string nuke;
+        /// <summary>
+        /// Represents a readonly integer range.
+        /// </summary>
         readonly int range;
 
+        /// <summary>
+        /// Represents a boolean value indicating whether the character is performing a frost nova backpedaling.
+        /// </summary>
         bool frostNovaBackpedaling;
+        /// <summary>
+        /// Represents the start time of the backpedal for the Frost Nova ability.
+        /// </summary>
         int frostNovaBackpedalStartTime;
+        /// <summary>
+        /// Represents a boolean value indicating whether the frost nova has jumped.
+        /// </summary>
         bool frostNovaJumped;
+        /// <summary>
+        /// Indicates whether the Frost Nova has started moving.
+        /// </summary>
         bool frostNovaStartedMoving;
 
+        /// <summary>
+        /// Initializes a new instance of the CombatState class with the specified parameters.
+        /// </summary>
         internal CombatState(Stack<IBotState> botStates, IDependencyContainer container, WoWUnit target) : base(botStates, container, target, 29 + (ObjectManager.GetTalentRank(3, 11) * 3))
         {
             player = ObjectManager.Player;
@@ -60,6 +147,9 @@ namespace FrostMageBot
             range = 29 + (ObjectManager.GetTalentRank(3, 11) * 3);
         }
 
+        /// <summary>
+        /// Updates the character's actions based on certain conditions.
+        /// </summary>
         public new void Update()
         {
             if (frostNovaBackpedaling && !frostNovaStartedMoving && Environment.TickCount - frostNovaBackpedalStartTime > 200)
@@ -121,14 +211,22 @@ namespace FrostMageBot
             }
         }
 
+        /// <summary>
+        /// Callback function for Frost Nova action.
+        /// Resets the flags for frostNovaStartedMoving, frostNovaJumped, and frostNovaBackpedaling.
+        /// Sets the frostNovaBackpedalStartTime to the current tick count.
+        /// </summary>
         Action FrostNovaCallback => () =>
-        {
-            frostNovaStartedMoving = false;
-            frostNovaJumped = false;
-            frostNovaBackpedaling = true;
-            frostNovaBackpedalStartTime = Environment.TickCount;
-        };
+                {
+                    frostNovaStartedMoving = false;
+                    frostNovaJumped = false;
+                    frostNovaBackpedaling = true;
+                    frostNovaBackpedalStartTime = Environment.TickCount;
+                };
 
+        /// <summary>
+        /// Checks if the target is frozen by checking if it has the debuffs Frostbite or FrostNova.
+        /// </summary>
         bool IsTargetFrozen => target.HasDebuff(Frostbite) || target.HasDebuff(FrostNova);
     }
 }

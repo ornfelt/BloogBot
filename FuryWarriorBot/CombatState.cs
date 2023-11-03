@@ -7,53 +7,173 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
+/// <summary>
+/// This namespace contains the classes and interfaces related to the Fury Warrior Bot.
+/// </summary>
 namespace FuryWarriorBot
 {
+    /// <summary>
+    /// Represents the combat state of the bot.
+    /// </summary>
+    /// <summary>
+    /// Represents the combat state of the bot.
+    /// </summary>
     class CombatState : CombatStateBase, IBotState
     {
+        /// <summary>
+        /// The constant string representing the battle stance.
+        /// </summary>
         const string BattleStance = "Battle Stance";
+        /// <summary>
+        /// Represents the constant string value for "Berserker Stance".
+        /// </summary>
         const string BerserkerStance = "Berserker Stance";
 
+        /// <summary>
+        /// The constant string representing the battle shout.
+        /// </summary>
         const string BattleShout = "Battle Shout";
+        /// <summary>
+        /// Represents the constant string "Berserker Rage".
+        /// </summary>
         const string BerserkerRage = "Berserker Rage";
+        /// <summary>
+        /// Represents the constant string "Berserking".
+        /// </summary>
         const string Berserking = "Berserking";
+        /// <summary>
+        /// Represents the constant string "Blood Fury".
+        /// </summary>
         const string BloodFury = "Blood Fury";
+        /// <summary>
+        /// Represents the constant string "Bloodrage".
+        /// </summary>
         const string Bloodrage = "Bloodrage";
+        /// <summary>
+        /// Represents the constant string "Bloodthirst".
+        /// </summary>
         const string Bloodthirst = "Bloodthirst";
+        /// <summary>
+        /// Represents a constant string named "Cleave".
+        /// </summary>
         const string Cleave = "Cleave";
+        /// <summary>
+        /// Represents the constant string "Death Wish".
+        /// </summary>
         const string DeathWish = "Death Wish";
+        /// <summary>
+        /// Represents the constant string value for "Demoralizing Shout".
+        /// </summary>
         const string DemoralizingShout = "Demoralizing Shout";
+        /// <summary>
+        /// Represents the constant string "Execute".
+        /// </summary>
         const string Execute = "Execute";
+        /// <summary>
+        /// The constant string representing the name "Heroic Strike".
+        /// </summary>
         const string HeroicStrike = "Heroic Strike";
+        /// <summary>
+        /// Represents a constant string with the value "Overpower".
+        /// </summary>
         const string Overpower = "Overpower";
+        /// <summary>
+        /// Represents the constant string "Pummel".
+        /// </summary>
         const string Pummel = "Pummel";
+        /// <summary>
+        /// The constant string value for "Rend".
+        /// </summary>
         const string Rend = "Rend";
+        /// <summary>
+        /// Represents the constant string "Retaliation".
+        /// </summary>
         const string Retaliation = "Retaliation";
+        /// <summary>
+        /// Represents a constant string with the value "Slam".
+        /// </summary>
         const string Slam = "Slam";
+        /// <summary>
+        /// The constant string representing "Sunder Armor".
+        /// </summary>
         const string SunderArmor = "Sunder Armor";
+        /// <summary>
+        /// Represents the constant string "Thunder Clap".
+        /// </summary>
         const string ThunderClap = "Thunder Clap";
+        /// <summary>
+        /// Represents a constant string value for "Ham String".
+        /// </summary>
         const string Hamstring = "Ham String";
+        /// <summary>
+        /// Represents the constant string "Intimidating Shout".
+        /// </summary>
         const string IntimidatingShout = "Intimidating Shout";
+        /// <summary>
+        /// Represents a constant string named "Whirlwind".
+        /// </summary>
         const string Whirlwind = "Whirlwind";
 
+        /// <summary>
+        /// Represents a readonly stack of IBotState objects.
+        /// </summary>
         readonly Stack<IBotState> botStates;
+        /// <summary>
+        /// Represents a read-only dependency container.
+        /// </summary>
         readonly IDependencyContainer container;
+        /// <summary>
+        /// Represents a read-only World of Warcraft unit target.
+        /// </summary>
         readonly WoWUnit target;
+        /// <summary>
+        /// Represents a readonly instance of the LocalPlayer class.
+        /// </summary>
         readonly LocalPlayer player;
 
+        /// <summary>
+        /// Represents a boolean value indicating whether the slam is ready.
+        /// </summary>
         bool slamReady;
+        /// <summary>
+        /// Represents the start time for when the slam is ready.
+        /// </summary>
         int slamReadyStartTime;
 
+        /// <summary>
+        /// Represents a boolean value indicating whether the character is backpedaling.
+        /// </summary>
         bool losBackpedaling;
+        /// <summary>
+        /// Represents the start time of the LOS backpedal.
+        /// </summary>
         int losBackpedalStartTime;
 
+        /// <summary>
+        /// Represents a boolean value indicating whether backpedaling is occurring.
+        /// </summary>
         bool backpedaling;
+        /// <summary>
+        /// Represents the start time of the backpedal.
+        /// </summary>
         int backpedalStartTime;
+        /// <summary>
+        /// The duration of the backpedal.
+        /// </summary>
         int backpedalDuration;
 
+        /// <summary>
+        /// Represents a boolean value indicating whether the object has been initialized.
+        /// </summary>
         bool initialized;
+        /// <summary>
+        /// Gets the current tick count of the system when entering the combat state.
+        /// </summary>
         int combatStateEnterTime = Environment.TickCount;
 
+        /// <summary>
+        /// Initializes a new instance of the CombatState class with the specified parameters.
+        /// </summary>
         internal CombatState(Stack<IBotState> botStates, IDependencyContainer container, WoWUnit target) : base(botStates, container, target, 5)
         {
             this.botStates = botStates;
@@ -64,11 +184,17 @@ namespace FuryWarriorBot
             WoWEventHandler.OnSlamReady += OnSlamReadyCallback;
         }
 
+        /// <summary>
+        /// Destructor for the CombatState class. Unsubscribes the OnSlamReadyCallback from the WoWEventHandler's OnSlamReady event.
+        /// </summary>
         ~CombatState()
         {
             WoWEventHandler.OnSlamReady -= OnSlamReadyCallback;
         }
 
+        /// <summary>
+        /// Updates the player's actions and abilities based on the current game state.
+        /// </summary>
         public new void Update()
         {
             if (Environment.TickCount - backpedalStartTime > backpedalDuration)
@@ -139,7 +265,7 @@ namespace FuryWarriorBot
             if (ObjectManager.Aggressors.Count() >= 1 || (ObjectManager.Aggressors.Count() > 1 && !AggressorsInMelee))
             {
                 TryUseAbility(Slam, 15, target.HealthPercent > 20 && slamReady, SlamCallback);
-                
+
                 // TryUseAbility(Rend, 10, (currentStance == BattleStance && target.HealthPercent > 50 && !target.HasDebuff(Rend) && (target.CreatureType != CreatureType.Elemental && target.CreatureType != CreatureType.Undead)));
 
                 TryUseAbility(Bloodthirst, 30);
@@ -154,22 +280,34 @@ namespace FuryWarriorBot
             }
         }
 
+        /// <summary>
+        /// Callback method for when the slam is ready.
+        /// </summary>
         void OnSlamReadyCallback(object sender, EventArgs e)
         {
             OnSlamReady();
         }
 
+        /// <summary>
+        /// Sets the slamReady flag to true and records the start time.
+        /// </summary>
         void OnSlamReady()
         {
             slamReady = true;
             slamReadyStartTime = Environment.TickCount;
         }
 
+        /// <summary>
+        /// Callback function for Slam. Sets the slamReady flag to false.
+        /// </summary>
         void SlamCallback()
         {
             slamReady = false;
         }
 
+        /// <summary>
+        /// Check if the player is facing all the targets and they are within melee range.
+        /// </summary>
         // Check to see if toon is facing all the targets and they are within melee, used to determine if player should walkbackwards to reposition targets in front of mob.
         bool FacingAllTargets
         {
@@ -179,6 +317,9 @@ namespace FuryWarriorBot
             }
         }
 
+        /// <summary>
+        /// Check to see if toon is within melee distance of mobs. This is used to determine if player should use single mob rotation or multi-mob rotation.
+        /// </summary>
         // Check to see if toon is with melee distance of mobs.  This is used to determine if player should use single mob rotation or multi-mob rotation.
         bool AggressorsInMelee
         {
@@ -188,6 +329,9 @@ namespace FuryWarriorBot
             }
         }
 
+        /// <summary>
+        /// Sets the player to walk backwards for a specified duration in milliseconds.
+        /// </summary>
         void WalkBack(int milleseconds)
         {
             backpedaling = true;

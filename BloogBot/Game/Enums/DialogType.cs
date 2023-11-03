@@ -1,5 +1,11 @@
-﻿namespace BloogBot.Game.Enums
+﻿/// <summary>
+/// This namespace contains the enumeration for different types of dialogues.
+/// </summary>
+namespace BloogBot.Game.Enums
 {
+    /// <summary>
+    /// Enum representing different types of dialogs.
+    /// </summary>
     public enum DialogType
     {
         gossip = 0,

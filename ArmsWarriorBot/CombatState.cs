@@ -7,10 +7,22 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
+/// <summary>
+/// This namespace contains the classes and functions related to the combat state of the Arms Warrior Bot.
+/// </summary>
 namespace ArmsWarriorBot
 {
+    /// <summary>
+    /// Represents a combat state in the game. Inherits from CombatStateBase and implements IBotState.
+    /// </summary>
+    /// <summary>
+    /// Represents a combat state in the game. Inherits from CombatStateBase and implements IBotState.
+    /// </summary>
     class CombatState : CombatStateBase, IBotState
     {
+        /// <summary>
+        /// Array of targets that can be affected by the Sunder ability.
+        /// </summary>
         static readonly string[] SunderTargets = { "Snapjaw", "Snapper", "Tortoise", "Spikeshell", "Burrower", "Borer", // turtles
             "Bear", "Grizzly", "Ashclaw", "Mauler", "Shardtooth", "Plaguebear", "Bristlefur", "Thistlefur", // bears
             "Scorpid", "Flayer", "Stinger", "Lasher", "Pincer", // scorpids
@@ -18,33 +30,93 @@ namespace ArmsWarriorBot
             "Crawler", "Crustacean", // crabs
             "Stag" }; // other
 
+        /// <summary>
+        /// The icon path for the Sunder Armor ability.
+        /// </summary>
         const string SunderArmorIcon = "Interface\\Icons\\Ability_Warrior_Sunder";
 
+        /// <summary>
+        /// The constant string representing the battle shout.
+        /// </summary>
         const string BattleShout = "Battle Shout";
+        /// <summary>
+        /// Represents the constant string "Bloodrage".
+        /// </summary>
         const string Bloodrage = "Bloodrage";
+        /// <summary>
+        /// Represents the constant string "Blood Fury".
+        /// </summary>
         const string BloodFury = "Blood Fury";
+        /// <summary>
+        /// Represents the constant string value for "Demoralizing Shout".
+        /// </summary>
         const string DemoralizingShout = "Demoralizing Shout";
+        /// <summary>
+        /// Represents the constant string "Execute".
+        /// </summary>
         const string Execute = "Execute";
+        /// <summary>
+        /// Represents the constant string "Hamstring".
+        /// </summary>
         const string Hamstring = "Hamstring";
+        /// <summary>
+        /// The constant string representing the name "Heroic Strike".
+        /// </summary>
         const string HeroicStrike = "Heroic Strike";
+        /// <summary>
+        /// Represents the constant string "Mortal Strike".
+        /// </summary>
         const string MortalStrike = "Mortal Strike";
+        /// <summary>
+        /// Represents a constant string with the value "Overpower".
+        /// </summary>
         const string Overpower = "Overpower";
+        /// <summary>
+        /// The constant string value for "Rend".
+        /// </summary>
         const string Rend = "Rend";
+        /// <summary>
+        /// Represents the constant string "Retaliation".
+        /// </summary>
         const string Retaliation = "Retaliation";
+        /// <summary>
+        /// The constant string representing "Sunder Armor".
+        /// </summary>
         const string SunderArmor = "Sunder Armor";
+        /// <summary>
+        /// Represents the constant string "Sweeping Strikes".
+        /// </summary>
         const string SweepingStrikes = "Sweeping Strikes";
+        /// <summary>
+        /// Represents the constant string "Thunder Clap".
+        /// </summary>
         const string ThunderClap = "Thunder Clap";
+        /// <summary>
+        /// Represents the constant string "Intimidating Shout".
+        /// </summary>
         const string IntimidatingShout = "Intimidating Shout";
 
+        /// <summary>
+        /// Represents a read-only World of Warcraft unit target.
+        /// </summary>
         readonly WoWUnit target;
+        /// <summary>
+        /// Represents a readonly instance of the LocalPlayer class.
+        /// </summary>
         readonly LocalPlayer player;
 
+        /// <summary>
+        /// Initializes a new instance of the CombatState class with the specified parameters.
+        /// </summary>
         internal CombatState(Stack<IBotState> botStates, IDependencyContainer container, WoWUnit target) : base(botStates, container, target, 5)
         {
             player = ObjectManager.Player;
             this.target = target;
         }
 
+        /// <summary>
+        /// Updates the character's abilities and actions during combat.
+        /// </summary>
         public new void Update()
         {
             if (base.Update())

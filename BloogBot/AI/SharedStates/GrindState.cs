@@ -7,18 +7,48 @@ using System.IO;
 using System.Reflection;
 using BloogBot.UI;
 
+/// <summary>
+/// Represents the state of the bot when it is in the grinding mode.
+/// </summary>
 namespace BloogBot.AI.SharedStates
 {
+    /// <summary>
+    /// Represents a state in which the bot is grinding.
+    /// </summary>
+    /// <summary>
+    /// Represents a state in which the bot is grinding.
+    /// </summary>
     public class GrindState : IBotState
     {
+        /// <summary>
+        /// Represents a static, read-only instance of the Random class.
+        /// </summary>
         static readonly Random random = new Random();
 
+        /// <summary>
+        /// Represents a readonly stack of IBotState objects.
+        /// </summary>
         readonly Stack<IBotState> botStates;
+        /// <summary>
+        /// Represents a read-only dependency container.
+        /// </summary>
         readonly IDependencyContainer container;
+        /// <summary>
+        /// Represents a local player.
+        /// </summary>
         LocalPlayer player;
+        /// <summary>
+        /// Represents a boolean value indicating whether the code is running in the background.
+        /// </summary>
         bool isInBg;
+        /// <summary>
+        /// Represents the level of the player.
+        /// </summary>
         int playerLevel;
 
+        /// <summary>
+        /// Initializes a new instance of the GrindState class.
+        /// </summary>
         public GrindState(Stack<IBotState> botStates, IDependencyContainer container)
         {
             this.botStates = botStates;
@@ -26,6 +56,9 @@ namespace BloogBot.AI.SharedStates
             player = ObjectManager.Player;
         }
 
+        /// <summary>
+        /// Updates the player's target and bot states based on the closest enemy target and the player's position.
+        /// </summary>
         public void Update()
         {
             var enemyTarget = container.FindClosestTarget();
@@ -41,6 +74,9 @@ namespace BloogBot.AI.SharedStates
             }
         }
 
+        /// <summary>
+        /// Handles the selection of a waypoint for the bot to move to.
+        /// </summary>
         private void HandleWpSelection()
         {
             // Initialize variables
@@ -69,6 +105,9 @@ namespace BloogBot.AI.SharedStates
             botStates.Push(new MoveToHotspotWaypointState(botStates, container, waypoint));
         }
 
+        /// <summary>
+        /// Ensures that the player has a zone assigned based on the nearest waypoint.
+        /// </summary>
         private void EnsurePlayerHasZone(Hotspot hotspot)
         {
             if (player.CurrZone == "0")
@@ -79,6 +118,9 @@ namespace BloogBot.AI.SharedStates
             }
         }
 
+        /// <summary>
+        /// Selects a new waypoint from the given list of nearest waypoints.
+        /// </summary>
         //private void SelectNewWaypoint(ref Position waypoint, IOrderedEnumerable<Position> nearestWps)
         private Position SelectNewWaypoint(IOrderedEnumerable<Position> nearestWps)
         {
@@ -101,6 +143,9 @@ namespace BloogBot.AI.SharedStates
             return waypoint;
         }
 
+        /// <summary>
+        /// Selects a new waypoint from the existing list of waypoints based on certain conditions.
+        /// </summary>
         private Position SelectNewWaypointFromExisting(IEnumerable<Position> waypoints, Position waypoint, Hotspot hotspot)
         {
             if (player.Position.DistanceTo(waypoint) < 3.0F || player.WpStuckCount > 10)
@@ -135,6 +180,9 @@ namespace BloogBot.AI.SharedStates
             return waypoint;
         }
 
+        /// <summary>
+        /// Selects a new linked waypoint based on the given list of waypoints and current waypoint.
+        /// </summary>
         private Position SelectNewLinkedWaypoint(IEnumerable<Position> waypoints, Position waypoint)
         {
             if (player.WpStuckCount > 10)
@@ -195,6 +243,9 @@ namespace BloogBot.AI.SharedStates
             return waypoint;
         }
 
+        /// <summary>
+        /// Handles the actions when a waypoint is reached.
+        /// </summary>
         private void HandleWaypointReachedActions(Position waypoint, int hotspotId)
         {
             player.VisitedWps.Add(waypoint.ID);
@@ -229,6 +280,9 @@ namespace BloogBot.AI.SharedStates
             }
         }
 
+        /// <summary>
+        /// Selects an overleveled waypoint from a collection of waypoints based on the current waypoint.
+        /// </summary>
         private Position SelectOverleveledWaypoint(IEnumerable<Position> waypoints, Position waypoint)
         {
             var stayOnWp = false;
@@ -295,6 +349,9 @@ namespace BloogBot.AI.SharedStates
             return waypoint;
         }
 
+        /// <summary>
+        /// Tries to mount the player character.
+        /// </summary>
         private void TryToMount()
         {
             string MountName = "white polar bear";
@@ -305,11 +362,17 @@ namespace BloogBot.AI.SharedStates
             }
         }
 
+        /// <summary>
+        /// Determines if the given hotspot ID is a background hotspot.
+        /// </summary>
         private bool HotspotIsBg(int hotspotId)
         {
             return (hotspotId > 8 && hotspotId < 13);
         }
 
+        /// <summary>
+        /// Performs a breadth-first search to find a forced waypoint path.
+        /// </summary>
         public List<int> ForcedWpPathViaBFS(int startId, bool ignoreBlacklistedWps)
         {
             var hotspot = container.GetCurrentHotspot();
@@ -339,7 +402,7 @@ namespace BloogBot.AI.SharedStates
                 // for those players so that they can move through the zones.
                 // Hotspot 1-4 are Azeroth WPs, 5,6 Outland, and 7,8 Northrend
                 else if (currentWaypoint.Zone != player.CurrZone && ((hotspot.Id < 5 && player.Level >= 60)
-                    || ((hotspot.Id == 5 || hotspot.Id == 6) && player.Level >= 70) 
+                    || ((hotspot.Id == 5 || hotspot.Id == 6) && player.Level >= 70)
                     || ((hotspot.Id == 7 || hotspot.Id == 8) && player.Level >= 80)))
                 {
                     // Try to visit new zones
@@ -383,6 +446,9 @@ namespace BloogBot.AI.SharedStates
             return currentPath; // Return last currentPath set or null
         }
 
+        /// <summary>
+        /// Logs the specified text to a file.
+        /// </summary>
         void LogToFile(string text)
         {
             var dir = Path.GetDirectoryName(Assembly.GetAssembly(typeof(MainViewModel)).CodeBase);

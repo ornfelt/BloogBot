@@ -6,20 +6,53 @@ using System.Collections.Generic;
 using System;
 using System.Linq;
 
+/// <summary>
+/// Namespace for the Arcane Mage Bot.
+/// </summary>
 namespace ArcaneMageBot
 {
+    /// <summary>
+    /// Represents a state for conjuring items.
+    /// </summary>
+    /// <summary>
+    /// Represents a state for conjuring items.
+    /// </summary>
     class ConjureItemsState : IBotState
     {
+        /// <summary>
+        /// Represents the constant string value "Conjure Food".
+        /// </summary>
         const string ConjureFood = "Conjure Food";
+        /// <summary>
+        /// The constant string representing the spell "Conjure Water".
+        /// </summary>
         const string ConjureWater = "Conjure Water";
 
+        /// <summary>
+        /// Represents a readonly stack of IBotState objects.
+        /// </summary>
         readonly Stack<IBotState> botStates;
+        /// <summary>
+        /// Represents a read-only dependency container.
+        /// </summary>
         readonly IDependencyContainer container;
+        /// <summary>
+        /// Represents a readonly instance of the LocalPlayer class.
+        /// </summary>
         readonly LocalPlayer player;
 
+        /// <summary>
+        /// Represents a World of Warcraft food item.
+        /// </summary>
         WoWItem foodItem;
+        /// <summary>
+        /// Represents a World of Warcraft item that can be consumed as a drink.
+        /// </summary>
         WoWItem drinkItem;
 
+        /// <summary>
+        /// Initializes a new instance of the ConjureItemsState class.
+        /// </summary>
         public ConjureItemsState(Stack<IBotState> botStates, IDependencyContainer container)
         {
             this.botStates = botStates;
@@ -27,6 +60,9 @@ namespace ArcaneMageBot
             player = ObjectManager.Player;
         }
 
+        /// <summary>
+        /// Updates the player's food and drink items based on the bot settings and current state.
+        /// </summary>
         public void Update()
         {
             foodItem = Inventory.GetAllItems()
@@ -64,6 +100,9 @@ namespace ArcaneMageBot
                 TryCastSpell(ConjureWater);
         }
 
+        /// <summary>
+        /// Tries to cast a spell by its name if the spell is ready and the player is not currently casting.
+        /// </summary>
         void TryCastSpell(string name)
         {
             if (player.IsSpellReady(name) && !player.IsCasting)

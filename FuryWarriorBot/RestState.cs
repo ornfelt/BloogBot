@@ -6,17 +6,44 @@ using BloogBot.Game.Objects;
 using System.Collections.Generic;
 using System.Linq;
 
+/// <summary>
+/// This namespace contains classes related to the Fury Warrior Bot.
+/// </summary>
 namespace FuryWarriorBot
 {
+    /// <summary>
+    /// Represents a state where the bot is resting.
+    /// </summary>
+    /// <summary>
+    /// Represents a state where the bot is resting.
+    /// </summary>
     class RestState : IBotState
     {
+        /// <summary>
+        /// The number of stacks.
+        /// </summary>
         const int stackCount = 5;
 
+        /// <summary>
+        /// Represents a readonly stack of IBotState objects.
+        /// </summary>
         readonly Stack<IBotState> botStates;
+        /// <summary>
+        /// Represents a read-only dependency container.
+        /// </summary>
         readonly IDependencyContainer container;
+        /// <summary>
+        /// Represents a readonly instance of the LocalPlayer class.
+        /// </summary>
         readonly LocalPlayer player;
+        /// <summary>
+        /// Represents a read-only World of Warcraft item for food.
+        /// </summary>
         readonly WoWItem foodItem;
 
+        /// <summary>
+        /// Initializes a new instance of the RestState class.
+        /// </summary>
         public RestState(Stack<IBotState> botStates, IDependencyContainer container)
         {
             this.botStates = botStates;
@@ -27,10 +54,13 @@ namespace FuryWarriorBot
                 .FirstOrDefault(i => i.Info.Name == container.BotSettings.Food);
         }
 
+        /// <summary>
+        /// Updates the player's actions based on certain conditions.
+        /// </summary>
         public void Update()
         {
             if (player.HealthPercent >= 95 ||
-                player.HealthPercent >= 80 && !player.IsEating ||                                                                
+                player.HealthPercent >= 80 && !player.IsEating ||
                 ObjectManager.Player.IsInCombat ||
                 ObjectManager.Units.Any(u => u.TargetGuid == ObjectManager.Player.Guid))
             {
@@ -68,6 +98,9 @@ namespace FuryWarriorBot
                 foodItem.Use();
         }
 
+        /// <summary>
+        /// Gets a value indicating whether the current object is in combat.
+        /// </summary>
         bool InCombat => ObjectManager.Aggressors.Count() > 0;
     }
 }

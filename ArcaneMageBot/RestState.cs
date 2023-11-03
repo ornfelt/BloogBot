@@ -4,19 +4,49 @@ using BloogBot.Game.Objects;
 using System.Collections.Generic;
 using System.Linq;
 
+/// <summary>
+/// Represents the state of the bot when the player character is resting and regenerating health and mana.
+/// </summary>
 namespace ArcaneMageBot
 {
+    /// <summary>
+    /// Represents a state of rest for the bot.
+    /// </summary>
+    /// <summary>
+    /// Represents a state of rest for the bot.
+    /// </summary>
     class RestState : IBotState
     {
+        /// <summary>
+        /// Represents the constant string "Evocation".
+        /// </summary>
         const string Evocation = "Evocation";
 
+        /// <summary>
+        /// Represents a readonly stack of IBotState objects.
+        /// </summary>
         readonly Stack<IBotState> botStates;
+        /// <summary>
+        /// Represents a read-only dependency container.
+        /// </summary>
         readonly IDependencyContainer container;
+        /// <summary>
+        /// Represents a readonly instance of the LocalPlayer class.
+        /// </summary>
         readonly LocalPlayer player;
 
+        /// <summary>
+        /// Represents a read-only World of Warcraft item for food.
+        /// </summary>
         readonly WoWItem foodItem;
+        /// <summary>
+        /// Represents a read-only World of Warcraft item used for drinking.
+        /// </summary>
         readonly WoWItem drinkItem;
-        
+
+        /// <summary>
+        /// Initializes a new instance of the RestState class.
+        /// </summary>
         public RestState(Stack<IBotState> botStates, IDependencyContainer container)
         {
             this.botStates = botStates;
@@ -30,6 +60,9 @@ namespace ArcaneMageBot
                 .FirstOrDefault(i => i.Info.Name == container.BotSettings.Drink);
         }
 
+        /// <summary>
+        /// Updates the player's actions based on various conditions.
+        /// </summary>
         public void Update()
         {
             if (InCombat)
@@ -63,10 +96,19 @@ namespace ArcaneMageBot
                 drinkItem.Use();
         }
 
+        /// <summary>
+        /// Checks if the player's health percentage is greater than 90.
+        /// </summary>
         bool HealthOk => player.HealthPercent > 90;
 
+        /// <summary>
+        /// Checks if the player's mana is sufficient for certain actions.
+        /// </summary>
         bool ManaOk => (player.Level < 6 && player.ManaPercent > 60) || player.ManaPercent >= 90 || (player.ManaPercent >= 75 && !player.IsDrinking);
 
+        /// <summary>
+        /// Gets a value indicating whether the player is currently in combat or if there are any units targeting the player.
+        /// </summary>
         bool InCombat => ObjectManager.Player.IsInCombat || ObjectManager.Units.Any(u => u.TargetGuid == ObjectManager.Player.Guid);
     }
 }

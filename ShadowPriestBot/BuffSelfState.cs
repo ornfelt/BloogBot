@@ -3,22 +3,46 @@ using BloogBot.Game;
 using BloogBot.Game.Objects;
 using System.Collections.Generic;
 
+/// <summary>
+/// This namespace contains classes related to the Shadow Priest Bot.
+/// </summary>
 namespace ShadowPriestBot
 {
+    /// <summary>
+    /// This class represents a state where the bot buffs itself.
+    /// </summary>
     class BuffSelfState : IBotState
     {
+        /// <summary>
+        /// Represents the constant string "Power Word: Fortitude".
+        /// </summary>
         const string PowerWordFortitude = "Power Word: Fortitude";
+        /// <summary>
+        /// Represents the constant string "Shadow Protection".
+        /// </summary>
         const string ShadowProtection = "Shadow Protection";
 
+        /// <summary>
+        /// Represents a readonly stack of IBotState objects.
+        /// </summary>
         readonly Stack<IBotState> botStates;
+        /// <summary>
+        /// Represents a readonly instance of the LocalPlayer class.
+        /// </summary>
         readonly LocalPlayer player;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="BuffSelfState"/> class.
+        /// </summary>
         public BuffSelfState(Stack<IBotState> botStates, IDependencyContainer container)
         {
             this.botStates = botStates;
             player = ObjectManager.Player;
         }
 
+        /// <summary>
+        /// Updates the player's buffs by casting Power Word Fortitude and Shadow Protection if necessary.
+        /// </summary>
         public void Update()
         {
             if ((!player.KnowsSpell(PowerWordFortitude) || player.HasBuff(PowerWordFortitude)) && (!player.KnowsSpell(ShadowProtection) || player.HasBuff(ShadowProtection)))
@@ -32,6 +56,9 @@ namespace ShadowPriestBot
             TryCastSpell(ShadowProtection);
         }
 
+        /// <summary>
+        /// Tries to cast a spell by the given name if the player has the required level and the spell is ready.
+        /// </summary>
         void TryCastSpell(string name, int requiredLevel = 1)
         {
             if (!player.HasBuff(name) && player.Level >= requiredLevel && player.IsSpellReady(name))

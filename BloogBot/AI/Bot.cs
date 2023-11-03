@@ -13,29 +13,80 @@ using System.Threading.Tasks;
 using System.Net;
 using System.Net.Mail;
 
+/// <summary>
+/// This namespace contains the AI logic for the BloogBot bot.
+/// </summary>
 namespace BloogBot.AI
 {
+    /// <summary>
+    /// This abstract class defines the basic structure and functionality of a Bot.
+    /// </summary>
     public abstract class Bot
     {
+        /// <summary>
+        /// Represents a readonly stack of IBotState objects.
+        /// </summary>
         readonly Stack<IBotState> botStates = new Stack<IBotState>();
+        /// <summary>
+        /// Represents a stopwatch that measures elapsed time.
+        /// </summary>
         readonly Stopwatch stopwatch = new Stopwatch();
+        /// <summary>
+        /// Represents a static, read-only instance of the Random class.
+        /// </summary>
         static readonly Random random = new Random();
 
+        /// <summary>
+        /// Represents a boolean value indicating whether the program is currently running.
+        /// </summary>
         bool running;
+        /// <summary>
+        /// Represents a boolean value indicating whether a corpse is being retrieved.
+        /// </summary>
         bool retrievingCorpse;
 
+        /// <summary>
+        /// Represents the current state of the object.
+        /// </summary>
         Type currentState;
+        /// <summary>
+        /// Represents the start time of the current state.
+        /// </summary>
         int currentStateStartTime;
+        /// <summary>
+        /// Represents the current position.
+        /// </summary>
         Position currentPosition;
+        /// <summary>
+        /// Represents the start time of the current position.
+        /// </summary>
         int currentPositionStartTime;
+        /// <summary>
+        /// Represents the position used for teleportation checks.
+        /// </summary>
         Position teleportCheckPosition;
+        /// <summary>
+        /// Represents a boolean value indicating whether an object is falling.
+        /// </summary>
         bool isFalling;
+        /// <summary>
+        /// Represents the current level.
+        /// </summary>
         int currentLevel;
 
+        /// <summary>
+        /// Represents a callback method that is invoked when the action stops.
+        /// </summary>
         Action stopCallback;
 
+        /// <summary>
+        /// Checks if the program is currently running.
+        /// </summary>
         public bool Running() => running;
 
+        /// <summary>
+        /// Stops the execution of the code and resets the current level and bot states.
+        /// </summary>
         public void Stop()
         {
             running = false;
@@ -47,6 +98,9 @@ namespace BloogBot.AI
             stopCallback?.Invoke();
         }
 
+        /// <summary>
+        /// Starts the process with the specified dependency container and stop callback.
+        /// </summary>
         public void Start(IDependencyContainer container, Action stopCallback)
         {
             this.stopCallback = stopCallback;
@@ -69,6 +123,9 @@ namespace BloogBot.AI
             }
         }
 
+        /// <summary>
+        /// Resets the values of the bot.
+        /// </summary>
         private void ResetValues(IDependencyContainer container, bool resetLevel)
         {
             if (resetLevel)
@@ -98,6 +155,10 @@ namespace BloogBot.AI
             ObjectManager.Player.LastKnownMapId = ObjectManager.MapId;
         }
 
+        /// <summary>
+        /// Triggers a travel action using the provided dependency container, with the option to reverse the travel path. 
+        /// Executes the provided callback action upon completion.
+        /// </summary>
         public void Travel(IDependencyContainer container, bool reverseTravelPath, Action callback)
         {
             try
@@ -151,6 +212,9 @@ namespace BloogBot.AI
             }
         }
 
+        /// <summary>
+        /// Starts the powerlevel process.
+        /// </summary>
         public void StartPowerlevel(IDependencyContainer container, Action stopCallback)
         {
             this.stopCallback = stopCallback;
@@ -178,6 +242,9 @@ namespace BloogBot.AI
             }
         }
 
+        /// <summary>
+        /// Starts the internal power leveling process asynchronously.
+        /// </summary>
         async void StartPowerlevelInternal(IDependencyContainer container)
         {
             while (running)
@@ -314,6 +381,9 @@ namespace BloogBot.AI
             }
         }
 
+        /// <summary>
+        /// Asynchronously starts the internal logic of the bot.
+        /// </summary>
         async void StartInternal(IDependencyContainer container)
         {
             while (running)
@@ -404,31 +474,31 @@ namespace BloogBot.AI
                             HandleLevelUp(player, false);
 
                             // Send mail to notify about levelup
-                            var fromAddress = new MailAddress("from_mail", "from_name");
-                            var toAddress = new MailAddress("to_mail", "to_name");
-                            const string fromPassword = "pass";
-                            const string subject = "Bot leveled up!";
-                            string body = $"Bot {player.Name} reached level {currentLevel}\nCurrent WP: " +
-                                $"{(player.CurrWpId == 0 ? "0" : container.GetCurrentHotspot().Waypoints.Where(h => h.ID == player.CurrWpId).FirstOrDefault().ToStringFull())}";
+                            //var fromAddress = new MailAddress("from_mail", "from_name");
+                            //var toAddress = new MailAddress("to_mail", "to_name");
+                            //const string fromPassword = "pass";
+                            //const string subject = "Bot leveled up!";
+                            //string body = $"Bot {player.Name} reached level {currentLevel}\nCurrent WP: " +
+                            //    $"{(player.CurrWpId == 0 ? "0" : container.GetCurrentHotspot().Waypoints.Where(h => h.ID == player.CurrWpId).FirstOrDefault().ToStringFull())}";
 
-                            var smtp = new SmtpClient
-                            {
-                                Host = "smtp.gmail.com", // For Gmail, use "smtp.gmail.com"
-                                Port = 587, // For SSL: 465, For TLS/STARTTLS: 587
-                                EnableSsl = true,
-                                DeliveryMethod = SmtpDeliveryMethod.Network,
-                                UseDefaultCredentials = false,
-                                Credentials = new NetworkCredential(fromAddress.Address, fromPassword)
-                            };
+                            //var smtp = new SmtpClient
+                            //{
+                            //    Host = "smtp.gmail.com", // For Gmail, use "smtp.gmail.com"
+                            //    Port = 587, // For SSL: 465, For TLS/STARTTLS: 587
+                            //    EnableSsl = true,
+                            //    DeliveryMethod = SmtpDeliveryMethod.Network,
+                            //    UseDefaultCredentials = false,
+                            //    Credentials = new NetworkCredential(fromAddress.Address, fromPassword)
+                            //};
 
-                            using (var message = new MailMessage(fromAddress, toAddress)
-                            {
-                                Subject = subject,
-                                Body = body
-                            })
-                            {
-                                smtp.Send(message);
-                            }
+                            //using (var message = new MailMessage(fromAddress, toAddress)
+                            //{
+                            //    Subject = subject,
+                            //    Body = body
+                            //})
+                            //{
+                            //    smtp.Send(message);
+                            //}
                         }
 
                         player.AntiAfk();
@@ -629,6 +699,9 @@ namespace BloogBot.AI
             Console.WriteLine("End of loop");
         }
 
+        /// <summary>
+        /// Handles the level up event for a local player.
+        /// </summary>
         private void HandleLevelUp(LocalPlayer player, bool isSecondTry)
         {
             var playerLevel = player.Level;
@@ -665,6 +738,9 @@ namespace BloogBot.AI
             }
         }
 
+        /// <summary>
+        /// Handles the situation when the bot is stuck.
+        /// </summary>
         private void HandleBotStuck(IDependencyContainer container, LocalPlayer player, bool StuckInState)
         {
             // Force teleport to current WP, or to corpse if dead
@@ -697,12 +773,18 @@ namespace BloogBot.AI
             }
         }
 
+        /// <summary>
+        /// Checks if the player is in a battleground.
+        /// </summary>
         private bool IsPlayerInBg()
         {
             var mapId = ObjectManager.MapId;
             return (mapId == 30 || mapId == 489 || mapId == 529 || mapId == 559);
         }
 
+        /// <summary>
+        /// Determines if the background is finished for the specified player.
+        /// </summary>
         private bool IsBgFinished(LocalPlayer player)
         {
             var result = player.LuaCallWithResults($"{{0}} = GetBattlefieldWinner()");
@@ -713,6 +795,9 @@ namespace BloogBot.AI
                 return false;
         }
 
+        /// <summary>
+        /// Logs the specified text to a file.
+        /// </summary>
         private void LogToFile(string text)
         {
             var dir = Path.GetDirectoryName(Assembly.GetAssembly(typeof(MainViewModel)).CodeBase);
@@ -728,6 +813,9 @@ namespace BloogBot.AI
             }
         }
 
+        /// <summary>
+        /// Logs the specified text to a file with the given file name.
+        /// </summary>
         private void LogToFile(string fileName, string text)
         {
             var dir = Path.GetDirectoryName(Assembly.GetAssembly(typeof(MainViewModel)).CodeBase);
@@ -750,6 +838,9 @@ namespace BloogBot.AI
             }
         }
 
+        /// <summary>
+        /// Shapeshifts the player character to human form if the player character is a Druid and currently in Bear Form or Cat Form.
+        /// </summary>
         void ShapeshiftToHumanForm(IDependencyContainer container)
         {
             if (ObjectManager.Player.Class == Class.Druid && ObjectManager.Player.CurrentShapeshiftForm == "Bear Form")
@@ -758,6 +849,9 @@ namespace BloogBot.AI
                 ObjectManager.Player.LuaCall("CastSpellByName('Cat Form')");
         }
 
+        /// <summary>
+        /// Pops the stack to the base state.
+        /// </summary>
         void PopStackToBaseState()
         {
             while (botStates.Count > 1)

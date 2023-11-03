@@ -4,10 +4,22 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
+/// <summary>
+/// This class provides methods for interacting with the player's inventory.
+/// </summary>
 namespace BloogBot.Game
 {
+    /// <summary>
+    /// This class represents the inventory and provides methods for managing items.
+    /// </summary>
+    /// <summary>
+    /// This class represents the inventory and provides methods for managing items.
+    /// </summary>
     static public class Inventory
     {
+        /// <summary>
+        /// Returns the total count of items with the specified name.
+        /// </summary>
         static public int GetItemCount(string parItemName)
         {
             var totalCount = 0;
@@ -35,6 +47,9 @@ namespace BloogBot.Game
             return totalCount;
         }
 
+        /// <summary>
+        /// Returns the total count of items with the specified item ID across all bags and slots.
+        /// </summary>
         static public int GetItemCount(int itemId)
         {
             var totalCount = 0;
@@ -62,6 +77,9 @@ namespace BloogBot.Game
             return totalCount;
         }
 
+        /// <summary>
+        /// Retrieves all WoWItems from the player's bags and containers.
+        /// </summary>
         static public IList<WoWItem> GetAllItems()
         {
             var items = new List<WoWItem>();
@@ -88,6 +106,9 @@ namespace BloogBot.Game
             return items;
         }
 
+        /// <summary>
+        /// Counts the number of free slots in the player's inventory.
+        /// </summary>
         static public int CountFreeSlots(bool parCountSpecialSlots)
         {
             var freeSlots = 0;
@@ -99,11 +120,11 @@ namespace BloogBot.Game
             var bagGuids = new List<ulong>();
             for (var i = 0; i < 4; i++)
                 bagGuids.Add(MemoryManager.ReadUlong(IntPtr.Add((IntPtr)MemoryAddresses.LocalPlayerFirstExtraBag, i * 8)));
-        
+
             var tmpItems = ObjectManager
                 .Containers
                 .Where(i => i.Slots != 0 && bagGuids.Contains(i.Guid)).ToList();
-            
+
             foreach (var bag in tmpItems)
             {
                 if ((bag.Info.Name.Contains("Quiver") || bag.Info.Name.Contains("Ammo") || bag.Info.Name.Contains("Shot") ||
@@ -118,6 +139,9 @@ namespace BloogBot.Game
             return freeSlots;
         }
 
+        /// <summary>
+        /// Gets the number of empty bag slots.
+        /// </summary>
         static public int EmptyBagSlots
         {
             get
@@ -130,6 +154,9 @@ namespace BloogBot.Game
             }
         }
 
+        /// <summary>
+        /// Retrieves the bag ID of an item with the specified GUID.
+        /// </summary>
         static public int GetBagId(ulong itemGuid)
         {
             var totalCount = 0;
@@ -157,6 +184,9 @@ namespace BloogBot.Game
             return totalCount;
         }
 
+        /// <summary>
+        /// Retrieves the slot ID of an item with the specified item GUID.
+        /// </summary>
         static public int GetSlotId(ulong itemGuid)
         {
             var totalCount = 0;
@@ -184,6 +214,9 @@ namespace BloogBot.Game
             return totalCount;
         }
 
+        /// <summary>
+        /// Retrieves the equipped item in the specified equipment slot.
+        /// </summary>
         static public WoWItem GetEquippedItem(EquipSlot slot)
         {
             var guid = ObjectManager.Player.GetEquippedItemGuid(slot);
@@ -191,6 +224,9 @@ namespace BloogBot.Game
             return ObjectManager.Items.FirstOrDefault(i => i.Guid == guid);
         }
 
+        /// <summary>
+        /// Retrieves the extra bag at the specified slot.
+        /// </summary>
         static WoWContainer GetExtraBag(int parSlot)
         {
             if (parSlot > 3 || parSlot < 0) return null;
@@ -198,6 +234,9 @@ namespace BloogBot.Game
             return bagGuid == 0 ? null : ObjectManager.Containers.FirstOrDefault(i => i.Guid == bagGuid);
         }
 
+        /// <summary>
+        /// Retrieves a WoWItem object based on the specified bag and slot.
+        /// </summary>
         static public WoWItem GetItem(int parBag, int parSlot)
         {
             parBag += 1;

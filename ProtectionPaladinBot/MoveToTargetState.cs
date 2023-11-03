@@ -5,16 +5,43 @@ using BloogBot.Game.Objects;
 using System.Collections.Generic;
 using System.Linq;
 
+/// <summary>
+/// Represents the state of the bot where it moves towards the target.
+/// </summary>
 namespace ProtectionPaladinBot
 {
+    /// <summary>
+    /// Represents a class that handles moving to a target state in a bot.
+    /// </summary>
+    /// <summary>
+    /// Represents a class that handles moving to a target state in a bot.
+    /// </summary>
     class MoveToTargetState : IBotState
     {
+        /// <summary>
+        /// Represents a readonly stack of IBotState objects.
+        /// </summary>
         readonly Stack<IBotState> botStates;
+        /// <summary>
+        /// Represents a read-only dependency container.
+        /// </summary>
         readonly IDependencyContainer container;
+        /// <summary>
+        /// Represents a read-only World of Warcraft unit target.
+        /// </summary>
         readonly WoWUnit target;
+        /// <summary>
+        /// Represents a readonly instance of the LocalPlayer class.
+        /// </summary>
         readonly LocalPlayer player;
+        /// <summary>
+        /// Represents a helper class for handling stuck operations.
+        /// </summary>
         readonly StuckHelper stuckHelper;
 
+        /// <summary>
+        /// Initializes a new instance of the MoveToTargetState class.
+        /// </summary>
         internal MoveToTargetState(Stack<IBotState> botStates, IDependencyContainer container, WoWUnit target)
         {
             this.botStates = botStates;
@@ -24,6 +51,9 @@ namespace ProtectionPaladinBot
             stuckHelper = new StuckHelper(botStates, container);
         }
 
+        /// <summary>
+        /// Updates the current state of the bot. If the target is tapped by another player or if there are aggressors targeting the target and none of them have the same GUID as the target, the bot stops all movement and pops the current state from the stack. Otherwise, it checks if the bot is stuck. If the player is within 3 units of the target's position or if the player is in combat, the bot stops all movement, pops the current state from the stack, and pushes a new CombatState onto the stack. Finally, it calculates the next waypoint using the Navigation class and moves the player towards it.
+        /// </summary>
         public void Update()
         {
             if (target.TappedByOther || (ObjectManager.Aggressors.Count() > 0 && !ObjectManager.Aggressors.Any(a => a.Guid == target.Guid)))

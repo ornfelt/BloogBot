@@ -7,10 +7,22 @@ using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 using System.Text;
 
+/// <summary>
+/// This namespace provides functionality for managing memory in a process.
+/// </summary>
 namespace BloogBot
 {
+    /// <summary>
+    /// This class provides methods for managing memory in a process.
+    /// </summary>
+    /// <summary>
+    /// This class provides methods for managing memory in a process.
+    /// </summary>
     public static unsafe class MemoryManager
     {
+        /// <summary>
+        /// Specifies the access rights for a process.
+        /// </summary>
         [Flags]
         enum ProcessAccessFlags
         {
@@ -34,20 +46,32 @@ namespace BloogBot
             PROCESS_VM_WRITE = 0x0020
         }
 
+        /// <summary>
+        /// Imports the VirtualProtect function from the kernel32.dll library.
+        /// </summary>
         [DllImport("kernel32.dll")]
         static extern bool VirtualProtect(IntPtr address, int size, uint newProtect, out uint oldProtect);
 
+        /// <summary>
+        /// Opens an existing local process object.
+        /// </summary>
         [DllImport("kernel32.dll")]
         static extern IntPtr OpenProcess(ProcessAccessFlags desiredAccess, bool inheritHandle, int processId);
 
+        /// <summary>
+        /// Writes data to an area of memory in a specified process.
+        /// </summary>
         [DllImport("kernel32.dll")]
         static extern bool WriteProcessMemory(
-            IntPtr hProcess,
-            IntPtr lpBaseAddress,
-            byte[] lpBuffer,
-            int dwSize,
-            ref int lpNumberOfBytesWritten);
+                    IntPtr hProcess,
+                    IntPtr lpBaseAddress,
+                    byte[] lpBuffer,
+                    int dwSize,
+                    ref int lpNumberOfBytesWritten);
 
+        /// <summary>
+        /// Specifies the protection options for a memory page.
+        /// </summary>
         [Flags]
         public enum Protection
         {
@@ -64,12 +88,24 @@ namespace BloogBot
             PAGE_WRITECOMBINE = 0x400
         }
 
+        /// <summary>
+        /// The VirtualProtect function changes the protection on a region of committed pages in the virtual address space of the calling process.
+        /// </summary>
         [DllImport("kernel32.dll")]
         static extern bool VirtualProtect(IntPtr lpAddress, UIntPtr dwSize, uint flNewProtect, out uint lpflOldProtect);
 
+        /// <summary>
+        /// The handle to the current process.
+        /// </summary>
         static readonly IntPtr wowProcessHandle = Process.GetCurrentProcess().Handle;
+        /// <summary>
+        /// Represents a static instance of the FasmNet class.
+        /// </summary>
         static readonly FasmNet fasm = new FasmNet();
 
+        /// <summary>
+        /// Reads a byte from the specified memory address.
+        /// </summary>
         [HandleProcessCorruptedStateExceptions]
         static internal byte ReadByte(IntPtr address)
         {
@@ -87,6 +123,9 @@ namespace BloogBot
             }
         }
 
+        /// <summary>
+        /// Reads an integer value from the specified memory address.
+        /// </summary>
         [HandleProcessCorruptedStateExceptions]
         static public int ReadInt(IntPtr address)
         {
@@ -104,6 +143,9 @@ namespace BloogBot
             }
         }
 
+        /// <summary>
+        /// Reads an unsigned integer from the specified memory address.
+        /// </summary>
         [HandleProcessCorruptedStateExceptions]
         static public uint ReadUint(IntPtr address)
         {
@@ -121,6 +163,9 @@ namespace BloogBot
             }
         }
 
+        /// <summary>
+        /// Reads an unsigned long integer from the specified memory address.
+        /// </summary>
         [HandleProcessCorruptedStateExceptions]
         static public ulong ReadUlong(IntPtr address)
         {
@@ -138,6 +183,9 @@ namespace BloogBot
             }
         }
 
+        /// <summary>
+        /// Reads an IntPtr value from the specified memory address.
+        /// </summary>
         [HandleProcessCorruptedStateExceptions]
         static public IntPtr ReadIntPtr(IntPtr address)
         {
@@ -155,6 +203,9 @@ namespace BloogBot
             }
         }
 
+        /// <summary>
+        /// Reads a float value from the specified memory address.
+        /// </summary>
         [HandleProcessCorruptedStateExceptions]
         static public float ReadFloat(IntPtr address)
         {
@@ -172,6 +223,9 @@ namespace BloogBot
             }
         }
 
+        /// <summary>
+        /// Reads a string from the specified memory address.
+        /// </summary>
         [HandleProcessCorruptedStateExceptions]
         static public string ReadString(IntPtr address, int size = 512)
         {
@@ -200,6 +254,9 @@ namespace BloogBot
             }
         }
 
+        /// <summary>
+        /// Reads a specified number of bytes from the memory address.
+        /// </summary>
         [HandleProcessCorruptedStateExceptions]
         static public byte[] ReadBytes(IntPtr address, int count)
         {
@@ -226,6 +283,9 @@ namespace BloogBot
             }
         }
 
+        /// <summary>
+        /// Reads an item cache entry from the specified memory address.
+        /// </summary>
         [HandleProcessCorruptedStateExceptions]
         static public ItemCacheEntry ReadItemCacheEntry(IntPtr address)
         {
@@ -243,10 +303,19 @@ namespace BloogBot
             }
         }
 
+        /// <summary>
+        /// Writes a byte value to the specified memory address.
+        /// </summary>
         static internal void WriteByte(IntPtr address, byte value) => Marshal.StructureToPtr(value, address, false);
 
+        /// <summary>
+        /// Writes an integer value to the specified memory address.
+        /// </summary>
         static internal void WriteInt(IntPtr address, int value) => Marshal.StructureToPtr(value, address, false);
 
+        /// <summary>
+        /// Writes an array of bytes to a specified memory address, bypassing protection.
+        /// </summary>
         // certain memory locations (Warden for example) are protected from modification.
         // we use OpenAccess with ProcessAccessFlags to remove the protection.
         // you can check whether memory is successfully being modified by setting a breakpoint
@@ -276,6 +345,9 @@ namespace BloogBot
             VirtualProtect(address, bytes.Length, (uint)protection, out uint _);
         }
 
+        /// <summary>
+        /// Injects an assembly into memory and returns the starting address of the allocated area.
+        /// </summary>
         static internal IntPtr InjectAssembly(string hackName, string[] instructions)
         {
             // first get the assembly as bytes for the allocated area before overwriting the memory
@@ -304,9 +376,12 @@ namespace BloogBot
             var hack = new Hack(hackName, start, byteCode);
             HackManager.AddHack(hack);
 
-            return start;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           
+            return start;
         }
 
+        /// <summary>
+        /// Injects an assembly into the game process.
+        /// </summary>
         static internal void InjectAssembly(string hackName, uint ptr, string instructions)
         {
             fasm.Clear();

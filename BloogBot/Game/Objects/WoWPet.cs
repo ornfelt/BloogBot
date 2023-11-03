@@ -3,25 +3,46 @@
 using System;
 using System.Collections.Generic;
 
+/// <summary>
+/// Represents a World of Warcraft pet.
+/// </summary>
 namespace BloogBot.Game.Objects
 {
+    /// <summary>
+    /// Represents a pet in the World of Warcraft game.
+    /// </summary>
     class WoWPet : WoWUnit
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="WoWPet"/> class.
+        /// </summary>
         internal WoWPet(
-             IntPtr pointer,
-             ulong guid,
-             ObjectType objectType) : base(pointer, guid, objectType)
+                     IntPtr pointer,
+                     ulong guid,
+                     ObjectType objectType) : base(pointer, guid, objectType)
         {
             // TODO
             //RefreshSpells();
         }
 
+        /// <summary>
+        /// Dictionary that stores pet spells for each pet name.
+        /// </summary>
         readonly IDictionary<string, int[]> petSpells = new Dictionary<string, int[]>();
 
+        /// <summary>
+        /// Checks if the pet knows a specific spell by its name.
+        /// </summary>
         public bool KnowsSpell(string name) => petSpells.ContainsKey(name);
 
+        /// <summary>
+        /// Calls the Lua function "PetAttack()" to initiate a pet attack.
+        /// </summary>
         public void Attack() => LuaCall("PetAttack()");
 
+        /// <summary>
+        /// Refreshes the list of spells for the pet.
+        /// </summary>
         public void RefreshSpells()
         {
             petSpells.Clear();

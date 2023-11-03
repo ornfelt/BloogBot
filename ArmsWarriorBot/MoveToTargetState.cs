@@ -5,16 +5,43 @@ using BloogBot.Game.Enums;
 using BloogBot.Game.Objects;
 using System.Collections.Generic;
 
+/// <summary>
+/// This namespace contains classes related to the Arms Warrior bot.
+/// </summary>
 namespace ArmsWarriorBot
 {
+    /// <summary>
+    /// Represents a class that handles moving to a target state in a bot.
+    /// </summary>
+    /// <summary>
+    /// Represents a class that handles moving to a target state in a bot.
+    /// </summary>
     class MoveToTargetState : IBotState
     {
+        /// <summary>
+        /// Represents a readonly stack of IBotState objects.
+        /// </summary>
         readonly Stack<IBotState> botStates;
+        /// <summary>
+        /// Represents a read-only dependency container.
+        /// </summary>
         readonly IDependencyContainer container;
+        /// <summary>
+        /// Represents a read-only World of Warcraft unit target.
+        /// </summary>
         readonly WoWUnit target;
+        /// <summary>
+        /// Represents a readonly instance of the LocalPlayer class.
+        /// </summary>
         readonly LocalPlayer player;
+        /// <summary>
+        /// Represents a helper class for handling stuck operations.
+        /// </summary>
         readonly StuckHelper stuckHelper;
 
+        /// <summary>
+        /// Initializes a new instance of the MoveToTargetState class.
+        /// </summary>
         internal MoveToTargetState(Stack<IBotState> botStates, IDependencyContainer container, WoWUnit target)
         {
             this.botStates = botStates;
@@ -24,6 +51,9 @@ namespace ArmsWarriorBot
             stuckHelper = new StuckHelper(botStates, container);
         }
 
+        /// <summary>
+        /// Updates the behavior of the bot.
+        /// </summary>
         public void Update()
         {
             if (target.TappedByOther || container.FindClosestTarget()?.Guid != target.Guid)

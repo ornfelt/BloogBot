@@ -5,10 +5,22 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
+/// <summary>
+/// This namespace contains shared states for handling equipment armor.
+/// </summary>
 namespace BloogBot.AI.SharedStates
 {
+    /// <summary>
+    /// A class that represents the state of equipping armor for a character.
+    /// </summary>
+    /// <summary>
+    /// A class that represents the state of equipping armor for a character.
+    /// </summary>
     public class EquipArmorState : IBotState
     {
+        /// <summary>
+        /// A dictionary that maps each class to its desired armor type.
+        /// </summary>
         static readonly IDictionary<Class, ItemSubclass> desiredArmorTypes = new Dictionary<Class, ItemSubclass>
         {
             { Class.Druid, ItemSubclass.Leather },
@@ -22,6 +34,9 @@ namespace BloogBot.AI.SharedStates
             { Class.Warrior, ItemSubclass.Mail }
         };
 
+        /// <summary>
+        /// List of equipment slots to check.
+        /// </summary>
         readonly IList<EquipSlot> slotsToCheck = new List<EquipSlot>
         {
             EquipSlot.Back,
@@ -35,13 +50,31 @@ namespace BloogBot.AI.SharedStates
             EquipSlot.Wrist
         };
 
+        /// <summary>
+        /// Represents a readonly stack of IBotState objects.
+        /// </summary>
         readonly Stack<IBotState> botStates;
+        /// <summary>
+        /// Represents a read-only dependency container.
+        /// </summary>
         readonly IDependencyContainer container;
+        /// <summary>
+        /// Represents a readonly instance of the LocalPlayer class.
+        /// </summary>
         readonly LocalPlayer player;
 
+        /// <summary>
+        /// Represents an empty equipment slot.
+        /// </summary>
         EquipSlot? emptySlot;
+        /// <summary>
+        /// Represents an item to be equipped in the World of Warcraft.
+        /// </summary>
         WoWItem itemToEquip;
 
+        /// <summary>
+        /// Initializes a new instance of the EquipArmorState class.
+        /// </summary>
         public EquipArmorState(Stack<IBotState> botStates, IDependencyContainer container)
         {
             this.botStates = botStates;
@@ -49,6 +82,13 @@ namespace BloogBot.AI.SharedStates
             player = ObjectManager.Player;
         }
 
+        /// <summary>
+        /// Updates the state of the bot. If the player is in combat, pops the current state from the stack and returns. 
+        /// If there is no item to equip, checks the inventory for empty slots and attempts to find an item to equip based on desired armor types, equip slot, and required level. 
+        /// If no item is found and there are no more slots to check, pops the current state from the stack and pushes a rest state. 
+        /// If there is an item to equip and the equip delay has passed, uses the item and equips it if it is of a quality higher than common. 
+        /// Resets the empty slot and item to equip variables after equipping the item.
+        /// </summary>
         public void Update()
         {
             if (player.IsInCombat)

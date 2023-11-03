@@ -5,17 +5,44 @@ using BloogBot.Game.Objects;
 using System.Collections.Generic;
 using System.Linq;
 
+/// <summary>
+/// This namespace contains the implementation of the RestState class, which represents the state of the Protection Warrior Bot when the player character is resting.
+/// </summary>
 namespace ProtectionWarriorBot
 {
+    /// <summary>
+    /// Represents a state where the bot is resting.
+    /// </summary>
+    /// <summary>
+    /// Represents a state where the bot is resting.
+    /// </summary>
     class RestState : IBotState
     {
+        /// <summary>
+        /// The number of stacks.
+        /// </summary>
         const int stackCount = 5;
 
+        /// <summary>
+        /// Represents a readonly stack of IBotState objects.
+        /// </summary>
         readonly Stack<IBotState> botStates;
+        /// <summary>
+        /// Represents a read-only dependency container.
+        /// </summary>
         readonly IDependencyContainer container;
+        /// <summary>
+        /// Represents a readonly instance of the LocalPlayer class.
+        /// </summary>
         readonly LocalPlayer player;
+        /// <summary>
+        /// Represents a read-only World of Warcraft item for food.
+        /// </summary>
         readonly WoWItem foodItem;
 
+        /// <summary>
+        /// Initializes a new instance of the RestState class.
+        /// </summary>
         public RestState(Stack<IBotState> botStates, IDependencyContainer container)
         {
             this.botStates = botStates;
@@ -26,10 +53,13 @@ namespace ProtectionWarriorBot
                 .FirstOrDefault(i => i.Info.Name == container.BotSettings.Food);
         }
 
+        /// <summary>
+        /// Updates the player's actions based on certain conditions.
+        /// </summary>
         public void Update()
         {
             if (player.HealthPercent >= 95 ||
-                player.HealthPercent >= 80 && !player.IsEating ||                                                                
+                player.HealthPercent >= 80 && !player.IsEating ||
                 ObjectManager.Player.IsInCombat ||
                 ObjectManager.Units.Any(u => u.TargetGuid == ObjectManager.Player.Guid))
             {
@@ -66,6 +96,9 @@ namespace ProtectionWarriorBot
                 foodItem.Use();
         }
 
+        /// <summary>
+        /// Gets a value indicating whether the player is currently in combat or if there are any units targeting the player.
+        /// </summary>
         bool InCombat => ObjectManager.Player.IsInCombat || ObjectManager.Units.Any(u => u.TargetGuid == ObjectManager.Player.Guid);
     }
 }

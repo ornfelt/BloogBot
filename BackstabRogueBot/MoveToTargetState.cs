@@ -7,27 +7,81 @@ using System.Collections.Generic;
 using BloogBot;
 using BloogBot.Game;
 
+/// <summary>
+/// This namespace contains classes related to the Backstab Rogue Bot.
+/// </summary>
 namespace BackstabRogueBot
 {
+    /// <summary>
+    /// Represents a state where the bot moves towards its target.
+    /// </summary>
+    /// <summary>
+    /// Represents a state where the bot moves towards its target.
+    /// </summary>
     class MoveToTargetState : IBotState
     {
+        /// <summary>
+        /// The constant string value for distraction.
+        /// </summary>
         const string Distract = "Distract";
+        /// <summary>
+        /// Represents a constant string named "Garrote".
+        /// </summary>
         const string Garrote = "Garrote";
+        /// <summary>
+        /// Represents a constant string with the value "Stealth".
+        /// </summary>
         const string Stealth = "Stealth";
+        /// <summary>
+        /// Represents a constant string value for "Cheap Shot".
+        /// </summary>
         const string CheapShot = "Cheap Shot";
+        /// <summary>
+        /// Represents the constant string "Ambush".
+        /// </summary>
         const string Ambush = "Ambush";
 
+        /// <summary>
+        /// Represents a readonly stack of IBotState objects.
+        /// </summary>
         readonly Stack<IBotState> botStates;
+        /// <summary>
+        /// Represents a read-only dependency container.
+        /// </summary>
         readonly IDependencyContainer container;
+        /// <summary>
+        /// Represents a read-only World of Warcraft unit target.
+        /// </summary>
         readonly WoWUnit target;
+        /// <summary>
+        /// Represents a readonly instance of the LocalPlayer class.
+        /// </summary>
         readonly LocalPlayer player;
+        /// <summary>
+        /// Represents a helper class for handling stuck operations.
+        /// </summary>
         readonly StuckHelper stuckHelper;
 
+        /// <summary>
+        /// Indicates whether the swap dagger is ready.
+        /// </summary>
         bool SwapDaggerReady;
+        /// <summary>
+        /// Gets or sets a value indicating whether a dagger is equipped.
+        /// </summary>
         bool DaggerEquipped;
+        /// <summary>
+        /// Indicates whether the swap between mace and sword is ready.
+        /// </summary>
         bool SwapMaceOrSwordReady;
+        /// <summary>
+        /// Represents whether a mace or a sword is currently equipped.
+        /// </summary>
         bool MaceOrSwordEquipped;
 
+        /// <summary>
+        /// Initializes a new instance of the MoveToTargetState class.
+        /// </summary>
         internal MoveToTargetState(Stack<IBotState> botStates, IDependencyContainer container, WoWUnit target)
         {
             this.botStates = botStates;
@@ -37,6 +91,9 @@ namespace BackstabRogueBot
             stuckHelper = new StuckHelper(botStates, container);
         }
 
+        /// <summary>
+        /// Updates the behavior of the player character.
+        /// </summary>
         public void Update()
         {
             if (target.TappedByOther || container.FindClosestTarget()?.Guid != target.Guid)
@@ -54,7 +111,7 @@ namespace BackstabRogueBot
 
             // Weapon Swap Logic
             ThreadSynchronizer.RunOnMainThread(() =>
-            {                                             
+            {
 
                 WoWItem MainHand = Inventory.GetEquippedItem(EquipSlot.MainHand);
                 WoWItem OffHand = Inventory.GetEquippedItem(EquipSlot.OffHand);

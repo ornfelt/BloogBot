@@ -1,5 +1,11 @@
-﻿namespace BloogBot.Game.Enums
+﻿/// <summary>
+/// This namespace contains the enumeration for different types of creatures.
+/// </summary>
+namespace BloogBot.Game.Enums
 {
+    /// <summary>
+    /// Represents the different types of creatures.
+    /// </summary>
     public enum CreatureType
     {
         Beast = 1,

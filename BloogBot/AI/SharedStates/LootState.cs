@@ -6,26 +6,65 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
+/// <summary>
+/// This namespace contains the shared states for the AI related to looting.
+/// </summary>
 namespace BloogBot.AI.SharedStates
 {
+    /// <summary>
+    /// Represents a class that handles the state of looting in a bot.
+    /// </summary>
     public class LootState : IBotState
     {
+        /// <summary>
+        /// Represents a readonly stack of IBotState objects.
+        /// </summary>
         readonly Stack<IBotState> botStates;
+        /// <summary>
+        /// Represents a read-only dependency container.
+        /// </summary>
         readonly IDependencyContainer container;
+        /// <summary>
+        /// Represents a read-only World of Warcraft unit target.
+        /// </summary>
         readonly WoWUnit target;
+        /// <summary>
+        /// Represents a readonly instance of the LocalPlayer class.
+        /// </summary>
         readonly LocalPlayer player;
+        /// <summary>
+        /// Represents a helper class for handling stuck operations.
+        /// </summary>
         readonly StuckHelper stuckHelper;
+        /// <summary>
+        /// Represents the start time of the application in milliseconds since the system started.
+        /// </summary>
         readonly int startTime = Environment.TickCount;
 
+        /// <summary>
+        /// Represents the count of times the program got stuck.
+        /// </summary>
         int stuckCount;
+        /// <summary>
+        /// Represents a loot frame used for displaying loot items.
+        /// </summary>
         LootFrame lootFrame;
+        /// <summary>
+        /// Represents the index of the loot.
+        /// </summary>
         int lootIndex;
+        /// <summary>
+        /// Represents the current state of the loot.
+        /// </summary>
         LootStates currentState;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="LootState"/> class.
+        /// </summary>
         public LootState(
-            Stack<IBotState> botStates,
-            IDependencyContainer container,
-            WoWUnit target)
+                    Stack<IBotState> botStates,
+                    IDependencyContainer container,
+                    WoWUnit target)
         {
             this.botStates = botStates;
             this.container = container;
@@ -34,6 +73,9 @@ namespace BloogBot.AI.SharedStates
             stuckHelper = new StuckHelper(botStates, container);
         }
 
+        /// <summary>
+        /// Updates the current state of the player.
+        /// </summary>
         public void Update()
         {
             if (player.Position.DistanceTo(target.Position) >= 5)
@@ -51,7 +93,7 @@ namespace BloogBot.AI.SharedStates
             if (target.CanBeLooted && currentState == LootStates.Initial && player.Position.DistanceTo(target.Position) < 5)
             {
                 player.StopAllMovement();
-                
+
                 if (Wait.For("StartLootDelay", 200))
                 {
                     target.Interact();
@@ -123,6 +165,9 @@ namespace BloogBot.AI.SharedStates
         }
     }
 
+    /// <summary>
+    /// Represents the possible states of loot.
+    /// </summary>
     enum LootStates
     {
         Initial,

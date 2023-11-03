@@ -2,12 +2,27 @@
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
+/// <summary>
+/// This class provides access to the World of Warcraft database.
+/// </summary>
 namespace BloogBot.Game
 {
+    /// <summary>
+    /// This class represents a static database for WoW, containing a dictionary that maps a ClientDb to a DbTable.
+    /// </summary>
+    /// <summary>
+    /// This class represents a static database for WoW, containing a dictionary that maps a ClientDb to a DbTable.
+    /// </summary>
     public static class WowDb
     {
+        /// <summary>
+        /// Dictionary that maps a ClientDb to a DbTable.
+        /// </summary>
         public static readonly Dictionary<ClientDb, DbTable> Tables = new Dictionary<ClientDb, DbTable>();
 
+        /// <summary>
+        /// Initializes the WowDb class by reading memory addresses and populating the Tables dictionary with DbTable objects.
+        /// </summary>
         static WowDb()
         {
             for (var tableBase = (IntPtr)MemoryAddresses.WowDbTableBase;
@@ -20,21 +35,36 @@ namespace BloogBot.Game
             }
         }
 
+        /// <summary>
+        /// Represents a database table and provides methods for retrieving rows.
+        /// </summary>
         public class DbTable
         {
+            /// <summary>
+            /// Gets the pointer value.
+            /// </summary>
             readonly IntPtr pointer;
-            
+
+            /// <summary>
+            /// Initializes a new instance of the DbTable class with the specified pointer.
+            /// </summary>
             public DbTable(IntPtr pointer)
             {
                 this.pointer = pointer;
             }
 
+            /// <summary>
+            /// Retrieves a row from the database.
+            /// </summary>
             // For all DBs, we should use GetRow, except for Spells.db, which should use GetLocalizedRow
             public IntPtr GetRow(int index)
             {
                 return Functions.GetRow(pointer, index);
             }
 
+            /// <summary>
+            /// Retrieves a localized row from the Spells.db database.
+            /// </summary>
             // For all DBs, we should use GetRow, except for Spells.db, which should use GetLocalizedRow
             public IntPtr GetLocalizedRow(int index)
             {
@@ -45,6 +75,9 @@ namespace BloogBot.Game
         }
     }
 
+    /// <summary>
+    /// Enum representing the different client databases.
+    /// </summary>
     public enum ClientDb : uint
     {
         Achievement = 0x000000EB, // 0x00A73888

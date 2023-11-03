@@ -7,26 +7,59 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 
+/// <summary>
+/// This namespace contains the shared states for the AI in battleground queue.
+/// </summary>
 namespace BloogBot.AI.SharedStates
 {
+    /// <summary>
+    /// Represents a class that manages the state of the battleground queue for a bot.
+    /// </summary>
+    /// <summary>
+    /// Represents a class that manages the state of the battleground queue for a bot.
+    /// </summary>
     public class BattlegroundQueueState : IBotState
     {
+        /// <summary>
+        /// Represents a readonly stack of IBotState objects.
+        /// </summary>
         readonly Stack<IBotState> botStates;
+        /// <summary>
+        /// Represents a read-only dependency container.
+        /// </summary>
         readonly IDependencyContainer container;
+        /// <summary>
+        /// Represents a local player.
+        /// </summary>
         LocalPlayer player;
+        /// <summary>
+        /// Represents the current state of the queue.
+        /// </summary>
         private QueueStates currentState;
+        /// <summary>
+        /// Represents the boolean variables for otherCTA, eyeCTA, strandCTA, isleCTA, avCTA, and abCTA.
+        /// </summary>
         private bool otherCTA, eyeCTA, strandCTA, isleCTA, avCTA, abCTA;
+        /// <summary>
+        /// Represents a static random number generator.
+        /// </summary>
         private static Random rand = new Random();
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="BattlegroundQueueState"/> class.
+        /// </summary>
         public BattlegroundQueueState(
-            Stack<IBotState> botStates,
-            IDependencyContainer container)
+                    Stack<IBotState> botStates,
+                    IDependencyContainer container)
         {
             this.botStates = botStates;
             this.container = container;
             player = ObjectManager.Player;
         }
 
+        /// <summary>
+        /// Updates the current state of the player's PVP queue.
+        /// </summary>
         public void Update()
         {
             if (CheckCombat())
@@ -58,7 +91,7 @@ namespace BloogBot.AI.SharedStates
                     { 1, "Arathi Basin" },
                     { 2, "Alterac Valley" }
                 };
-                 player.LuaCall($"for i=1,GetNumBattlegroundTypes()do local name,_,_,_,_=GetBattlegroundInfo(i)if name=='{battlegroundNames[RandBgQueueIndex()]}'then PVPBattlegroundFrame.selectedBG = i end end");
+                player.LuaCall($"for i=1,GetNumBattlegroundTypes()do local name,_,_,_,_=GetBattlegroundInfo(i)if name=='{battlegroundNames[RandBgQueueIndex()]}'then PVPBattlegroundFrame.selectedBG = i end end");
                 // You can also just JoinBattlefield directly:
                 //run for i=1,GetNumBattlegroundTypes()do local name,_,_,_,_=GetBattlegroundInfo(i)if name=="Warsong Gulch"then JoinBattlefield(i)end end
 
@@ -98,6 +131,9 @@ namespace BloogBot.AI.SharedStates
             }
         }
 
+        /// <summary>
+        /// Checks if the player is in combat. If the player is in combat, it pops the current bot state and pushes a new GrindState onto the bot state stack. Returns true if the player is in combat, otherwise returns false.
+        /// </summary>
         private bool CheckCombat()
         {
             if (player.IsInCombat)
@@ -109,6 +145,9 @@ namespace BloogBot.AI.SharedStates
             return false;
         }
 
+        /// <summary>
+        /// Checks if the current time is within the specified occurrence and length based on the start time.
+        /// </summary>
         private bool CheckCTA(string startTime, long occurence, long length)
         {
             // Convert the startTime string to a DateTime object
@@ -122,6 +161,9 @@ namespace BloogBot.AI.SharedStates
             return (differenceInSeconds % (occurence * MINUTES)) < (length * MINUTES);
         }
 
+        /// <summary>
+        /// Generates a random background queue index based on the player's level and certain conditions.
+        /// </summary>
         private int RandBgQueueIndex()
         {
             SetCTA();
@@ -153,6 +195,9 @@ namespace BloogBot.AI.SharedStates
             //return bgQueueIndex;
         }
 
+        /// <summary>
+        /// Sets the current Call to Arms for various game events.
+        /// </summary>
         void SetCTA()
         {
             // Calculate current call to arms
@@ -179,6 +224,9 @@ namespace BloogBot.AI.SharedStates
         }
     }
 
+    /// <summary>
+    /// Represents the possible states of a queue.
+    /// </summary>
     enum QueueStates
     {
         Initial,

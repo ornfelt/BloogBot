@@ -15,7 +15,7 @@ public:
 	XYZ()
 	{
 		X = 0;
-		Y = 0; 
+		Y = 0;
 		Z = 0;
 	}
 
@@ -35,7 +35,7 @@ public:
 	void Release();
 	XYZ* CalculatePath(unsigned int mapId, XYZ start, XYZ end, bool straightPath, int* length);
 	void FreePathArr(XYZ* length);
-    std::string GetMmapsPath();
+	std::string GetMmapsPath();
 
 private:
 	void InitializeMapsForContinent(MMAP::MMapManager* manager, unsigned int mapId);

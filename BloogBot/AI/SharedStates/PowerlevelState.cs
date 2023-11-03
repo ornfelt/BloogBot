@@ -5,36 +5,93 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
+/// <summary>
+/// Contains the implementation of the PowerlevelState class, which represents the state of the bot when it is in powerleveling mode.
+/// </summary>
 namespace BloogBot.AI.SharedStates
 {
+    /// <summary>
+    /// Represents the state of the power level of the bot.
+    /// </summary>
+    /// <summary>
+    /// Represents the state of the power level of the bot.
+    /// </summary>
     class PowerlevelState : IBotState
     {
-        static readonly string[] playerEmotes = { "amaze", "applaud", "bark", "beckon", "belch", "blink", "blow", "blush", "bonk", "bounce", "bow", 
+        /// <summary>
+        /// Array of player emotes.
+        /// </summary>
+        static readonly string[] playerEmotes = { "amaze", "applaud", "bark", "beckon", "belch", "blink", "blow", "blush", "bonk", "bounce", "bow",
             "bravo", "cheer", "chew", "chicken", "chuckle", "clap", "comfort", "cuddle", "curtsey", "dance", "drool", "excited", "fidget",
             "flex", "followme", "gaze", "guffaw", "happy", "highfive", "hug", "impatient", "kiss", "knuckles", "laugh", "listen", "love",
             "massage", "moan", "moo", "nosepick", "pat", "pizza", "ponder", "purr", "roar", "salute", "sexy", "shimmy", "silly", "train",
             "smile", "smirk", "snicker", "sniff", "soothe", "stare", "tickle", "whistle", "wave" };
 
-        static readonly string[] targetEmotes = { "angry", "bark", "beckon", "bite", "cackle", "flex", "glare", "plead", "roar", "rude", 
+        /// <summary>
+        /// Array of target emotes.
+        /// </summary>
+        static readonly string[] targetEmotes = { "angry", "bark", "beckon", "bite", "cackle", "flex", "glare", "plead", "roar", "rude",
             "scowl", "openfire", "slap", "snarl", "snicker", "spit", "taunt", "tease", "threaten", "yawn" };
 
+        /// <summary>
+        /// Represents a static, read-only instance of the Random class.
+        /// </summary>
         static readonly Random random = new Random();
 
+        /// <summary>
+        /// Represents a readonly stack of IBotState objects.
+        /// </summary>
         readonly Stack<IBotState> botStates;
+        /// <summary>
+        /// Represents a read-only dependency container.
+        /// </summary>
         readonly IDependencyContainer container;
+        /// <summary>
+        /// Represents a readonly instance of the LocalPlayer class.
+        /// </summary>
         readonly LocalPlayer player;
 
+        /// <summary>
+        /// Represents a World of Warcraft player.
+        /// </summary>
         WoWPlayer targetPlayer;
 
+        /// <summary>
+        /// Represents the range of values for an integer.
+        /// </summary>
         int range;
+        /// <summary>
+        /// Represents a boolean value indicating whether the process has started.
+        /// </summary>
         bool started;
+        /// <summary>
+        /// Represents the start time.
+        /// </summary>
         int startTime;
+        /// <summary>
+        /// Represents the start delay for a process.
+        /// </summary>
         int startDelay;
+        /// <summary>
+        /// Represents the distance at which the player should stop.
+        /// </summary>
         int playerStopDistance;
+        /// <summary>
+        /// Represents the search frequency.
+        /// </summary>
         double searchFrequency;
+        /// <summary>
+        /// Represents the frequency of jumps as a double value.
+        /// </summary>
         double jumpFrequency;
+        /// <summary>
+        /// Represents a boolean value indicating whether the object has been initialized.
+        /// </summary>
         bool initialized;
 
+        /// <summary>
+        /// Initializes a new instance of the PowerlevelState class.
+        /// </summary>
         public PowerlevelState(Stack<IBotState> botStates, IDependencyContainer container)
         {
             this.botStates = botStates;
@@ -42,6 +99,9 @@ namespace BloogBot.AI.SharedStates
             player = ObjectManager.Player;
         }
 
+        /// <summary>
+        /// Updates the behavior of the bot.
+        /// </summary>
         public void Update()
         {
             if (!initialized)
@@ -126,6 +186,9 @@ namespace BloogBot.AI.SharedStates
             }
         }
 
+        /// <summary>
+        /// Performs an emote action based on the current target player.
+        /// </summary>
         void Emote()
         {
             string emote;

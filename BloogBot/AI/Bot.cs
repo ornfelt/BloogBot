@@ -769,6 +769,9 @@ namespace BloogBot.AI
             }
         }
 
+        /// <summary>
+        /// Force teleport to current or nearby WP.
+        /// </summary>
         private void ForceTeleport(IDependencyContainer container, LocalPlayer player, string reason)
         {
             if (player.CurrWpId == 0)

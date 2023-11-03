@@ -1,0 +1,925 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="BloogBot.AI.Bot" Collapsed="true">
+    <Position X="17.5" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AgAAAgAkACCAAAIAIAAIEwACIAgIAACYJAUkAQRAAAI=</HashCode>
+      <FileName>AI\Bot.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BloogBot.AI.DependencyContainer" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="17.5" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAMAAACAAQAQAAACIICAgEgAAECAAAQIAAAAAAACAAA=</HashCode>
+      <FileName>AI\DependencyContainer.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="BloogBot.AI.PlayerTracker" Collapsed="true">
+    <Position X="22.75" Y="5.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAEAAIAAAAAAAQAIAAAAAAAAQ=</HashCode>
+      <FileName>AI\PlayerTracker.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BloogBot.AI.StuckHelper" Collapsed="true">
+    <Position X="21" Y="7.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>FAAAggAAAAAAAAAAAAAAAAAAAIAAAAAJAAAAAAAAAAA=</HashCode>
+      <FileName>AI\StuckHelper.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BloogBot.AI.SharedStates.ArenaSkirmishQueueState" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="14" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>BAQAAoAAAAAAAAAAIAAAAAAAAAAEAAABAAAAAAAAAAA=</HashCode>
+      <FileName>AI\SharedStates\ArenaSkirmishQueueState.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="BloogBot.AI.SharedStates.BattlegroundQueueState" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="15.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>JAQAAoAAAABAAAACIAAwAAAAAAAACAABAEAAAACAQAg=</HashCode>
+      <FileName>AI\SharedStates\BattlegroundQueueState.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="BloogBot.AI.SharedStates.BuyItemsState" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="24.5" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAQAAgAAAAAIAAAAAAAAAAAAQAAAAAAVAAAQAAACAAA=</HashCode>
+      <FileName>AI\SharedStates\BuyItemsState.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="BloogBot.AI.SharedStates.CombatStateBase" Collapsed="true">
+    <Position X="12.25" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>RAQAAgAAAAAIAAAIIAECCCACAAAAAAEBAAQgAEIBQIA=</HashCode>
+      <FileName>AI\SharedStates\CombatStateBase.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BloogBot.AI.SharedStates.EquipArmorState" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="26.25" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>BAQAAgAAAAACAABAAAAAAAAEAAAAAAQBAAAAAAAAAAA=</HashCode>
+      <FileName>AI\SharedStates\EquipArmorState.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="BloogBot.AI.SharedStates.EquipBagsState" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="12.25" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>BAQEAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>AI\SharedStates\EquipBagsState.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="BloogBot.AI.SharedStates.GatherObjectState" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="15.75" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAQAAgAAAAAAAAAAIAAgAAAAAAAAAAABAAAAAAAAEAA=</HashCode>
+      <FileName>AI\SharedStates\GatherObjectState.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="BloogBot.AI.SharedStates.GrindState" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="17.5" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>BwQAAgiEAAQCAAABAAQAIAAAAAAAAAABABQAAAAAAIA=</HashCode>
+      <FileName>AI\SharedStates\GrindState.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="BloogBot.AI.SharedStates.LootState" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="22.75" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>BAQAAgACAAAAAAACIACgAAAAAAAAAAABAAAAAAIAAAA=</HashCode>
+      <FileName>AI\SharedStates\LootState.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="BloogBot.AI.SharedStates.MoveToCorpseState" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="19.25" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>BgQAAgACABAIAAACEAAAAAAAAAIAAAABAAQAAAAAAAA=</HashCode>
+      <FileName>AI\SharedStates\MoveToCorpseState.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="BloogBot.AI.SharedStates.MoveToHotspotWaypointState" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="21" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>BAQAAgACAAAAAAAAAAAAAAAAAAAAAAABAAAABAAAAAA=</HashCode>
+      <FileName>AI\SharedStates\MoveToHotspotWaypointState.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="BloogBot.AI.SharedStates.MoveToPositionState" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="22.75" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>BAYAAgACAAAAAAACAAAAAAAAAAAAAAABAAAABAAAAAA=</HashCode>
+      <FileName>AI\SharedStates\MoveToPositionState.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="BloogBot.AI.SharedStates.PowerlevelState" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="26.25" Y="5.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>hAQAAiAIABAAABAAACAgAgAAAgAAAgABAAQAAAEAAAA=</HashCode>
+      <FileName>AI\SharedStates\PowerlevelState.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="BloogBot.AI.SharedStates.ReleaseCorpseState" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="15.75" Y="6.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>BAQAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAA=</HashCode>
+      <FileName>AI\SharedStates\ReleaseCorpseState.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="BloogBot.AI.SharedStates.RepairEquipmentState" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="17.5" Y="6.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>BAQAAgAAAABIAAAgAAAAAAAAQAAAAAAVAAAQAAAAAAA=</HashCode>
+      <FileName>AI\SharedStates\RepairEquipmentState.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="BloogBot.AI.SharedStates.RetrieveCorpseState" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="26.25" Y="6.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>BAQAAgAACBAAAAAAAEAAAAAAAAAAAAAJAAQAAAAAAAA=</HashCode>
+      <FileName>AI\SharedStates\RetrieveCorpseState.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="BloogBot.AI.SharedStates.SellItemsState" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="12.25" Y="7.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAQAAgAAAABIIAAgAAAAAAAAQAAABAAVAAAQAAAAAAA=</HashCode>
+      <FileName>AI\SharedStates\SellItemsState.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="BloogBot.AI.SharedStates.StuckState" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="22.75" Y="7.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>BAQAAgAAAAAAAAAAAAAAAAAAIAAAAQAFAAQAAAACAAA=</HashCode>
+      <FileName>AI\SharedStates\StuckState.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="BloogBot.AI.SharedStates.TravelState" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="15.75" Y="8.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>BARAAgAAAAAAAAAAAAAAAAAAQAAAAAABAAAAQAAAAAA=</HashCode>
+      <FileName>AI\SharedStates\TravelState.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="BloogBot.BotLoader" Collapsed="true">
+    <Position X="19.25" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>BAAAAAAAAAAAAAAAAAEAAUAAAAAAAAAAAAAAAACAAAA=</HashCode>
+      <FileName>BotLoader.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BloogBot.BotSettings" Collapsed="true">
+    <Position X="22.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>QAIACiCBIIoABgBI2BE4QUlQALAAAUUAAAgUEwAAAAE=</HashCode>
+      <FileName>BotSettings.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BloogBot.ClientHelper" Collapsed="true">
+    <Position X="26.25" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAA=</HashCode>
+      <FileName>ClientHelper.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BloogBot.CommandModel" Collapsed="true">
+    <Position X="15.75" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAACAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAQAEAAA=</HashCode>
+      <FileName>CommandModel.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BloogBot.ReportSignature" Collapsed="true">
+    <Position X="19.25" Y="6.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAACAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAQAAAAA=</HashCode>
+      <FileName>CommandModel.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BloogBot.ReportSummary" Collapsed="true">
+    <Position X="21" Y="6.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>CommandModel.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BloogBot.Detour" Collapsed="true">
+    <Position X="19.25" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AgAAEAAAABAAAAAAIAAABAQAAAAAAAIBAAAAAEAAAEA=</HashCode>
+      <FileName>Detour.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BloogBot.DiscordClientWrapper" Collapsed="true">
+    <Position X="24.5" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAQAgAABAAIQAAACAEAAAAAAgBAIAAAAAABAIEAFA=</HashCode>
+      <FileName>DiscordClientWrapper.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BloogBot.Hack" Collapsed="true">
+    <Position X="19.25" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>EAAAAgAAAAAAAABAAAAAAAQAAAAAAAACAAAAAAAAAAA=</HashCode>
+      <FileName>Hack.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BloogBot.HackManager" Collapsed="true">
+    <Position X="21" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAIAAAAAAgAAAAAAAAAAAAAACAAAAAIAAAAA=</HashCode>
+      <FileName>HackManager.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BloogBot.Hotspot" Collapsed="true">
+    <Position X="22.75" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAACEAAABAAgIAAAQBAAAgAAAAAAAAACQAAABAAAAEA=</HashCode>
+      <FileName>Hotspot.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BloogBot.HotspotGenerator" Collapsed="true">
+    <Position X="24.5" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAIAAQAAAAAAAAAAAIAIAAAAIAAAAAAAAAAAAFAA=</HashCode>
+      <FileName>HotspotGenerator.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BloogBot.Loader" Collapsed="true">
+    <Position X="15.75" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAgAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Loader.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BloogBot.Logger" Collapsed="true">
+    <Position X="17.5" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAEAAQAAAAAAAAAAAAgAAAAAAAABAAAAAAA=</HashCode>
+      <FileName>Logger.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BloogBot.MemoryManager" Collapsed="true">
+    <Position X="14" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAABEACBAQAABAQABEAUQgAgAAwAAAAAA=</HashCode>
+      <FileName>MemoryManager.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BloogBot.Navigation" Collapsed="true">
+    <Position X="24.5" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAABAJAAAACAgAAAAIABIAAAAAAAAAAAAQAAQAAAAAA=</HashCode>
+      <FileName>Navigation.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BloogBot.Npc" Collapsed="true">
+    <Position X="26.25" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAACEAAgAAAgwAAgABAAAAQgAAAAABAAAAAAAAAAAAA=</HashCode>
+      <FileName>Npc.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BloogBot.Probe" Collapsed="true">
+    <Position X="12.25" Y="6.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAIAAAEAQAAASAABAACABAAAAAgAwAQAABAACQAA=</HashCode>
+      <FileName>Probe.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BloogBot.Repository" Collapsed="true">
+    <Position X="22.75" Y="6.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAQAABAIABAMQGEQEAAACAAAAEAAACABIAMAAAAAQA=</HashCode>
+      <FileName>Repository.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BloogBot.SignalEventManager" Collapsed="true">
+    <Position X="15.75" Y="7.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAQAAAIAEAAMABQAAAAEEAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>SignalEventManager.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BloogBot.SqliteRepository" Collapsed="true">
+    <Position X="0.5" Y="5.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAABAIACBMQmEQAgAACAAAAEAAAiABIAEAAQAAQA=</HashCode>
+      <FileName>SqliteRepository.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="BloogBot.SqlRepository" Collapsed="true">
+    <Position X="1.75" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAwAAAACAAQIAAAgAAAAAAAAAAAAAAAAQAAAAAAg=</HashCode>
+      <FileName>SqlRepository.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BloogBot.ThreadSynchronizer" Collapsed="true">
+    <Position X="26.25" Y="7.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>gAAAAAEAAAQBQAAAICAhAAAAIQAGgCAACAAAUACgABA=</HashCode>
+      <FileName>ThreadSynchronizer.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BloogBot.TravelPath" Collapsed="true">
+    <Position X="12.25" Y="8.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAACAAAAAAAAAAAAAAAAAgQAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>TravelPath.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BloogBot.TravelPathGenerator" Collapsed="true">
+    <Position X="14" Y="8.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AARAAIAAQAAAAQAAAAAAIAIAAAAIAAAAAAAAAAAABAA=</HashCode>
+      <FileName>TravelPathGenerator.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BloogBot.TSqlRepository" Collapsed="true">
+    <Position X="2.75" Y="5.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAABAIACBMQmEQAgAACAAAAEAAAiABIAEAAAAAQA=</HashCode>
+      <FileName>TSqlRepository.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="BloogBot.Wait" Collapsed="true">
+    <Position X="19.25" Y="8.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAACAAgAAAABAAAIAAAAAAAIAAAAAAAAAA=</HashCode>
+      <FileName>Wait.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BloogBot.WardenDisabler" Collapsed="true">
+    <Position X="21" Y="8.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AoBgIAgMAACAwQACGBgIAAQQAAAAggoCgQhAAAABAAg=</HashCode>
+      <FileName>WardenDisabler.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BloogBot.Game.Cache.ItemCacheInfo" Collapsed="true">
+    <Position X="14" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAEAAAAABBAEAAgAEQAAAAAAAAAAAAAGAAAAAA=</HashCode>
+      <FileName>Game\Cache\ItemCacheInfo.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BloogBot.Game.Cache.ItemCacheEntry" Collapsed="true">
+    <Position X="12.25" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAgAEEAAAAAAgAAgAAAGAgAAAA=</HashCode>
+      <FileName>Game\Cache\ItemCacheInfo.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BloogBot.Game.Frames.DialogFrame" Collapsed="true">
+    <Position X="21" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAgAAAAAAEAAAAAAAAAAAAAAAAAAABAAAAA=</HashCode>
+      <FileName>Game\Frames\DialogFrame.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BloogBot.Game.Frames.DialogOption" Collapsed="true">
+    <Position X="22.75" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAA=</HashCode>
+      <FileName>Game\Frames\DialogFrame.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BloogBot.Game.Frames.LootFrame" Collapsed="true">
+    <Position X="19.25" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAA=</HashCode>
+      <FileName>Game\Frames\LootFrame.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BloogBot.Game.Frames.LootItem" Collapsed="true">
+    <Position X="21" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAACAAAAAAAAAgCAAAAAAAAAACAAAAAAAAEAAAAA=</HashCode>
+      <FileName>Game\Frames\LootFrame.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BloogBot.Game.Frames.MerchantFrame" Collapsed="true">
+    <Position X="15.75" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAgAAgAAAAEAAAgAAAAAAAAAQAEAAAAAAAAAIAA=</HashCode>
+      <FileName>Game\Frames\MerchantFrame.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BloogBot.Game.Frames.MerchantItem" Collapsed="true">
+    <Position X="17.5" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAgAAAAAQAAAAAAAAAAAAAAEAAAAA=</HashCode>
+      <FileName>Game\Frames\MerchantFrame.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BloogBot.Game.Functions" Collapsed="true">
+    <Position X="14" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAkADASAEgACEAEABDQEACIUAAAwWhAIAAQIACAAAAY=</HashCode>
+      <FileName>Game\Functions.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BloogBot.Game.Inventory" Collapsed="true">
+    <Position X="26.25" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAQCAAAAAAAEAEAAAAAAAAAAAUAAAAAAggAAAAAAAAA=</HashCode>
+      <FileName>Game\Inventory.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BloogBot.Game.MemoryAddresses" Collapsed="true">
+    <Position X="12.25" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>RgACQBRKBhGKcVqEQBNgCkBCaSwEDgwISsNCgC7xNkA=</HashCode>
+      <FileName>Game\MemoryAddresses.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BloogBot.Game.ObjectManager" Collapsed="true">
+    <Position X="12.25" Y="5.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AIAQAAAEEQACGRGBSAUAGAAAAAEgAAEAEAgCAQACEkA=</HashCode>
+      <FileName>Game\ObjectManager.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BloogBot.Game.Position" Collapsed="true">
+    <Position X="24.5" Y="5.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAgCCEYBEAAAAAAAAAAAAgCAAABTAAcEE=</HashCode>
+      <FileName>Game\Position.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BloogBot.Game.Spell" Collapsed="true">
+    <Position X="17.5" Y="7.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAACAAAAAAAgAAAEAAAAABQAAAAAAAAAAAAAIAAAAAA=</HashCode>
+      <FileName>Game\Spell.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BloogBot.Game.SpellEffect" Collapsed="true">
+    <Position X="19.25" Y="7.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAQAAAAEAAAA=</HashCode>
+      <FileName>Game\SpellEffect.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BloogBot.Game.TBCGameFunctionHandler" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="24.5" Y="7.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AUgALEyAEgMKNBEIDDQEACKUABAwSxAIASABRCQAAgY=</HashCode>
+      <FileName>Game\TBCGameFunctionHandler.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="BloogBot.Game.VanillaGameFunctionHandler" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="17.5" Y="8.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AUgALAyAEgMKNBEIBDQEACKUABAwSxAIASABBCAAAgY=</HashCode>
+      <FileName>Game\VanillaGameFunctionHandler.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="BloogBot.Game.WotLKGameFunctionHandler" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="22.75" Y="8.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AUgALASAEgcCPBkIBDQFACOUCBAwSxAIASABRCAAAgY=</HashCode>
+      <FileName>Game\WotLKGameFunctionHandler.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="BloogBot.Game.WowDb" Collapsed="true">
+    <Position X="24.5" Y="8.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Game\WowDb.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BloogBot.Game.WoWEventHandler" Collapsed="true">
+    <Position X="26.25" Y="8.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>QAAAAQABAgAAAAAAAAAAAIQIAAAAAAAAAAGCgQCIAAA=</HashCode>
+      <FileName>Game\WoWEventHandler.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BloogBot.Game.OnLootFrameOpenArgs" Collapsed="true">
+    <Position X="17.5" Y="5.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Game\WoWEventHandler.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BloogBot.Game.OnDialogFrameOpenArgs" Collapsed="true">
+    <Position X="15.75" Y="5.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Game\WoWEventHandler.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BloogBot.Game.OnMerchantFrameOpenArgs" Collapsed="true">
+    <Position X="19.25" Y="5.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Game\WoWEventHandler.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BloogBot.Game.OnUiMessageArgs" Collapsed="true">
+    <Position X="21" Y="5.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAA=</HashCode>
+      <FileName>Game\WoWEventHandler.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BloogBot.Game.OnChatMessageArgs" Collapsed="true">
+    <Position X="14" Y="5.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAABAAAAAAAAAAAAAAAAAAAAAAIAAAAAAIAAAAAA=</HashCode>
+      <FileName>Game\WoWEventHandler.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BloogBot.Game.Objects.LocalPet" Collapsed="true">
+    <Position X="5.25" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAEAAAAAAAAAEBAAAAAAABIAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Game\Objects\LocalPet.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BloogBot.Game.Objects.LocalPlayer" Collapsed="true">
+    <Position X="9.75" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>IMCyWqQEclgLHQDCwP8fFDKLKMJSARguCFSMImyBYBc=</HashCode>
+      <FileName>Game\Objects\LocalPlayer.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BloogBot.Game.Objects.WoWContainer" Collapsed="true">
+    <Position X="3" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAEAAAAAAAAABAAAAAAAAAAAA=</HashCode>
+      <FileName>Game\Objects\WoWContainer.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BloogBot.Game.Objects.WoWGameObject" Collapsed="true">
+    <Position X="0.75" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Game\Objects\WoWGameObject.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BloogBot.Game.Objects.WoWItem" Collapsed="true">
+    <Position X="3" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAgAAAAAAIAAABAgAAAAAAAAAAEAAAAAAAAAFAAAAA=</HashCode>
+      <FileName>Game\Objects\WoWItem.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BloogBot.Game.Objects.WoWObject" Collapsed="true">
+    <Position X="5.25" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAIAACCQACAoAAAAAAQAIAEAFIAAAIAAAAAARAA=</HashCode>
+      <FileName>Game\Objects\WoWObject.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BloogBot.Game.Objects.WoWPet" Collapsed="true">
+    <Position X="7.5" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAEAAAAAEAAAAAAAAAAAIAAAAAACAAAAAAAAAA=</HashCode>
+      <FileName>Game\Objects\WoWPet.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BloogBot.Game.Objects.WoWPlayer" Collapsed="true">
+    <Position X="9.75" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>EQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Game\Objects\WoWPlayer.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BloogBot.Game.Objects.WoWUnit" Collapsed="true">
+    <Position X="7.5" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>QAUAWQAgAAAACkAQACQOCIMQAAQAAAEpCKIkIBAJYYw=</HashCode>
+      <FileName>Game\Objects\WoWUnit.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BloogBot.Properties.Resources" Collapsed="true">
+    <Position X="24.5" Y="6.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAABEAAAAQAAAAAAAAAAAAAAAIA=</HashCode>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BloogBot.Properties.Settings" Collapsed="true">
+    <Position X="14" Y="7.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAIAAAAAABAAAAAAAAAAAAAAA=</HashCode>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BloogBot.UI.App" Collapsed="true">
+    <Position X="12.25" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>IAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>UI\App.xaml.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BloogBot.UI.CommandHandler" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="14" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAABAAAAAACAAQAAEAAAABAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>UI\CommandHandler.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="BloogBot.UI.MainViewModel" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="24.5" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>YIe4Q6+PLuoXRFrz+xFwWe9V6fkgL2Sz8XEVGgLXamU=</HashCode>
+      <FileName>UI\MainViewModel.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="BloogBot.UI.BotSettingAttribute" Collapsed="true">
+    <Position X="21" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>UI\MainViewModel.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BloogBot.UI.ProbeFieldAttribute" Collapsed="true">
+    <Position X="14" Y="6.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>UI\MainViewModel.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BloogBot.UI.MainWindow" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="26.25" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>UI\MainWindow.xaml.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Struct Name="BloogBot.Game.Intersection" Collapsed="true">
+    <Position X="12.25" Y="9.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAYQE=</HashCode>
+      <FileName>Game\Intersection.cs</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="BloogBot.Game.XYZ" Collapsed="true">
+    <Position X="14" Y="9.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAYAE=</HashCode>
+      <FileName>Game\XYZ.cs</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="BloogBot.Game.XYZXYZ" Collapsed="true">
+    <Position X="15.75" Y="9.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAEADAAAAAKABAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Game\XYZXYZ.cs</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Interface Name="BloogBot.AI.IBot" Collapsed="true">
+    <Position X="12.25" Y="11" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAEACAAAAAAAAAAAAQAAAAAAACIIAAACABEAAA=</HashCode>
+      <FileName>AI\IBot.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="BloogBot.AI.IBotState" Collapsed="true">
+    <Position X="14" Y="11" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>AI\IBotState.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="BloogBot.AI.IDependencyContainer" Collapsed="true">
+    <Position X="15.75" Y="11" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAIAAACAAQAQAAAAIACAAEgAAACAAAQIAAAAAAACAAA=</HashCode>
+      <FileName>AI\IDependencyContainer.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="BloogBot.IRepository" Collapsed="true">
+    <Position X="19.25" Y="11" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAABAIAABMQGEQAAAACAAAAEAAAiABIAEAAAAAQg=</HashCode>
+      <FileName>IRepository.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="BloogBot.Game.IGameFunctionHandler" Collapsed="true">
+    <Position X="17.5" Y="11" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAgADASAEgACEAEIBDQEACIUAAAwShAIAAAAACAAAAY=</HashCode>
+      <FileName>Game\IGameFunctionHandler.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Enum Name="BloogBot.AI.SharedStates.ArenaQueueStates" Collapsed="true">
+    <Position X="12.25" Y="12" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAEAAAEAAAAAAgAAAAAQAAAAAAAAAAAAIAAAAgAA=</HashCode>
+      <FileName>AI\SharedStates\ArenaSkirmishQueueState.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="BloogBot.AI.SharedStates.QueueStates" Collapsed="true">
+    <Position X="19.25" Y="13.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>gAAAAAAAAAAAAAAAKAAAAAUAQAAAAAAAEAAAAAAAAAA=</HashCode>
+      <FileName>AI\SharedStates\BattlegroundQueueState.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="BloogBot.AI.SharedStates.State" Collapsed="true">
+    <Position X="22.75" Y="13.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAEAACAgAAAAAAiAQAAAAAAAAAAAAAEAAAAAAAAAA=</HashCode>
+      <FileName>AI\SharedStates\BuyItemsState.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="BloogBot.AI.SharedStates.LootStates" Collapsed="true">
+    <Position X="26.25" Y="12.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAgAAAAAAAAAAQAAAAAAAAAAAAAABAAAAA=</HashCode>
+      <FileName>AI\SharedStates\LootState.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="BloogBot.PointComparisonResult" Collapsed="true">
+    <Position X="17.5" Y="13.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAABAAAAAEEAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Navigation.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="BloogBot.Game.Enums.AuraFlags" Collapsed="true">
+    <Position X="14" Y="12" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAQAAAAAAAAAAAAAAAAAEAAAAAAAAAAgAAAAAAAAAAA=</HashCode>
+      <FileName>Game\Enums\AuraFlags.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="BloogBot.Game.Enums.Class" Collapsed="true">
+    <Position X="15.75" Y="12" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ACAAAAAAAAAAAAAAADAAEAAAgECAAAAUAAAAAAIAAAA=</HashCode>
+      <FileName>Game\Enums\Class.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="BloogBot.Game.Enums.ClientVersion" Collapsed="true">
+    <Position X="19.25" Y="12" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAgQAAA=</HashCode>
+      <FileName>Game\Enums\ClientVersion.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="BloogBot.Game.Enums.ControlBits" Collapsed="true">
+    <Position X="21" Y="12" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ASAAEAAAIgAABAAAAAAAAAAAAAAAAIAACACAAAAAAoA=</HashCode>
+      <FileName>Game\Enums\ControlBits.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="BloogBot.Game.Enums.CreatureFamily" Collapsed="true">
+    <Position X="22.75" Y="12" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>gAJAAACEAAIAKABjAghAiAEDEAACEGAAAAgAAAACAAE=</HashCode>
+      <FileName>Game\Enums\CreatureFamily.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="BloogBot.Game.Enums.CreatureRank" Collapsed="true">
+    <Position X="24.5" Y="12" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>QAAAAAAAAQAAAAAAQAAAAAAAAAAIAAAAAAAAEAAAAAA=</HashCode>
+      <FileName>Game\Enums\CreatureRank.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="BloogBot.Game.Enums.CreatureType" Collapsed="true">
+    <Position X="26.25" Y="12" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AACAAAAAAAIAgQAAEAAAAAAAAABBAAICAAAAQAAQAAA=</HashCode>
+      <FileName>Game\Enums\CreatureType.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="BloogBot.Game.Enums.EffectType" Collapsed="true">
+    <Position X="15.75" Y="12.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAEAAAAAAGAAAAAAAAAAAAAAAAAAAABAAAAAEAAAA=</HashCode>
+      <FileName>Game\Enums\DebuffType.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="BloogBot.Game.Enums.DialogType" Collapsed="true">
+    <Position X="12.25" Y="12.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAABBECAAAAAAAAAAAAgAIEAAEEAAAAAAAAAQAAQAAA=</HashCode>
+      <FileName>Game\Enums\DialogType.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="BloogBot.Game.Enums.DynamicFlags" Collapsed="true">
+    <Position X="14" Y="12.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAEAAABAAAAAAAEAAAQAAAAAAAAAAAEAAAA=</HashCode>
+      <FileName>Game\Enums\DynamicFlags.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="BloogBot.Game.Enums.EquipSlot" Collapsed="true">
+    <Position X="17.5" Y="12.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>IQIAAAEQA2AASIGAEAAAAAAAAgAAAABAQAAAAAAAAAA=</HashCode>
+      <FileName>Game\Enums\EquipSlot.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="BloogBot.Game.Enums.ItemCacheLookupType" Collapsed="true">
+    <Position X="19.25" Y="12.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAgAAAAAAAAAAAAAAAAAABAAAAAAAEAAAA=</HashCode>
+      <FileName>Game\Enums\ItemCacheLookupType.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="BloogBot.Game.Enums.ItemClass" Collapsed="true">
+    <Position X="21" Y="12.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>BAAAAAZAMAAgAARAAAAAAAAAIQAIAAgAEAIAIAAAIAA=</HashCode>
+      <FileName>Game\Enums\ItemClass.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="BloogBot.Game.Enums.ItemQuality" Collapsed="true">
+    <Position X="22.75" Y="12.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>QAAAAQAAAAAAAAAQAAAAAAAQAAIAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Game\Enums\ItemQuality.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="BloogBot.Game.Enums.ItemSubclass" Collapsed="true">
+    <Position X="24.5" Y="12.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>lk6hCTb4ITMgBoahapBhyELgYSoEDcEI0w4oLypyEIw=</HashCode>
+      <FileName>Game\Enums\ItemSubclass.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="BloogBot.Game.Enums.MovementFlags" Collapsed="true">
+    <Position X="14" Y="13.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ABAACiAQBQAAAKEAAAFFAAAAEECAABAAIgACAAAAAEE=</HashCode>
+      <FileName>Game\Enums\MovementFlags.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="BloogBot.Game.Enums.ObjectType" Collapsed="true">
+    <Position X="15.75" Y="13.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAQAAAAAAAAAICAAAAAEAAAAAAAAAAAAEQIAAAA=</HashCode>
+      <FileName>Game\Enums\ObjectType.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="BloogBot.Game.Enums.Race" Collapsed="true">
+    <Position X="21" Y="13.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAgAAAEgAIAAAAIAAAAAAAAAAEAAAAgAAAAABQAAAg=</HashCode>
+      <FileName>Game\Enums\Race.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="BloogBot.Game.Enums.UnitFlags" Collapsed="true">
+    <Position X="24.5" Y="13.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>gQQEIEAQBAAAAAEAIAcAAEICQRAAgAAAABAZEAWAAIA=</HashCode>
+      <FileName>Game\Enums\UnitFlags.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="BloogBot.Game.Enums.UnitReaction" Collapsed="true">
+    <Position X="26.25" Y="13.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAgIAAAAAAAAAAAABAAgAAABAAAAIAAAAAABAAAAQAA=</HashCode>
+      <FileName>Game\Enums\UnitReactions.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="BloogBot.Game.LuaTarget" Collapsed="true">
+    <Position X="12.25" Y="13.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAQAAAAA=</HashCode>
+      <FileName>Game\LuaTarget.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="BloogBot.Game.ClientDb" Collapsed="true">
+    <Position X="17.5" Y="12" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>69Idaqfu/FlwONM617mxHz7897+KdMu01leW+mLEFRc=</HashCode>
+      <FileName>Game\WowDb.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

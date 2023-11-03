@@ -35,6 +35,13 @@ using namespace std;
 
 namespace MMAP
 {
+	/**
+	 * @brief Converts a number to a string.
+	 *
+	 * @tparam T The type of the number.
+	 * @param Number The number to convert.
+	 * @return The string representation of the number.
+	 */
 	template <typename T>
 	string NumberToString(T Number)
 	{
@@ -43,6 +50,13 @@ namespace MMAP
 		return ss.str();
 	}
 
+	/**
+	 * @brief Replaces all occurrences of a substring with another substring in a string.
+	 *
+	 * @param s The input string.
+	 * @param search The substring to search for.
+	 * @param replace The substring to replace it with.
+	 */
 	void str_replace(string& s, const string& search, const string& replace)
 	{
 		for (size_t pos = 0;; pos += replace.length())
@@ -57,6 +71,12 @@ namespace MMAP
 
 	EXTERN_C IMAGE_DOS_HEADER __ImageBase;
 
+	/**
+	 * @brief Gets the name of a map file for a given map ID.
+	 *
+	 * @param mapId The map ID.
+	 * @param result The resulting map file name.
+	 */
 	void getMapName(unsigned int mapId, string& result)
 	{
 		string mapIdStr = "";
@@ -94,6 +114,14 @@ namespace MMAP
 		result = pathToMmapFile;
 	}
 
+	/**
+	 * @brief Gets the name of a tile file for a given map ID, X, and Y coordinates.
+	 *
+	 * @param mapId The map ID.
+	 * @param x The X coordinate.
+	 * @param y The Y coordinate.
+	 * @param result The resulting tile file name.
+	 */
 	void getTileName(unsigned int mapId, int x, int y, string& result)
 	{
 		string tileName = "";
@@ -143,9 +171,16 @@ namespace MMAP
 	}
 
 	// ######################## MMapFactory ########################
-	// our global singelton copy
+	/**
+	 * @brief Singleton instance of the MMapManager class.
+	 */
 	MMapManager* g_MMapManager = NULL;
 
+	/**
+	 * @brief Creates or gets the MMapManager singleton instance.
+	 *
+	 * @return The MMapManager instance.
+	 */
 	MMapManager* MMapFactory::createOrGetMMapManager()
 	{
 		if (g_MMapManager == NULL)
@@ -157,6 +192,9 @@ namespace MMAP
 	}
 
 	// ######################## MMapManager ########################
+	/**
+	 * @brief Destructor for the MMapManager class.
+	 */
 	MMapManager::~MMapManager()
 	{
 		for (MMapDataSet::iterator i = loadedMMaps.begin(); i != loadedMMaps.end(); ++i)
@@ -165,6 +203,12 @@ namespace MMAP
 		}
 	}
 
+	/**
+	 * @brief Loads map data for a given map ID.
+	 *
+	 * @param mapId The map ID.
+	 * @return True if the map data is loaded successfully, false otherwise.
+	 */
 	bool MMapManager::loadMapData(unsigned int mapId)
 	{
 		if (loadedMMaps.find(mapId) != loadedMMaps.end())
@@ -192,11 +236,26 @@ namespace MMAP
 		return true;
 	}
 
+	/**
+	 * @brief Packs tile coordinates into a single unsigned integer.
+	 *
+	 * @param x The X coordinate.
+	 * @param y The Y coordinate.
+	 * @return The packed tile ID.
+	 */
 	unsigned int MMapManager::packTileID(int x, int y)
 	{
 		return unsigned int(x << 16 | y);
 	}
 
+	/**
+	 * @brief Loads a map for a given map ID and tile coordinates.
+	 *
+	 * @param mapId The map ID.
+	 * @param x The X coordinate.
+	 * @param y The Y coordinate.
+	 * @return True if the map is loaded successfully, false otherwise.
+	 */
 	bool MMapManager::loadMap(unsigned int mapId, int x, int y)
 	{
 		loadMapData(mapId);
@@ -231,6 +290,12 @@ namespace MMAP
 		return true;
 	}
 
+	/**
+	 * @brief Gets the navigation mesh for a given map ID.
+	 *
+	 * @param mapId The map ID.
+	 * @return The navigation mesh.
+	 */
 	dtNavMesh const* MMapManager::GetNavMesh(unsigned int mapId)
 	{
 		if (loadedMMaps.find(mapId) == loadedMMaps.end())
@@ -241,6 +306,13 @@ namespace MMAP
 		return loadedMMaps[mapId]->navMesh;
 	}
 
+	/**
+	 * @brief Gets the navigation mesh query for a given map ID and instance ID.
+	 *
+	 * @param mapId The map ID.
+	 * @param instanceId The instance ID.
+	 * @return The navigation mesh query.
+	 */
 	dtNavMeshQuery const* MMapManager::GetNavMeshQuery(unsigned int mapId, unsigned int instanceId)
 	{
 		if (loadedMMaps.find(mapId) == loadedMMaps.end())
@@ -265,6 +337,11 @@ namespace MMAP
 		return mmap->navMeshQueries[instanceId];
 	}
 
+	/**
+	 * @brief Checks if the western continent is loaded.
+	 *
+	 * @return True if the western continent is loaded, false otherwise.
+	 */
 	bool hasLoadedWesternContinent()
 	{
 		return hasLoadedWesternContinent;

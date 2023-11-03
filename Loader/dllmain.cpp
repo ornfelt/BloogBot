@@ -52,6 +52,12 @@ wchar_t* dllLocation = NULL;
 
 #define MB(s) MessageBoxW(NULL, s, NULL, MB_OK);
 
+/**
+ * @brief Thread entry point for the CLR hosting.
+ *
+ * @param pParam A pointer to thread parameters (not used).
+ * @return Exit code (0 on success, 1 on failure).
+ */
 unsigned __stdcall ThreadMain(void* pParam)
 {
 	AllocConsole();
@@ -201,6 +207,9 @@ unsigned __stdcall ThreadMain(void* pParam)
 	return 0;
 }
 
+/**
+ * @brief Loads and initializes the CLR.
+ */
 void LoadClr()
 {
 	wchar_t buffer[255];
@@ -222,6 +231,14 @@ void LoadClr()
 	g_hThread = (HANDLE)_beginthreadex(NULL, 0, ThreadMain, NULL, 0, NULL);
 }
 
+/**
+ * @brief DllMain function for the DLL.
+ *
+ * @param hDll Handle to the DLL module.
+ * @param dwReason The reason for calling the DllMain function.
+ * @param lpReserved Reserved parameter (not used).
+ * @return TRUE if successful, FALSE otherwise.
+ */
 BOOL WINAPI DllMain(HMODULE hDll, DWORD dwReason, LPVOID lpReserved)
 {
 	g_myDllModule = hDll;

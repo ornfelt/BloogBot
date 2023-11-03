@@ -60,6 +60,15 @@
 ///
 /// @see dtNavMeshQuery
 
+/**
+ * @class dtQueryFilter
+ *
+ * @brief The default implementation of a query filter.
+ *
+ * This class represents a query filter used for pathfinding queries on a navigation mesh. It allows customization of area costs and flags to include or exclude certain polygons during pathfinding.
+ *
+ * @see dtNavMeshQuery
+ */
 dtQueryFilter::dtQueryFilter() :
 	m_includeFlags(0xffff),
 	m_excludeFlags(0)
@@ -68,6 +77,17 @@ dtQueryFilter::dtQueryFilter() :
 		m_areaCost[i] = 1.0f;
 }
 
+/**
+ * @brief Checks if a polygon passes the filter criteria.
+ *
+ * This function is used to determine if a polygon should be considered during a pathfinding query based on the filter's include and exclude flags.
+ *
+ * @param ref The polygon reference.
+ * @param tile The tile containing the polygon.
+ * @param poly The polygon to check.
+ *
+ * @return True if the polygon passes the filter, false otherwise.
+ */
 #ifdef DT_VIRTUAL_QUERYFILTER
 bool dtQueryFilter::passFilter(const dtPolyRef /*ref*/,
 	const dtMeshTile* /*tile*/,
@@ -76,6 +96,25 @@ bool dtQueryFilter::passFilter(const dtPolyRef /*ref*/,
 	return (poly->flags & m_includeFlags) != 0 && (poly->flags & m_excludeFlags) == 0;
 }
 
+/**
+ * @brief Calculates the cost between two points on a polygon.
+ *
+ * This function calculates the cost of traveling between two points on a polygon based on the area cost and distance between the points.
+ *
+ * @param pa The start point.
+ * @param pb The end point.
+ * @param prevRef The reference to the previous polygon.
+ * @param prevTile The tile containing the previous polygon.
+ * @param prevPoly The previous polygon.
+ * @param curRef The reference to the current polygon.
+ * @param curTile The tile containing the current polygon.
+ * @param curPoly The current polygon.
+ * @param nextRef The reference to the next polygon.
+ * @param nextTile The tile containing the next polygon.
+ * @param nextPoly The next polygon.
+ *
+ * @return The cost of traveling between the points.
+ */
 float dtQueryFilter::getCost(const float* pa, const float* pb,
 	const dtPolyRef /*prevRef*/, const dtMeshTile* /*prevTile*/, const dtPoly* /*prevPoly*/,
 	const dtPolyRef /*curRef*/, const dtMeshTile* /*curTile*/, const dtPoly* curPoly,
@@ -84,6 +123,17 @@ float dtQueryFilter::getCost(const float* pa, const float* pb,
 	return dtVdist(pa, pb) * m_areaCost[curPoly->getArea()];
 }
 #else
+ /**
+  * @brief Checks if a polygon passes the filter criteria.
+  *
+  * This function is used to determine if a polygon should be considered during a pathfinding query based on the filter's include and exclude flags.
+  *
+  * @param ref The polygon reference.
+  * @param tile The tile containing the polygon.
+  * @param poly The polygon to check.
+  *
+  * @return True if the polygon passes the filter, false otherwise.
+  */
 inline bool dtQueryFilter::passFilter(const dtPolyRef /*ref*/,
 	const dtMeshTile* /*tile*/,
 	const dtPoly* poly) const
@@ -91,6 +141,25 @@ inline bool dtQueryFilter::passFilter(const dtPolyRef /*ref*/,
 	return (poly->flags & m_includeFlags) != 0 && (poly->flags & m_excludeFlags) == 0;
 }
 
+/**
+ * @brief Calculates the cost between two points on a polygon.
+ *
+ * This function calculates the cost of traveling between two points on a polygon based on the area cost and distance between the points.
+ *
+ * @param pa The start point.
+ * @param pb The end point.
+ * @param prevRef The reference to the previous polygon.
+ * @param prevTile The tile containing the previous polygon.
+ * @param prevPoly The previous polygon.
+ * @param curRef The reference to the current polygon.
+ * @param curTile The tile containing the current polygon.
+ * @param curPoly The current polygon.
+ * @param nextRef The reference to the next polygon.
+ * @param nextTile The tile containing the next polygon.
+ * @param nextPoly The next polygon.
+ *
+ * @return The cost of traveling between the points.
+ */
 inline float dtQueryFilter::getCost(const float* pa, const float* pb,
 	const dtPolyRef /*prevRef*/, const dtMeshTile* /*prevTile*/, const dtPoly* /*prevPoly*/,
 	const dtPolyRef /*curRef*/, const dtMeshTile* /*curTile*/, const dtPoly* curPoly,
@@ -100,9 +169,20 @@ inline float dtQueryFilter::getCost(const float* pa, const float* pb,
 }
 #endif	
 
+/**
+ * @brief A constant representing the scale of the search heuristic.
+ *
+ * The search heuristic scale is used in pathfinding calculations.
+ */
 static const float H_SCALE = 0.999f; // Search heuristic scale.
 
-
+/**
+ * @brief Allocates memory for a new navigation mesh query object.
+ *
+ * This function allocates memory for a new navigation mesh query object and initializes it.
+ *
+ * @return A pointer to the newly allocated navigation mesh query object.
+ */
 dtNavMeshQuery* dtAllocNavMeshQuery()
 {
 	void* mem = dtAlloc(sizeof(dtNavMeshQuery), DT_ALLOC_PERM);
@@ -110,6 +190,13 @@ dtNavMeshQuery* dtAllocNavMeshQuery()
 	return new(mem) dtNavMeshQuery;
 }
 
+/**
+ * @brief Frees memory allocated for a navigation mesh query object.
+ *
+ * This function releases the memory allocated for a navigation mesh query object.
+ *
+ * @param navmesh A pointer to the navigation mesh query object to be freed.
+ */
 void dtFreeNavMeshQuery(dtNavMeshQuery* navmesh)
 {
 	if (!navmesh) return;
@@ -135,6 +222,15 @@ void dtFreeNavMeshQuery(dtNavMeshQuery* navmesh)
 ///
 /// @see dtNavMesh, dtQueryFilter, #dtAllocNavMeshQuery(), #dtAllocNavMeshQuery()
 
+/**
+ * @class dtNavMeshQuery
+ *
+ * @brief Represents a query object for navigation mesh queries.
+ *
+ * This class provides functionality for performing various types of pathfinding queries on a navigation mesh.
+ *
+ * @see dtNavMesh, dtQueryFilter, #dtAllocNavMeshQuery(), #dtAllocNavMeshQuery()
+ */
 dtNavMeshQuery::dtNavMeshQuery() :
 	m_nav(0),
 	m_tinyNodePool(0),
@@ -144,6 +240,9 @@ dtNavMeshQuery::dtNavMeshQuery() :
 	memset(&m_query, 0, sizeof(dtQueryData));
 }
 
+/**
+ * @brief Destroys the navigation mesh query object and frees allocated memory.
+ */
 dtNavMeshQuery::~dtNavMeshQuery()
 {
 	if (m_tinyNodePool)
@@ -157,12 +256,17 @@ dtNavMeshQuery::~dtNavMeshQuery()
 	dtFree(m_openList);
 }
 
-/// @par 
-///
-/// Must be the first function called after construction, before other
-/// functions are used.
-///
-/// This function can be used multiple times.
+/**
+ * @brief Initializes the navigation mesh query object.
+ *
+ * This function initializes the navigation mesh query object with the specified navigation mesh and maximum number of nodes.
+ * Must be the first function called after construction, before other functions are used.  Can be called multiple times.
+ *
+ * @param nav The navigation mesh to use for queries.
+ * @param maxNodes The maximum number of nodes to allocate for queries.
+ *
+ * @return The status of the initialization operation.
+ */
 dtStatus dtNavMeshQuery::init(const dtNavMesh* nav, const int maxNodes)
 {
 	m_nav = nav;
@@ -216,6 +320,18 @@ dtStatus dtNavMeshQuery::init(const dtNavMesh* nav, const int maxNodes)
 	return DT_SUCCESS;
 }
 
+/**
+ * @brief Finds a random point on the navigation mesh.
+ *
+ * This function randomly selects a point on the navigation mesh using a reservoir sampling method. It chooses a random tile first and then a random polygon within that tile, weighted by their areas.
+ *
+ * @param filter The query filter to apply to the random point selection.
+ * @param frand A function that generates random values between 0 and 1.
+ * @param randomRef The resulting random polygon reference.
+ * @param randomPt The resulting random point on the navigation mesh.
+ *
+ * @return The status of the operation. Returns DT_SUCCESS on success, or an error code on failure.
+ */
 dtStatus dtNavMeshQuery::findRandomPoint(const dtQueryFilter* filter, float (*frand)(),
 	dtPolyRef* randomRef, float* randomPt) const
 {
@@ -308,6 +424,21 @@ dtStatus dtNavMeshQuery::findRandomPoint(const dtQueryFilter* filter, float (*fr
 	return DT_SUCCESS;
 }
 
+/**
+ * @brief Finds a random point around a circle on the navigation mesh.
+ *
+ * This function randomly selects a point on the navigation mesh around a specified circle centered at `centerPos`. It uses a reservoir sampling method to choose a random polygon within the circle, weighted by their areas.
+ *
+ * @param startRef The reference of the starting polygon within the circle.
+ * @param centerPos The center position of the circle.
+ * @param radius The radius of the circle.
+ * @param filter The query filter to apply to the random point selection.
+ * @param frand A function that generates random values between 0 and 1.
+ * @param randomRef The resulting random polygon reference.
+ * @param randomPt The resulting random point on the navigation mesh.
+ *
+ * @return The status of the operation. Returns DT_SUCCESS on success, or an error code on failure.
+ */
 dtStatus dtNavMeshQuery::findRandomPointAroundCircle(dtPolyRef startRef, const float* centerPos, const float radius,
 	const dtQueryFilter* filter, float (*frand)(),
 	dtPolyRef* randomRef, float* randomPt) const
@@ -490,17 +621,20 @@ dtStatus dtNavMeshQuery::findRandomPointAroundCircle(dtPolyRef startRef, const f
 	return DT_SUCCESS;
 }
 
-
 //////////////////////////////////////////////////////////////////////////////////////////
 
-/// @par
-///
-/// Uses the detail polygons to find the surface height. (Most accurate.)
-///
-/// @p pos does not have to be within the bounds of the polygon or navigation mesh.
-///
-/// See closestPointOnPolyBoundary() for a limited but faster option.
-///
+/**
+ * @brief Finds the closest point on a polygon to a given position.
+ *
+ * This function calculates the closest point on a specified polygon to a given position. It handles both ground polygons and off-mesh connections.
+ *
+ * @param ref The reference of the polygon.
+ * @param pos The position to find the closest point to.
+ * @param closest The resulting closest point on the polygon.
+ * @param posOverPoly A pointer to a boolean flag indicating if the provided position is over the polygon (optional).
+ *
+ * @return The status of the operation. Returns DT_SUCCESS on success, or an error code on failure.
+ */
 dtStatus dtNavMeshQuery::closestPointOnPoly(dtPolyRef ref, const float* pos, float* closest, bool* posOverPoly) const
 {
 	dtAssert(m_nav);
@@ -586,17 +720,23 @@ dtStatus dtNavMeshQuery::closestPointOnPoly(dtPolyRef ref, const float* pos, flo
 	return DT_SUCCESS;
 }
 
-/// @par
-///
-/// Much faster than closestPointOnPoly().
-///
-/// If the provided position lies within the polygon's xz-bounds (above or below), 
-/// then @p pos and @p closest will be equal.
-///
-/// The height of @p closest will be the polygon boundary.  The height detail is not used.
-/// 
-/// @p pos does not have to be within the bounds of the polybon or the navigation mesh.
-/// 
+/**
+ * @brief Finds the closest point on the boundary of a polygon to a given position.
+ *
+ * This function calculates the closest point on the boundary of a specified polygon to a given position. It is much faster than `closestPointOnPoly()` but does not account for height detail.
+ *
+ * If the provided position lies within the polygon's xz-bounds (above or below), then `pos` and `closest` will be equal.
+ *
+ * The height of `closest` will be the polygon boundary. The height detail is not used.
+ *
+ * `pos` does not have to be within the bounds of the polygon or the navigation mesh.
+ *
+ * @param ref The reference of the polygon.
+ * @param pos The position to find the closest point to.
+ * @param closest The resulting closest point on the polygon's boundary.
+ *
+ * @return The status of the operation. Returns DT_SUCCESS on success, or an error code on failure.
+ */
 dtStatus dtNavMeshQuery::closestPointOnPolyBoundary(dtPolyRef ref, const float* pos, float* closest) const
 {
 	dtAssert(m_nav);
@@ -644,11 +784,17 @@ dtStatus dtNavMeshQuery::closestPointOnPolyBoundary(dtPolyRef ref, const float* 
 	return DT_SUCCESS;
 }
 
-/// @par
-///
-/// Will return #DT_FAILURE if the provided position is outside the xz-bounds 
-/// of the polygon.
-/// 
+/**
+ * @brief Gets the height of a position within a polygon.
+ *
+ * This function calculates the height of a position within a specified polygon. It considers both ground polygons and off-mesh connections.
+ *
+ * @param ref The reference of the polygon.
+ * @param pos The position to find the height at.
+ * @param height The resulting height at the position.
+ *
+ * @return The status of the operation. Returns DT_SUCCESS on success, or an error code on failure.
+ */
 dtStatus dtNavMeshQuery::getPolyHeight(dtPolyRef ref, const float* pos, float* height) const
 {
 	dtAssert(m_nav);
@@ -697,15 +843,23 @@ dtStatus dtNavMeshQuery::getPolyHeight(dtPolyRef ref, const float* pos, float* h
 	return DT_FAILURE | DT_INVALID_PARAM;
 }
 
-/// @par 
-///
-/// @note If the search box does not intersect any polygons the search will 
-/// return #DT_SUCCESS, but @p nearestRef will be zero. So if in doubt, check 
-/// @p nearestRef before using @p nearestPt.
-///
-/// @warning This function is not suitable for large area searches.  If the search
-/// extents overlaps more than 128 polygons it may return an invalid result.
-///
+/**
+ * @brief Finds the nearest polygon to a given center point within specified extents.
+ *
+ * This function finds the nearest polygon to a specified center point within the specified extents. It uses a query filter to determine if a polygon is valid. The nearest point on the polygon's boundary is also provided.
+ *
+ * If the search box does not intersect any polygons, the search will return DT_SUCCESS, but `nearestRef` will be zero. So if in doubt, check `nearestRef` before using `nearestPt`.
+ *
+ * @warning This function is not suitable for large area searches. If the search extents overlap more than 128 polygons, it may return an invalid result.
+ *
+ * @param center The center point for the search.
+ * @param extents The extents of the search box.
+ * @param filter The query filter to apply to the search.
+ * @param nearestRef The resulting reference of the nearest polygon.
+ * @param nearestPt The resulting nearest point on the polygon's boundary.
+ *
+ * @return The status of the operation. Returns DT_SUCCESS on success, or an error code on failure.
+ */
 dtStatus dtNavMeshQuery::findNearestPoly(const float* center, const float* extents,
 	const dtQueryFilter* filter,
 	dtPolyRef* nearestRef, float* nearestPt) const
@@ -763,6 +917,20 @@ dtStatus dtNavMeshQuery::findNearestPoly(const float* center, const float* exten
 	return DT_SUCCESS;
 }
 
+/**
+ * @brief Queries polygons within a tile that intersect with a specified bounding box.
+ *
+ * This function queries polygons within a specified tile that intersect with a bounding box defined by `qmin` and `qmax`. It uses a query filter to determine if a polygon is valid. The matching polygons' references are stored in the `polys` array, up to a maximum of `maxPolys`.
+ *
+ * @param tile The tile to query polygons from.
+ * @param qmin The minimum bounds of the query box.
+ * @param qmax The maximum bounds of the query box.
+ * @param filter The query filter to apply to the polygons.
+ * @param polys An array to store the references of matching polygons.
+ * @param maxPolys The maximum number of polygon references to store.
+ *
+ * @return The number of matching polygons found.
+ */
 int dtNavMeshQuery::queryPolygonsInTile(const dtMeshTile* tile, const float* qmin, const float* qmax,
 	const dtQueryFilter* filter,
 	dtPolyRef* polys, const int maxPolys) const
@@ -858,15 +1026,24 @@ int dtNavMeshQuery::queryPolygonsInTile(const dtMeshTile* tile, const float* qmi
 	}
 }
 
-/// @par 
-///
-/// If no polygons are found, the function will return #DT_SUCCESS with a
-/// @p polyCount of zero.
-///
-/// If @p polys is too small to hold the entire result set, then the array will 
-/// be filled to capacity. The method of choosing which polygons from the 
-/// full set are included in the partial result set is undefined.
-///
+/**
+ * @brief Queries polygons within a specified bounding box.
+ *
+ * This function queries polygons within a specified bounding box defined by `center` and `extents`. It uses a query filter to determine if a polygon is valid. The matching polygons' references are stored in the `polys` array, up to a maximum of `maxPolys`.
+ *
+ * If no polygons are found, the function will return #DT_SUCCESS with a `polyCount` of zero.
+ *
+ * If `polys` is too small to hold the entire result set, then the array will be filled to capacity. The method of choosing which polygons from the full set are included in the partial result set is undefined.
+ *
+ * @param center The center point of the query bounding box.
+ * @param extents The half extents of the query bounding box.
+ * @param filter The query filter to apply to the polygons.
+ * @param polys An array to store the references of matching polygons.
+ * @param polyCount A pointer to store the number of matching polygons found.
+ * @param maxPolys The maximum number of polygon references to store.
+ *
+ * @return The status of the operation. Returns DT_SUCCESS on success, or an error code on failure.
+ */
 dtStatus dtNavMeshQuery::queryPolygons(const float* center, const float* extents,
 	const dtQueryFilter* filter,
 	dtPolyRef* polys, int* polyCount, const int maxPolys) const
@@ -907,17 +1084,28 @@ dtStatus dtNavMeshQuery::queryPolygons(const float* center, const float* extents
 	return DT_SUCCESS;
 }
 
-/// @par
-///
-/// If the end polygon cannot be reached through the navigation graph,
-/// the last polygon in the path will be the nearest the end polygon.
-///
-/// If the path array is to small to hold the full result, it will be filled as 
-/// far as possible from the start polygon toward the end polygon.
-///
-/// The start and end positions are used to calculate traversal costs. 
-/// (The y-values impact the result.)
-///
+/**
+ * @brief Finds a path from a start polygon to an end polygon.
+ *
+ * This function finds a path from a specified start polygon to a specified end polygon. It uses A* search to calculate the path, considering traversal costs and a query filter to determine valid paths.
+ *
+ * If the end polygon cannot be reached through the navigation graph, the last polygon in the path will be the nearest to the end polygon.
+ *
+ * If the path array is too small to hold the full result, it will be filled as far as possible from the start polygon toward the end polygon.
+ *
+ * The start and end positions are used to calculate traversal costs. The y-values impact the result.
+ *
+ * @param startRef The reference of the start polygon.
+ * @param endRef The reference of the end polygon.
+ * @param startPos The position of the start point.
+ * @param endPos The position of the end point.
+ * @param filter The query filter to apply to the pathfinding.
+ * @param path An array to store the references of the path polygons.
+ * @param pathCount A pointer to store the number of path polygons found.
+ * @param maxPath The maximum number of polygon references to store in the path array.
+ *
+ * @return The status of the operation. Returns DT_SUCCESS on success, or an error code on failure.
+ */
 dtStatus dtNavMeshQuery::findPath(dtPolyRef startRef, dtPolyRef endRef,
 	const float* startPos, const float* endPos,
 	const dtQueryFilter* filter,
@@ -1132,14 +1320,24 @@ dtStatus dtNavMeshQuery::findPath(dtPolyRef startRef, dtPolyRef endRef,
 	return status;
 }
 
-/// @par
-///
-/// @warning Calling any non-slice methods before calling finalizeSlicedFindPath() 
-/// or finalizeSlicedFindPathPartial() may result in corrupted data!
-///
-/// The @p filter pointer is stored and used for the duration of the sliced
-/// path query.
-///
+/**
+ * @brief Initializes a sliced pathfinding query.
+ *
+ * This function initializes a sliced pathfinding query with the specified parameters. It is part of a multi-step process to find a path from a start polygon to an end polygon in a navigation mesh. This function sets up the query and prepares it for execution.
+ *
+ * @warning Calling any non-slice methods before calling finalizeSlicedFindPath() or finalizeSlicedFindPathPartial() may result in corrupted data!
+ *
+ * The @p filter pointer is stored and used for the duration of the sliced path query.
+ *
+ * @param startRef The reference of the start polygon.
+ * @param endRef The reference of the end polygon.
+ * @param startPos The position of the start point.
+ * @param endPos The position of the end point.
+ * @param filter The query filter to apply to the pathfinding.
+ * @param options Additional options for the pathfinding query.
+ *
+ * @return The status of the operation. Returns DT_SUCCESS on success, or an error code on failure.
+ */
 dtStatus dtNavMeshQuery::initSlicedFindPath(dtPolyRef startRef, dtPolyRef endRef,
 	const float* startPos, const float* endPos,
 	const dtQueryFilter* filter, const unsigned int options)
@@ -1201,6 +1399,16 @@ dtStatus dtNavMeshQuery::initSlicedFindPath(dtPolyRef startRef, dtPolyRef endRef
 	return m_query.status;
 }
 
+/**
+ * @brief Updates a sliced pathfinding query.
+ *
+ * This function updates an ongoing sliced pathfinding query for a specified maximum number of iterations. It continues the search for the path from the start polygon to the end polygon. It is part of the multi-step process initiated by initSlicedFindPath().
+ *
+ * @param maxIter The maximum number of iterations to perform during this update.
+ * @param doneIters A pointer to store the number of iterations actually performed.
+ *
+ * @return The status of the operation. Returns DT_SUCCESS on success, or an error code on failure or completion.
+ */
 dtStatus dtNavMeshQuery::updateSlicedFindPath(const int maxIter, int* doneIters)
 {
 	if (!dtStatusInProgress(m_query.status))
@@ -1418,6 +1626,17 @@ dtStatus dtNavMeshQuery::updateSlicedFindPath(const int maxIter, int* doneIters)
 	return m_query.status;
 }
 
+/**
+ * @brief Finalizes a sliced pathfinding query.
+ *
+ * This function finalizes an ongoing sliced pathfinding query, retrieving the result path. It is part of the multi-step process initiated by initSlicedFindPath().
+ *
+ * @param path An array to store the references of the path polygons.
+ * @param pathCount A pointer to store the number of path polygons found.
+ * @param maxPath The maximum number of polygon references to store in the path array.
+ *
+ * @return The status of the operation. Returns DT_SUCCESS on success, or an error code on failure.
+ */
 dtStatus dtNavMeshQuery::finalizeSlicedFindPath(dtPolyRef* path, int* pathCount, const int maxPath)
 {
 	*pathCount = 0;
@@ -1500,6 +1719,19 @@ dtStatus dtNavMeshQuery::finalizeSlicedFindPath(dtPolyRef* path, int* pathCount,
 	return DT_SUCCESS | details;
 }
 
+/**
+ * @brief Finalizes a sliced pathfinding query with partial results.
+ *
+ * This function finalizes an ongoing sliced pathfinding query and retrieves a partial result path based on existing nodes and path information. It is part of the multi-step process initiated by initSlicedFindPath() and can be used to extend a path with additional segments.
+ *
+ * @param existing An array of existing polygon references that represent a partial path.
+ * @param existingSize The size of the existing polygon reference array.
+ * @param path An array to store the references of the extended path polygons.
+ * @param pathCount A pointer to store the number of path polygons found.
+ * @param maxPath The maximum number of polygon references to store in the path array.
+ *
+ * @return The status of the operation. Returns DT_SUCCESS on success, DT_FAILURE if the existingSize is zero, or an error code on other failures.
+ */
 dtStatus dtNavMeshQuery::finalizeSlicedFindPathPartial(const dtPolyRef* existing, const int existingSize,
 	dtPolyRef* path, int* pathCount, const int maxPath)
 {
@@ -1598,7 +1830,22 @@ dtStatus dtNavMeshQuery::finalizeSlicedFindPathPartial(const dtPolyRef* existing
 	return DT_SUCCESS | details;
 }
 
-
+/**
+ * @brief Appends a vertex to a straight path.
+ *
+ * This function appends a vertex to a straight path, where a straight path is a series of connected vertices representing a path between two points. It is used to extend a straight path during pathfinding.
+ *
+ * @param pos The position of the vertex to append.
+ * @param flags The flags associated with the vertex.
+ * @param ref The polygon reference associated with the vertex.
+ * @param straightPath An array to store the straight path vertices.
+ * @param straightPathFlags An array to store the flags for each vertex in the straight path.
+ * @param straightPathRefs An array to store the polygon references for each vertex in the straight path.
+ * @param straightPathCount A pointer to store the number of vertices in the straight path.
+ * @param maxStraightPath The maximum number of vertices that can be stored in the straight path.
+ *
+ * @return The status of the operation. Returns DT_SUCCESS on success, DT_BUFFER_TOO_SMALL if the maximum path length is exceeded, or DT_IN_PROGRESS if the vertex is appended successfully.
+ */
 dtStatus dtNavMeshQuery::appendVertex(const float* pos, const unsigned char flags, const dtPolyRef ref,
 	float* straightPath, unsigned char* straightPathFlags, dtPolyRef* straightPathRefs,
 	int* straightPathCount, const int maxStraightPath) const
@@ -1629,6 +1876,24 @@ dtStatus dtNavMeshQuery::appendVertex(const float* pos, const unsigned char flag
 	return DT_IN_PROGRESS;
 }
 
+/**
+ * @brief Appends portal vertices to a straight path.
+ *
+ * This function appends portal vertices to a straight path, extending the path based on portal information. Portals represent connections between polygons in a navigation mesh and are used to create a continuous straight path.
+ *
+ * @param startIdx The index of the starting vertex in the path.
+ * @param endIdx The index of the ending vertex in the path.
+ * @param endPos The position of the final destination.
+ * @param path An array of polygon references representing the path.
+ * @param straightPath An array to store the extended straight path vertices.
+ * @param straightPathFlags An array to store the flags for each vertex in the straight path.
+ * @param straightPathRefs An array to store the polygon references for each vertex in the straight path.
+ * @param straightPathCount A pointer to store the number of vertices in the straight path.
+ * @param maxStraightPath The maximum number of vertices that can be stored in the straight path.
+ * @param options Additional options for appending the portals.
+ *
+ * @return The status of the operation. Returns DT_SUCCESS on success, DT_FAILURE if the provided references are invalid, or DT_IN_PROGRESS if the portals are appended successfully.
+ */
 dtStatus dtNavMeshQuery::appendPortals(const int startIdx, const int endIdx, const float* endPos, const dtPolyRef* path,
 	float* straightPath, unsigned char* straightPathFlags, dtPolyRef* straightPathRefs,
 	int* straightPathCount, const int maxStraightPath, const int options) const
@@ -1679,23 +1944,26 @@ dtStatus dtNavMeshQuery::appendPortals(const int startIdx, const int endIdx, con
 	return DT_IN_PROGRESS;
 }
 
-/// @par
-/// 
-/// This method peforms what is often called 'string pulling'.
-///
-/// The start position is clamped to the first polygon in the path, and the 
-/// end position is clamped to the last. So the start and end positions should 
-/// normally be within or very near the first and last polygons respectively.
-///
-/// The returned polygon references represent the reference id of the polygon 
-/// that is entered at the associated path position. The reference id associated 
-/// with the end point will always be zero.  This allows, for example, matching 
-/// off-mesh link points to their representative polygons.
-///
-/// If the provided result buffers are too small for the entire result set, 
-/// they will be filled as far as possible from the start toward the end 
-/// position.
-///
+/**
+ * @brief Finds a straight path between two points along a navigation mesh.
+ *
+ * This method performs 'string pulling,' finding a straight path between two points along a navigation mesh. The start position is clamped to the first polygon in the path, and the end position is clamped to the last polygon. The returned polygon references represent the reference id of the polygon entered at the associated path position, with the reference id associated with the end point always being zero.
+ *
+ * If the provided result buffers (straightPath, straightPathFlags, straightPathRefs) are too small for the entire result set, they will be filled as far as possible from the start toward the end position.
+ *
+ * @param startPos The starting position of the path.
+ * @param endPos The ending position of the path.
+ * @param path An array of polygon references representing the path.
+ * @param pathSize The size of the path array.
+ * @param straightPath An array to store the vertices of the straight path.
+ * @param straightPathFlags An array to store the flags for each vertex in the straight path.
+ * @param straightPathRefs An array to store the polygon references for each vertex in the straight path.
+ * @param straightPathCount A pointer to store the number of vertices in the straight path.
+ * @param maxStraightPath The maximum number of vertices that can be stored in the straight path.
+ * @param options Additional options for finding the straight path.
+ *
+ * @return The status of the operation. Returns DT_SUCCESS on success, DT_PARTIAL_RESULT if a partial path is found, DT_BUFFER_TOO_SMALL if the result buffers are too small, or an error code on other failures.
+ */
 dtStatus dtNavMeshQuery::findStraightPath(const float* startPos, const float* endPos,
 	const dtPolyRef* path, const int pathSize,
 	float* straightPath, unsigned char* straightPathFlags, dtPolyRef* straightPathRefs,
@@ -1917,26 +2185,22 @@ dtStatus dtNavMeshQuery::findStraightPath(const float* startPos, const float* en
 	return DT_SUCCESS | ((*straightPathCount >= maxStraightPath) ? DT_BUFFER_TOO_SMALL : 0);
 }
 
-/// @par
-///
-/// This method is optimized for small delta movement and a small number of 
-/// polygons. If used for too great a distance, the result set will form an 
-/// incomplete path.
-///
-/// @p resultPos will equal the @p endPos if the end is reached. 
-/// Otherwise the closest reachable position will be returned.
-/// 
-/// @p resultPos is not projected onto the surface of the navigation 
-/// mesh. Use #getPolyHeight if this is needed.
-///
-/// This method treats the end position in the same manner as 
-/// the #raycast method. (As a 2D point.) See that method's documentation 
-/// for details.
-/// 
-/// If the @p visited array is too small to hold the entire result set, it will 
-/// be filled as far as possible from the start position toward the end 
-/// position.
-///
+/**
+ * @brief Moves along the surface of a navigation mesh from a start position to an end position.
+ *
+ * This method moves along the surface of a navigation mesh from a start position to an end position, avoiding obstacles and returning the closest reachable position if the end is not reached. The result position is not projected onto the surface of the navigation mesh.
+ *
+ * @param startRef The polygon reference representing the starting position.
+ * @param startPos The starting position in world coordinates.
+ * @param endPos The ending position in world coordinates.
+ * @param filter The query filter to control which polygons can be traversed.
+ * @param resultPos The result position, which will be the end position if reached, or the closest reachable position otherwise.
+ * @param visited An array to store the visited polygon references along the path.
+ * @param visitedCount A pointer to store the number of visited polygons.
+ * @param maxVisitedSize The maximum number of polygon references that can be stored in the visited array.
+ *
+ * @return The status of the operation. Returns DT_SUCCESS on success, DT_FAILURE if there is an invalid parameter, or an error code on other failures.
+ */
 dtStatus dtNavMeshQuery::moveAlongSurface(dtPolyRef startRef, const float* startPos, const float* endPos,
 	const dtQueryFilter* filter,
 	float* resultPos, dtPolyRef* visited, int* visitedCount, const int maxVisitedSize) const
@@ -2132,7 +2396,20 @@ dtStatus dtNavMeshQuery::moveAlongSurface(dtPolyRef startRef, const float* start
 	return status;
 }
 
-
+/**
+ * @brief Gets portal points between two polygons.
+ *
+ * This method retrieves the portal points between two polygons specified by their references. The portal points define the left and right boundaries of the path segment between the two polygons.
+ *
+ * @param from The reference of the starting polygon.
+ * @param to The reference of the ending polygon.
+ * @param left An array to store the left boundary of the portal.
+ * @param right An array to store the right boundary of the portal.
+ * @param fromType The type of the starting polygon.
+ * @param toType The type of the ending polygon.
+ *
+ * @return The status of the operation. Returns DT_SUCCESS on success, DT_FAILURE if there is an invalid parameter, or an error code on other failures.
+ */
 dtStatus dtNavMeshQuery::getPortalPoints(dtPolyRef from, dtPolyRef to, float* left, float* right,
 	unsigned char& fromType, unsigned char& toType) const
 {
@@ -2153,7 +2430,22 @@ dtStatus dtNavMeshQuery::getPortalPoints(dtPolyRef from, dtPolyRef to, float* le
 	return getPortalPoints(from, fromPoly, fromTile, to, toPoly, toTile, left, right);
 }
 
-// Returns portal points between two polygons.
+/**
+ * @brief Returns portal points between two polygons.
+ *
+ * This method retrieves the portal points between two polygons specified by their references. The portal points define the left and right boundaries of the path segment between the two polygons.
+ *
+ * @param from The reference of the starting polygon.
+ * @param fromPoly The pointer to the starting polygon's data.
+ * @param fromTile The pointer to the tile containing the starting polygon.
+ * @param to The reference of the ending polygon.
+ * @param toPoly The pointer to the ending polygon's data.
+ * @param toTile The pointer to the tile containing the ending polygon.
+ * @param left An array to store the left boundary of the portal.
+ * @param right An array to store the right boundary of the portal.
+ *
+ * @return The status of the operation. Returns DT_SUCCESS on success, DT_FAILURE if there is an invalid parameter, or an error code on other failures.
+ */
 dtStatus dtNavMeshQuery::getPortalPoints(dtPolyRef from, const dtPoly* fromPoly, const dtMeshTile* fromTile,
 	dtPolyRef to, const dtPoly* toPoly, const dtMeshTile* toTile,
 	float* left, float* right) const
@@ -2227,7 +2519,17 @@ dtStatus dtNavMeshQuery::getPortalPoints(dtPolyRef from, const dtPoly* fromPoly,
 	return DT_SUCCESS;
 }
 
-// Returns edge mid point between two polygons.
+/**
+ * @brief Returns the edge midpoint between two polygons.
+ *
+ * This method calculates the midpoint on the edge between two polygons specified by their references. The midpoint is computed as the average position between the portal points of the two polygons.
+ *
+ * @param from The reference of the starting polygon.
+ * @param to The reference of the ending polygon.
+ * @param mid An array to store the computed midpoint.
+ *
+ * @return The status of the operation. Returns DT_SUCCESS on success, DT_FAILURE if there is an invalid parameter, or an error code on other failures.
+ */
 dtStatus dtNavMeshQuery::getEdgeMidPoint(dtPolyRef from, dtPolyRef to, float* mid) const
 {
 	float left[3], right[3];
@@ -2240,6 +2542,21 @@ dtStatus dtNavMeshQuery::getEdgeMidPoint(dtPolyRef from, dtPolyRef to, float* mi
 	return DT_SUCCESS;
 }
 
+/**
+ * @brief Returns the edge midpoint between two polygons.
+ *
+ * This method calculates the midpoint on the edge between two polygons specified by their references. The midpoint is computed as the average position between the portal points of the two polygons.
+ *
+ * @param from The reference of the starting polygon.
+ * @param fromPoly The pointer to the starting polygon's data.
+ * @param fromTile The pointer to the tile containing the starting polygon.
+ * @param to The reference of the ending polygon.
+ * @param toPoly The pointer to the ending polygon's data.
+ * @param toTile The pointer to the tile containing the ending polygon.
+ * @param mid An array to store the computed midpoint.
+ *
+ * @return The status of the operation. Returns DT_SUCCESS on success, DT_FAILURE if there is an invalid parameter, or an error code on other failures.
+ */
 dtStatus dtNavMeshQuery::getEdgeMidPoint(dtPolyRef from, const dtPoly* fromPoly, const dtMeshTile* fromTile,
 	dtPolyRef to, const dtPoly* toPoly, const dtMeshTile* toTile,
 	float* mid) const
@@ -2253,46 +2570,40 @@ dtStatus dtNavMeshQuery::getEdgeMidPoint(dtPolyRef from, const dtPoly* fromPoly,
 	return DT_SUCCESS;
 }
 
-
-
-/// @par
-///
-/// This method is meant to be used for quick, short distance checks.
-///
-/// If the path array is too small to hold the result, it will be filled as 
-/// far as possible from the start postion toward the end position.
-///
-/// <b>Using the Hit Parameter (t)</b>
-/// 
-/// If the hit parameter is a very high value (FLT_MAX), then the ray has hit 
-/// the end position. In this case the path represents a valid corridor to the 
-/// end position and the value of @p hitNormal is undefined.
-///
-/// If the hit parameter is zero, then the start position is on the wall that 
-/// was hit and the value of @p hitNormal is undefined.
-///
-/// If 0 < t < 1.0 then the following applies:
-///
-/// @code
-/// distanceToHitBorder = distanceToEndPosition * t
-/// hitPoint = startPos + (endPos - startPos) * t
-/// @endcode
-///
-/// <b>Use Case Restriction</b>
-///
-/// The raycast ignores the y-value of the end position. (2D check.) This 
-/// places significant limits on how it can be used. For example:
-///
-/// Consider a scene where there is a main floor with a second floor balcony 
-/// that hangs over the main floor. So the first floor mesh extends below the 
-/// balcony mesh. The start position is somewhere on the first floor. The end 
-/// position is on the balcony.
-///
-/// The raycast will search toward the end position along the first floor mesh. 
-/// If it reaches the end position's xz-coordinates it will indicate FLT_MAX
-/// (no wall hit), meaning it reached the end position. This is one example of why
-/// this method is meant for short distance checks.
-///
+/**
+ * @brief Performs a raycast query from the start position to the end position on the navigation mesh.
+ *
+ * This method is meant to be used for quick, short-distance checks. It performs a raycast query from the start position to the end position along the navigation mesh to determine if there are any obstacles or walls in the way.
+ *
+ * If the path array is too small to hold the result, it will be filled as far as possible from the start position toward the end position.
+ *
+ * @param startRef The reference of the starting polygon.
+ * @param startPos The 3D coordinates of the starting position.
+ * @param endPos The 3D coordinates of the ending position.
+ * @param filter The query filter that specifies which polygons can be traversed.
+ * @param t The hit parameter representing the point of intersection between the ray and the navigation mesh.
+ * @param hitNormal The hit normal vector at the point of intersection (optional).
+ * @param path An array to store the visited polygon references along the ray path (optional).
+ * @param pathCount The number of visited polygons in the path (optional).
+ * @param maxPath The maximum number of polygons that can be stored in the path array.
+ *
+ * @return The status of the operation. Returns DT_SUCCESS if the ray hit the navigation mesh, DT_FAILURE if there is an invalid parameter, DT_SUCCESS_NO_RESULT if the ray reaches the end position without hitting anything, or an error code on other failures.
+ *
+ * @par Using the Hit Parameter (t):
+ * If the hit parameter is a very high value (FLT_MAX), then the ray has hit the end position. In this case, the path represents a valid corridor to the end position, and the value of @p hitNormal is undefined.
+ *
+ * If the hit parameter is zero, then the start position is on the wall that was hit, and the value of @p hitNormal is undefined.
+ *
+ * If 0 < t < 1.0, then the following applies:
+ *
+ * @code
+ * distanceToHitBorder = distanceToEndPosition * t
+ * hitPoint = startPos + (endPos - startPos) * t
+ * @endcode
+ *
+ * @par Use Case Restriction:
+ * The raycast ignores the y-value of the end position (2D check). This places significant limits on how it can be used. For example, if there is a main floor with a second-floor balcony that hangs over the main floor, the raycast will search toward the end position along the first-floor mesh. If it reaches the end position's xz-coordinates, it will indicate FLT_MAX (no wall hit), meaning it reached the end position. This method is intended for short-distance checks.
+ */
 dtStatus dtNavMeshQuery::raycast(dtPolyRef startRef, const float* startPos, const float* endPos,
 	const dtQueryFilter* filter,
 	float* t, float* hitNormal, dtPolyRef* path, int* pathCount, const int maxPath) const
@@ -2312,45 +2623,38 @@ dtStatus dtNavMeshQuery::raycast(dtPolyRef startRef, const float* startPos, cons
 	return status;
 }
 
-
-/// @par
-///
-/// This method is meant to be used for quick, short distance checks.
-///
-/// If the path array is too small to hold the result, it will be filled as 
-/// far as possible from the start postion toward the end position.
-///
-/// <b>Using the Hit Parameter t of RaycastHit</b>
-/// 
-/// If the hit parameter is a very high value (FLT_MAX), then the ray has hit 
-/// the end position. In this case the path represents a valid corridor to the 
-/// end position and the value of @p hitNormal is undefined.
-///
-/// If the hit parameter is zero, then the start position is on the wall that 
-/// was hit and the value of @p hitNormal is undefined.
-///
-/// If 0 < t < 1.0 then the following applies:
-///
-/// @code
-/// distanceToHitBorder = distanceToEndPosition * t
-/// hitPoint = startPos + (endPos - startPos) * t
-/// @endcode
-///
-/// <b>Use Case Restriction</b>
-///
-/// The raycast ignores the y-value of the end position. (2D check.) This 
-/// places significant limits on how it can be used. For example:
-///
-/// Consider a scene where there is a main floor with a second floor balcony 
-/// that hangs over the main floor. So the first floor mesh extends below the 
-/// balcony mesh. The start position is somewhere on the first floor. The end 
-/// position is on the balcony.
-///
-/// The raycast will search toward the end position along the first floor mesh. 
-/// If it reaches the end position's xz-coordinates it will indicate FLT_MAX
-/// (no wall hit), meaning it reached the end position. This is one example of why
-/// this method is meant for short distance checks.
-///
+/**
+ * @brief Performs a raycast query from the start position to the end position on the navigation mesh.
+ *
+ * This method is meant to be used for quick, short-distance checks. It performs a raycast query from the start position to the end position along the navigation mesh to determine if there are any obstacles or walls in the way.
+ *
+ * If the path array is too small to hold the result, it will be filled as far as possible from the start position toward the end position.
+ *
+ * @param startRef The reference of the starting polygon.
+ * @param startPos The 3D coordinates of the starting position.
+ * @param endPos The 3D coordinates of the ending position.
+ * @param filter The query filter that specifies which polygons can be traversed.
+ * @param options Additional options for the raycast query.
+ * @param hit A raycast hit result that will be filled with the query results.
+ * @param prevRef The reference of the previous polygon (optional).
+ *
+ * @return The status of the operation. Returns DT_SUCCESS if the ray hit the navigation mesh, DT_FAILURE if there is an invalid parameter, DT_SUCCESS_NO_RESULT if the ray reaches the end position without hitting anything, or an error code on other failures.
+ *
+ * @par Using the Hit Parameter (t):
+ * If the hit parameter is a very high value (FLT_MAX), then the ray has hit the end position. In this case, the path represents a valid corridor to the end position, and the value of @p hitNormal is undefined.
+ *
+ * If the hit parameter is zero, then the start position is on the wall that was hit, and the value of @p hitNormal is undefined.
+ *
+ * If 0 < t < 1.0, then the following applies:
+ *
+ * @code
+ * distanceToHitBorder = distanceToEndPosition * t
+ * hitPoint = startPos + (endPos - startPos) * t
+ * @endcode
+ *
+ * @par Use Case Restriction:
+ * The raycast ignores the y-value of the end position (2D check). This places significant limits on how it can be used. For example, if there is a main floor with a second-floor balcony that hangs over the main floor, the raycast will search toward the end position along the first-floor mesh. If it reaches the end position's xz-coordinates, it will indicate FLT_MAX (no wall hit), meaning it reached the end position. This method is intended for short-distance checks.
+ */
 dtStatus dtNavMeshQuery::raycast(dtPolyRef startRef, const float* startPos, const float* endPos,
 	const dtQueryFilter* filter, const unsigned int options,
 	dtRaycastHit* hit, dtPolyRef prevRef) const
@@ -2566,35 +2870,37 @@ dtStatus dtNavMeshQuery::raycast(dtPolyRef startRef, const float* startPos, cons
 	return status;
 }
 
-/// @par
-///
-/// At least one result array must be provided.
-///
-/// The order of the result set is from least to highest cost to reach the polygon.
-///
-/// A common use case for this method is to perform Dijkstra searches. 
-/// Candidate polygons are found by searching the graph beginning at the start polygon.
-///
-/// If a polygon is not found via the graph search, even if it intersects the 
-/// search circle, it will not be included in the result set. For example:
-///
-/// polyA is the start polygon.
-/// polyB shares an edge with polyA. (Is adjacent.)
-/// polyC shares an edge with polyB, but not with polyA
-/// Even if the search circle overlaps polyC, it will not be included in the 
-/// result set unless polyB is also in the set.
-/// 
-/// The value of the center point is used as the start position for cost 
-/// calculations. It is not projected onto the surface of the mesh, so its 
-/// y-value will effect the costs.
-///
-/// Intersection tests occur in 2D. All polygons and the search circle are 
-/// projected onto the xz-plane. So the y-value of the center point does not 
-/// effect intersection tests.
-///
-/// If the result arrays are to small to hold the entire result set, they will be 
-/// filled to capacity.
-/// 
+/**
+ * @brief Finds polygons within a circle on the navigation mesh.
+ *
+ * This method is used to find polygons within a specified radius from a center point on the navigation mesh. The order of the result set is from the least to the highest cost to reach the polygons.
+ *
+ * At least one result array must be provided. If the result arrays are too small to hold the entire result set, they will be filled to capacity.
+ *
+ * A common use case for this method is to perform Dijkstra searches. Candidate polygons are found by searching the graph beginning at the start polygon.
+ *
+ * If a polygon is not found via the graph search, even if it intersects the search circle, it will not be included in the result set. For example:
+ * - polyA is the start polygon.
+ * - polyB shares an edge with polyA (is adjacent).
+ * - polyC shares an edge with polyB but not with polyA.
+ * Even if the search circle overlaps polyC, it will not be included in the result set unless polyB is also in the set.
+ *
+ * The value of the center point is used as the start position for cost calculations. It is not projected onto the surface of the mesh, so its y-value will affect the costs.
+ *
+ * Intersection tests occur in 2D. All polygons and the search circle are projected onto the xz-plane, so the y-value of the center point does not affect intersection tests.
+ *
+ * @param startRef The reference of the starting polygon.
+ * @param centerPos The 3D coordinates of the center point of the search circle.
+ * @param radius The radius of the search circle.
+ * @param filter The query filter that specifies which polygons can be traversed.
+ * @param resultRef An array to store the polygon references of the found polygons.
+ * @param resultParent An array to store the parent polygon references corresponding to the found polygons.
+ * @param resultCost An array to store the costs to reach the found polygons.
+ * @param resultCount A pointer to the variable that will hold the number of found polygons.
+ * @param maxResult The maximum number of polygons that can be stored in the result arrays.
+ *
+ * @return The status of the operation. Returns DT_SUCCESS if polygons are found within the circle, DT_FAILURE if there is an invalid parameter, DT_OUT_OF_NODES if the operation runs out of nodes, DT_BUFFER_TOO_SMALL if the result arrays are too small to hold the entire result set, or an error code on other failures.
+ */
 dtStatus dtNavMeshQuery::findPolysAroundCircle(dtPolyRef startRef, const float* centerPos, const float radius,
 	const dtQueryFilter* filter,
 	dtPolyRef* resultRef, dtPolyRef* resultParent, float* resultCost,
@@ -2748,28 +3054,33 @@ dtStatus dtNavMeshQuery::findPolysAroundCircle(dtPolyRef startRef, const float* 
 	return status;
 }
 
-/// @par
-///
-/// The order of the result set is from least to highest cost.
-/// 
-/// At least one result array must be provided.
-///
-/// A common use case for this method is to perform Dijkstra searches. 
-/// Candidate polygons are found by searching the graph beginning at the start 
-/// polygon.
-/// 
-/// The same intersection test restrictions that apply to findPolysAroundCircle()
-/// method apply to this method.
-/// 
-/// The 3D centroid of the search polygon is used as the start position for cost 
-/// calculations.
-/// 
-/// Intersection tests occur in 2D. All polygons are projected onto the 
-/// xz-plane. So the y-values of the vertices do not effect intersection tests.
-/// 
-/// If the result arrays are is too small to hold the entire result set, they will 
-/// be filled to capacity.
-///
+/**
+ * @brief Finds polygons around a shape on the navigation mesh.
+ *
+ * This method is used to find polygons around a shape defined by a set of vertices on the navigation mesh. The order of the result set is from the least to the highest cost to reach the polygons.
+ *
+ * At least one result array must be provided. If the result arrays are too small to hold the entire result set, they will be filled to capacity.
+ *
+ * A common use case for this method is to perform Dijkstra searches. Candidate polygons are found by searching the graph beginning at the start polygon.
+ *
+ * The same intersection test restrictions that apply to the findPolysAroundCircle() method apply to this method.
+ *
+ * The 3D centroid of the search polygon is used as the start position for cost calculations.
+ *
+ * Intersection tests occur in 2D. All polygons are projected onto the xz-plane. So the y-values of the vertices do not affect intersection tests.
+ *
+ * @param startRef The reference of the starting polygon.
+ * @param verts The vertices defining the shape on the navigation mesh.
+ * @param nverts The number of vertices in the shape.
+ * @param filter The query filter that specifies which polygons can be traversed.
+ * @param resultRef An array to store the polygon references of the found polygons.
+ * @param resultParent An array to store the parent polygon references corresponding to the found polygons.
+ * @param resultCost An array to store the costs to reach the found polygons.
+ * @param resultCount A pointer to the variable that will hold the number of found polygons.
+ * @param maxResult The maximum number of polygons that can be stored in the result arrays.
+ *
+ * @return The status of the operation. Returns DT_SUCCESS if polygons are found around the shape, DT_FAILURE if there is an invalid parameter, DT_OUT_OF_NODES if the operation runs out of nodes, DT_BUFFER_TOO_SMALL if the result arrays are too small to hold the entire result set, or an error code on other failures.
+ */
 dtStatus dtNavMeshQuery::findPolysAroundShape(dtPolyRef startRef, const float* verts, const int nverts,
 	const dtQueryFilter* filter,
 	dtPolyRef* resultRef, dtPolyRef* resultParent, float* resultCost,
@@ -2928,28 +3239,30 @@ dtStatus dtNavMeshQuery::findPolysAroundShape(dtPolyRef startRef, const float* v
 	return status;
 }
 
-/// @par
-///
-/// This method is optimized for a small search radius and small number of result 
-/// polygons.
-///
-/// Candidate polygons are found by searching the navigation graph beginning at 
-/// the start polygon.
-///
-/// The same intersection test restrictions that apply to the findPolysAroundCircle 
-/// mehtod applies to this method.
-///
-/// The value of the center point is used as the start point for cost calculations. 
-/// It is not projected onto the surface of the mesh, so its y-value will effect 
-/// the costs.
-/// 
-/// Intersection tests occur in 2D. All polygons and the search circle are 
-/// projected onto the xz-plane. So the y-value of the center point does not 
-/// effect intersection tests.
-/// 
-/// If the result arrays are is too small to hold the entire result set, they will 
-/// be filled to capacity.
-/// 
+/**
+ * @brief Finds polygons in the local neighborhood of a point on the navigation mesh.
+ *
+ * This method is optimized for a small search radius and a small number of result polygons. Candidate polygons are found by searching the navigation graph beginning at the start polygon.
+ *
+ * The same intersection test restrictions that apply to the `findPolysAroundCircle` method apply to this method.
+ *
+ * The value of the center point is used as the start point for cost calculations. It is not projected onto the surface of the mesh, so its y-value will affect the costs.
+ *
+ * Intersection tests occur in 2D. All polygons and the search circle are projected onto the xz-plane. So the y-value of the center point does not affect intersection tests.
+ *
+ * If the result arrays are too small to hold the entire result set, they will be filled to capacity.
+ *
+ * @param startRef The reference of the starting polygon.
+ * @param centerPos The center position around which to search for polygons.
+ * @param radius The search radius for finding nearby polygons.
+ * @param filter The query filter that specifies which polygons can be traversed.
+ * @param resultRef An array to store the polygon references of the found polygons.
+ * @param resultParent An array to store the parent polygon references corresponding to the found polygons.
+ * @param resultCount A pointer to the variable that will hold the number of found polygons.
+ * @param maxResult The maximum number of polygons that can be stored in the result arrays.
+ *
+ * @return The status of the operation. Returns DT_SUCCESS if polygons are found in the local neighborhood, DT_FAILURE if there is an invalid parameter, DT_OUT_OF_NODES if the operation runs out of nodes, DT_BUFFER_TOO_SMALL if the result arrays are too small to hold the entire result set, or an error code on other failures.
+ */
 dtStatus dtNavMeshQuery::findLocalNeighbourhood(dtPolyRef startRef, const float* centerPos, const float radius,
 	const dtQueryFilter* filter,
 	dtPolyRef* resultRef, dtPolyRef* resultParent,
@@ -3126,12 +3439,29 @@ dtStatus dtNavMeshQuery::findLocalNeighbourhood(dtPolyRef startRef, const float*
 }
 
 
+/**
+ * @brief Represents an interval along a segment of a polygon boundary.
+ *
+ * The dtSegInterval structure is used to store information about intervals along a segment of a polygon boundary. It holds the reference of the polygon, the start time (tmin), and the end time (tmax) of the interval.
+ */
 struct dtSegInterval
 {
 	dtPolyRef ref;
 	short tmin, tmax;
 };
 
+/**
+ * @brief Inserts a new interval into an array of intervals while maintaining order.
+ *
+ * This function inserts a new interval specified by its start time (tmin), end time (tmax), and polygon reference (ref) into an array of intervals (ints) while ensuring that the intervals remain sorted by their start times. The array is limited to a maximum number of intervals (maxInts).
+ *
+ * @param ints A pointer to the array of intervals.
+ * @param nints A reference to the number of intervals in the array (updated after insertion).
+ * @param maxInts The maximum number of intervals the array can hold.
+ * @param tmin The start time of the new interval.
+ * @param tmax The end time of the new interval.
+ * @param ref The reference of the polygon associated with the interval.
+ */
 static void insertInterval(dtSegInterval* ints, int& nints, const int maxInts,
 	const short tmin, const short tmax, const dtPolyRef ref)
 {
@@ -3154,17 +3484,27 @@ static void insertInterval(dtSegInterval* ints, int& nints, const int maxInts,
 	nints++;
 }
 
-/// @par
-///
-/// If the @p segmentRefs parameter is provided, then all polygon segments will be returned. 
-/// Otherwise only the wall segments are returned.
-/// 
-/// A segment that is normally a portal will be included in the result set as a 
-/// wall if the @p filter results in the neighbor polygon becoomming impassable.
-/// 
-/// The @p segmentVerts and @p segmentRefs buffers should normally be sized for the 
-/// maximum segments per polygon of the source navigation mesh.
-/// 
+/**
+ * @brief Retrieves wall segments for a given polygon and filter.
+ *
+ * This method calculates and retrieves wall segments for a specified polygon based on the provided filter.
+ * Wall segments represent the edges of the polygon that are adjacent to impassable areas.
+ *
+ * If the `segmentRefs` parameter is provided, then all polygon segments will be returned. Otherwise, only the wall segments are returned.
+ *
+ * A segment that is normally a portal will be included in the result set as a wall if the `filter` results in the neighbor polygon becoming impassable.
+ *
+ * The `segmentVerts` and `segmentRefs` buffers should normally be sized for the maximum segments per polygon of the source navigation mesh.
+ *
+ * @param ref The reference of the polygon for which wall segments are retrieved.
+ * @param filter The query filter to determine which edges are considered impassable.
+ * @param segmentVerts A pointer to the buffer that will store the segment vertices (allocated by the caller).
+ * @param segmentRefs A pointer to the buffer that will store the segment polygon references (allocated by the caller).
+ * @param segmentCount A pointer to the variable that will store the number of segments found.
+ * @param maxSegments The maximum number of segments the buffers can hold.
+ *
+ * @return The status of the operation, indicating success or failure, and whether the buffer size is too small.
+ */
 dtStatus dtNavMeshQuery::getPolyWallSegments(dtPolyRef ref, const dtQueryFilter* filter,
 	float* segmentVerts, dtPolyRef* segmentRefs, int* segmentCount,
 	const int maxSegments) const
@@ -3305,16 +3645,28 @@ dtStatus dtNavMeshQuery::getPolyWallSegments(dtPolyRef ref, const dtQueryFilter*
 	return status;
 }
 
-/// @par
-///
-/// @p hitPos is not adjusted using the height detail data.
-///
-/// @p hitDist will equal the search radius if there is no wall within the 
-/// radius. In this case the values of @p hitPos and @p hitNormal are
-/// undefined.
-///
-/// The normal will become unpredicable if @p hitDist is a very small number.
-///
+/**
+ * @brief Finds the distance to the nearest wall from a given point within a specified radius.
+ *
+ * This method calculates the distance to the nearest wall from a specified point within a given radius.
+ *
+ * @note The @p hitPos is not adjusted using the height detail data.
+ *
+ * @note The @p hitDist will equal the search radius if there is no wall within the radius.
+ * In this case, the values of @p hitPos and @p hitNormal are undefined.
+ *
+ * @note The normal will become unpredictable if @p hitDist is a very small number.
+ *
+ * @param startRef The reference of the starting polygon.
+ * @param centerPos The center position from which to search for the nearest wall.
+ * @param maxRadius The maximum search radius.
+ * @param filter The query filter to determine which edges are considered impassable.
+ * @param hitDist A pointer to the variable that will store the distance to the nearest wall.
+ * @param hitPos A pointer to the buffer that will store the position of the hit point on the wall (allocated by the caller).
+ * @param hitNormal A pointer to the buffer that will store the normal vector of the wall at the hit point (allocated by the caller).
+ *
+ * @return The status of the operation, indicating success or failure.
+ */
 dtStatus dtNavMeshQuery::findDistanceToWall(dtPolyRef startRef, const float* centerPos, const float maxRadius,
 	const dtQueryFilter* filter,
 	float* hitDist, float* hitPos, float* hitNormal) const
@@ -3497,6 +3849,17 @@ dtStatus dtNavMeshQuery::findDistanceToWall(dtPolyRef startRef, const float* cen
 	return status;
 }
 
+/**
+ * @brief Checks if a polygon reference is valid and passes the query filter.
+ *
+ * This method checks if a given polygon reference is valid and passes the provided query filter.
+ * It is used to validate polygon references before using them in queries.
+ *
+ * @param ref The polygon reference to check.
+ * @param filter The query filter to determine if the polygon is passable.
+ *
+ * @return True if the polygon reference is valid and passes the query filter, false otherwise.
+ */
 bool dtNavMeshQuery::isValidPolyRef(dtPolyRef ref, const dtQueryFilter* filter) const
 {
 	const dtMeshTile* tile = 0;
@@ -3511,11 +3874,16 @@ bool dtNavMeshQuery::isValidPolyRef(dtPolyRef ref, const dtQueryFilter* filter) 
 	return true;
 }
 
-/// @par
-///
-/// The closed list is the list of polygons that were fully evaluated during 
-/// the last navigation graph search. (A* or Dijkstra)
-/// 
+/**
+ * @brief Checks if a polygon reference is in the closed list of a navigation graph search.
+ *
+ * The closed list is the list of polygons that were fully evaluated during the last navigation graph search,
+ * such as A* or Dijkstra.
+ *
+ * @param ref The polygon reference to check.
+ *
+ * @return True if the polygon reference is in the closed list, false otherwise.
+ */
 bool dtNavMeshQuery::isInClosedList(dtPolyRef ref) const
 {
 	if (!m_nodePool) return false;

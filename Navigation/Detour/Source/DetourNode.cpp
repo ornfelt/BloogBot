@@ -22,8 +22,17 @@
 #include "DetourCommon.h"
 #include <string.h>
 
+/**
+ * @brief Hashes a polygon reference value.
+ *
+ * This function calculates a hash value for a polygon reference.
+ *
+ * @param a The polygon reference to hash.
+ *
+ * @return The hash value.
+ */
 #ifdef DT_POLYREF64
-// From Thomas Wang, https://gist.github.com/badboy/6267743
+ // From Thomas Wang, https://gist.github.com/badboy/6267743
 inline unsigned int dtHashRef(dtPolyRef a)
 {
 	a = (~a) + (a << 18); // a = (a << 18) - a - 1;
@@ -35,6 +44,15 @@ inline unsigned int dtHashRef(dtPolyRef a)
 	return (unsigned int)a;
 }
 #else
+ /**
+  * @brief Hashes a polygon reference value.
+  *
+  * This function calculates a hash value for a polygon reference.
+  *
+  * @param a The polygon reference to hash.
+  *
+  * @return The hash value.
+  */
 inline unsigned int dtHashRef(dtPolyRef a)
 {
 	a += ~(a << 15);
@@ -48,6 +66,14 @@ inline unsigned int dtHashRef(dtPolyRef a)
 #endif
 
 //////////////////////////////////////////////////////////////////////////////////////////
+/**
+ * @brief Constructs a node pool for navigation mesh nodes.
+ *
+ * This constructor initializes a node pool with the specified maximum number of nodes and hash size.
+ *
+ * @param maxNodes The maximum number of nodes in the pool.
+ * @param hashSize The size of the hash table for quick node lookup.
+ */
 dtNodePool::dtNodePool(int maxNodes, int hashSize) :
 	m_nodes(0),
 	m_first(0),
@@ -71,6 +97,9 @@ dtNodePool::dtNodePool(int maxNodes, int hashSize) :
 	memset(m_next, 0xff, sizeof(dtNodeIndex) * m_maxNodes);
 }
 
+/**
+ * @brief Destroys the node pool and frees allocated memory.
+ */
 dtNodePool::~dtNodePool()
 {
 	dtFree(m_nodes);
@@ -78,12 +107,26 @@ dtNodePool::~dtNodePool()
 	dtFree(m_first);
 }
 
+/**
+ * @brief Clears the node pool, resetting it to its initial state.
+ */
 void dtNodePool::clear()
 {
 	memset(m_first, 0xff, sizeof(dtNodeIndex) * m_hashSize);
 	m_nodeCount = 0;
 }
 
+/**
+ * @brief Finds nodes with a specific polygon reference.
+ *
+ * This function finds nodes with the given polygon reference and populates the provided array with pointers to those nodes.
+ *
+ * @param id The polygon reference to search for.
+ * @param nodes An array to store pointers to found nodes.
+ * @param maxNodes The maximum number of nodes to search for.
+ *
+ * @return The number of nodes found.
+ */
 unsigned int dtNodePool::findNodes(dtPolyRef id, dtNode** nodes, const int maxNodes)
 {
 	int n = 0;
@@ -103,6 +146,16 @@ unsigned int dtNodePool::findNodes(dtPolyRef id, dtNode** nodes, const int maxNo
 	return n;
 }
 
+/**
+ * @brief Finds a node with a specific polygon reference and state.
+ *
+ * This function finds a node with the given polygon reference and state.
+ *
+ * @param id The polygon reference to search for.
+ * @param state The state to match.
+ *
+ * @return A pointer to the found node, or nullptr if not found.
+ */
 dtNode* dtNodePool::findNode(dtPolyRef id, unsigned char state)
 {
 	unsigned int bucket = dtHashRef(id) & (m_hashSize - 1);
@@ -116,6 +169,16 @@ dtNode* dtNodePool::findNode(dtPolyRef id, unsigned char state)
 	return 0;
 }
 
+/**
+ * @brief Gets or creates a node with a specific polygon reference and state.
+ *
+ * This function either retrieves an existing node with the given polygon reference and state or creates a new one if it doesn't exist.
+ *
+ * @param id The polygon reference to search for.
+ * @param state The state to match.
+ *
+ * @return A pointer to the node, or nullptr if the maximum node count is reached.
+ */
 dtNode* dtNodePool::getNode(dtPolyRef id, unsigned char state)
 {
 	unsigned int bucket = dtHashRef(id) & (m_hashSize - 1);
@@ -149,8 +212,14 @@ dtNode* dtNodePool::getNode(dtPolyRef id, unsigned char state)
 	return node;
 }
 
-
 //////////////////////////////////////////////////////////////////////////////////////////
+/**
+ * @brief Constructs a priority queue for navigation mesh nodes.
+ *
+ * This constructor initializes a priority queue with the specified capacity.
+ *
+ * @param n The capacity of the priority queue.
+ */
 dtNodeQueue::dtNodeQueue(int n) :
 	m_heap(0),
 	m_capacity(n),
@@ -162,11 +231,20 @@ dtNodeQueue::dtNodeQueue(int n) :
 	dtAssert(m_heap);
 }
 
+/**
+ * @brief Destroys the priority queue and frees allocated memory.
+ */
 dtNodeQueue::~dtNodeQueue()
 {
 	dtFree(m_heap);
 }
 
+/**
+ * @brief Moves a node up in the priority queue to maintain heap property.
+ *
+ * @param i The index of the node to move up.
+ * @param node The node to move.
+ */
 void dtNodeQueue::bubbleUp(int i, dtNode* node)
 {
 	int parent = (i - 1) / 2;
@@ -180,6 +258,12 @@ void dtNodeQueue::bubbleUp(int i, dtNode* node)
 	m_heap[i] = node;
 }
 
+/**
+ * @brief Moves a node down in the priority queue to maintain heap property.
+ *
+ * @param i The index of the node to move down.
+ * @param node The node to move.
+ */
 void dtNodeQueue::trickleDown(int i, dtNode* node)
 {
 	int child = (i * 2) + 1;

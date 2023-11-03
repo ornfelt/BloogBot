@@ -35,11 +35,24 @@
 #include "Utilities/UnorderedMapSet.h"
 
 //  memory management
+
+/**
+ * @brief Custom memory allocation function for Detour.
+ *
+ * @param size The size of memory to allocate.
+ * @param hint The allocation hint (not used).
+ * @return A pointer to the allocated memory.
+ */
 inline void* dtCustomAlloc(int size, dtAllocHint /*hint*/)
 {
 	return (void*)new unsigned char[size];
 }
 
+/**
+ * @brief Custom memory deallocation function for Detour.
+ *
+ * @param ptr A pointer to the memory to deallocate.
+ */
 inline void dtCustomFree(void* ptr)
 {
 	delete[](unsigned char*)ptr;
@@ -50,6 +63,9 @@ namespace MMAP
 	typedef std::unordered_map<unsigned int, dtTileRef> MMapTileSet;
 	typedef std::unordered_map<unsigned int, dtNavMeshQuery*> NavMeshQuerySet;
 
+	/**
+ * @brief Struct to hold data related to a map.
+ */
 	struct MMapData
 	{
 		MMapData(dtNavMesh* mesh) : navMesh(mesh) {}
@@ -75,6 +91,9 @@ namespace MMAP
 
 	typedef std::unordered_map<unsigned int, MMapData*> MMapDataSet;
 
+	/**
+	 * @brief Class to manage maps.
+	 */
 	class MMapManager
 	{
 	public:
@@ -82,12 +101,38 @@ namespace MMAP
 
 		std::map<unsigned int, bool> zoneMap = {};
 
+		/**
+		 * @brief Load a map.
+		 *
+		 * @param mapId The ID of the map to load.
+		 * @param x The X coordinate.
+		 * @param y The Y coordinate.
+		 * @return True if the map was loaded successfully, false otherwise.
+		 */
 		bool loadMap(unsigned int mapId, int x, int y);
 
-		// the returned [dtNavMeshQuery const*] is NOT threadsafe
+		/**
+		 * @brief Get the navigation mesh query for a map instance.
+		 *
+		 * @param mapId The ID of the map.
+		 * @param instanceId The instance ID.
+		 * @return The navigation mesh query for the specified map instance.
+		 */
+		 // the returned [dtNavMeshQuery const*] is NOT threadsafe
 		dtNavMeshQuery const* GetNavMeshQuery(unsigned int mapId, unsigned int instanceId);
+		/**
+		 * @brief Get the navigation mesh for a map.
+		 *
+		 * @param mapId The ID of the map.
+		 * @return The navigation mesh for the specified map.
+		 */
 		dtNavMesh const* GetNavMesh(unsigned int mapId);
 
+		/**
+		 * @brief Get the count of loaded maps.
+		 *
+		 * @return The count of loaded maps.
+		 */
 		unsigned int getLoadedMapsCount() const { return loadedMMaps.size(); }
 	private:
 		bool loadMapData(unsigned int mapId);
@@ -96,6 +141,9 @@ namespace MMAP
 		MMapDataSet loadedMMaps;
 	};
 
+	/**
+	 * @brief Factory class to create or get an instance of MMapManager.
+	 */
 	class MMapFactory
 	{
 	public:

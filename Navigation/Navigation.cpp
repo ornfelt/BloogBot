@@ -11,8 +11,16 @@ using namespace std;
 
 EXTERN_C IMAGE_DOS_HEADER __ImageBase;
 
+/**
+ * @brief Singleton instance of the Navigation class.
+ */
 Navigation* Navigation::s_singletonInstance = NULL;
 
+/**
+ * @brief Gets the singleton instance of the Navigation class.
+ *
+ * @return The Navigation instance.
+ */
 Navigation* Navigation::GetInstance()
 {
 	if (s_singletonInstance == NULL)
@@ -20,21 +28,42 @@ Navigation* Navigation::GetInstance()
 	return s_singletonInstance;
 }
 
+/**
+ * @brief Initializes the navigation system.
+ */
 void Navigation::Initialize()
 {
 	dtAllocSetCustom(dtCustomAlloc, dtCustomFree);
 }
 
+/**
+ * @brief Releases resources used by the navigation system.
+ */
 void Navigation::Release()
 {
 	MMAP::MMapFactory::createOrGetMMapManager()->~MMapManager();
 }
 
+/**
+ * @brief Frees memory allocated for a path array.
+ *
+ * @param pathArr The path array to free.
+ */
 void Navigation::FreePathArr(XYZ* pathArr)
 {
 	delete[] pathArr;
 }
 
+/**
+ * @brief Calculates a navigation path.
+ *
+ * @param mapId The map ID.
+ * @param start The starting position.
+ * @param end The destination position.
+ * @param straightPath Indicates whether to calculate a straight path.
+ * @param length The length of the calculated path.
+ * @return The calculated path as an array of XYZ points.
+ */
 XYZ* Navigation::CalculatePath(unsigned int mapId, XYZ start, XYZ end, bool straightPath, int* length)
 {
 	MMAP::MMapManager* manager = MMAP::MMapFactory::createOrGetMMapManager();
@@ -59,6 +88,12 @@ XYZ* Navigation::CalculatePath(unsigned int mapId, XYZ start, XYZ end, bool stra
 	return pathArr;
 }
 
+/**
+ * @brief Initializes maps for a continent if not already loaded.
+ *
+ * @param manager The MMapManager instance.
+ * @param mapId The map ID of the continent.
+ */
 void Navigation::InitializeMapsForContinent(MMAP::MMapManager* manager, unsigned int mapId)
 {
 	if (!manager->zoneMap.contains(mapId))
@@ -96,6 +131,11 @@ void Navigation::InitializeMapsForContinent(MMAP::MMapManager* manager, unsigned
 	}
 }
 
+/**
+ * @brief Gets the path to the directory containing map tile files.
+ *
+ * @return The path to the mmaps directory.
+ */
 string Navigation::GetMmapsPath()
 {
 	WCHAR DllPath[MAX_PATH] = { 0 };

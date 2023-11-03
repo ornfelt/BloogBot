@@ -31,6 +31,12 @@
 #include <fstream>
 
 ////////////////// PathFinder //////////////////
+/**
+ * @brief Constructor for the PathFinder class.
+ *
+ * @param mapId The map ID.
+ * @param instanceId The instance ID.
+ */
 PathFinder::PathFinder(unsigned int mapId, unsigned int instanceId) :
 	m_polyLength(0), m_type(PATHFIND_BLANK),
 	m_useStraightPath(false), m_forceDestination(false), m_pointPathLimit(MAX_POINT_PATH_LENGTH),
@@ -45,11 +51,27 @@ PathFinder::PathFinder(unsigned int mapId, unsigned int instanceId) :
 	createFilter();
 }
 
+/**
+ * @brief Destructor for the PathFinder class.
+ */
 PathFinder::~PathFinder()
 {
 	//printf("++ PathFinder::~PathInfo() for ME \n");
 }
 
+/**
+ * @brief Calculates a path from the origin to the destination.
+ *
+ * @param originX The X-coordinate of the origin.
+ * @param originY The Y-coordinate of the origin.
+ * @param originZ The Z-coordinate of the origin.
+ * @param destX The X-coordinate of the destination.
+ * @param destY The Y-coordinate of the destination.
+ * @param destZ The Z-coordinate of the destination.
+ * @param forceDest Indicates whether to force the destination.
+ * @param isSwimming Indicates whether the character is swimming.
+ * @return True if the path was successfully calculated, false otherwise.
+ */
 bool PathFinder::calculate(float originX, float originY, float originZ, float destX, float destY, float destZ, bool forceDest, bool isSwimming)
 {
 	Vector3 start(originX, originY, originZ);
@@ -88,6 +110,15 @@ bool PathFinder::calculate(float originX, float originY, float originZ, float de
 	return true;
 }
 
+/**
+ * @brief Gets the polygon reference for a given position on the path.
+ *
+ * @param polyPath The array of polygon references.
+ * @param polyPathSize The size of the polygon reference array.
+ * @param point The position for which to find the polygon reference.
+ * @param distance The distance between the point and the polygon.
+ * @return The polygon reference.
+ */
 dtPolyRef PathFinder::getPathPolyByPosition(const dtPolyRef* polyPath, unsigned int polyPathSize, const float* point, float* distance) const
 {
 	if (!polyPath || !polyPathSize)
@@ -128,6 +159,13 @@ dtPolyRef PathFinder::getPathPolyByPosition(const dtPolyRef* polyPath, unsigned 
 	return (minDist2d < 3.0f) ? nearestPoly : INVALID_POLYREF;
 }
 
+/**
+ * @brief Gets the polygon reference for a given location.
+ *
+ * @param point The location for which to find the polygon reference.
+ * @param distance The distance between the point and the polygon.
+ * @return The polygon reference.
+ */
 dtPolyRef PathFinder::getPolyByLocation(const float* point, float* distance) const
 {
 	// first we check the current path
@@ -164,6 +202,12 @@ dtPolyRef PathFinder::getPolyByLocation(const float* point, float* distance) con
 	return INVALID_POLYREF;
 }
 
+/**
+ * @brief Builds the polygon-based path between two positions.
+ *
+ * @param startPos The starting position.
+ * @param endPos The destination position.
+ */
 void PathFinder::BuildPolyPath(const Vector3& startPos, const Vector3& endPos)
 {
 	// *** getting start/end poly logic ***
@@ -387,6 +431,12 @@ void PathFinder::BuildPolyPath(const Vector3& startPos, const Vector3& endPos)
 	BuildPointPath(startPoint, endPoint);
 }
 
+/**
+ * @brief Builds the point-based path between two positions.
+ *
+ * @param startPoint The starting point.
+ * @param endPoint The destination point.
+ */
 void PathFinder::BuildPointPath(const float* startPoint, const float* endPoint)
 {
 	float pathPoints[MAX_POINT_PATH_LENGTH * VERTEX_SIZE];
@@ -461,6 +511,9 @@ void PathFinder::BuildPointPath(const float* startPoint, const float* endPoint)
 	//printf("++ PathFinder::BuildPointPath path type %d size %d poly-size %d\n", m_type, pointCount, m_polyLength);
 }
 
+/**
+ * @brief Handles path building error by clearing the path.
+ */
 void PathFinder::BuildError()
 {
 	clear();
@@ -470,6 +523,9 @@ void PathFinder::BuildError()
 	m_type = PATHFIND_NOPATH;
 }
 
+/**
+ * @brief Builds a shortcut path from the current position to the destination.
+ */
 void PathFinder::BuildShortcut()
 {
 	//printf("++ PathFinder::BuildShortcut :: making shortcut\n");
@@ -486,6 +542,9 @@ void PathFinder::BuildShortcut()
 	m_type = PATHFIND_SHORTCUT;
 }
 
+/**
+ * @brief Creates the navigation filter for pathfinding.
+ */
 void PathFinder::createFilter()
 {
 	unsigned short includeFlags = 0;
@@ -499,6 +558,14 @@ void PathFinder::createFilter()
 	updateFilter(false, 0, 0, 0);
 }
 
+/**
+ * @brief Updates the navigation filter based on the creature's movement type and position.
+ *
+ * @param isSwimming Indicates whether the creature is swimming.
+ * @param x The X-coordinate of the creature's position.
+ * @param y The Y-coordinate of the creature's position.
+ * @param z The Z-coordinate of the creature's position.
+ */
 void PathFinder::updateFilter(bool isSwimming, float x, float y, float z)
 {
 	// allow creatures to cheat and use different movement types if they are moved
@@ -512,6 +579,14 @@ void PathFinder::updateFilter(bool isSwimming, float x, float y, float z)
 	}
 }
 
+/**
+ * @brief Retrieves the navigation terrain type at a given position.
+ *
+ * @param x The X-coordinate of the position.
+ * @param y The Y-coordinate of the position.
+ * @param z The Z-coordinate of the position.
+ * @return The navigation terrain type at the specified position.
+ */
 NavTerrain PathFinder::getNavTerrain(float x, float y, float z)
 {
 	GridMapLiquidData data;
@@ -534,6 +609,12 @@ NavTerrain PathFinder::getNavTerrain(float x, float y, float z)
 	}
 }
 
+/**
+ * @brief Checks if there is a navigation tile at the given position.
+ *
+ * @param p The position to check.
+ * @return True if a navigation tile is present at the given position, otherwise false.
+ */
 bool PathFinder::HaveTile(const Vector3& p) const
 {
 	int tx, ty;
@@ -552,6 +633,16 @@ bool PathFinder::HaveTile(const Vector3& p) const
 	return (m_navMesh->getTileAt(tx, ty, 0) != NULL);
 }
 
+/**
+ * @brief Fixes up the corridor in the path by eliminating overlapping segments.
+ *
+ * @param path The current path.
+ * @param npath The number of polygons in the path.
+ * @param maxPath The maximum path length.
+ * @param visited The visited polygons.
+ * @param nvisited The number of visited polygons.
+ * @return The number of polygons in the corrected path.
+ */
 unsigned int PathFinder::fixupCorridor(dtPolyRef* path, unsigned int npath, unsigned int maxPath,
 	const dtPolyRef* visited, unsigned int nvisited)
 {
@@ -608,6 +699,19 @@ unsigned int PathFinder::fixupCorridor(dtPolyRef* path, unsigned int npath, unsi
 	return req + size;
 }
 
+/**
+ * @brief Retrieves the steering target for the path.
+ *
+ * @param startPos The starting position.
+ * @param endPos The destination position.
+ * @param minTargetDist The minimum distance to the target.
+ * @param path The current path.
+ * @param pathSize The size of the current path.
+ * @param steerPos The computed steering target position.
+ * @param steerPosFlag The flags associated with the steering target.
+ * @param steerPosRef The reference to the steering target polygon.
+ * @return True if a valid steering target was found, otherwise false.
+ */
 bool PathFinder::getSteerTarget(const float* startPos, const float* endPos,
 	float minTargetDist, const dtPolyRef* path, unsigned int pathSize,
 	float* steerPos, unsigned char& steerPosFlag, dtPolyRef& steerPosRef)
@@ -651,6 +755,18 @@ bool PathFinder::getSteerTarget(const float* startPos, const float* endPos,
 	return true;
 }
 
+/**
+ * @brief Finds a smooth path from the starting position to the destination.
+ *
+ * @param startPos The starting position.
+ * @param endPos The destination position.
+ * @param polyPath The path of polygons.
+ * @param polyPathSize The size of the polygon path.
+ * @param smoothPath The resulting smooth path.
+ * @param smoothPathSize The size of the smooth path.
+ * @param maxSmoothPathSize The maximum size of the smooth path.
+ * @return The status of the path smoothing operation.
+ */
 dtStatus PathFinder::findSmoothPath(const float* startPos, const float* endPos,
 	const dtPolyRef* polyPath, unsigned int polyPathSize,
 	float* smoothPath, int* smoothPathSize, unsigned int maxSmoothPathSize)
@@ -789,6 +905,15 @@ dtStatus PathFinder::findSmoothPath(const float* startPos, const float* endPos,
 	return nsmoothPath < MAX_POINT_PATH_LENGTH ? DT_SUCCESS : DT_FAILURE;
 }
 
+/**
+ * @brief Checks if the Y and Z coordinates of two 3D points are within a specified range.
+ *
+ * @param v1 The first 3D point (X, Y, Z).
+ * @param v2 The second 3D point (X, Y, Z).
+ * @param r The range for the X and Z coordinates.
+ * @param h The range for the Y (elevation) coordinate.
+ * @return True if the Y and Z coordinates are within the specified range, otherwise false.
+ */
 bool PathFinder::inRangeYZX(const float* v1, const float* v2, float r, float h) const
 {
 	const float dx = v2[0] - v1[0];
@@ -797,12 +922,28 @@ bool PathFinder::inRangeYZX(const float* v1, const float* v2, float r, float h) 
 	return (dx * dx + dz * dz) < r * r && fabsf(dy) < h;
 }
 
+/**
+ * @brief Checks if the 3D coordinates of two Vector3 points are within a specified range.
+ *
+ * @param p1 The first Vector3 point (X, Y, Z).
+ * @param p2 The second Vector3 point (X, Y, Z).
+ * @param r The range for the X and Y coordinates.
+ * @param h The range for the Z coordinate (elevation).
+ * @return True if the 3D coordinates are within the specified range, otherwise false.
+ */
 bool PathFinder::inRange(const Vector3& p1, const Vector3& p2, float r, float h) const
 {
 	Vector3 d = p1 - p2;
 	return (d.x * d.x + d.y * d.y) < r * r && fabsf(d.z) < h;
 }
 
+/**
+ * @brief Calculates the squared 3D distance between two Vector3 points.
+ *
+ * @param p1 The first Vector3 point.
+ * @param p2 The second Vector3 point.
+ * @return The squared 3D distance between the two points.
+ */
 float PathFinder::dist3DSqr(const Vector3& p1, const Vector3& p2) const
 {
 	return (p1 - p2).squaredLength();

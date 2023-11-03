@@ -27,7 +27,22 @@
 #include "DetourAssert.h"
 #include <new>
 
-
+/**
+ * @brief Checks if two slabs overlap.
+ *
+ * This function checks if two slabs, defined by their minimum and maximum coordinates
+ * in the x and y directions, overlap. The slabs are represented as AABBs (Axis-Aligned Bounding Boxes).
+ * It's used to determine if two segments (represented by slabs) in a 2D space overlap.
+ *
+ * @param amin The minimum coordinates of the first slab (AABB).
+ * @param amax The maximum coordinates of the first slab (AABB).
+ * @param bmin The minimum coordinates of the second slab (AABB).
+ * @param bmax The maximum coordinates of the second slab (AABB).
+ * @param px The padding in the x direction used to shrink the slabs.
+ * @param py The padding in the y direction used to shrink the slabs.
+ *
+ * @return True if the two slabs overlap, false otherwise.
+ */
 inline bool overlapSlabs(const float* amin, const float* amax,
 	const float* bmin, const float* bmax,
 	const float px, const float py)
@@ -64,6 +79,17 @@ inline bool overlapSlabs(const float* amin, const float* amax,
 	return false;
 }
 
+/**
+ * @brief Gets the coordinate of a slab along a specified side.
+ *
+ * Given a vertex (va) and a side (0, 2, 4, or 6), this function returns the coordinate
+ * of the vertex along the specified side. It's used in conjunction with the `calcSlabEndPoints` function.
+ *
+ * @param va The vertex coordinates.
+ * @param side The side index (0, 2, 4, or 6).
+ *
+ * @return The coordinate of the vertex along the specified side.
+ */
 static float getSlabCoord(const float* va, const int side)
 {
 	if (side == 0 || side == 4)
@@ -73,6 +99,19 @@ static float getSlabCoord(const float* va, const int side)
 	return 0;
 }
 
+/**
+ * @brief Calculates the endpoints of a slab.
+ *
+ * Given two vertices (va and vb) and a side (0, 2, 4, or 6), this function calculates
+ * the minimum and maximum coordinates of the slab along that side. The resulting coordinates
+ * are stored in `bmin` and `bmax`. It's used to compute slabs for overlap checks.
+ *
+ * @param va The first vertex coordinates.
+ * @param vb The second vertex coordinates.
+ * @param bmin The output minimum coordinates of the slab.
+ * @param bmax The output maximum coordinates of the slab.
+ * @param side The side index (0, 2, 4, or 6).
+ */
 static void calcSlabEndPoints(const float* va, const float* vb, float* bmin, float* bmax, const int side)
 {
 	if (side == 0 || side == 4)
@@ -111,6 +150,19 @@ static void calcSlabEndPoints(const float* va, const float* vb, float* bmin, flo
 	}
 }
 
+/**
+ * @brief Computes the tile hash value for a given tile position.
+ *
+ * This function computes a hash value for a tile position (x, y) using two large
+ * multiplicative constants and a bitwise AND operation with a mask. The resulting
+ * hash value can be used for various purposes, including indexing tiles in a data structure.
+ *
+ * @param x The x-coordinate of the tile position.
+ * @param y The y-coordinate of the tile position.
+ * @param mask The mask used for bitwise AND to limit the hash value's range.
+ *
+ * @return The computed tile hash value.
+ */
 inline int computeTileHash(int x, int y, const int mask)
 {
 	const unsigned int h1 = 0x8da6b343; // Large multiplicative constants;
@@ -119,6 +171,17 @@ inline int computeTileHash(int x, int y, const int mask)
 	return (int)(n & mask);
 }
 
+/**
+ * @brief Allocates a link from the free list of links in a tile.
+ *
+ * This function allocates a link from the free list of links in a given tile.
+ * If no links are available in the free list, it returns `DT_NULL_LINK`.
+ * It's used to manage link allocation for tiles.
+ *
+ * @param tile A pointer to the mesh tile.
+ *
+ * @return The allocated link index or `DT_NULL_LINK` if no links are available.
+ */
 inline unsigned int allocLink(dtMeshTile* tile)
 {
 	if (tile->linksFreeList == DT_NULL_LINK)
@@ -128,13 +191,31 @@ inline unsigned int allocLink(dtMeshTile* tile)
 	return link;
 }
 
+/**
+ * @brief Frees a link by adding it back to the free list of links in a tile.
+ *
+ * This function frees a link by adding it back to the free list of links in a given tile.
+ * The link's `next` pointer is updated to point to the current head of the free list, and
+ * the free list's head is updated to point to the freed link.
+ *
+ * @param tile A pointer to the mesh tile.
+ * @param link The index of the link to be freed.
+ */
 inline void freeLink(dtMeshTile* tile, unsigned int link)
 {
 	tile->links[link].next = tile->linksFreeList;
 	tile->linksFreeList = link;
 }
 
-
+/**
+ * @brief Allocates memory for a new navigation mesh.
+ *
+ * This function allocates memory for a new `dtNavMesh` object and returns a pointer to it.
+ * The memory is allocated using `dtAlloc` with permanent storage, and the `dtNavMesh` object
+ * is constructed in the allocated memory.
+ *
+ * @return A pointer to the newly allocated `dtNavMesh` object, or 0 if memory allocation fails.
+ */
 dtNavMesh* dtAllocNavMesh()
 {
 	void* mem = dtAlloc(sizeof(dtNavMesh), DT_ALLOC_PERM);
@@ -142,10 +223,15 @@ dtNavMesh* dtAllocNavMesh()
 	return new(mem) dtNavMesh;
 }
 
-/// @par
-///
-/// This function will only free the memory for tiles with the #DT_TILE_FREE_DATA
-/// flag set.
+/**
+ * @brief Frees memory associated with a navigation mesh.
+ *
+ * This function frees the memory associated with a `dtNavMesh` object. It destructs the object
+ * and releases the memory allocated for it using `dtFree`. It will only free the memory for tiles
+ * with the #DT_TILE_FREE_DATA flag set, which indicates that the tile data can be freed.
+ *
+ * @param navmesh A pointer to the `dtNavMesh` object to be freed.
+ */
 void dtFreeNavMesh(dtNavMesh* navmesh)
 {
 	if (!navmesh) return;
@@ -185,6 +271,13 @@ Notes:
 @see dtNavMeshQuery, dtCreateNavMeshData, dtNavMeshCreateParams, #dtAllocNavMesh, #dtFreeNavMesh
 */
 
+/**
+ * @brief Constructs a new navigation mesh.
+ *
+ * This constructor initializes the `dtNavMesh` object. It sets various member variables to their
+ * initial values and allocates memory for tiles and other data structures. The navigation mesh
+ * should be initialized further using the `init` method.
+ */
 dtNavMesh::dtNavMesh() :
 	m_tileWidth(0),
 	m_tileHeight(0),
@@ -206,6 +299,13 @@ dtNavMesh::dtNavMesh() :
 	m_orig[2] = 0;
 }
 
+/**
+ * @brief Destroys the navigation mesh and frees associated memory.
+ *
+ * This destructor cleans up the `dtNavMesh` object by freeing memory allocated for tiles with
+ * the #DT_TILE_FREE_DATA flag set. It also frees memory allocated for tile lookup and other
+ * data structures. Once this destructor is called, the `dtNavMesh` object should not be used.
+ */
 dtNavMesh::~dtNavMesh()
 {
 	for (int i = 0; i < m_maxTiles; ++i)
@@ -221,6 +321,17 @@ dtNavMesh::~dtNavMesh()
 	dtFree(m_tiles);
 }
 
+/**
+ * @brief Initializes the navigation mesh with the specified parameters.
+ *
+ * This method initializes the navigation mesh with the provided `params`. It copies the parameters
+ * and sets up the required data structures for tiles and tile lookup. Memory for tiles and lookup
+ * data is allocated, and an ID generator is initialized based on the maximum number of tiles and
+ * polygons. The navigation mesh should be initialized using this method before use.
+ *
+ * @param params A pointer to the `dtNavMeshParams` structure containing the navigation mesh parameters.
+ * @return The status of the initialization operation. Returns #DT_SUCCESS on success or an error code on failure.
+ */
 dtStatus dtNavMesh::init(const dtNavMeshParams* params)
 {
 	memcpy(&m_params, params, sizeof(dtNavMeshParams));
@@ -264,6 +375,18 @@ dtStatus dtNavMesh::init(const dtNavMeshParams* params)
 	return DT_SUCCESS;
 }
 
+/**
+ * @brief Initializes the navigation mesh from binary data.
+ *
+ * This method initializes the navigation mesh using binary data provided in the `data` parameter.
+ * It checks whether the data format is correct and then initializes the navigation mesh with the
+ * provided parameters. It further adds the tile from the binary data using the `addTile` method.
+ *
+ * @param data The binary data containing navigation mesh information.
+ * @param dataSize The size of the binary data in bytes.
+ * @param flags Additional flags to control the initialization process.
+ * @return The status of the initialization operation. Returns #DT_SUCCESS on success or an error code on failure.
+ */
 dtStatus dtNavMesh::init(unsigned char* data, const int dataSize, const int flags)
 {
 	// Make sure the data is in right format.
@@ -287,16 +410,38 @@ dtStatus dtNavMesh::init(unsigned char* data, const int dataSize, const int flag
 	return addTile(data, dataSize, flags, 0, 0);
 }
 
-/// @par
-///
-/// @note The parameters are created automatically when the single tile
-/// initialization is performed.
+/**
+ * @brief Gets the navigation mesh parameters.
+ *
+ * This method returns a pointer to the navigation mesh parameters structure, which contains
+ * information about the navigation mesh's origin, tile size, and maximum tile and polygon limits.
+ *
+ * @note The parameters are created automatically when the single tile initialization is performed.
+ * @return A pointer to the `dtNavMeshParams` structure representing the navigation mesh parameters.
+ */
 const dtNavMeshParams* dtNavMesh::getParams() const
 {
 	return &m_params;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
+/**
+ * @brief Finds connecting polygons between two vertices on a specified tile edge.
+ *
+ * This method finds connecting polygons between two vertices `va` and `vb` on a specified tile's
+ * edge. The `tile` parameter specifies the tile to search on, and the `side` parameter indicates
+ * the edge of the tile. The connecting polygons are returned in the `con` array along with their
+ * intersection area in the `conarea` array.
+ *
+ * @param va The start vertex.
+ * @param vb The end vertex.
+ * @param tile A pointer to the `dtMeshTile` on which to search for connecting polygons.
+ * @param side The edge of the tile (0-3) to search for connections.
+ * @param con An array to store the connecting polygon references.
+ * @param conarea An array to store the intersection areas of the connecting polygons.
+ * @param maxcon The maximum number of connecting polygons that can be stored in the `con` and `conarea` arrays.
+ * @return The number of connecting polygons found. If the `maxcon` limit is reached, only a subset of the connecting polygons is returned.
+ */
 int dtNavMesh::findConnectingPolys(const float* va, const float* vb,
 	const dtMeshTile* tile, int side,
 	dtPolyRef* con, float* conarea, int maxcon) const
@@ -350,6 +495,15 @@ int dtNavMesh::findConnectingPolys(const float* va, const float* vb,
 	return n;
 }
 
+/**
+ * @brief Disconnects external links between two tiles.
+ *
+ * This method disconnects external links between the specified `tile` and `target` tile. It iterates through
+ * the polygons of the `tile` and removes links that point to the `target` tile. It updates the links accordingly.
+ *
+ * @param tile The source tile from which to disconnect external links.
+ * @param target The target tile to disconnect external links to.
+ */
 void dtNavMesh::unconnectExtLinks(dtMeshTile* tile, dtMeshTile* target)
 {
 	if (!tile || !target) return;
@@ -385,6 +539,17 @@ void dtNavMesh::unconnectExtLinks(dtMeshTile* tile, dtMeshTile* target)
 	}
 }
 
+/**
+ * @brief Connects external links between two tiles.
+ *
+ * This method connects external links between the specified `tile` and `target` tile on a specific `side`.
+ * It iterates through the polygons of the `tile` and creates new links to connecting polygons in the `target` tile
+ * on the specified side. The links are created and compressed based on portal limits.
+ *
+ * @param tile The source tile from which to connect external links.
+ * @param target The target tile to connect external links to.
+ * @param side The side of the tile to connect external links (0-3).
+ */
 void dtNavMesh::connectExtLinks(dtMeshTile* tile, dtMeshTile* target, int side)
 {
 	if (!tile) return;
@@ -452,6 +617,19 @@ void dtNavMesh::connectExtLinks(dtMeshTile* tile, dtMeshTile* target, int side)
 	}
 }
 
+/**
+ * @brief Connects external off-mesh links from one tile to another.
+ *
+ * This method connects external off-mesh links from the specified `tile` to the specified `target` tile
+ * on a specific `side`. It iterates through the off-mesh connections in the `target` tile and finds
+ * the ones that have a side matching the specified side. For each matching off-mesh connection, it
+ * checks if it can be connected to a polygon in the current `tile`. If a connection is found, it creates
+ * the appropriate links between the polygons in both tiles.
+ *
+ * @param tile The source tile from which to connect external off-mesh links.
+ * @param target The target tile to connect external off-mesh links to.
+ * @param side The side of the tile to connect external off-mesh links (0-3).
+ */
 void dtNavMesh::connectExtOffMeshLinks(dtMeshTile* tile, dtMeshTile* target, int side)
 {
 	if (!tile) return;
@@ -519,9 +697,17 @@ void dtNavMesh::connectExtOffMeshLinks(dtMeshTile* tile, dtMeshTile* target, int
 			}
 		}
 	}
-
 }
 
+/**
+ * @brief Connects internal links between polygons within a single tile.
+ *
+ * This method connects internal links between polygons within the specified `tile`. It iterates through
+ * the polygons in the tile and creates links between neighboring polygons. The links are added to the
+ * linked list of each polygon.
+ *
+ * @param tile The tile for which to connect internal links.
+ */
 void dtNavMesh::connectIntLinks(dtMeshTile* tile)
 {
 	if (!tile) return;
@@ -559,6 +745,17 @@ void dtNavMesh::connectIntLinks(dtMeshTile* tile)
 	}
 }
 
+/**
+ * @brief Initializes base off-mesh links for a given tile.
+ *
+ * This method initializes base off-mesh links for the specified `tile`. Off-mesh connections
+ * are links that connect two non-contiguous regions of the navigation mesh, often used for
+ * jumping, climbing, or other special movement actions. This function finds the nearest
+ * polygon within the current tile that matches the start point of each off-mesh connection
+ * and creates appropriate links between the polygons.
+ *
+ * @param tile The tile for which to initialize base off-mesh links.
+ */
 void dtNavMesh::baseOffMeshLinks(dtMeshTile* tile)
 {
 	if (!tile) return;
@@ -617,6 +814,19 @@ void dtNavMesh::baseOffMeshLinks(dtMeshTile* tile)
 	}
 }
 
+/**
+ * @brief Finds the closest point on a polygon to a given position.
+ *
+ * This method calculates the closest point on a polygon referenced by the provided `ref`
+ * to a given `pos`. It also returns whether the closest point is over the polygon or not.
+ * If the polygon type is an off-mesh connection, it directly computes the closest point.
+ * Otherwise, it clamps the point to the nearest edge of the polygon.
+ *
+ * @param ref The reference ID of the polygon.
+ * @param pos The position to find the closest point to.
+ * @param closest The resulting closest point on the polygon.
+ * @param posOverPoly A boolean indicating whether the `pos` is over the polygon or not.
+ */
 void dtNavMesh::closestPointOnPoly(dtPolyRef ref, const float* pos, float* closest, bool* posOverPoly) const
 {
 	const dtMeshTile* tile = 0;
@@ -696,6 +906,19 @@ void dtNavMesh::closestPointOnPoly(dtPolyRef ref, const float* pos, float* close
 	}
 }
 
+/**
+ * @brief Finds the nearest polygon within a tile to a given point.
+ *
+ * This method searches for the nearest polygon within the specified `tile` to a given `center` point.
+ * It also returns the closest point on the polygon to the center and whether the closest point
+ * is over the polygon or not.
+ *
+ * @param tile The tile within which to search for the nearest polygon.
+ * @param center The center point to find the nearest polygon to.
+ * @param extents The extents of the search area.
+ * @param nearestPt The resulting closest point on the polygon.
+ * @return The reference ID of the nearest polygon found.
+ */
 dtPolyRef dtNavMesh::findNearestPolyInTile(const dtMeshTile* tile,
 	const float* center, const float* extents,
 	float* nearestPt) const
@@ -744,6 +967,21 @@ dtPolyRef dtNavMesh::findNearestPolyInTile(const dtMeshTile* tile,
 	return nearest;
 }
 
+/**
+ * @brief Queries polygons within a tile that overlap with a given bounding box.
+ *
+ * This method queries the polygons within the specified `tile` that overlap with the bounding box
+ * defined by `qmin` and `qmax`. It returns an array of polygon references and the number of polygons
+ * found, up to a maximum of `maxPolys`. The bounding box query can be used to find polygons that are
+ * within or intersect the specified area.
+ *
+ * @param tile The tile within which to perform the query.
+ * @param qmin The minimum corner of the query bounding box.
+ * @param qmax The maximum corner of the query bounding box.
+ * @param polys An array to store the polygon references found.
+ * @param maxPolys The maximum number of polygon references that can be stored in `polys`.
+ * @return The number of polygons found that match the query criteria.
+ */
 int dtNavMesh::queryPolygonsInTile(const dtMeshTile* tile, const float* qmin, const float* qmax,
 	dtPolyRef* polys, const int maxPolys) const
 {
@@ -828,17 +1066,26 @@ int dtNavMesh::queryPolygonsInTile(const dtMeshTile* tile, const float* qmin, co
 	}
 }
 
-/// @par
-///
-/// The add operation will fail if the data is in the wrong format, the allocated tile
-/// space is full, or there is a tile already at the specified reference.
-///
-/// The lastRef parameter is used to restore a tile with the same tile
-/// reference it had previously used.  In this case the #dtPolyRef's for the
-/// tile will be restored to the same values they were before the tile was 
-/// removed.
-///
-/// @see dtCreateNavMeshData, #removeTile
+/**
+ * @brief Adds a new tile to the navigation mesh.
+ *
+ * This method adds a new tile to the navigation mesh using the provided tile data. It performs
+ * several checks to ensure the data is in the correct format, there is space available for
+ * the new tile, and the tile reference is not already in use. If successful, it returns the
+ * reference of the added tile.
+ *
+ * The `lastRef` parameter is used to restore a tile with the same tile reference it had
+ * previously used. In this case, the `dtPolyRef` values for the tile will be restored to
+ * the same values they were before the tile was removed.
+ *
+ * @param data The tile data to add.
+ * @param dataSize The size of the tile data.
+ * @param flags Flags for the tile.
+ * @param lastRef The reference of the tile to be restored (if applicable).
+ * @param result A pointer to store the reference of the added tile.
+ * @return The status of the operation, indicating success or failure.
+ * @see dtCreateNavMeshData, #removeTile
+ */
 dtStatus dtNavMesh::addTile(unsigned char* data, int dataSize, int flags,
 	dtTileRef lastRef, dtTileRef* result)
 {
@@ -978,6 +1225,17 @@ dtStatus dtNavMesh::addTile(unsigned char* data, int dataSize, int flags,
 	return DT_SUCCESS;
 }
 
+/**
+ * @brief Gets the tile at the specified coordinates and layer.
+ *
+ * This method retrieves the tile at the specified `(x, y, layer)` coordinates from the navigation
+ * mesh. If no tile is found at the given location, it returns nullptr.
+ *
+ * @param x The x-coordinate of the tile's position.
+ * @param y The y-coordinate of the tile's position.
+ * @param layer The layer index of the tile.
+ * @return A pointer to the tile at the specified location, or nullptr if not found.
+ */
 const dtMeshTile* dtNavMesh::getTileAt(const int x, const int y, const int layer) const
 {
 	// Find tile based on hash.
@@ -997,6 +1255,20 @@ const dtMeshTile* dtNavMesh::getTileAt(const int x, const int y, const int layer
 	return 0;
 }
 
+/**
+ * @brief Gets neighboring tiles at the specified coordinates and side.
+ *
+ * This method retrieves neighboring tiles at the specified `(x, y)` coordinates, considering the
+ * side specified. It calculates the new coordinates based on the given side and then calls
+ * `getTilesAt` to find the tiles at the new location.
+ *
+ * @param x The x-coordinate of the current tile's position.
+ * @param y The y-coordinate of the current tile's position.
+ * @param side The side index indicating the direction to find neighbors (0 to 7).
+ * @param tiles An array to store the neighboring tiles.
+ * @param maxTiles The maximum number of neighboring tiles to retrieve.
+ * @return The number of neighboring tiles found.
+ */
 int dtNavMesh::getNeighbourTilesAt(const int x, const int y, const int side, dtMeshTile** tiles, const int maxTiles) const
 {
 	int nx = x, ny = y;
@@ -1015,6 +1287,20 @@ int dtNavMesh::getNeighbourTilesAt(const int x, const int y, const int side, dtM
 	return getTilesAt(nx, ny, tiles, maxTiles);
 }
 
+/**
+ * @brief Gets tiles at the specified coordinates.
+ *
+ * This method retrieves tiles at the specified `(x, y)` coordinates from the navigation mesh. It
+ * iterates through the tiles in the hash grid and checks if each tile's position matches the
+ * specified coordinates. If a matching tile is found, it is added to the `tiles` array. The
+ * process continues until either all matching tiles are found or the `maxTiles` limit is reached.
+ *
+ * @param x The x-coordinate of the tiles' positions.
+ * @param y The y-coordinate of the tiles' positions.
+ * @param tiles An array to store the tiles found.
+ * @param maxTiles The maximum number of tiles to retrieve.
+ * @return The number of tiles found at the specified coordinates.
+ */
 int dtNavMesh::getTilesAt(const int x, const int y, dtMeshTile** tiles, const int maxTiles) const
 {
 	int n = 0;
@@ -1037,10 +1323,21 @@ int dtNavMesh::getTilesAt(const int x, const int y, dtMeshTile** tiles, const in
 	return n;
 }
 
-/// @par
-///
-/// This function will not fail if the tiles array is too small to hold the
-/// entire result set.  It will simply fill the array to capacity.
+/**
+ * @brief Gets tiles at the specified coordinates.
+ *
+ * This method retrieves tiles at the specified `(x, y)` coordinates from the navigation mesh.
+ * It iterates through the tiles in the hash grid and checks if each tile's position matches the
+ * specified coordinates. If a matching tile is found, it is added to the `tiles` array. The
+ * process continues until either all matching tiles are found or the `maxTiles` limit is reached.
+ * If the `tiles` array is too small to hold the entire result set, it will fill the array to capacity.
+ *
+ * @param x The x-coordinate of the tiles' positions.
+ * @param y The y-coordinate of the tiles' positions.
+ * @param tiles An array of pointers to const mesh tiles to store the tiles found.
+ * @param maxTiles The maximum number of tiles to retrieve.
+ * @return The number of tiles found at the specified coordinates.
+ */
 int dtNavMesh::getTilesAt(const int x, const int y, dtMeshTile const** tiles, const int maxTiles) const
 {
 	int n = 0;
@@ -1063,7 +1360,18 @@ int dtNavMesh::getTilesAt(const int x, const int y, dtMeshTile const** tiles, co
 	return n;
 }
 
-
+/**
+ * @brief Gets the tile reference at the specified coordinates and layer.
+ *
+ * This method retrieves the tile reference at the specified `(x, y)` coordinates and the
+ * specified layer. It searches the navigation mesh tiles for a tile with matching coordinates and
+ * layer and returns its tile reference.
+ *
+ * @param x The x-coordinate of the tile's position.
+ * @param y The y-coordinate of the tile's position.
+ * @param layer The layer of the tile.
+ * @return The tile reference of the tile at the specified coordinates and layer, or 0 if not found.
+ */
 dtTileRef dtNavMesh::getTileRefAt(const int x, const int y, const int layer) const
 {
 	// Find tile based on hash.
@@ -1083,6 +1391,16 @@ dtTileRef dtNavMesh::getTileRefAt(const int x, const int y, const int layer) con
 	return 0;
 }
 
+/**
+ * @brief Gets the mesh tile corresponding to a tile reference.
+ *
+ * This method retrieves the mesh tile associated with the specified tile reference. It decodes
+ * the tile index and salt from the tile reference and validates them against the navigation mesh.
+ * If the tile reference is valid, it returns a pointer to the corresponding mesh tile; otherwise, it returns null.
+ *
+ * @param ref The tile reference to look up.
+ * @return A pointer to the mesh tile corresponding to the tile reference, or null if not found or invalid.
+ */
 const dtMeshTile* dtNavMesh::getTileByRef(dtTileRef ref) const
 {
 	if (!ref)
@@ -1097,27 +1415,73 @@ const dtMeshTile* dtNavMesh::getTileByRef(dtTileRef ref) const
 	return tile;
 }
 
+/**
+ * @brief Gets the maximum number of tiles in the navigation mesh.
+ *
+ * This method returns the maximum number of tiles that can be stored in the navigation mesh.
+ *
+ * @return The maximum number of tiles in the navigation mesh.
+ */
 int dtNavMesh::getMaxTiles() const
 {
 	return m_maxTiles;
 }
 
+
+/**
+ * @brief Gets a pointer to a mesh tile by its index.
+ *
+ * This method retrieves a pointer to the mesh tile at the specified index.
+ *
+ * @param i The index of the mesh tile.
+ * @return A pointer to the mesh tile at the specified index.
+ */
 dtMeshTile* dtNavMesh::getTile(int i)
 {
 	return &m_tiles[i];
 }
 
+/**
+ * @brief Gets a const pointer to a mesh tile by its index.
+ *
+ * This method retrieves a constant pointer to the mesh tile at the specified index.
+ *
+ * @param i The index of the mesh tile.
+ * @return A constant pointer to the mesh tile at the specified index.
+ */
 const dtMeshTile* dtNavMesh::getTile(int i) const
 {
 	return &m_tiles[i];
 }
 
+/**
+ * @brief Calculates the tile coordinates (tx, ty) based on a world position (pos).
+ *
+ * This method calculates the tile coordinates `(tx, ty)` based on a given world position `pos`
+ * within the navigation mesh. It is used to determine which tile covers a specific point in the world.
+ *
+ * @param pos The world position for which to calculate the tile coordinates.
+ * @param tx A pointer to store the calculated x-coordinate of the tile.
+ * @param ty A pointer to store the calculated y-coordinate of the tile.
+ */
 void dtNavMesh::calcTileLoc(const float* pos, int* tx, int* ty) const
 {
 	*tx = (int)floorf((pos[0] - m_orig[0]) / m_tileWidth);
 	*ty = (int)floorf((pos[2] - m_orig[2]) / m_tileHeight);
 }
 
+/**
+ * @brief Retrieves the tile and polygon data associated with a polygon reference.
+ *
+ * This method takes a polygon reference `ref` as input and returns the corresponding tile and polygon data.
+ * It decodes the polygon reference to obtain the tile index and polygon index, validates them, and then
+ * retrieves the tile and polygon pointers, which are returned through the `tile` and `poly` output parameters.
+ *
+ * @param ref The polygon reference for which to retrieve the tile and polygon data.
+ * @param tile A pointer to store the tile data.
+ * @param poly A pointer to store the polygon data.
+ * @return The status of the operation. Returns DT_SUCCESS if successful or a failure status code if not.
+ */
 dtStatus dtNavMesh::getTileAndPolyByRef(const dtPolyRef ref, const dtMeshTile** tile, const dtPoly** poly) const
 {
 	if (!ref) return DT_FAILURE;
@@ -1131,11 +1495,22 @@ dtStatus dtNavMesh::getTileAndPolyByRef(const dtPolyRef ref, const dtMeshTile** 
 	return DT_SUCCESS;
 }
 
-/// @par
-///
-/// @warning Only use this function if it is known that the provided polygon
-/// reference is valid. This function is faster than #getTileAndPolyByRef, but
-/// it does not validate the reference.
+
+/**
+ * @brief Retrieves the tile and polygon data associated with a polygon reference without validation.
+ *
+ * This method is similar to `getTileAndPolyByRef`, but it does not validate the provided polygon reference.
+ * It directly decodes the reference and retrieves the corresponding tile and polygon data. This function
+ * is faster than `getTileAndPolyByRef` but should only be used when it is known that the provided reference is valid.
+ *
+ * @param ref The polygon reference for which to retrieve the tile and polygon data.
+ * @param tile A pointer to store the tile data.
+ * @param poly A pointer to store the polygon data.
+ *
+ * @warning Only use this function if it is known that the provided polygon
+ * reference is valid. This function is faster than #getTileAndPolyByRef, but
+ * it does not validate the reference.
+ */
 void dtNavMesh::getTileAndPolyByRefUnsafe(const dtPolyRef ref, const dtMeshTile** tile, const dtPoly** poly) const
 {
 	unsigned int salt, it, ip;
@@ -1144,6 +1519,15 @@ void dtNavMesh::getTileAndPolyByRefUnsafe(const dtPolyRef ref, const dtMeshTile*
 	*poly = &m_tiles[it].polys[ip];
 }
 
+/**
+ * @brief Checks if a polygon reference is valid.
+ *
+ * This method checks if a given polygon reference is valid by decoding it and validating the tile index,
+ * salt, and polygon index. It returns true if the reference is valid and false otherwise.
+ *
+ * @param ref The polygon reference to check for validity.
+ * @return True if the polygon reference is valid; otherwise, false.
+ */
 bool dtNavMesh::isValidPolyRef(dtPolyRef ref) const
 {
 	if (!ref) return false;
@@ -1155,12 +1539,25 @@ bool dtNavMesh::isValidPolyRef(dtPolyRef ref) const
 	return true;
 }
 
-/// @par
-///
-/// This function returns the data for the tile so that, if desired,
-/// it can be added back to the navigation mesh at a later point.
-///
-/// @see #addTile
+/**
+ * @brief Removes a tile from the navigation mesh.
+ *
+ * This method removes a tile from the navigation mesh based on its tile reference. It performs the following steps:
+ * - Removes the tile from the hash lookup.
+ * - Disconnects links to neighboring tiles.
+ * - Frees the tile's data if it owns it.
+ * - Resets the tile's properties.
+ * - Adds the tile to the free tile list for reuse.
+ *
+ * The removed tile's data can be stored in the `data` output parameter for later reinsertion into the navigation mesh
+ * using the `addTile` method.
+ *
+ * @param ref The tile reference of the tile to be removed.
+ * @param data A pointer to store the removed tile's data if it owns it.
+ * @param dataSize A pointer to store the size of the removed tile's data if it owns it.
+ * @return The status of the operation. Returns DT_SUCCESS if successful or a failure status code if not.
+ * @see #addTile
+ */
 dtStatus dtNavMesh::removeTile(dtTileRef ref, unsigned char** data, int* dataSize)
 {
 	if (!ref)
@@ -1257,6 +1654,15 @@ dtStatus dtNavMesh::removeTile(dtTileRef ref, unsigned char** data, int* dataSiz
 	return DT_SUCCESS;
 }
 
+/**
+ * @brief Retrieves the tile reference associated with the given mesh tile.
+ *
+ * This method takes a pointer to a mesh tile as input and calculates the tile reference for that tile.
+ * It encodes the salt value, tile index, and a polygon index of 0 to create a unique tile reference.
+ *
+ * @param tile A pointer to the mesh tile for which to retrieve the tile reference.
+ * @return The tile reference for the specified mesh tile.
+ */
 dtTileRef dtNavMesh::getTileRef(const dtMeshTile* tile) const
 {
 	if (!tile) return 0;
@@ -1264,20 +1670,27 @@ dtTileRef dtNavMesh::getTileRef(const dtMeshTile* tile) const
 	return (dtTileRef)encodePolyId(tile->salt, it, 0);
 }
 
-/// @par
-///
-/// Example use case:
-/// @code
-///
-/// const dtPolyRef base = navmesh->getPolyRefBase(tile);
-/// for (int i = 0; i < tile->header->polyCount; ++i)
-/// {
-///     const dtPoly* p = &tile->polys[i];
-///     const dtPolyRef ref = base | (dtPolyRef)i;
-///     
-///     // Use the reference to access the polygon data.
-/// }
-/// @endcode
+/**
+ * @brief Retrieves the base polygon reference for a given mesh tile.
+ *
+ * This method calculates and returns the base polygon reference for a specified mesh tile.
+ * The base reference is used as a starting point to access individual polygons within the tile.
+ *
+ * @param tile A pointer to the mesh tile for which to retrieve the base polygon reference.
+ * @return The base polygon reference for the specified mesh tile.
+ *
+ * @par Example use case:
+ * @code
+ * const dtPolyRef base = navmesh->getPolyRefBase(tile);
+ * for (int i = 0; i < tile->header->polyCount; ++i)
+ * {
+ *     const dtPoly* p = &tile->polys[i];
+ *     const dtPolyRef ref = base | (dtPolyRef)i;
+ *
+ *     // Use the reference to access the polygon data.
+ * }
+ * @endcode
+ */
 dtPolyRef dtNavMesh::getPolyRefBase(const dtMeshTile* tile) const
 {
 	if (!tile) return 0;
@@ -1285,20 +1698,45 @@ dtPolyRef dtNavMesh::getPolyRefBase(const dtMeshTile* tile) const
 	return encodePolyId(tile->salt, it, 0);
 }
 
+/**
+ * @brief Represents the state of a navigation mesh tile.
+ *
+ * The `dtTileState` structure stores information about the state of a navigation mesh tile
+ * at a specific point in time. It includes a magic number, a version number, and the tile's reference
+ * at the time of storing the data.
+ */
 struct dtTileState
 {
-	int magic;								// Magic number, used to identify the data.
-	int version;							// Data version number.
-	dtTileRef ref;							// Tile ref at the time of storing the data.
+	int magic;        /**< Magic number, used to identify the data. */
+	int version;      /**< Data version number. */
+	dtTileRef ref;    /**< Tile reference at the time of storing the data. */
 };
 
+/**
+ * @brief Represents the state of a navigation mesh polygon.
+ *
+ * The `dtPolyState` structure stores information about the state of a polygon within a navigation mesh
+ * at a specific point in time. It includes flags that describe polygon properties (see dtPolyFlags)
+ * and the area ID of the polygon.
+ */
 struct dtPolyState
 {
-	unsigned short flags;						// Flags (see dtPolyFlags).
-	unsigned char area;							// Area ID of the polygon.
+	unsigned short flags;  /**< Flags (see dtPolyFlags). */
+	unsigned char area;    /**< Area ID of the polygon. */
 };
 
-///  @see #storeTileState
+/**
+ * @brief Calculates the size required to store the state of a mesh tile.
+ *
+ * This method calculates and returns the size required to store the state of a specified mesh tile,
+ * including both structural and non-structural data. The state size includes information about polygon
+ * flags, area IDs, etc.
+ *
+ * @param tile A pointer to the mesh tile for which to calculate the state size.
+ * @return The size in bytes required to store the state of the specified mesh tile.
+ *
+ * @see #storeTileState
+ */
 int dtNavMesh::getTileStateSize(const dtMeshTile* tile) const
 {
 	if (!tile) return 0;
@@ -1307,11 +1745,32 @@ int dtNavMesh::getTileStateSize(const dtMeshTile* tile) const
 	return headerSize + polyStateSize;
 }
 
-/// @par
-///
-/// Tile state includes non-structural data such as polygon flags, area ids, etc.
-/// @note The state data is only valid until the tile reference changes.
-/// @see #getTileStateSize, #restoreTileState
+/**
+ * @brief Stores the state of a mesh tile in a provided data buffer.
+ *
+ * This method stores the state of a specified mesh tile, including both structural and non-structural data,
+ * into the provided data buffer. The state data includes information about polygon flags, area IDs, etc.
+ *
+ * @param tile A pointer to the mesh tile for which to store the state.
+ * @param data A pointer to the buffer where the state data will be stored.
+ * @param maxDataSize The maximum size of the data buffer.
+ * @return The status of the operation. Use #dtStatusSucceeded to check if the operation was successful.
+ *
+ * @note The state data is only valid until the tile reference changes.
+ * @see #getTileStateSize, #restoreTileState
+ *
+ * @par Example use case:
+ * @code
+ * const int stateSize = navmesh->getTileStateSize(tile);
+ * unsigned char* stateData = new unsigned char[stateSize];
+ * if (dtStatusSucceeded(navmesh->storeTileState(tile, stateData, stateSize)))
+ * {
+ *     // State data has been successfully stored in stateData buffer.
+ *     // ...
+ * }
+ * delete[] stateData; // Don't forget to release the allocated memory.
+ * @endcode
+ */
 dtStatus dtNavMesh::storeTileState(const dtMeshTile* tile, unsigned char* data, const int maxDataSize) const
 {
 	// Make sure there is enough space to store the state.
@@ -1339,11 +1798,25 @@ dtStatus dtNavMesh::storeTileState(const dtMeshTile* tile, unsigned char* data, 
 	return DT_SUCCESS;
 }
 
-/// @par
-///
-/// Tile state includes non-structural data such as polygon flags, area ids, etc.
-/// @note This function does not impact the tile's #dtTileRef and #dtPolyRef's.
-/// @see #storeTileState
+/**
+ * @brief Restores the state of a navigation mesh tile.
+ *
+ * This function restores the state of a navigation mesh tile based on the provided data.
+ * The tile's non-structural data, such as polygon flags and area IDs, are restored to the
+ * specified state. The function checks for compatibility with the stored state data and
+ * returns success if the restoration is successful.
+ *
+ * @param[in,out] tile The tile to restore the state for.
+ * @param[in] data The state data containing the tile's previous state.
+ * @param[in] maxDataSize The maximum size of the state data buffer.
+ *
+ * @return The status of the restoration operation. Use #dtStatusSucceed to check for success.
+ *         Possible failure statuses include #DT_FAILURE, #DT_WRONG_MAGIC, #DT_WRONG_VERSION,
+ *         and #DT_INVALID_PARAM.
+ *
+ * @note This function does not impact the tile's #dtTileRef and #dtPolyRef values.
+ * @see #storeTileState
+ */
 dtStatus dtNavMesh::restoreTileState(dtMeshTile* tile, const unsigned char* data, const int maxDataSize)
 {
 	// Make sure there is enough space to store the state.
@@ -1374,13 +1847,24 @@ dtStatus dtNavMesh::restoreTileState(dtMeshTile* tile, const unsigned char* data
 	return DT_SUCCESS;
 }
 
-/// @par
-///
-/// Off-mesh connections are stored in the navigation mesh as special 2-vertex 
-/// polygons with a single edge. At least one of the vertices is expected to be 
-/// inside a normal polygon. So an off-mesh connection is "entered" from a 
-/// normal polygon at one of its endpoints. This is the polygon identified by 
-/// the prevRef parameter.
+/**
+ * @brief Retrieves the endpoints of an off-mesh connection polygon.
+ *
+ * Off-mesh connections are stored in the navigation mesh as special 2-vertex
+ * polygons with a single edge. At least one of the vertices is expected to be
+ * inside a normal polygon. So an off-mesh connection is "entered" from a
+ * normal polygon at one of its endpoints. This is the polygon identified by
+ * the prevRef parameter.
+ *
+ * @param[in] prevRef The reference to the previous polygon from which the
+ *                    off-mesh connection is entered.
+ * @param[in] polyRef The reference to the off-mesh connection polygon.
+ * @param[out] startPos The starting position of the off-mesh connection.
+ * @param[out] endPos The ending position of the off-mesh connection.
+ *
+ * @return The status of the operation. Use #dtStatusSucceed to check for success.
+ *         Possible failure statuses include #DT_FAILURE and #DT_INVALID_PARAM.
+ */
 dtStatus dtNavMesh::getOffMeshConnectionPolyEndPoints(dtPolyRef prevRef, dtPolyRef polyRef, float* startPos, float* endPos) const
 {
 	unsigned int salt, it, ip;
@@ -1423,7 +1907,13 @@ dtStatus dtNavMesh::getOffMeshConnectionPolyEndPoints(dtPolyRef prevRef, dtPolyR
 	return DT_SUCCESS;
 }
 
-
+/**
+ * @brief Retrieves an off-mesh connection by its reference.
+ *
+ * @param[in] ref The reference to the off-mesh connection.
+ *
+ * @return A pointer to the off-mesh connection data if found, or nullptr if not found.
+ */
 const dtOffMeshConnection* dtNavMesh::getOffMeshConnectionByRef(dtPolyRef ref) const
 {
 	unsigned int salt, it, ip;
@@ -1448,7 +1938,15 @@ const dtOffMeshConnection* dtNavMesh::getOffMeshConnectionByRef(dtPolyRef ref) c
 	return &tile->offMeshCons[idx];
 }
 
-
+/**
+ * @brief Sets the flags of a polygon identified by its reference.
+ *
+ * @param[in] ref The reference to the polygon.
+ * @param[in] flags The new flags to set for the polygon.
+ *
+ * @return The status of the operation. Use #dtStatusSucceed to check for success.
+ *         Possible failure statuses include #DT_FAILURE and #DT_INVALID_PARAM.
+ */
 dtStatus dtNavMesh::setPolyFlags(dtPolyRef ref, unsigned short flags)
 {
 	if (!ref) return DT_FAILURE;
@@ -1466,6 +1964,15 @@ dtStatus dtNavMesh::setPolyFlags(dtPolyRef ref, unsigned short flags)
 	return DT_SUCCESS;
 }
 
+/**
+ * @brief Retrieves the flags of a polygon identified by its reference.
+ *
+ * @param[in] ref The reference to the polygon.
+ * @param[out] resultFlags The flags of the polygon identified by the reference.
+ *
+ * @return The status of the operation. Use #dtStatusSucceed to check for success.
+ *         Possible failure statuses include #DT_FAILURE and #DT_INVALID_PARAM.
+ */
 dtStatus dtNavMesh::getPolyFlags(dtPolyRef ref, unsigned short* resultFlags) const
 {
 	if (!ref) return DT_FAILURE;
@@ -1482,6 +1989,15 @@ dtStatus dtNavMesh::getPolyFlags(dtPolyRef ref, unsigned short* resultFlags) con
 	return DT_SUCCESS;
 }
 
+/**
+ * @brief Sets the area ID of a polygon identified by its reference.
+ *
+ * @param[in] ref The reference to the polygon.
+ * @param[in] area The new area ID to set for the polygon.
+ *
+ * @return The status of the operation. Use #dtStatusSucceed to check for success.
+ *         Possible failure statuses include #DT_FAILURE and #DT_INVALID_PARAM.
+ */
 dtStatus dtNavMesh::setPolyArea(dtPolyRef ref, unsigned char area)
 {
 	if (!ref) return DT_FAILURE;
@@ -1498,6 +2014,15 @@ dtStatus dtNavMesh::setPolyArea(dtPolyRef ref, unsigned char area)
 	return DT_SUCCESS;
 }
 
+/**
+ * @brief Retrieves the area ID of a polygon identified by its reference.
+ *
+ * @param[in] ref The reference to the polygon.
+ * @param[out] resultArea The area ID of the polygon identified by the reference.
+ *
+ * @return The status of the operation. Use #dtStatusSucceed to check for success.
+ *         Possible failure statuses include #DT_FAILURE and #DT_INVALID_PARAM.
+ */
 dtStatus dtNavMesh::getPolyArea(dtPolyRef ref, unsigned char* resultArea) const
 {
 	if (!ref) return DT_FAILURE;
@@ -1513,4 +2038,3 @@ dtStatus dtNavMesh::getPolyArea(dtPolyRef ref, unsigned char* resultArea) const
 
 	return DT_SUCCESS;
 }
-

@@ -27,9 +27,14 @@
 #include "DetourAlloc.h"
 #include "DetourAssert.h"
 
+/**
+ * @brief The maximum index value representing a null mesh index.
+ */
 static unsigned short MESH_NULL_IDX = 0xffff;
 
-
+/**
+ * @brief Structure representing a bounding volume item.
+ */
 struct BVItem
 {
 	unsigned short bmin[3];
@@ -37,6 +42,13 @@ struct BVItem
 	int i;
 };
 
+/**
+ * @brief Compare function for sorting items along the X-axis.
+ *
+ * @param va Pointer to the first BVItem.
+ * @param vb Pointer to the second BVItem.
+ * @return -1 if va is less than vb, 1 if va is greater than vb, and 0 if they are equal.
+ */
 static int compareItemX(const void* va, const void* vb)
 {
 	const BVItem* a = (const BVItem*)va;
@@ -48,6 +60,13 @@ static int compareItemX(const void* va, const void* vb)
 	return 0;
 }
 
+/**
+ * @brief Compare function for sorting items along the Y-axis.
+ *
+ * @param va Pointer to the first BVItem.
+ * @param vb Pointer to the second BVItem.
+ * @return -1 if va is less than vb, 1 if va is greater than vb, and 0 if they are equal.
+ */
 static int compareItemY(const void* va, const void* vb)
 {
 	const BVItem* a = (const BVItem*)va;
@@ -59,6 +78,14 @@ static int compareItemY(const void* va, const void* vb)
 	return 0;
 }
 
+
+/**
+ * @brief Compare function for sorting items along the Z-axis.
+ *
+ * @param va Pointer to the first BVItem.
+ * @param vb Pointer to the second BVItem.
+ * @return -1 if va is less than vb, 1 if va is greater than vb, and 0 if they are equal.
+ */
 static int compareItemZ(const void* va, const void* vb)
 {
 	const BVItem* a = (const BVItem*)va;
@@ -70,6 +97,16 @@ static int compareItemZ(const void* va, const void* vb)
 	return 0;
 }
 
+/**
+ * @brief Calculate the extents of a range of BVItems.
+ *
+ * @param items Array of BVItems.
+ * @param nitems Number of BVItems.
+ * @param imin Index of the first BVItem.
+ * @param imax Index of the last BVItem.
+ * @param bmin Output minimum bounds.
+ * @param bmax Output maximum bounds.
+ */
 static void calcExtends(BVItem* items, const int /*nitems*/, const int imin, const int imax,
 	unsigned short* bmin, unsigned short* bmax)
 {
@@ -94,6 +131,14 @@ static void calcExtends(BVItem* items, const int /*nitems*/, const int imin, con
 	}
 }
 
+/**
+ * @brief Determine the longest axis among three values.
+ *
+ * @param x Value for the X-axis.
+ * @param y Value for the Y-axis.
+ * @param z Value for the Z-axis.
+ * @return The index of the longest axis (0 for X, 1 for Y, 2 for Z).
+ */
 inline int longestAxis(unsigned short x, unsigned short y, unsigned short z)
 {
 	int	axis = 0;
@@ -111,6 +156,16 @@ inline int longestAxis(unsigned short x, unsigned short y, unsigned short z)
 	return axis;
 }
 
+/**
+ * @brief Subdivide a range of BVItems to create a BV tree.
+ *
+ * @param items Array of BVItems.
+ * @param nitems Number of BVItems.
+ * @param imin Index of the first BVItem.
+ * @param imax Index of the last BVItem.
+ * @param curNode Current node index.
+ * @param nodes Array of BV nodes.
+ */
 static void subdivide(BVItem* items, int nitems, int imin, int imax, int& curNode, dtBVNode* nodes)
 {
 	int inum = imax - imin;
@@ -169,6 +224,20 @@ static void subdivide(BVItem* items, int nitems, int imin, int imax, int& curNod
 	}
 }
 
+/**
+ * @brief Create a BV tree for a navigation mesh.
+ *
+ * @param verts Array of vertices.
+ * @param nverts Number of vertices.
+ * @param polys Array of polygons.
+ * @param npolys Number of polygons.
+ * @param nvp Number of vertices per polygon.
+ * @param cs Cell size.
+ * @param ch Cell height.
+ * @param nnodes Number of BV nodes.
+ * @param nodes Array of BV nodes.
+ * @return The number of BV nodes created.
+ */
 static int createBVTree(const unsigned short* verts, const int /*nverts*/,
 	const unsigned short* polys, const int npolys, const int nvp,
 	const float cs, const float ch,
@@ -214,6 +283,27 @@ static int createBVTree(const unsigned short* verts, const int /*nverts*/,
 	return curNode;
 }
 
+/**
+ * @brief Classify an off-mesh connection point with respect to a bounding volume.
+ *
+ * This function determines the relative position of a point to a bounding volume
+ * defined by its minimum (`bmin`) and maximum (`bmax`) bounds in 3D space.
+ *
+ * @param pt The 3D point to be classified.
+ * @param bmin The minimum bounds of the bounding volume.
+ * @param bmax The maximum bounds of the bounding volume.
+ *
+ * @return An unsigned char representing the classification result:
+ * - 0: Point is outside the bounding volume along the X-axis (XP).
+ * - 1: Point is outside the bounding volume along the X-axis and Z-axis (XP | ZP).
+ * - 2: Point is outside the bounding volume along the Z-axis (ZP).
+ * - 3: Point is outside the bounding volume along the X-axis and Z-axis (XM | ZP).
+ * - 4: Point is outside the bounding volume along the X-axis (XM).
+ * - 5: Point is outside the bounding volume along the X-axis and Z-axis (XM | ZM).
+ * - 6: Point is outside the bounding volume along the Z-axis (ZM).
+ * - 7: Point is outside the bounding volume along the X-axis and Z-axis (XP | ZM).
+ * - 0xff: Point is inside the bounding volume or the classification is unknown.
+ */
 static unsigned char classifyOffMeshPoint(const float* pt, const float* bmin, const float* bmax)
 {
 	static const unsigned char XP = 1 << 0;
@@ -244,13 +334,23 @@ static unsigned char classifyOffMeshPoint(const float* pt, const float* bmin, co
 
 // TODO: Better error handling.
 
-/// @par
-/// 
-/// The output data array is allocated using the detour allocator (dtAlloc()).  The method
-/// used to free the memory will be determined by how the tile is added to the navigation
-/// mesh.
-///
-/// @see dtNavMesh, dtNavMesh::addTile()
+/**
+ * @brief Creates navigation mesh data based on the specified parameters.
+ *
+ * This function generates navigation mesh data for a given set of input parameters. The resulting
+ * navigation mesh can be used for pathfinding and other navigation-related tasks.
+ *
+ * @param params A pointer to the structure containing the parameters for creating the navigation mesh.
+ * @param[out] outData A pointer to the pointer that will receive the allocated navigation mesh data.
+ * @param[out] outDataSize A pointer to an integer that will receive the size of the generated navigation mesh data in bytes.
+ *
+ * @note The output data array is allocated using the detour allocator (dtAlloc()). The method
+ * used to free the memory will be determined by how the tile is added to the navigation mesh.
+ *
+ * @return True if the navigation mesh data was successfully generated; otherwise, false.
+ *
+ * @see dtNavMesh, dtNavMesh::addTile()
+ */
 bool dtCreateNavMeshData(dtNavMeshCreateParams* params, unsigned char** outData, int* outDataSize)
 {
 	if (params->nvp > DT_VERTS_PER_POLYGON)
@@ -632,6 +732,18 @@ bool dtCreateNavMeshData(dtNavMeshCreateParams* params, unsigned char** outData,
 	return true;
 }
 
+/**
+ * @brief Swaps the endianess of a navigation mesh header and verifies its validity.
+ *
+ * This function swaps the endianess of a navigation mesh header in the provided data and
+ * verifies its validity by checking the magic number and version. It is used when loading
+ * navigation mesh data to ensure compatibility with the current system's endianess.
+ *
+ * @param data A pointer to the navigation mesh header data.
+ * @param dataSize The size of the navigation mesh header data in bytes (currently unused).
+ *
+ * @return True if the endianess swap was successful and the header is valid; otherwise, false.
+ */
 bool dtNavMeshHeaderSwapEndian(unsigned char* data, const int /*dataSize*/)
 {
 	dtMeshHeader* header = (dtMeshHeader*)data;
@@ -678,12 +790,22 @@ bool dtNavMeshHeaderSwapEndian(unsigned char* data, const int /*dataSize*/)
 	return true;
 }
 
-/// @par
-///
-/// @warning This function assumes that the header is in the correct endianess already. 
-/// Call #dtNavMeshHeaderSwapEndian() first on the data if the data is expected to be in wrong endianess 
-/// to start with. Call #dtNavMeshHeaderSwapEndian() after the data has been swapped if converting from 
-/// native to foreign endianess.
+/**
+ * @brief Swaps the endianess of a navigation mesh data block.
+ *
+ * This function swaps the endianess of a navigation mesh data block in the provided data.
+ * It assumes that the header is already in the correct endianess. Call #dtNavMeshHeaderSwapEndian()
+ * first on the data if the data is expected to be in the wrong endianess to start with.
+ * Call #dtNavMeshHeaderSwapEndian() after the data has been swapped if converting from native to foreign endianess.
+ *
+ * @warning This function should only be used on the data block after the header has been validated
+ * and its endianess has been swapped.
+ *
+ * @param data A pointer to the navigation mesh data block.
+ * @param dataSize The size of the navigation mesh data block in bytes (currently unused).
+ *
+ * @return True if the endianess swap was successful; otherwise, false.
+ */
 bool dtNavMeshDataSwapEndian(unsigned char* data, const int /*dataSize*/)
 {
 	// Make sure the data is in right format.

@@ -27,22 +27,37 @@
 
 #include "DetourNavMesh.h"
 
+/**
+ * @brief Magic number for MMAP file format.
+ */
 #define MMAP_MAGIC 0x4d4d4150   // 'MMAP'
+ /**
+  * @brief MMAP file format version.
+  */
 #define MMAP_VERSION 4
+  /**
+   * @brief Size of grid cells in MMAP.
+   */
 #define SIZE_OF_GRIDS 533.33333f
 
+/**
+* @brief Header structure for MMAP tiles.
+*/
 struct MmapTileHeader
 {
-	unsigned int mmapMagic;
-	unsigned int dtVersion;
-	unsigned int mmapVersion;
-	unsigned int size;
-	bool usesLiquids : 1;
+	unsigned int mmapMagic;     ///< Magic number for MMAP file format.
+	unsigned int dtVersion;     ///< Detour version.
+	unsigned int mmapVersion;   ///< MMAP version.
+	unsigned int size;          ///< Size of the tile.
+	bool usesLiquids : 1;       ///< Flag indicating if liquids are used.
 
 	MmapTileHeader() : mmapMagic(MMAP_MAGIC), dtVersion(DT_NAVMESH_VERSION),
 		mmapVersion(MMAP_VERSION), size(0), usesLiquids(false) {}//usesLiquids(true) {} //Remove liquid in paths (not 100% with current maps)
 };
 
+/**
+ * @brief Enumeration representing terrain types in MMAP.
+ */
 enum NavTerrain
 {
 	NAV_EMPTY = 0x00,

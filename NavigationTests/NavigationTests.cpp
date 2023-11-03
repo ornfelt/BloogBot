@@ -12,9 +12,15 @@ namespace NavigationTests
 
 	typedef XYZ* (__cdecl* f_calculatePath)(unsigned int, XYZ, XYZ, bool, int*);
 
+	/**
+	  * @brief A class containing unit tests for navigation functionality.
+	  */
 	TEST_CLASS(NavigationTests)
 	{
 	public:
+		/**
+		 * @brief Test case for correctly building a navigation path.
+		 */
 		TEST_METHOD(CorrectlyBuildsNavigationPath)
 		{
 			const auto path = GetNavigationDllPath();
@@ -36,6 +42,9 @@ namespace NavigationTests
 			Assert::IsTrue(length > 2);
 		}
 
+		/**
+		 * @brief Test case for an unreachable destination.
+		 */
 		TEST_METHOD(UnreachableDestination)
 		{
 			const auto path = GetNavigationDllPath();
@@ -57,6 +66,10 @@ namespace NavigationTests
 			Assert::IsTrue(length > 2);
 		}
 	private:
+		/**
+		 * @brief Get the path to the Navigation DLL.
+		 * @return The path to the Navigation DLL as a string.
+		 */
 		std::string GetNavigationDllPath()
 		{
 			WCHAR dllPath[MAX_PATH] = { 0 };

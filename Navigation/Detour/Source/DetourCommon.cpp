@@ -16,16 +16,39 @@
 // 3. This notice may not be removed or altered from any source distribution.
 //
 
+/**
+ * @file DetourMathCustom.cpp
+ * @brief Custom math functions for Detour.
+ */
+
 #include "DetourCommon.h"
 #include "DetourMath.h"
 
-//////////////////////////////////////////////////////////////////////////////////////////
+ //////////////////////////////////////////////////////////////////////////////////////////
 
+ /**
+  * @brief Compute the square root of a floating-point number.
+  *
+  * @param x The input value.
+  * @return The square root of x.
+  */
 float dtSqrt(float x)
 {
 	return dtMathSqrtf(x);
 }
 
+/**
+ * @brief Find the closest point on a triangle to a given point.
+ *
+ * This function calculates the closest point on a triangle (defined by vertices a, b, and c)
+ * to a given point p and stores the result in the closest array.
+ *
+ * @param closest The closest point (output).
+ * @param p The input point.
+ * @param a The first vertex of the triangle.
+ * @param b The second vertex of the triangle.
+ * @param c The third vertex of the triangle.
+ */
 void dtClosestPtPointTriangle(float* closest, const float* p,
 	const float* a, const float* b, const float* c)
 {
@@ -112,6 +135,23 @@ void dtClosestPtPointTriangle(float* closest, const float* p,
 	closest[2] = a[2] + ab[2] * v + ac[2] * w;
 }
 
+/**
+ * @brief Check if a line segment intersects with a polygon in 2D space.
+ *
+ * This function checks if a line segment defined by points p0 and p1 intersects
+ * with a polygon defined by vertices verts in 2D space. It also returns the intersection
+ * points and segments.
+ *
+ * @param p0 The starting point of the line segment.
+ * @param p1 The ending point of the line segment.
+ * @param verts The vertices of the polygon.
+ * @param nverts The number of vertices in the polygon.
+ * @param tmin The parameter at which the line enters the polygon.
+ * @param tmax The parameter at which the line exits the polygon.
+ * @param segMin The index of the segment where the line enters the polygon.
+ * @param segMax The index of the segment where the line exits the polygon.
+ * @return True if the line segment intersects with the polygon, false otherwise.
+ */
 bool dtIntersectSegmentPoly2D(const float* p0, const float* p1,
 	const float* verts, int nverts,
 	float& tmin, float& tmax,
@@ -172,6 +212,15 @@ bool dtIntersectSegmentPoly2D(const float* p0, const float* p1,
 	return true;
 }
 
+/**
+ * @brief Compute the square of the distance from a point to a line segment in 2D.
+ *
+ * @param pt The point.
+ * @param p The start point of the line segment.
+ * @param q The end point of the line segment.
+ * @param t Output parameter representing the parameter value at the closest point on the line segment.
+ * @return The square of the distance between the point and the line segment.
+ */
 float dtDistancePtSegSqr2D(const float* pt, const float* p, const float* q, float& t)
 {
 	float pqx = q[0] - p[0];
@@ -188,6 +237,14 @@ float dtDistancePtSegSqr2D(const float* pt, const float* p, const float* q, floa
 	return dx * dx + dz * dz;
 }
 
+/**
+ * @brief Calculate the center of a polygon.
+ *
+ * @param tc The output center point of the polygon.
+ * @param idx An array of vertex indices that make up the polygon.
+ * @param nidx The number of vertices in the polygon.
+ * @param verts An array of vertex coordinates.
+ */
 void dtCalcPolyCenter(float* tc, const unsigned short* idx, int nidx, const float* verts)
 {
 	tc[0] = 0.0f;
@@ -206,6 +263,16 @@ void dtCalcPolyCenter(float* tc, const unsigned short* idx, int nidx, const floa
 	tc[2] *= s;
 }
 
+/**
+ * @brief Find the closest height (y-coordinate) point on a triangle to a given point.
+ *
+ * @param p The given point.
+ * @param a The first vertex of the triangle.
+ * @param b The second vertex of the triangle.
+ * @param c The third vertex of the triangle.
+ * @param h Output parameter representing the height of the closest point on the triangle.
+ * @return True if the closest point is inside the triangle, false otherwise.
+ */
 bool dtClosestHeightPointTriangle(const float* p, const float* a, const float* b, const float* c, float& h)
 {
 	float v0[3], v1[3], v2[3];
@@ -238,9 +305,14 @@ bool dtClosestHeightPointTriangle(const float* p, const float* a, const float* b
 	return false;
 }
 
-/// @par
-///
-/// All points are projected onto the xz-plane, so the y-values are ignored.
+/**
+ * @brief Check if a 2D point is inside a polygon defined by its vertices.
+ *
+ * @param pt The 2D point to check.
+ * @param verts An array of vertex coordinates that define the polygon.
+ * @param nverts The number of vertices in the polygon.
+ * @return True if the point is inside the polygon, false otherwise.
+ */
 bool dtPointInPolygon(const float* pt, const float* verts, const int nverts)
 {
 	// TODO: Replace pnpoly with triArea2D tests?
@@ -257,6 +329,16 @@ bool dtPointInPolygon(const float* pt, const float* verts, const int nverts)
 	return c;
 }
 
+/**
+ * @brief Calculate the squared distances from a point to the edges of a polygon.
+ *
+ * @param pt The point.
+ * @param verts An array of vertex coordinates that define the polygon.
+ * @param nverts The number of vertices in the polygon.
+ * @param ed Output array to store the squared distances.
+ * @param et Output array to store the parameter values at the closest points on the edges.
+ * @return True if the point is inside the polygon, false otherwise.
+ */
 bool dtDistancePtPolyEdgesSqr(const float* pt, const float* verts, const int nverts,
 	float* ed, float* et)
 {
@@ -275,6 +357,15 @@ bool dtDistancePtPolyEdgesSqr(const float* pt, const float* verts, const int nve
 	return c;
 }
 
+/**
+ * @brief Project a polygon onto an axis and find its minimum and maximum values along that axis.
+ *
+ * @param axis The axis to project onto.
+ * @param poly An array of vertex coordinates that define the polygon.
+ * @param npoly The number of vertices in the polygon.
+ * @param rmin Output parameter representing the minimum value along the axis.
+ * @param rmax Output parameter representing the maximum value along the axis.
+ */
 static void projectPoly(const float* axis, const float* poly, const int npoly,
 	float& rmin, float& rmax)
 {
@@ -287,6 +378,16 @@ static void projectPoly(const float* axis, const float* poly, const int npoly,
 	}
 }
 
+/**
+ * @brief Check if two ranges on an axis overlap.
+ *
+ * @param amin The minimum value of the first range.
+ * @param amax The maximum value of the first range.
+ * @param bmin The minimum value of the second range.
+ * @param bmax The maximum value of the second range.
+ * @param eps The epsilon value to account for slight overlap.
+ * @return True if the ranges overlap, false otherwise.
+ */
 inline bool overlapRange(const float amin, const float amax,
 	const float bmin, const float bmax,
 	const float eps)
@@ -294,9 +395,15 @@ inline bool overlapRange(const float amin, const float amax,
 	return ((amin + eps) > bmax || (amax - eps) < bmin) ? false : true;
 }
 
-/// @par
-///
-/// All vertices are projected onto the xz-plane, so the y-values are ignored.
+/**
+ * @brief Check if two convex polygons overlap in 2D. All vertices are projected onto the xz-plane, so the y-values are ignored.
+ *
+ * @param polya An array of vertex coordinates that define the first polygon.
+ * @param npolya The number of vertices in the first polygon.
+ * @param polyb An array of vertex coordinates that define the second polygon.
+ * @param npolyb The number of vertices in the second polygon.
+ * @return True if the polygons overlap, false otherwise.
+ */
 bool dtOverlapPolyPoly2D(const float* polya, const int npolya,
 	const float* polyb, const int npolyb)
 {
@@ -333,8 +440,16 @@ bool dtOverlapPolyPoly2D(const float* polya, const int npolya,
 	return true;
 }
 
-// Returns a random point in a convex polygon.
-// Adapted from Graphics Gems article.
+/**
+ * @brief Generate a random point within a convex polygon. Adapted from Graphics Gems article.
+ *
+ * @param pts An array of vertex coordinates that define the polygon.
+ * @param npts The number of vertices in the polygon.
+ * @param areas An array of precomputed triangle areas.
+ * @param s A random value between 0 and 1.
+ * @param t A random value between 0 and 1.
+ * @param out The output random point within the polygon.
+ */
 void dtRandomPointInConvexPoly(const float* pts, const int npts, float* areas,
 	const float s, const float t, float* out)
 {
@@ -374,8 +489,30 @@ void dtRandomPointInConvexPoly(const float* pts, const int npts, float* areas,
 	out[2] = a * pa[2] + b * pb[2] + c * pc[2];
 }
 
+/**
+ * @brief Compute the perpendicular cross product of two 2D vectors.
+ *
+ * @param a The first 2D vector.
+ * @param b The second 2D vector.
+ * @return The result of the perpendicular cross product.
+ */
 inline float vperpXZ(const float* a, const float* b) { return a[0] * b[2] - a[2] * b[0]; }
 
+/**
+ * @brief Intersect two line segments in 2D space.
+ *
+ * This function calculates the intersection point of two line segments defined by
+ * their endpoints.
+ *
+ * @param ap The starting point of the first line segment.
+ * @param aq The ending point of the first line segment.
+ * @param bp The starting point of the second line segment.
+ * @param bq The ending point of the second line segment.
+ * @param[out] s The parameter 's' indicating the location of the intersection on the first segment.
+ * @param[out] t The parameter 't' indicating the location of the intersection on the second segment.
+ *
+ * @return True if the line segments intersect, false otherwise.
+ */
 bool dtIntersectSegSeg2D(const float* ap, const float* aq,
 	const float* bp, const float* bq,
 	float& s, float& t)
@@ -390,4 +527,3 @@ bool dtIntersectSegSeg2D(const float* ap, const float* aq,
 	t = vperpXZ(u, w) / d;
 	return true;
 }
-

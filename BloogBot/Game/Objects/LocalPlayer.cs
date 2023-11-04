@@ -629,11 +629,11 @@ namespace BloogBot.Game.Objects
             {41, new List<int> { 7320, 6131, 8458 }}, // Ice Armor R2, Frost Nova R3, Fire Ward R3
             {42, new List<int> { 8462, 10144, 10148, 10156, 10159 }}, // Frost Ward R3, Conjure Food R5, Fireball R8, Arcane Intellect R4, Cone of Cold R3
             {44, new List<int> { 10179 }}, // Frostbolt R8
-            {46, new List<int> { 22782, 10197 }}, // Mage Armor R2, Fire Blast R6
+            {46, new List<int> { 13031, 22782, 10197 }}, // Ice Barrier R2, Mage Armor R2, Fire Blast R6
             {48, new List<int> { 10173, 10149 }}, // Dampen Magic R4, Fireball R9
             {50, new List<int> { 10219, 10160, 10161, 10180 }}, // Ice Armor R3, Cone of Cold R4, Cone of Cold R5, Frostbolt R9
             {51, new List<int> { 10139 }}, // Conjure Water R6
-            {52, new List<int> { 10145 }}, // Conjure Food R6
+            {52, new List<int> { 10145, 13032 }}, // Conjure Food R6, Ice Barrier R3
             {54, new List<int> { 10230, 10150, 10199 }}, // Frost Nova R4, Fireball R10, Fire Blast R7
             {56, new List<int> { 10157, 10181 }}, // Arcane Intellect R5, Frostbolt R10
             {58, new List<int> { 22783, 13033 }}, // Mage Armor R3, Ice Barrier R4
@@ -646,13 +646,13 @@ namespace BloogBot.Game.Objects
             {67, new List<int> { 33944, 27088 }}, // Dampen Magic R6, Frost Nova R5
             {69, new List<int> { 27124, 27125, 27072 }}, // Ice Armor R5, Mage Armor R4, Frostbolt R13
             {70, new List<int> { 27079, 27090, 27126, 33717, 38692, 38697 }}, // Fire Blast R9, Conjure Water R9, Arcane Intellect R6, Conjure Food R8, Fireball R14, Frostbolt R14
-            {71, new List<int> { 43023 }}, // Mage Armor R5
+            {71, new List<int> { 33405, 43023 }}, // Ice Barrier R6, Mage Armor R5
             {74, new List<int> { 42832, 42872 }}, // Fireball R15, Fire Blast R10
             {75, new List<int> { 42841, 42917, 43038 }}, // Frostbolt R15, Frost Nova R6, Ice Barrier R7
             {76, new List<int> { 43015 }}, // Dampen Magic R7
             {78, new List<int> { 42833, 43010, 42842 }}, // Fireball R16, Fire Ward R7, Frostbolt R16
             {79, new List<int> { 42842, 43008, 43024, 42931 }}, // Frostbolt R17, Ice Armor R6, Mage Armor R6, Cone of Cold R8
-            {80, new List<int> { 42995, 42873 }} // Arcane Intellect R7, Fire Blast R11
+            {80, new List<int> { 42995, 42873, 43039 }} // Arcane Intellect R7, Fire Blast R11, Ice Barrier R8
         };
 
         public Dictionary<int, List<int>> LevelItemsDict => m_LevelItemsDict;

@@ -30,7 +30,7 @@ namespace BloogBot.AI.SharedStates
             if (currentState == ArenaQueueStates.Initial)
             {
                 player.StopAllMovement();
-                player.LuaCall($"SendChatMessage('.go creature {(IsAlly() ? "68938": "4762")}')");
+                player.LuaCall($"SendChatMessage('.go creature {(IsAlly(player) ? "68938" : "4762")}')");
                 currentState = ArenaQueueStates.BotTeleported;
                 player.ShouldWaitForTeleportDelay = true;
                 return;
@@ -38,8 +38,7 @@ namespace BloogBot.AI.SharedStates
 
             if (currentState == ArenaQueueStates.BotTeleported && Wait.For("BotTeleportedDelay", 1500))
             {
-                bool isAlly = IsAlly();
-                var arenaNpc = ObjectManager.Units.Where(u => u.Name == (isAlly ? "Beka Zipwhistle" : "Zeggon Botsnap")).FirstOrDefault();
+                var arenaNpc = ObjectManager.Units.Where(u => u.Name == (IsAlly(player) ? "Beka Zipwhistle" : "Zeggon Botsnap")).FirstOrDefault();
                 if (arenaNpc != null)
                     player.SetTarget(arenaNpc.Guid);
                 currentState = ArenaQueueStates.NpcTargeted;
@@ -48,7 +47,7 @@ namespace BloogBot.AI.SharedStates
 
             if (currentState == ArenaQueueStates.NpcTargeted && Wait.For("NpcTargetedDelay", 1500))
             {
-                var arenaNpc = ObjectManager.Units.Where(u => u.Name == (IsAlly() ? "Beka Zipwhistle" : "Zeggon Botsnap")).FirstOrDefault();
+                var arenaNpc = ObjectManager.Units.Where(u => u.Name == (IsAlly(player) ? "Beka Zipwhistle" : "Zeggon Botsnap")).FirstOrDefault();
                 if (arenaNpc != null)
                     arenaNpc.Interact();
                 currentState = ArenaQueueStates.NpcInteractedWith;
@@ -74,11 +73,13 @@ namespace BloogBot.AI.SharedStates
             }
         }
 
-        private bool IsAlly()
+        /// <summary>
+        /// Determines if the player is an ally.
+        /// </summary>
+        private bool IsAlly(LocalPlayer player)
         {
-            // TODO: determine faction
-            Console.WriteLine($"Player faction: {player.FactionId}");
-            return false;
+            //Console.WriteLine($"Player faction: {player.FactionId}");
+            return player.IsAlly;
         }
     }
 

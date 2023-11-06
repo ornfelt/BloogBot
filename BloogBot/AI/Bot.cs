@@ -71,31 +71,36 @@ namespace BloogBot.AI
 
         private void ResetValues(IDependencyContainer container, bool resetLevel)
         {
+            var player = ObjectManager.Player;
             if (resetLevel)
             {
                 // First time starting bot
-                currentLevel = ObjectManager.Player.Level;
+                currentLevel = player.Level;
                 // Log datetime to file to separate new bot sessions
                 LogToFile("VisitedWanderNodes.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm"));
-                ObjectManager.Player.LastWpId = 0;
+                player.LastWpId = 0;
+                // Set faction
+                var result = player.LuaCallWithResults($"{{0}} = UnitRace('player')");
+                player.IsAlly = result.Length > 0 && new[] { "Human", "Gnome", "Dwarf", "Night Elf", "Draenei" }.Contains(result[0]);
+                Console.WriteLine($"Player faction set to: {(player.IsAlly ? "ally" : "horde")}");
             }
             botStates.Push(new GrindState(botStates, container));
             currentState = botStates.Peek().GetType();
             currentStateStartTime = Environment.TickCount;
-            currentPosition = ObjectManager.Player.Position;
+            currentPosition = player.Position;
             currentPositionStartTime = Environment.TickCount;
-            teleportCheckPosition = ObjectManager.Player.Position;
-            ObjectManager.Player.CurrWpId = 0;
-            ObjectManager.Player.CurrZone = "0";
-            ObjectManager.Player.DeathsAtWp = 0;
-            ObjectManager.Player.WpStuckCount = 0;
-            ObjectManager.Player.StuckInStateOrPosCount = 0;
-            ObjectManager.Player.ForcedWpPath = new List<int>();
-            ObjectManager.Player.VisitedWps = new HashSet<int>();
-            ObjectManager.Player.HasBeenStuckAtWp = false;
-            ObjectManager.Player.HasJoinedBg = false;
-            ObjectManager.Player.HasOverLeveled = false;
-            ObjectManager.Player.LastKnownMapId = ObjectManager.MapId;
+            teleportCheckPosition = player.Position;
+            player.CurrWpId = 0;
+            player.CurrZone = "0";
+            player.DeathsAtWp = 0;
+            player.WpStuckCount = 0;
+            player.StuckInStateOrPosCount = 0;
+            player.ForcedWpPath = new List<int>();
+            player.VisitedWps = new HashSet<int>();
+            player.HasBeenStuckAtWp = false;
+            player.HasJoinedBg = false;
+            player.HasOverLeveled = false;
+            player.LastKnownMapId = ObjectManager.MapId;
         }
 
         public void Travel(IDependencyContainer container, bool reverseTravelPath, Action callback)

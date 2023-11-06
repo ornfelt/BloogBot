@@ -168,51 +168,29 @@ namespace BloogBot.AI
         //public Hotspot GetCurrentHotspot() => BotSettings.GrindingHotspot;
         public Hotspot GetCurrentHotspot()
         {
+            var player = ObjectManager.Player;
             // Hard-coded logic based on Hotspot Id, default is hotspot from settings
             switch (ObjectManager.MapId)
             {
                 case 1:
-                    if (BotSettings.GrindingHotspot.Id > 2)
-                        return GetHotspotById(1); // Kalimdor horde
-                    break;
-
+                    return GetHotspotById(player.IsAlly ? 2 : 1); // Kalimdor
                 case 0:
-                    if (BotSettings.GrindingHotspot.Id != 3 && BotSettings.GrindingHotspot.Id != 4)
-                        return GetHotspotById(3); // EK horde
-                    break;
-
+                    return GetHotspotById(player.IsAlly ? 4 : 3); // Eastern Kingdoms
                 case 530:
-                    if (BotSettings.GrindingHotspot.Id != 5 && BotSettings.GrindingHotspot.Id != 6)
-                        return GetHotspotById(5); // Outland horde
-                    break;
-
+                    return GetHotspotById(player.IsAlly ? 6 : 5); // Outland
                 case 571:
-                    if (BotSettings.GrindingHotspot.Id != 7 && BotSettings.GrindingHotspot.Id != 8)
-                        return GetHotspotById(7); // Northrend horde
-                    break;
-
+                    return GetHotspotById(player.IsAlly ? 8 : 7); // Northrend
                 case 489:
-                    if (BotSettings.GrindingHotspot.Id != 9)
-                        return GetHotspotById(9); // WSG
-                    break;
-
+                    return GetHotspotById(9); // WSG
                 case 529:
-                    if (BotSettings.GrindingHotspot.Id != 10)
-                        return GetHotspotById(10); // AB
-                    break;
-
+                    return GetHotspotById(10); // AB
                 case 30:
-                    if (BotSettings.GrindingHotspot.Id != 11)
-                        return GetHotspotById(11); // AV
-                    break;
-
+                    return GetHotspotById(11); // AV
                 case 559:
-                    if (BotSettings.GrindingHotspot.Id != 12)
-                        return GetHotspotById(12); // Nagrand Arena
-                    break;
+                    return GetHotspotById(12); // Nagrand Arena
+                default:
+                    return BotSettings.GrindingHotspot; // Default
             }
-
-            return BotSettings.GrindingHotspot; // Default
         }
 
         public void CheckForTravelPath(Stack<IBotState> botStates, bool reverse, bool needsToRest = true)

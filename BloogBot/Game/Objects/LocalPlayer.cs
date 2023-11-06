@@ -536,6 +536,18 @@ namespace BloogBot.Game.Objects
         private static bool m_ShouldTeleportToLastWp;
         public bool ShouldTeleportToLastWp { get { return m_ShouldTeleportToLastWp; } set { m_ShouldTeleportToLastWp = value; } }
 
+        /// <summary>
+        /// Gets or sets a value indicating whether the player is of faction Alliance or not.
+        /// </summary>
+        private static bool m_IsAlly;
+        /// <summary>
+        /// Gets or sets a value indicating whether the player is of faction Alliance or not.
+        /// </summary>
+        public bool IsAlly { get { return m_IsAlly; } set { m_IsAlly = value; } }
+
+        /// <summary>
+        /// The last known map ID.
+        /// </summary>
         private static uint m_LastKnownMapId;
         public uint LastKnownMapId { get { return m_LastKnownMapId; } set { m_LastKnownMapId = value; } }
 

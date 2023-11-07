@@ -145,8 +145,6 @@ namespace BloogBot.AI
             var mapId = ObjectManager.MapId;
             if (!BotSettings.TargetingExcludedNames.Contains(player.BotFriend))
                 BotSettings.TargetingExcludedNames += ("|" + player.BotFriend);
-            if (!BotSettings.TargetingExcludedNames.Contains("Infernal Attacker"))
-                BotSettings.TargetingExcludedNames += ("|" + "Infernal Attacker");
             var potentialTargetsList = ObjectManager.Units
                 // only consider units that are not null, and whose name and position are not null
                 .Where(u => u != null && u.Name != null && u.Position != null)

@@ -713,6 +713,13 @@ namespace BloogBot.Game.Objects
             {78, new List<int> { 37038, 37113 }} // Wand, Wrist
         };
 
-        public string BotFriend = "Lazarus";
+        /// <summary>
+        /// The name of the bot's npcbot friend.
+        /// </summary>
+        private static string m_BotFriend; // Lazarus (horde) or Zalduun (ally)
+        /// <summary>
+        /// The name of the bot's npcbot friend.
+        /// </summary>
+        public string BotFriend { get { return m_BotFriend; } set { m_BotFriend = value; } }
     }
 }

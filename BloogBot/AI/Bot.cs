@@ -83,6 +83,7 @@ namespace BloogBot.AI
                 var result = player.LuaCallWithResults($"{{0}} = UnitRace('player')");
                 player.IsAlly = result.Length > 0 && new[] { "Human", "Gnome", "Dwarf", "Night Elf", "Draenei" }.Contains(result[0]);
                 Console.WriteLine($"Player faction set to: {(player.IsAlly ? "ally" : "horde")}");
+                player.BotFriend = player.IsAlly ? "Zalduun" : "Lazarus";
             }
             botStates.Push(new GrindState(botStates, container));
             currentState = botStates.Peek().GetType();

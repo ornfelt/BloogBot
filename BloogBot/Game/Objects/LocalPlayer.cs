@@ -1048,8 +1048,12 @@ namespace BloogBot.Game.Objects
         };
 
         /// <summary>
-        /// The name of the bot's friend.
+        /// The name of the bot's npcbot friend.
         /// </summary>
-        public string BotFriend = "Lazarus";
+        private static string m_BotFriend; // Lazarus (horde) or Zalduun (ally)
+        /// <summary>
+        /// The name of the bot's npcbot friend.
+        /// </summary>
+        public string BotFriend { get { return m_BotFriend; } set { m_BotFriend = value; } }
     }
 }

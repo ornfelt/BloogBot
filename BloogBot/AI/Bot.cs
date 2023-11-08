@@ -687,6 +687,7 @@ namespace BloogBot.AI
                 botStates.Pop();
                 botStates.Push(new GrindState(botStates, container));
             }
+            player.WpStuckCount = 0;
             player.LuaCall("StaticPopup1Button1:Click();"); // Required if stuck at release point in BG
 
             player.StuckInStateOrPosCount += 1;

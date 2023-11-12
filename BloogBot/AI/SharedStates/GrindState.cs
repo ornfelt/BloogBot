@@ -107,7 +107,7 @@ namespace BloogBot.AI.SharedStates
             {
                 Console.WriteLine($"WP: {waypoint.ID} " + (player.WpStuckCount > 10 ? "couldn't be reached" : "reached") + ", selecting new WP...");
                 // Check if player is higher level than waypoint maxlevel
-                player.HasOverLeveled = !isInBg && playerLevel >= waypoint.MaxLevel;
+                player.HasOverLeveled = !isInBg && (playerLevel >= waypoint.MaxLevel || playerLevel < waypoint.MinLevel);
 
                 if (player.Position.DistanceTo(waypoint) < 3.0F)
                     HandleWaypointReachedActions(waypoint, hotspot.Id);
@@ -179,9 +179,7 @@ namespace BloogBot.AI.SharedStates
                 }
                 if (linkSearchCount > 15)
                 {
-                    // This means that randLink is same as previously visited WP,
-                    // or that the bot is in a zone with higher minlevel than current level
-                    // => Choose current random WP if no other links are suitable
+                    // Choose current random WP if no other links are suitable
                     waypoint = linkWp;
                     newWpFound = true;
                 }

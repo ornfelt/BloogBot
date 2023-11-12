@@ -102,7 +102,8 @@ namespace BloogBot.AI.SharedStates
         {
             if (player.IsInCombat)
             {
-                player.LuaCall($"TogglePVPFrame()");
+                if (currentState == QueueStates.PVPTabOpened || currentState == QueueStates.PVPFrameToggledAgain)
+                    player.LuaCall($"TogglePVPFrame()");
                 botStates.Pop();
                 botStates.Push(new GrindState(botStates, container));
                 return true;

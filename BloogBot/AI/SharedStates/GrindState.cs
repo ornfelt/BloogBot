@@ -163,13 +163,6 @@ namespace BloogBot.AI.SharedStates
                         waypoint = linkWp;
                         newWpFound = true;
                     }
-                    else if (linkSearchCount > 15)
-                    {
-                        // This means that randLink is same as previously visited WP
-                        // Choose it if no other links are suitable
-                        waypoint = linkWp;
-                        newWpFound = true;
-                    }
                 }
                 else
                 {
@@ -182,14 +175,15 @@ namespace BloogBot.AI.SharedStates
                             waypoint = linkWp;
                             newWpFound = true;
                         }
-                        else if (linkSearchCount > 15)
-                        {
-                            // This means that randLink is same as previously visited WP
-                            // Choose it if no other links are suitable
-                            waypoint = linkWp;
-                            newWpFound = true;
-                        }
                     }
+                }
+                if (linkSearchCount > 15)
+                {
+                    // This means that randLink is same as previously visited WP,
+                    // or that the bot is in a zone with higher minlevel than current level
+                    // => Choose current random WP if no other links are suitable
+                    waypoint = linkWp;
+                    newWpFound = true;
                 }
             }
             return waypoint;

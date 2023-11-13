@@ -322,9 +322,9 @@ namespace BloogBot.AI.SharedStates
                 }
 
                 if (currentWaypoint.MaxLevel > player.Level && currentWaypoint.MinLevel <= player.Level
-                    && (ignoreBlacklistedWps || !player.HasVisitedWp(currentId)))
+                    && (ignoreBlacklistedWps || (!player.HasVisitedWp(currentId))))
                 {
-                    Console.WriteLine("Found new WP matching player level: " + currentWaypoint.ToStringFull() + "\n");
+                    Console.WriteLine($"Found new WP matching player level (ignoreBlacklistedWps: {ignoreBlacklistedWps}): " + currentWaypoint.ToStringFull() + "\n");
                     return currentPath;
                 }
                 // Player could be above all WP maxlevels, so make an exception
@@ -345,7 +345,7 @@ namespace BloogBot.AI.SharedStates
 
                     if (currWpIsNewZone)
                     {
-                        Console.WriteLine("Found new WP matching player level (> hotspot maxlevel): " + currentWaypoint.ToStringFull() + "\n");
+                        Console.WriteLine($"Found new WP matching player level (> hotspot maxlevel, ignoreBlacklistedWps: {ignoreBlacklistedWps}): " + currentWaypoint.ToStringFull() + "\n");
                         return currentPath;
                     }
                 }

@@ -6,102 +6,33 @@ using BloogBot.Game.Objects;
 using System.Collections.Generic;
 using System.Linq;
 
-/// <summary>
-/// This namespace contains classes related to the Shadow Priest Bot.
-/// </summary>
 namespace ShadowPriestBot
 {
-    /// <summary>
-    /// Represents a combat state in the bot, implementing the IBotState interface.
-    /// </summary>
     class CombatState : CombatStateBase, IBotState
     {
-        /// <summary>
-        /// The Lua script for casting the "Shoot" spell if the action button with ID 12 is not set to auto-repeat.
-        /// </summary>
         const string WandLuaScript = "if IsAutoRepeatAction(12) == nil then CastSpellByName('Shoot') end";
-        /// <summary>
-        /// Lua script to turn off the wand if the action is set to auto-repeat.
-        /// </summary>
         const string TurnOffWandLuaScript = "if IsAutoRepeatAction(12) ~= nil then CastSpellByName('Shoot') end";
 
-        /// <summary>
-        /// Represents the constant string "Abolish Disease".
-        /// </summary>
         const string AbolishDisease = "Abolish Disease";
-        /// <summary>
-        /// Represents the constant string "Cure Disease".
-        /// </summary>
         const string CureDisease = "Cure Disease";
-        /// <summary>
-        /// Represents the constant string "Dispel Magic".
-        /// </summary>
         const string DispelMagic = "Dispel Magic";
-        /// <summary>
-        /// Represents the constant string "Inner Fire".
-        /// </summary>
         const string InnerFire = "Inner Fire";
-        /// <summary>
-        /// Represents the constant string "Lesser Heal".
-        /// </summary>
         const string LesserHeal = "Lesser Heal";
-        /// <summary>
-        /// Represents the constant string "Mind Blast".
-        /// </summary>
         const string MindBlast = "Mind Blast";
-        /// <summary>
-        /// Represents the constant string "Mind Flay".
-        /// </summary>
         const string MindFlay = "Mind Flay";
-        /// <summary>
-        /// Represents the constant string "Power Word: Shield".
-        /// </summary>
         const string PowerWordShield = "Power Word: Shield";
-        /// <summary>
-        /// Represents the constant string "Psychic Scream".
-        /// </summary>
         const string PsychicScream = "Psychic Scream";
-        /// <summary>
-        /// The constant string representing the name "Shadowform".
-        /// </summary>
         const string ShadowForm = "Shadowform";
-        /// <summary>
-        /// Represents the constant string "Shadow Word: Pain".
-        /// </summary>
         const string ShadowWordPain = "Shadow Word: Pain";
-        /// <summary>
-        /// Represents the constant string "Smite".
-        /// </summary>
         const string Smite = "Smite";
-        /// <summary>
-        /// Represents the constant string "Vampiric Embrace".
-        /// </summary>
         const string VampiricEmbrace = "Vampiric Embrace";
-        /// <summary>
-        /// Represents the constant string "Weakened Soul".
-        /// </summary>
         const string WeakenedSoul = "Weakened Soul";
 
-        /// <summary>
-        /// Represents a readonly stack of IBotState objects.
-        /// </summary>
         readonly Stack<IBotState> botStates;
-        /// <summary>
-        /// Represents a read-only dependency container.
-        /// </summary>
         readonly IDependencyContainer container;
-        /// <summary>
-        /// Represents a read-only World of Warcraft unit target.
-        /// </summary>
         readonly WoWUnit target;
-        /// <summary>
-        /// Represents a readonly instance of the LocalPlayer class.
-        /// </summary>
         readonly LocalPlayer player;
 
-        /// <summary>
-        /// Initializes a new instance of the CombatState class with the specified parameters.
-        /// </summary>
         internal CombatState(Stack<IBotState> botStates, IDependencyContainer container, WoWUnit target) : base(botStates, container, target, 30)
         {
             this.botStates = botStates;
@@ -110,9 +41,6 @@ namespace ShadowPriestBot
             this.target = target;
         }
 
-        /// <summary>
-        /// Updates the behavior of the player character.
-        /// </summary>
         public new void Update()
         {
             if (player.HealthPercent < 30 && target.HealthPercent > 50 && player.Mana >= player.GetManaCost(LesserHeal))
@@ -131,7 +59,7 @@ namespace ShadowPriestBot
             else
             {
                 var aggressors = ObjectManager.Aggressors;
-
+                
                 TryCastSpell(ShadowForm, 0, int.MaxValue, !player.HasBuff(ShadowForm));
 
                 TryCastSpell(VampiricEmbrace, 0, 29, player.HealthPercent < 100 && !target.HasDebuff(VampiricEmbrace) && target.HealthPercent > 50);
@@ -142,7 +70,7 @@ namespace ShadowPriestBot
                 TryCastSpell(ShadowWordPain, 0, 29, target.HealthPercent > 70 && !target.HasDebuff(ShadowWordPain));
 
                 TryCastSpell(DispelMagic, 0, int.MaxValue, player.HasMagicDebuff, castOnSelf: true);
-
+                
                 if (player.KnowsSpell(AbolishDisease))
                     TryCastSpell(AbolishDisease, 0, int.MaxValue, player.IsDiseased && !player.HasBuff(ShadowForm), castOnSelf: true);
                 else if (player.KnowsSpell(CureDisease))

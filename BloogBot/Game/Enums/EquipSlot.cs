@@ -1,11 +1,5 @@
-﻿/// <summary>
-/// Represents the equipment slots for a character's items.
-/// </summary>
-namespace BloogBot.Game.Enums
+﻿namespace BloogBot.Game.Enums
 {
-    /// <summary>
-    /// Represents the equipment slot for an item.
-    /// </summary>
     public enum EquipSlot
     {
         Head = 1,

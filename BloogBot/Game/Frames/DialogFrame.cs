@@ -3,22 +3,10 @@ using BloogBot.Game.Objects;
 using System;
 using System.Collections.Generic;
 
-/// <summary>
-/// This namespace contains classes for handling dialog frames in the game.
-/// </summary>
 namespace BloogBot.Game.Frames
 {
-    /// <summary>
-    /// Represents a dialog frame in the application.
-    /// </summary>
-    /// <summary>
-    /// Represents a dialog frame in the application.
-    /// </summary>
     public class DialogFrame
     {
-        /// <summary>
-        /// Initializes a new instance of the DialogFrame class.
-        /// </summary>
         public DialogFrame()
         {
             if (ClientHelper.ClientVersion == ClientVersion.Vanilla)
@@ -67,19 +55,10 @@ namespace BloogBot.Game.Frames
             }
         }
 
-        /// <summary>
-        /// Gets or sets the list of dialog options.
-        /// </summary>
         public IList<DialogOption> DialogOptions { get; } = new List<DialogOption>();
 
-        /// <summary>
-        /// Closes the dialog frame for the specified WoWPlayer.
-        /// </summary>
         public void CloseDialogFrame(WoWPlayer player) => player.LuaCall("CloseGossip()");
 
-        /// <summary>
-        /// Selects the first gossip option of the specified type for the given player.
-        /// </summary>
         public void SelectFirstGossipOfType(WoWPlayer player, DialogType type)
         {
             for (var i = 0; i < DialogOptions.Count; i++)
@@ -91,22 +70,13 @@ namespace BloogBot.Game.Frames
         }
     }
 
-    /// <summary>
-    /// Represents a dialog option.
-    /// </summary>
     public class DialogOption
     {
-        /// <summary>
-        /// Initializes a new instance of the <see cref="DialogOption"/> class with the specified type.
-        /// </summary>
         internal DialogOption(DialogType type)
         {
             Type = type;
         }
 
-        /// <summary>
-        /// Gets the type of the dialog.
-        /// </summary>
         public DialogType Type { get; }
     }
 }

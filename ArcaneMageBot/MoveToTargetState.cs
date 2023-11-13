@@ -4,57 +4,21 @@ using BloogBot.Game;
 using BloogBot.Game.Objects;
 using System.Collections.Generic;
 
-/// <summary>
-/// This namespace contains classes related to the Arcane Mage Bot.
-/// </summary>
 namespace ArcaneMageBot
 {
-    /// <summary>
-    /// Represents a class that handles the movement of the bot to a target state.
-    /// </summary>
-    /// <summary>
-    /// Represents a class that implements the IBotState interface and handles moving to a target state.
-    /// </summary>
     class MoveToTargetState : IBotState
     {
-        /// <summary>
-        /// Represents a constant string value for "Fireball".
-        /// </summary>
         const string Fireball = "Fireball";
-        /// <summary>
-        /// The constant string representing the spell "Frostbolt".
-        /// </summary>
         const string Frostbolt = "Frostbolt";
 
-        /// <summary>
-        /// Represents a readonly stack of IBotState objects.
-        /// </summary>
         readonly Stack<IBotState> botStates;
-        /// <summary>
-        /// Represents a read-only dependency container.
-        /// </summary>
         readonly IDependencyContainer container;
-        /// <summary>
-        /// Represents a read-only World of Warcraft unit target.
-        /// </summary>
         readonly WoWUnit target;
-        /// <summary>
-        /// Represents a readonly instance of the LocalPlayer class.
-        /// </summary>
         readonly LocalPlayer player;
-        /// <summary>
-        /// Represents a helper class for handling stuck operations.
-        /// </summary>
         readonly StuckHelper stuckHelper;
 
-        /// <summary>
-        /// Gets the pulling spell.
-        /// </summary>
         readonly string pullingSpell;
 
-        /// <summary>
-        /// Initializes a new instance of the MoveToTargetState class.
-        /// </summary>
         internal MoveToTargetState(Stack<IBotState> botStates, IDependencyContainer container, WoWUnit target)
         {
             this.botStates = botStates;
@@ -69,9 +33,6 @@ namespace ArcaneMageBot
                 pullingSpell = Fireball;
         }
 
-        /// <summary>
-        /// Updates the current state of the bot.
-        /// </summary>
         public void Update()
         {
             if (target.TappedByOther || container.FindClosestTarget()?.Guid != target.Guid)

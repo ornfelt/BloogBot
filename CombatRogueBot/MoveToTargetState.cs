@@ -5,60 +5,21 @@ using BloogBot.Game.Enums;
 using BloogBot.Game.Objects;
 using System.Collections.Generic;
 
-/// <summary>
-/// This namespace contains classes and interfaces related to the Combat Rogue Bot.
-/// </summary>
 namespace CombatRogueBot
 {
-    /// <summary>
-    /// Represents a state where the bot moves towards its target.
-    /// </summary>
-    /// <summary>
-    /// Represents a state where the bot moves towards its target.
-    /// </summary>
     class MoveToTargetState : IBotState
     {
-        /// <summary>
-        /// The constant string value for distraction.
-        /// </summary>
         const string Distract = "Distract";
-        /// <summary>
-        /// Represents a constant string named "Garrote".
-        /// </summary>
         const string Garrote = "Garrote";
-        /// <summary>
-        /// Represents a constant string with the value "Stealth".
-        /// </summary>
         const string Stealth = "Stealth";
-        /// <summary>
-        /// Represents a constant string value for "Cheap Shot".
-        /// </summary>
         const string CheapShot = "Cheap Shot";
 
-        /// <summary>
-        /// Represents a readonly stack of IBotState objects.
-        /// </summary>
         readonly Stack<IBotState> botStates;
-        /// <summary>
-        /// Represents a read-only dependency container.
-        /// </summary>
         readonly IDependencyContainer container;
-        /// <summary>
-        /// Represents a read-only World of Warcraft unit target.
-        /// </summary>
         readonly WoWUnit target;
-        /// <summary>
-        /// Represents a readonly instance of the LocalPlayer class.
-        /// </summary>
         readonly LocalPlayer player;
-        /// <summary>
-        /// Represents a helper class for handling stuck operations.
-        /// </summary>
         readonly StuckHelper stuckHelper;
 
-        /// <summary>
-        /// Initializes a new instance of the MoveToTargetState class.
-        /// </summary>
         internal MoveToTargetState(Stack<IBotState> botStates, IDependencyContainer container, WoWUnit target)
         {
             this.botStates = botStates;
@@ -68,9 +29,6 @@ namespace CombatRogueBot
             stuckHelper = new StuckHelper(botStates, container);
         }
 
-        /// <summary>
-        /// Updates the behavior of the bot based on the current target and player's position.
-        /// </summary>
         public void Update()
         {
             if (target.TappedByOther || container.FindClosestTarget()?.Guid != target.Guid)
@@ -111,7 +69,7 @@ namespace CombatRogueBot
                     player.LuaCall($"CastSpellByName('{CheapShot}')");
                     return;
                 }
-            }
+            } 
 
             if (distanceToTarget < 3)
             {

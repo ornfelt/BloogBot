@@ -4,119 +4,52 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 
-/// <summary>
-/// This namespace contains classes related to the game's local player.
-/// </summary>
 namespace BloogBot.Game.Objects
 {
-    /// <summary>
-    /// Represents a player character that is controlled by the local machine.
-    /// </summary>
-    /// <summary>
-    /// Represents a player character that is controlled by the local machine.
-    /// </summary>
     public class LocalPlayer : WoWPlayer
     {
-        /// <summary>
-        /// Initializes a new instance of the LocalPlayer class with the specified pointer, GUID, and object type.
-        /// </summary>
         internal LocalPlayer(
-                    IntPtr pointer,
-                    ulong guid,
-                    ObjectType objectType)
-                    : base(pointer, guid, objectType)
+            IntPtr pointer,
+            ulong guid,
+            ObjectType objectType)
+            : base(pointer, guid, objectType)
         {
             RefreshSpells();
         }
 
-        /// <summary>
-        /// Represents a random number generator.
-        /// </summary>
         readonly Random random = new Random();
 
-        /// <summary>
-        /// Represents a warrior with the battle stance.
-        /// </summary>
         // WARRIOR
         const string BattleStance = "Battle Stance";
-        /// <summary>
-        /// Represents the constant string value for "Berserker Stance".
-        /// </summary>
         const string BerserkerStance = "Berserker Stance";
-        /// <summary>
-        /// Represents the constant string value for "Defensive Stance".
-        /// </summary>
         const string DefensiveStance = "Defensive Stance";
 
-        /// <summary>
-        /// Represents the constant string value for "Bear Form".
-        /// </summary>
         // DRUID
         const string BearForm = "Bear Form";
-        /// <summary>
-        /// Represents the constant string "Cat Form".
-        /// </summary>
         const string CatForm = "Cat Form";
 
-        /// <summary>
-        /// Opcode for setting the facing direction. To be confirmed.
-        /// </summary>
         // OPCODES
         const int SET_FACING_OPCODE = 0xDA; // TBC
 
-        /// <summary>
-        /// Dictionary that stores the spells of each player.
-        /// The key is the player's name and the value is an array of integers representing the spells.
-        /// </summary>
         public readonly IDictionary<string, int[]> PlayerSpells = new Dictionary<string, int[]>();
 
-        /// <summary>
-        /// Gets or sets the target WoWUnit.
-        /// </summary>
         public WoWUnit Target { get; set; }
 
-        /// <summary>
-        /// Represents a boolean value indicating whether the object is currently turning.
-        /// </summary>
         bool turning;
-        /// <summary>
-        /// Represents the total number of turns.
-        /// </summary>
         int totalTurns;
-        /// <summary>
-        /// Represents the number of turns taken.
-        /// </summary>
         int turnCount;
-        /// <summary>
-        /// The amount of something per turn.
-        /// </summary>
         float amountPerTurn;
-        /// <summary>
-        /// Represents the position of an object while it is turning towards a target.
-        /// </summary>
         Position turningToward;
 
-        /// <summary>
-        /// Retrieves the class of the local player by reading a byte from the memory address of the local player's class.
-        /// </summary>
         public Class Class => (Class)MemoryManager.ReadByte((IntPtr)MemoryAddresses.LocalPlayerClass);
 
-        /// <summary>
-        /// Writes the current tick count to the last hardware action memory address, effectively preventing the user from going AFK.
-        /// </summary>
         public void AntiAfk() => MemoryManager.WriteInt((IntPtr)MemoryAddresses.LastHardwareAction, Environment.TickCount);
 
-        /// <summary>
-        /// Gets the position of the corpse of the local player.
-        /// </summary>
         public Position CorpsePosition => new Position(
-                    MemoryManager.ReadFloat((IntPtr)MemoryAddresses.LocalPlayerCorpsePositionX),
-                    MemoryManager.ReadFloat((IntPtr)MemoryAddresses.LocalPlayerCorpsePositionY),
-                    MemoryManager.ReadFloat((IntPtr)MemoryAddresses.LocalPlayerCorpsePositionZ));
+            MemoryManager.ReadFloat((IntPtr)MemoryAddresses.LocalPlayerCorpsePositionX),
+            MemoryManager.ReadFloat((IntPtr)MemoryAddresses.LocalPlayerCorpsePositionY),
+            MemoryManager.ReadFloat((IntPtr)MemoryAddresses.LocalPlayerCorpsePositionZ));
 
-        /// <summary>
-        /// Faces the specified position.
-        /// </summary>
         public void Face(Position pos)
         {
             // sometimes the client gets in a weird state and CurrentFacing is negative. correct that here.
@@ -200,15 +133,9 @@ namespace BloogBot.Game.Objects
             }
         }
 
-        /// <summary>
-        /// Determines if the given position is within the cleave radius, which is larger than the facing radius.
-        /// </summary>
         // Nat added this to see if he could test out the cleave radius which is larger than that isFacing radius
         public bool IsInCleave(Position position) => Math.Abs(GetFacingForPosition(position) - Facing) < 3f;
 
-        /// <summary>
-        /// Sets the facing direction of the player.
-        /// </summary>
         public void SetFacing(float facing)
         {
             if (ClientHelper.ClientVersion == ClientVersion.WotLK)
@@ -222,18 +149,12 @@ namespace BloogBot.Game.Objects
             }
         }
 
-        /// <summary>
-        /// Moves the object towards the specified position.
-        /// </summary>
         public void MoveToward(Position pos)
         {
             Face(pos);
             StartMovement(ControlBits.Front);
         }
 
-        /// <summary>
-        /// Resets the facing state by setting all relevant variables to their initial values and stopping any strafing movement.
-        /// </summary>
         void ResetFacingState()
         {
             turning = false;
@@ -245,9 +166,6 @@ namespace BloogBot.Game.Objects
             StopMovement(ControlBits.StrafeRight);
         }
 
-        /// <summary>
-        /// Turns the object 180 degrees.
-        /// </summary>
         public void Turn180()
         {
             var newFacing = Facing + Math.PI;
@@ -256,10 +174,6 @@ namespace BloogBot.Game.Objects
             SetFacing((float)newFacing);
         }
 
-        /// <summary>
-        /// Starts the movement based on the given control bits.
-        /// The client will NOT send a packet to the server if a key is already pressed, so you're safe to spam this.
-        /// </summary>
         // the client will NOT send a packet to the server if a key is already pressed, so you're safe to spam this
         public void StartMovement(ControlBits bits)
         {
@@ -271,9 +185,6 @@ namespace BloogBot.Game.Objects
             Functions.SetControlBit((int)bits, 1, Environment.TickCount);
         }
 
-        /// <summary>
-        /// Stops all movement in the specified directions.
-        /// </summary>
         public void StopAllMovement()
         {
             var bits = ControlBits.Front | ControlBits.Back | ControlBits.Left | ControlBits.Right | ControlBits.StrafeLeft | ControlBits.StrafeRight;
@@ -281,9 +192,6 @@ namespace BloogBot.Game.Objects
             StopMovement(bits);
         }
 
-        /// <summary>
-        /// Stops the movement based on the specified control bits.
-        /// </summary>
         public void StopMovement(ControlBits bits)
         {
             if (bits == ControlBits.Nothing)
@@ -293,9 +201,6 @@ namespace BloogBot.Game.Objects
             Functions.SetControlBit((int)bits, 0, Environment.TickCount);
         }
 
-        /// <summary>
-        /// Performs a jump action. If the client version is Vanilla, it stops the movement and then starts the jump movement. Otherwise, it calls the Jump function from the Functions class.
-        /// </summary>
         public void Jump()
         {
             if (ClientHelper.ClientVersion == ClientVersion.Vanilla)
@@ -309,9 +214,6 @@ namespace BloogBot.Game.Objects
             }
         }
 
-        /// <summary>
-        /// Use this property to determine whether you can use cannibalize.
-        /// </summary>
         // use this to determine whether you can use cannibalize
         public bool TastyCorpsesNearby =>
             ObjectManager.Units.Any(u =>
@@ -319,14 +221,8 @@ namespace BloogBot.Game.Objects
                 && u.CreatureType.HasFlag(CreatureType.Humanoid | CreatureType.Undead)
             );
 
-        /// <summary>
-        /// Calls the Lua function "DoEmote" with the parameter "STAND" to make the character stand.
-        /// </summary>
         public void Stand() => LuaCall("DoEmote(\"STAND\")");
 
-        /// <summary>
-        /// Gets the current stance based on the buffs.
-        /// </summary>
         public string CurrentStance
         {
             get
@@ -344,9 +240,6 @@ namespace BloogBot.Game.Objects
             }
         }
 
-        /// <summary>
-        /// Gets a value indicating whether the player is in ghost form.
-        /// </summary>
         public bool InGhostForm
         {
             get
@@ -360,18 +253,9 @@ namespace BloogBot.Game.Objects
             }
         }
 
-        /// <summary>
-        /// Sets the target using the specified GUID.
-        /// </summary>
         public void SetTarget(ulong guid) => Functions.SetTarget(guid);
 
-        /// <summary>
-        /// Gets or sets the ComboPointGuid.
-        /// </summary>
         ulong ComboPointGuid { get; set; }
-        /// <summary>
-        /// Determines if the player can overpower the target.
-        /// </summary>
         public bool CanOverpower
         {
             get
@@ -402,9 +286,6 @@ namespace BloogBot.Game.Objects
             }
         }
 
-        /// <summary>
-        /// Gets the number of combo points on the target.
-        /// </summary>
         public byte ComboPoints
         {
             get
@@ -418,9 +299,6 @@ namespace BloogBot.Game.Objects
             }
         }
 
-        /// <summary>
-        /// Gets the current shapeshift form.
-        /// </summary>
         public string CurrentShapeshiftForm
         {
             get
@@ -435,39 +313,18 @@ namespace BloogBot.Game.Objects
             }
         }
 
-        /// <summary>
-        /// Checks if the player is diseased by checking for any debuffs of type Disease.
-        /// </summary>
         public bool IsDiseased => GetDebuffs(LuaTarget.Player).Any(t => t.Type == EffectType.Disease);
 
-        /// <summary>
-        /// Checks if the player is cursed by examining the debuffs.
-        /// </summary>
         public bool IsCursed => GetDebuffs(LuaTarget.Player).Any(t => t.Type == EffectType.Curse);
 
-        /// <summary>
-        /// Checks if the player is poisoned by checking for any debuffs of type "Poison".
-        /// </summary>
         public bool IsPoisoned => GetDebuffs(LuaTarget.Player).Any(t => t.Type == EffectType.Poison);
 
-        /// <summary>
-        /// Checks if the player has any magic debuffs.
-        /// </summary>
         public bool HasMagicDebuff => GetDebuffs(LuaTarget.Player).Any(t => t.Type == EffectType.Magic);
 
-        /// <summary>
-        /// Releases the corpse.
-        /// </summary>
         public void ReleaseCorpse() => Functions.ReleaseCorpse(Pointer);
 
-        /// <summary>
-        /// Retrieves the corpse.
-        /// </summary>
         public void RetrieveCorpse() => Functions.RetrieveCorpse();
 
-        /// <summary>
-        /// Refreshes the list of player spells.
-        /// </summary>
         public void RefreshSpells()
         {
             PlayerSpells.Clear();
@@ -480,7 +337,7 @@ namespace BloogBot.Game.Objects
                 if (ClientHelper.ClientVersion == ClientVersion.Vanilla)
                 {
                     var spellsBasePtr = MemoryManager.ReadIntPtr((IntPtr)0x00C0D788);
-                    var spellPtr = MemoryManager.ReadIntPtr(spellsBasePtr + currentSpellId * 4);
+                    var spellPtr =  MemoryManager.ReadIntPtr(spellsBasePtr + currentSpellId * 4);
 
                     var spellNamePtr = MemoryManager.ReadIntPtr(spellPtr + 0x1E0);
                     name = MemoryManager.ReadString(spellNamePtr);
@@ -508,9 +365,6 @@ namespace BloogBot.Game.Objects
             }
         }
 
-        /// <summary>
-        /// Gets the spell ID for a given spell name and rank.
-        /// </summary>
         public int GetSpellId(string spellName, int rank = -1)
         {
             int spellId;
@@ -524,9 +378,6 @@ namespace BloogBot.Game.Objects
             return spellId;
         }
 
-        /// <summary>
-        /// Checks if a spell is ready to be cast.
-        /// </summary>
         public bool IsSpellReady(string spellName, int rank = -1)
         {
             if (!PlayerSpells.ContainsKey(spellName))
@@ -537,9 +388,6 @@ namespace BloogBot.Game.Objects
             return !Functions.IsSpellOnCooldown(spellId);
         }
 
-        /// <summary>
-        /// Retrieves the mana cost of a spell based on its name and rank.
-        /// </summary>
         public int GetManaCost(string spellName, int rank = -1)
         {
             if (ClientHelper.ClientVersion == ClientVersion.Vanilla)
@@ -559,47 +407,26 @@ namespace BloogBot.Game.Objects
             }
         }
 
-        /// <summary>
-        /// Checks if the player knows a specific spell.
-        /// </summary>
         public bool KnowsSpell(string name) => PlayerSpells.ContainsKey(name);
 
-        /// <summary>
-        /// Checks if the main hand weapon is enchanted.
-        /// </summary>
         public bool MainhandIsEnchanted => LuaCallWithResults("{0} = GetWeaponEnchantInfo()")[0] == "1";
 
-        /// <summary>
-        /// Retrieves the unique identifier of an item in the backpack at the specified slot.
-        /// </summary>
         public ulong GetBackpackItemGuid(int slot) => MemoryManager.ReadUlong(GetDescriptorPtr() + (MemoryAddresses.LocalPlayer_BackpackFirstItemOffset + (slot * 8)));
 
-        /// <summary>
-        /// Retrieves the GUID of the equipped item in the specified equipment slot.
-        /// </summary>
         public ulong GetEquippedItemGuid(EquipSlot slot) => MemoryManager.ReadUlong(IntPtr.Add(Pointer, (MemoryAddresses.LocalPlayer_EquipmentFirstItemOffset + ((int)slot - 1) * 0x8)));
-
-        /// <summary>
-        /// Casts a spell by its name on a target with the specified GUID.
-        /// </summary>
+        
         public void CastSpell(string spellName, ulong targetGuid)
         {
             var spellId = GetSpellId(spellName);
             Functions.CastSpellById(spellId, targetGuid);
         }
 
-        /// <summary>
-        /// Determines if the current position is in line of sight with the specified position.
-        /// </summary>
         public bool InLosWith(Position position)
         {
             var i = Functions.Intersect(Position, position);
             return i.X == 0 && i.Y == 0 && i.Z == 0;
         }
 
-        /// <summary>
-        /// Gets a value indicating whether the character can use the "Riposte" spell.
-        /// </summary>
         public bool CanRiposte
         {
             get
@@ -612,18 +439,12 @@ namespace BloogBot.Game.Objects
             }
         }
 
-        /// <summary>
-        /// Casts a spell at a specified position.
-        /// </summary>
         public void CastSpellAtPosition(string spellName, Position position)
         {
             return;
             // Functions.CastAtPosition(spellName, position);
         }
 
-        /// <summary>
-        /// Checks if a spell with the specified name is set to auto-repeat.
-        /// </summary>
         public bool IsAutoRepeating(string name)
         {
             string luaString = $@"
@@ -650,218 +471,86 @@ namespace BloogBot.Game.Objects
             return false;
         }
 
-        /// <summary>
-        /// Formats a Lua string with the provided arguments.
-        /// </summary>
         private static string FormatLua(string str, params object[] names)
         {
             return string.Format(str, names.Select(s => s.ToString().Replace("'", "\\'").Replace("\"", "\\\"")).ToArray());
         }
 
-        /// <summary>
-        /// Keeps track of the current zone.
-        /// </summary>
         // Keep track of current zone
         private static string m_CurrZone;
-        /// <summary>
-        /// Gets or sets the current zone.
-        /// </summary>
         public string CurrZone { get { return m_CurrZone; } set { m_CurrZone = value; } }
 
-        /// <summary>
-        /// Keeps track of the current WP.
-        /// </summary>
         // Keep track of current WP
         private static int m_CurrWpId;
-        /// <summary>
-        /// Gets or sets the current waypoint ID.
-        /// </summary>
         public int CurrWpId { get { return m_CurrWpId; } set { m_CurrWpId = value; } }
 
-        /// <summary>
-        /// Keeps track of the last WP visited.
-        /// </summary>
         // Keep track of last WP visited
         private static int m_LastWpId;
-        /// <summary>
-        /// Gets or sets the last waypoint ID.
-        /// </summary>
         public int LastWpId { get { return m_LastWpId; } set { m_LastWpId = value; } }
 
-        /// <summary>
-        /// Keeps track of deaths at WP.
-        /// </summary>
         // Keep track of deaths at WP
         private static int m_DeathsAtWp;
-        /// <summary>
-        /// Gets or sets the number of deaths at the waypoint.
-        /// </summary>
         public int DeathsAtWp { get { return m_DeathsAtWp; } set { m_DeathsAtWp = value; } }
 
-        /// <summary>
-        /// The number of times the work process has been stuck.
-        /// </summary>
         private static int m_WpStuckCount;
-        /// <summary>
-        /// Gets or sets the number of times the waypoint has been stuck.
-        /// </summary>
         public int WpStuckCount { get { return m_WpStuckCount; } set { m_WpStuckCount = value; } }
 
-        /// <summary>
-        /// Gets or sets a value indicating whether the object has overleveled.
-        /// </summary>
         private static bool m_HasOverleveled;
-        /// <summary>
-        /// Gets or sets a value indicating whether the object has overleveled.
-        /// </summary>
         public bool HasOverLeveled { get { return m_HasOverleveled; } set { m_HasOverleveled = value; } }
 
-        /// <summary>
-        /// The list of forced waypoint paths.
-        /// </summary>
         private static List<int> m_ForcedWpPath;
-        /// <summary>
-        /// Gets or sets the forced waypoint path.
-        /// </summary>
         public List<int> ForcedWpPath { get { return m_ForcedWpPath; } set { m_ForcedWpPath = value; } }
 
-        /// <summary>
-        /// The set of visited waypoints.
-        /// </summary>
         private static HashSet<int> m_VisitedWps;
-        /// <summary>
-        /// Checks if the specified ID has been visited.
-        /// </summary>
         public bool HasVisitedWp(int id)
         {
             return m_VisitedWps.Contains(id);
         }
-        /// <summary>
-        /// Gets or sets the visited waypoints.
-        /// </summary>
         public HashSet<int> VisitedWps { get { return m_VisitedWps; } set { m_VisitedWps = value; } }
 
-        /// <summary>
-        /// A set of integers representing blacklisted WPs.
-        /// </summary>
-        private static HashSet<int> m_BlackListedWps = new HashSet<int> { 35, 118, 168, 300, 320, 359, 993, 1093, 1094, 1100, 1180, 1359, 1364, 1369, 1426, 1438, 1444, 1445, 1456, 1462, 1463, 1464, 1465, 1466, 1566, 1614, 2388, 2571, 2584, 5057, 5069 };
-        /// <summary>
-        /// Gets or sets the blacklisted waypoints.
-        /// </summary>
+        private static HashSet<int> m_BlackListedWps = new HashSet<int> {35, 118, 168, 300, 320, 359, 993, 1093, 1094, 1100, 1180, 1359, 1364, 1369, 1426, 1438, 1444, 1445, 1456, 1462, 1463, 1464, 1465, 1466, 1566, 1614, 2388, 2571, 2584, 5057, 5069};
         public HashSet<int> BlackListedWps { get { return m_BlackListedWps; } set { m_BlackListedWps = value; } }
 
-        /// <summary>
-        /// Gets or sets a value indicating whether the object has been stuck at a waypoint.
-        /// </summary>
         private static bool m_HasBeenStuckAtWp;
-        /// <summary>
-        /// Gets or sets a value indicating whether the object has been stuck at a waypoint.
-        /// </summary>
         public bool HasBeenStuckAtWp { get { return m_HasBeenStuckAtWp; } set { m_HasBeenStuckAtWp = value; } }
 
-        /// <summary>
-        /// Gets or sets a value indicating whether the user has joined the background.
-        /// </summary>
         private static bool m_HasJoinedBg;
-        /// <summary>
-        /// Gets or sets a value indicating whether the user has joined the background.
-        /// </summary>
         public bool HasJoinedBg { get { return m_HasJoinedBg; } set { m_HasJoinedBg = value; } }
 
-        /// <summary>
-        /// Gets or sets a value indicating whether the program has entered a new map.
-        /// </summary>
         private static bool m_HasEnteredNewMap;
-        /// <summary>
-        /// Gets or sets a value indicating whether the player has entered a new map.
-        /// </summary>
         public bool HasEnteredNewMap { get { return m_HasEnteredNewMap; } set { m_HasEnteredNewMap = value; } }
 
-        /// <summary>
-        /// Gets or sets a value indicating whether the program should wait for a short delay.
-        /// </summary>
         private static bool m_ShouldWaitForShortDelay;
-        /// <summary>
-        /// Gets or sets a value indicating whether the program should wait for a short delay.
-        /// </summary>
         public bool ShouldWaitForShortDelay { get { return m_ShouldWaitForShortDelay; } set { m_ShouldWaitForShortDelay = value; } }
 
-        /// <summary>
-        /// Gets or sets a value indicating whether the program should wait for the teleport delay.
-        /// </summary>
         private static bool m_ShouldWaitForTeleportDelay;
-        /// <summary>
-        /// Gets or sets a value indicating whether the program should wait for teleport delay.
-        /// </summary>
         public bool ShouldWaitForTeleportDelay { get { return m_ShouldWaitForTeleportDelay; } set { m_ShouldWaitForTeleportDelay = value; } }
-
-        /// <summary>
-        /// Gets or sets a value indicating whether there are items to equip.
-        /// </summary>
+        
         private static bool m_HasItemsToEquip;
-        /// <summary>
-        /// Gets or sets a value indicating whether there are items to equip.
-        /// </summary>
         public bool HasItemsToEquip { get { return m_HasItemsToEquip; } set { m_HasItemsToEquip = value; } }
 
-        /// <summary>
-        /// Gets or sets a value indicating whether the object should teleport to the last waypoint.
-        /// </summary>
         private static bool m_ShouldTeleportToLastWp;
-        /// <summary>
-        /// Gets or sets a value indicating whether the object should teleport to the last waypoint.
-        /// </summary>
         public bool ShouldTeleportToLastWp { get { return m_ShouldTeleportToLastWp; } set { m_ShouldTeleportToLastWp = value; } }
 
-        /// <summary>
-        /// The last known map ID.
-        /// </summary>
         private static uint m_LastKnownMapId;
-        /// <summary>
-        /// Gets or sets the last known map ID.
-        /// </summary>
         public uint LastKnownMapId { get { return m_LastKnownMapId; } set { m_LastKnownMapId = value; } }
 
-        /// <summary>
-        /// The count of times the program has been stuck in a state or position.
-        /// </summary>
         private static uint m_StuckInStateOrPosCount;
-        /// <summary>
-        /// Gets or sets the count of times the object is stuck in a state or position.
-        /// </summary>
         public uint StuckInStateOrPosCount { get { return m_StuckInStateOrPosCount; } set { m_StuckInStateOrPosCount = value; } }
 
-        /// <summary>
-        /// The set of blacklisted targets.
-        /// </summary>
-        private static HashSet<ulong> m_BlackListedTargets = new HashSet<ulong> { };
-        /// <summary>
-        /// Gets or sets the blacklisted targets.
-        /// </summary>
+        private static HashSet<ulong> m_BlackListedTargets = new HashSet<ulong> {};
         public HashSet<ulong> BlackListedTargets { get { return m_BlackListedTargets; } set { m_BlackListedTargets = value; } }
 
-        /// <summary>
-        /// Gets or sets the list of food names.
-        /// </summary>
         public List<string> FoodNames { get { return s_FoodNames; } set { s_FoodNames = value; } }
-        /// <summary>
-        /// List of conjured food names.
-        /// </summary>
-        private static List<string> s_FoodNames = new List<string>
+        private static List<string> s_FoodNames = new List<string> 
         {
-            "Conjured Cinnamon Roll", "Conjured Croissant", "Conjured Pumpernickel",
-            "Conjured Rye", "Conjured Muffin", "Conjured Sourdough",
-            "Conjured Mana Pie", "Conjured Sweet Roll", "Conjured Bread",
+            "Conjured Cinnamon Roll", "Conjured Croissant", "Conjured Pumpernickel", 
+            "Conjured Rye", "Conjured Muffin", "Conjured Sourdough", 
+            "Conjured Mana Pie", "Conjured Sweet Roll", "Conjured Bread", 
             "Conjured Mana Strudel", "Conjured Mana Biscuit"
         };
 
-        /// <summary>
-        /// Gets or sets the list of drink names.
-        /// </summary>
         public List<string> DrinkNames { get { return s_DrinkNames; } set { s_DrinkNames = value; } }
-        /// <summary>
-        /// List of drink names.
-        /// </summary>
         private static List<string> s_DrinkNames = new List<string>
         {
             "Conjured Crystal Water", "Conjured Purified Water", "Conjured Fresh Water",
@@ -871,10 +560,6 @@ namespace BloogBot.Game.Objects
             "Conjured Mana Biscuit", "Conjured Mana Pie"
         };
 
-        /// <summary>
-        /// Dictionary containing the commands for repairing hotspots in different locations.
-        /// Key represents the location and value represents the repair command.
-        /// </summary>
         private static Dictionary<int, string> m_HotspotRepairDict = new Dictionary<int, string>
         {
             { 1, ".npcb wp go 31" },     // Kalimdor horde repair
@@ -886,18 +571,9 @@ namespace BloogBot.Game.Objects
             { 7, ".npcb wp go 2730" },   // Northrend horde repair
             { 8, ".npcb wp go 2703" }    // Northrend alliance repair
         };
-        /// <summary>
-        /// Gets or sets the dictionary for hotspot repairs.
-        /// </summary>
         public Dictionary<int, string> HotspotRepairDict => m_HotspotRepairDict;
 
-        /// <summary>
-        /// Gets or sets the dictionary of level talents.
-        /// </summary>
         public Dictionary<int, string> LevelTalentsDict => m_LevelTalentsDict;
-        /// <summary>
-        /// Dictionary that maps level numbers to talent values.
-        /// </summary>
         private static Dictionary<int, string> m_LevelTalentsDict = new Dictionary<int, string>
         {
             {10, "3, 2"}, {11, "3, 2"}, {12, "3, 2"}, {13, "3, 2"}, {14, "3, 2"}, {15, "3, 4"},
@@ -914,9 +590,6 @@ namespace BloogBot.Game.Objects
             {76, "3, 3"}, {77, "3, 3"}, {78, "3, 1"}, {79, "3, 1"}, {80, "3, 1"}
         };
 
-        /// <summary>
-        /// Retrieves a list of all spells within a specified level range.
-        /// </summary>
         public static List<int> GetAllSpellsInLevelRange(int min, int max)
         {
             return m_LevelSpellsDict
@@ -925,15 +598,8 @@ namespace BloogBot.Game.Objects
                 .ToList();
         }
 
-        /// <summary>
-        /// Gets or sets the dictionary that maps level to a list of spells.
-        /// </summary>
         public Dictionary<int, List<int>> LevelSpellsDict => m_LevelSpellsDict;
 
-        /// <summary>
-        /// Dictionary that stores the spells available at each level for a Mage character.
-        /// The key represents the level, and the value is a list of spell IDs.
-        /// </summary>
         private static Dictionary<int, List<int>> m_LevelSpellsDict = new Dictionary<int, List<int>>
         {
             {3, new List<int> { 1459 }}, // Arcane Intellect R1
@@ -985,13 +651,7 @@ namespace BloogBot.Game.Objects
             {80, new List<int> { 42995, 42873 }} // Arcane Intellect R7, Fire Blast R11
         };
 
-        /// <summary>
-        /// Gets or sets the dictionary that maps level IDs to lists of item IDs.
-        /// </summary>
         public Dictionary<int, List<int>> LevelItemsDict => m_LevelItemsDict;
-        /// <summary>
-        /// Dictionary that maps a level to a list of item IDs.
-        /// </summary>
         private static Dictionary<int, List<int>> m_LevelItemsDict = new Dictionary<int, List<int>>
         {
             {10, new List<int> { 6659, 3344 }}, // Legs, Waist
@@ -1037,9 +697,6 @@ namespace BloogBot.Game.Objects
             {78, new List<int> { 37038, 37113 }} // Wand, Wrist
         };
 
-        /// <summary>
-        /// The name of the bot's friend.
-        /// </summary>
         public string BotFriend = "Lazarus";
     }
 }

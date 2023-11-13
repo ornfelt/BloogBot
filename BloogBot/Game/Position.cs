@@ -2,25 +2,10 @@
 using System;
 using System.Collections.Generic;
 
-/// <summary>
-/// This namespace contains classes related to game positions.
-/// </summary>
 namespace BloogBot.Game
 {
-    /// <summary>
-    /// Represents a position in 3D space with x, y, and z coordinates.
-    /// </summary>
-    /// <summary>
-    /// Represents a position in 3D space with x, y, and z coordinates.
-    /// </summary>
     public class Position
     {
-        /// <summary>
-        /// Initializes a new instance of the <see cref="Position"/> class.
-        /// </summary>
-        /// <param name="x">The x coordinate.</param>
-        /// <param name="y">The y coordinate.</param>
-        /// <param name="z">The z coordinate.</param>
         //[JsonConstructor]
         public Position(float x, float y, float z)
         {
@@ -29,9 +14,6 @@ namespace BloogBot.Game
             Z = z;
         }
 
-        /// <summary>
-        /// Initializes a new instance of the Position class with the specified coordinates, ID, zone, level range, and links.
-        /// </summary>
         [JsonConstructor]
         public Position(float x, float y, float z, int id, string zone, int minlevel, int maxlevel, string links)
         {
@@ -45,10 +27,6 @@ namespace BloogBot.Game
             Links = links;
         }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="Position"/> class.
-        /// </summary>
-        /// <param name="xyz">The XYZ object containing the X, Y, and Z coordinates.</param>
         public Position(XYZ xyz)
         {
             X = xyz.X;
@@ -56,45 +34,18 @@ namespace BloogBot.Game
             Z = xyz.Z;
         }
 
-        /// <summary>
-        /// Gets the value of X.
-        /// </summary>
         public float X { get; }
 
-        /// <summary>
-        /// Gets the value of the Y property.
-        /// </summary>
         public float Y { get; }
 
-        /// <summary>
-        /// Gets the value of Z.
-        /// </summary>
         public float Z { get; }
 
-        /// <summary>
-        /// Gets the ID.
-        /// </summary>
         public int ID { get; }
-        /// <summary>
-        /// Gets the zone.
-        /// </summary>
         public string Zone { get; }
-        /// <summary>
-        /// Gets the minimum level.
-        /// </summary>
         public int MinLevel { get; }
-        /// <summary>
-        /// Gets the maximum level.
-        /// </summary>
         public int MaxLevel { get; }
-        /// <summary>
-        /// Gets or sets the links.
-        /// </summary>
         public string Links { get; }
 
-        /// <summary>
-        /// Calculates the distance between this position and the specified position.
-        /// </summary>
         public float DistanceTo(Position position)
         {
             var deltaX = X - position.X;
@@ -104,9 +55,6 @@ namespace BloogBot.Game
             return (float)Math.Sqrt(deltaX * deltaX + deltaY * deltaY + deltaZ * deltaZ);
         }
 
-        /// <summary>
-        /// Calculates the 2D distance between this position and the specified position.
-        /// </summary>
         public float DistanceTo2D(Position position)
         {
             var deltaX = X - position.X;
@@ -115,9 +63,6 @@ namespace BloogBot.Game
             return (float)Math.Sqrt(deltaX * deltaX + deltaY * deltaY);
         }
 
-        /// <summary>
-        /// Returns a normalized vector of the current position.
-        /// </summary>
         public Position GetNormalizedVector()
         {
             var magnitude = Math.Sqrt(X * X + Y * Y + Z * Z);
@@ -125,42 +70,21 @@ namespace BloogBot.Game
             return new Position((float)(X / magnitude), (float)(Y / magnitude), (float)(Z / magnitude));
         }
 
-        /// <summary>
-        /// Subtracts the coordinates of two positions and returns a new position.
-        /// </summary>
         // Update these to match new constructor (only necessary if playing rogue?)
         public static Position operator -(Position a, Position b) =>
             new Position(a.X - b.X, a.Y - b.Y, a.Z - b.Z);
 
-        /// <summary>
-        /// Adds two positions together and returns a new position with the sum of their coordinates.
-        /// </summary>
         public static Position operator +(Position a, Position b) =>
-                    new Position(a.X + b.X, a.Y + b.Y, a.Z + b.Z);
+            new Position(a.X + b.X, a.Y + b.Y, a.Z + b.Z);
 
-        /// <summary>
-        /// Multiplies a Position object by an integer value.
-        /// </summary>
         public static Position operator *(Position a, int n) =>
-                    new Position(a.X * n, a.Y * n, a.Z * n);
+            new Position(a.X * n, a.Y * n, a.Z * n);
 
-        /// <summary>
-        /// Converts the current object to an instance of XYZ.
-        /// </summary>
         public XYZ ToXYZ() => new XYZ(X, Y, Z);
 
-        /// <summary>
-        /// Returns a string representation of the object with rounded X, Y, and Z values.
-        /// </summary>
         public override string ToString() => $"X: {Math.Round(X, 2)}, Y: {Math.Round(Y, 2)}, Z: {Math.Round(Z, 2)}";
-        /// <summary>
-        /// Returns a string representation of the object including ID, Zone, MinLevel, MaxLevel, X, Y, Z, and Links.
-        /// </summary>
         public string ToStringFull() => $"ID: {ID}, Zone: {GetZoneName(Int32.Parse(Zone))} ({Zone}), MinLevel: {MinLevel}, MaxLevel: {MaxLevel}, X: {Math.Round(X, 2)}, Y: {Math.Round(Y, 2)}, Z: {Math.Round(Z, 2)}, Links: {Links}";
 
-        /// <summary>
-        /// Dictionary that maps zone IDs to zone names.
-        /// </summary>
         private static readonly Dictionary<int, string> ZoneIdNameDict = new Dictionary<int, string>
         {
             {14, "Durotar"}, {15, "Dustwallow Marsh"}, {16, "Azshara"}, {17, "The Barrens"},
@@ -186,19 +110,11 @@ namespace BloogBot.Game
             { 2597, "Alterac Valley" }, { 3358, "Arathi Basin" }
         };
 
-        /// <summary>
-        /// Gets the name of the zone based on the given zone ID.
-        /// If the zone ID is found in the ZoneIdNameDict dictionary, the corresponding name is returned.
-        /// Otherwise, "Unknown Zone" is returned.
-        /// </summary>
         private static string GetZoneName(int zone)
         {
             return ZoneIdNameDict.ContainsKey(zone) ? ZoneIdNameDict[zone] : "Unknown Zone";
         }
 
-        /// <summary>
-        /// Retrieves the name of the zone.
-        /// </summary>
         public string GetZoneName()
         {
             return GetZoneName(Int32.Parse(Zone));

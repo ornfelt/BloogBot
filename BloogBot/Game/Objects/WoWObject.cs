@@ -3,97 +3,43 @@ using System;
 using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 
-/// <summary>
-/// The BloogBot.Game.Objects namespace contains classes for handling World of Warcraft objects.
-/// </summary>
 namespace BloogBot.Game.Objects
 {
-    /// <summary>
-    /// Represents a World of Warcraft object.
-    /// </summary>
-    /// <summary>
-    /// Represents a World of Warcraft object.
-    /// </summary>
     public unsafe abstract class WoWObject
     {
-        /// <summary>
-        /// Gets or sets the pointer.
-        /// </summary>
         public virtual IntPtr Pointer { get; set; }
-        /// <summary>
-        /// Gets or sets the Guid.
-        /// </summary>
         public virtual ulong Guid { get; set; }
-        /// <summary>
-        /// Gets or sets the type of the object.
-        /// </summary>
         public virtual ObjectType ObjectType { get; set; }
 
-        /// <summary>
-        /// Represents a delegate for getting the position of an object.
-        /// </summary>
         [UnmanagedFunctionPointer(CallingConvention.ThisCall)]
         delegate void GetPositionDelegate(IntPtr objectPtr, ref XYZ pos);
 
-        /// <summary>
-        /// Represents a delegate used to get the facing of an object.
-        /// </summary>
         [UnmanagedFunctionPointer(CallingConvention.ThisCall)]
         delegate float GetFacingDelegate(IntPtr objectPtr);
 
-        /// <summary>
-        /// Delegate used for interacting with objects in vanilla.
-        /// </summary>
         // used for interacting in vanilla
         [UnmanagedFunctionPointer(CallingConvention.ThisCall)]
         delegate void RightClickObjectDelegate(IntPtr unitPtr, int autoLoot);
-
-        /// <summary>
-        /// Delegate used for interacting with others.
-        /// </summary>
+        
         // used for interacting in others
         [UnmanagedFunctionPointer(CallingConvention.ThisCall)]
         delegate void InteractDelegate(IntPtr objectPtr);
 
-        /// <summary>
-        /// Represents a delegate that is used to get the name of an object pointer.
-        /// </summary>
         [UnmanagedFunctionPointer(CallingConvention.ThisCall)]
         delegate IntPtr GetNameDelegate(IntPtr objectPtr);
 
-        /// <summary>
-        /// Gets the position delegate.
-        /// </summary>
         readonly GetPositionDelegate getPositionFunction;
 
-        /// <summary>
-        /// Gets the facing delegate.
-        /// </summary>
         readonly GetFacingDelegate getFacingFunction;
 
-        /// <summary>
-        /// Delegate for handling right-click events on objects.
-        /// </summary>
         readonly RightClickObjectDelegate rightClickObjectFunction;
 
-        /// <summary>
-        /// Gets or sets the readonly InteractDelegate function.
-        /// </summary>
         readonly InteractDelegate interactFunction;
 
-        /// <summary>
-        /// Gets the name delegate.
-        /// </summary>
         readonly GetNameDelegate getNameFunction;
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="WoWObject"/> class.
-        /// </summary>
         public WoWObject() { }
 
-        /// <summary>
-        /// Initializes a new instance of the WoWObject class with the specified pointer, GUID, and object type.
-        /// </summary>
         public WoWObject(IntPtr pointer, ulong guid, ObjectType objectType)
         {
             Pointer = pointer;
@@ -124,17 +70,11 @@ namespace BloogBot.Game.Objects
             else
             {
                 rightClickObjectFunction = Marshal.GetDelegateForFunctionPointer<RightClickObjectDelegate>((IntPtr)0x60BEA0);
-            }
+            }    
         }
 
-        /// <summary>
-        /// Gets the position.
-        /// </summary>
         public virtual Position Position => GetPosition();
 
-        /// <summary>
-        /// Retrieves the position of the object.
-        /// </summary>
         [HandleProcessCorruptedStateExceptions]
         Position GetPosition()
         {
@@ -200,7 +140,7 @@ namespace BloogBot.Game.Objects
 
                     return new Position(xyz);
                 }
-
+                
             }
             catch (AccessViolationException)
             {
@@ -209,14 +149,8 @@ namespace BloogBot.Game.Objects
             }
         }
 
-        /// <summary>
-        /// Gets the facing value.
-        /// </summary>
         public float Facing => GetFacing();
 
-        /// <summary>
-        /// Retrieves the facing angle of the WoWObject.
-        /// </summary>
         [HandleProcessCorruptedStateExceptions]
         float GetFacing()
         {
@@ -245,14 +179,8 @@ namespace BloogBot.Game.Objects
             }
         }
 
-        /// <summary>
-        /// Gets the name.
-        /// </summary>
         public string Name => GetName();
 
-        /// <summary>
-        /// Retrieves the name of the WoWObject.
-        /// </summary>
         [HandleProcessCorruptedStateExceptions]
         string GetName()
         {
@@ -298,7 +226,7 @@ namespace BloogBot.Game.Objects
                     else
                         return "";
                 }
-
+                
             }
             catch (AccessViolationException)
             {
@@ -306,10 +234,7 @@ namespace BloogBot.Game.Objects
                 return "";
             }
         }
-
-        /// <summary>
-        /// Interacts with an object based on the client version.
-        /// </summary>
+        
         public void Interact()
         {
             if (ClientHelper.ClientVersion == ClientVersion.Vanilla)
@@ -322,9 +247,6 @@ namespace BloogBot.Game.Objects
             }
         }
 
-        /// <summary>
-        /// Retrieves the pointer to the descriptor of the WoW object by reading the IntPtr value from the memory address obtained by adding the offset of the WoWObject_DescriptorOffset to the current pointer.
-        /// </summary>
         protected IntPtr GetDescriptorPtr() => MemoryManager.ReadIntPtr(IntPtr.Add(Pointer, MemoryAddresses.WoWObject_DescriptorOffset));
     }
 }

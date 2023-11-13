@@ -6,62 +6,23 @@ using BloogBot.Game.Objects;
 using System.Collections.Generic;
 using System.Linq;
 
-/// <summary>
-/// This namespace contains classes and interfaces related to the Affliction Warlock bot.
-/// </summary>
 namespace AfflictionWarlockBot
 {
-    /// <summary>
-    /// Represents a state where the bot is resting.
-    /// </summary>
-    /// <summary>
-    /// Represents a state where the bot is resting.
-    /// </summary>
     class RestState : IBotState
     {
-        /// <summary>
-        /// The number of stacks.
-        /// </summary>
         const int stackCount = 5;
 
-        /// <summary>
-        /// Represents the constant string "Consume Shadows".
-        /// </summary>
         const string ConsumeShadows = "Consume Shadows";
-        /// <summary>
-        /// Represents the constant string "Health Funnel".
-        /// </summary>
         const string HealthFunnel = "Health Funnel";
 
-        /// <summary>
-        /// Represents a readonly stack of IBotState objects.
-        /// </summary>
         readonly Stack<IBotState> botStates;
-        /// <summary>
-        /// Represents a read-only dependency container.
-        /// </summary>
         readonly IDependencyContainer container;
-        /// <summary>
-        /// Represents a readonly instance of the LocalPlayer class.
-        /// </summary>
         readonly LocalPlayer player;
-
-        /// <summary>
-        /// Represents a read-only World of Warcraft item for food.
-        /// </summary>
+        
         readonly WoWItem foodItem;
-        /// <summary>
-        /// Represents a read-only World of Warcraft item used for drinking.
-        /// </summary>
         readonly WoWItem drinkItem;
-        /// <summary>
-        /// Represents a local pet.
-        /// </summary>
         LocalPet pet;
 
-        /// <summary>
-        /// Initializes a new instance of the RestState class.
-        /// </summary>
         public RestState(Stack<IBotState> botStates, IDependencyContainer container)
         {
             this.botStates = botStates;
@@ -76,9 +37,6 @@ namespace AfflictionWarlockBot
                 .FirstOrDefault(i => i.Info.Name == container.BotSettings.Drink);
         }
 
-        /// <summary>
-        /// Updates the current state of the bot.
-        /// </summary>
         public void Update()
         {
             pet = ObjectManager.Pet;
@@ -142,27 +100,12 @@ namespace AfflictionWarlockBot
                 drinkItem.Use();
         }
 
-        /// <summary>
-        /// Checks if the health is okay based on the conditions:
-        /// - If there is no food item available
-        /// - If the player's health percentage is greater than or equal to 90
-        /// - If the player's health percentage is greater than or equal to 70 and the player is not currently eating
-        /// </summary>
         bool HealthOk => foodItem == null || player.HealthPercent >= 90 || (player.HealthPercent >= 70 && !player.IsEating);
 
-        /// <summary>
-        /// Checks if the pet's health is okay. Returns true if the pet is null or its health percentage is greater than or equal to 80.
-        /// </summary>
         bool PetHealthOk => ObjectManager.Pet == null || ObjectManager.Pet.HealthPercent >= 80;
 
-        /// <summary>
-        /// Checks if the player's mana is sufficient for certain conditions.
-        /// </summary>
         bool ManaOk => (player.Level < 6 && player.ManaPercent > 50) || player.ManaPercent >= 90 || (player.ManaPercent >= 55 && !player.IsDrinking);
 
-        /// <summary>
-        /// Gets a value indicating whether the player is currently in combat or if any units are targeting the player or the player's pet.
-        /// </summary>
         bool InCombat => ObjectManager.Player.IsInCombat || ObjectManager.Units.Any(u => u.TargetGuid == ObjectManager.Player.Guid || u.TargetGuid == ObjectManager.Pet?.Guid);
     }
 }

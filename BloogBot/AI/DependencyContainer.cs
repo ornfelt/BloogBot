@@ -7,48 +7,27 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 
-/// <summary>
-/// This namespace contains classes related to the AI functionality of BloogBot.
-/// </summary>
 namespace BloogBot.AI
 {
-    /// <summary>
-    /// Represents a dependency container that implements the IDependencyContainer interface.
-    /// </summary>
-    /// <summary>
-    /// Represents a dependency container that implements the IDependencyContainer interface.
-    /// </summary>
     public class DependencyContainer : IDependencyContainer
     {
-        /// <summary>
-        /// Array of names for different types of oozes.
-        /// </summary>
         static readonly string[] oozeNames = { "Acidic Swamp Ooze", "Black Slime", "Cloned Ectoplasm", "Cloned Ooze", "Corrosive Sap Beast", "Corrosive Swamp Ooze",
             "Cursed Ooze", "Devouring Ectoplasm", "Evolving Ectoplasm", "Gargantuan Ooze", "Glob of Viscidus", "Glutinous Ooze", "Green Sludge", "Irradiated Slime",
             "Jade Ooze", "Muculent Ooze", "Nightmare Ectoplasm", "Noxious Slime", "Plague Slime", "Primal Ooze", "Rotting Slime", "Sap Beast", "Silty Oozeling",
             "Tainted Ooze", "Vile Slime", "The Rot", "Viscidus", "The Ongar" };
 
-        /// <summary>
-        /// Gets or sets the targeting criteria for a World of Warcraft unit.
-        /// </summary>
         readonly Func<WoWUnit, bool> targetingCriteria;
 
-        /// <summary>
-        /// Gets the dictionary of player trackers.
-        /// </summary>
         IDictionary<string, PlayerTracker> PlayerTrackers { get; } = new Dictionary<string, PlayerTracker>();
 
-        /// <summary>
-        /// Initializes a new instance of the DependencyContainer class.
-        /// </summary>
         public DependencyContainer(
-                    Func<WoWUnit, bool> targetingCriteria,
-                    Func<Stack<IBotState>, IDependencyContainer, IBotState> createRestState,
-                    Func<Stack<IBotState>, IDependencyContainer, WoWUnit, IBotState> createMoveToTargetState,
-                    Func<Stack<IBotState>, IDependencyContainer, WoWUnit, WoWPlayer, IBotState> createPowerlevelCombatState,
-                    BotSettings botSettings,
-                    Probe probe,
-                    IEnumerable<Hotspot> hotspots)
+            Func<WoWUnit, bool> targetingCriteria,
+            Func<Stack<IBotState>, IDependencyContainer, IBotState> createRestState,
+            Func<Stack<IBotState>, IDependencyContainer, WoWUnit, IBotState> createMoveToTargetState,
+            Func<Stack<IBotState>, IDependencyContainer, WoWUnit, WoWPlayer, IBotState> createPowerlevelCombatState,
+            BotSettings botSettings,
+            Probe probe,
+            IEnumerable<Hotspot> hotspots)
         {
             this.targetingCriteria = targetingCriteria;
 
@@ -60,39 +39,18 @@ namespace BloogBot.AI
             Hotspots = hotspots;
         }
 
-        /// <summary>
-        /// Gets or sets the function used to create a new instance of the bot state for REST requests.
-        /// </summary>
         public Func<Stack<IBotState>, IDependencyContainer, IBotState> CreateRestState { get; }
 
-        /// <summary>
-        /// Gets or sets the function that creates a move to target state.
-        /// </summary>
         public Func<Stack<IBotState>, IDependencyContainer, WoWUnit, IBotState> CreateMoveToTargetState { get; }
 
-        /// <summary>
-        /// Creates a combat state for power leveling, using the specified stack of bot states, dependency container, WoW unit, and WoW player.
-        /// </summary>
         public Func<Stack<IBotState>, IDependencyContainer, WoWUnit, WoWPlayer, IBotState> CreatePowerlevelCombatState { get; }
 
-        /// <summary>
-        /// Gets or sets the settings for the bot.
-        /// </summary>
         public BotSettings BotSettings { get; }
 
-        /// <summary>
-        /// Gets the Probe object.
-        /// </summary>
         public Probe Probe { get; }
 
-        /// <summary>
-        /// Gets the collection of hotspots.
-        /// </summary>
         public IEnumerable<Hotspot> Hotspots { get; }
 
-        /// <summary>
-        /// Finds the threat for the player character.
-        /// </summary>
         // this is broken up into multiple sub-expressions to improve readability and debuggability
         public WoWUnit FindThreat()
         {
@@ -131,9 +89,6 @@ namespace BloogBot.AI
             return null;
         }
 
-        /// <summary>
-        /// Finds the closest target for the player.
-        /// </summary>
         // this is broken up into multiple sub-expressions to improve readability and debuggability
         public WoWUnit FindClosestTarget()
         {
@@ -187,11 +142,6 @@ namespace BloogBot.AI
             //return potentialTargets.FirstOrDefault();
         }
 
-        /// <summary>
-        /// Determines whether the player can attack the specified target.
-        /// </summary>
-        /// <param name="targetGuid">The unique identifier of the target.</param>
-        /// <returns>True if the player can attack the target; otherwise, false.</returns>
         private bool CanAttackTarget(ulong targetGuid)
         {
             var player = ObjectManager.Player;
@@ -210,17 +160,11 @@ namespace BloogBot.AI
             //}
         }
 
-        /// <summary>
-        /// Retrieves a hotspot by its ID.
-        /// </summary>
         private Hotspot GetHotspotById(int id)
         {
             return Hotspots.FirstOrDefault(h => h != null && h.Id == id);
         }
 
-        /// <summary>
-        /// Retrieves the current hotspot based on the logic of the current map.
-        /// </summary>
         //public Hotspot GetCurrentHotspot() => BotSettings.GrindingHotspot;
         public Hotspot GetCurrentHotspot()
         {
@@ -271,9 +215,6 @@ namespace BloogBot.AI
             return BotSettings.GrindingHotspot; // Default
         }
 
-        /// <summary>
-        /// Checks for a travel path and creates travel and move to position states if a path exists.
-        /// </summary>
         public void CheckForTravelPath(Stack<IBotState> botStates, bool reverse, bool needsToRest = true)
         {
             var currentHotspot = BotSettings.GrindingHotspot;
@@ -306,20 +247,10 @@ namespace BloogBot.AI
             }
         }
 
-        /// <summary>
-        /// Gets or sets a value indicating whether the person is running errands.
-        /// </summary>
         public bool RunningErrands { get; set; }
 
-        /// <summary>
-        /// Represents the timer for beeping.
-        /// </summary>
         int beepTimer;
 
-        /// <summary>
-        /// Updates the player trackers by removing old players and tracking new players.
-        /// Checks if the bot is catching heat and triggers warnings or stops the bot accordingly.
-        /// </summary>
         public bool UpdatePlayerTrackers()
         {
             var stopBot = false;
@@ -402,9 +333,6 @@ namespace BloogBot.AI
             return stopBot;
         }
 
-        /// <summary>
-        /// Gets or sets a value indicating whether the teleport checker is disabled.
-        /// </summary>
         public bool DisableTeleportChecker { get; set; }
     }
 }

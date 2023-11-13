@@ -6,150 +6,48 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-/// <summary>
-/// This namespace contains the implementation of the PowerlevelCombatState class, which represents the state of the bot when in powerlevel combat mode.
-/// </summary>
 namespace ElementalShamanBot
 {
-    /// <summary>
-    /// Represents the combat state for a character with a power level.
-    /// </summary>
-    /// <summary>
-    /// Represents the combat state for a character with a power level.
-    /// </summary>
     class PowerlevelCombatState : IBotState
     {
 
-        /// <summary>
-        /// Represents the error message for when the target is not in line of sight.
-        /// </summary>
         const string LosErrorMessage = "Target not in line of sight";
-        /// <summary>
-        /// The Lua script for auto attacking. If the current action is not '12', it casts the 'Attack' spell.
-        /// </summary>
         const string AutoAttackLuaScript = "if IsCurrentAction('12') == nil then CastSpellByName('Attack') end";
 
-        /// <summary>
-        /// Represents the constant string "Clearcasting".
-        /// </summary>
         const string Clearcasting = "Clearcasting";
-        /// <summary>
-        /// Represents the constant string "Earth Shock".
-        /// </summary>
         const string EarthShock = "Earth Shock";
-        /// <summary>
-        /// Represents the constant string value "Elemental Mastery".
-        /// </summary>
         const string ElementalMastery = "Elemental Mastery";
-        /// <summary>
-        /// Represents the constant string "Flame Shock".
-        /// </summary>
         const string FlameShock = "Flame Shock";
-        /// <summary>
-        /// Represents the constant string "Flametongue Weapon".
-        /// </summary>
         const string FlametongueWeapon = "Flametongue Weapon";
-        /// <summary>
-        /// Represents the constant string value for "Focused Casting".
-        /// </summary>
         const string FocusedCasting = "Focused Casting";
-        /// <summary>
-        /// Represents the constant string value for "Grounding Totem".
-        /// </summary>
         const string GroundingTotem = "Grounding Totem";
-        /// <summary>
-        /// Represents the constant string "Mana Spring Totem".
-        /// </summary>
         const string ManaSpringTotem = "Mana Spring Totem";
-        /// <summary>
-        /// The constant string representing the name "Healing Wave".
-        /// </summary>
         const string HealingWave = "Healing Wave";
-        /// <summary>
-        /// Represents a constant string value for "Lightning Bolt".
-        /// </summary>
         const string LightningBolt = "Lightning Bolt";
-        /// <summary>
-        /// Represents the constant string "Lightning Shield".
-        /// </summary>
         const string LightningShield = "Lightning Shield";
-        /// <summary>
-        /// Represents the constant string "Rockbiter Weapon".
-        /// </summary>
         const string RockbiterWeapon = "Rockbiter Weapon";
-        /// <summary>
-        /// Represents the constant string value for "Searing Totem".
-        /// </summary>
         const string SearingTotem = "Searing Totem";
-        /// <summary>
-        /// Represents the constant string "Stoneclaw Totem".
-        /// </summary>
         const string StoneclawTotem = "Stoneclaw Totem";
-        /// <summary>
-        /// Represents the constant string "Stoneskin Totem".
-        /// </summary>
         const string StoneskinTotem = "Stoneskin Totem";
-        /// <summary>
-        /// Represents the constant string "Tremor Totem".
-        /// </summary>
         const string TremorTotem = "Tremor Totem";
-        /// <summary>
-        /// Represents the constant string "Lesser Healing Wave".
-        /// </summary>
         const string LesserHealingWave = "Lesser Healing Wave";
 
-        /// <summary>
-        /// Array of creatures that are feared by the player.
-        /// </summary>
         readonly string[] fearingCreatures = new[] { "Scorpid Terror" };
-        /// <summary>
-        /// Array of fire-immune creatures.
-        /// </summary>
         readonly string[] fireImmuneCreatures = new[] { "Rogue Flame Spirit", "Burning Destroyer" };
-        /// <summary>
-        /// An array of creatures that are immune to nature attacks.
-        /// </summary>
         readonly string[] natureImmuneCreatures = new[] { "Swirling Vortex", "Gusting Vortex", "Dust Stormer" };
 
-
-        /// <summary>
-        /// Represents the last position of the target.
-        /// </summary>
+        
         Position targetLastPosition;
 
-        /// <summary>
-        /// Represents a boolean value indicating whether there are any line of sight (LOS) obstacles.
-        /// </summary>
         bool noLos;
-        /// <summary>
-        /// Represents the start time for the "no loss" period.
-        /// </summary>
         int noLosStartTime;
 
-        /// <summary>
-        /// Represents a readonly stack of IBotState objects.
-        /// </summary>
         readonly Stack<IBotState> botStates;
-        /// <summary>
-        /// Represents a read-only dependency container.
-        /// </summary>
         readonly IDependencyContainer container;
-        /// <summary>
-        /// Represents a read-only World of Warcraft unit target.
-        /// </summary>
         readonly WoWUnit target;
-        /// <summary>
-        /// Represents a World of Warcraft player who is the target of power leveling.
-        /// </summary>
         readonly WoWPlayer powerlevelTarget;
-        /// <summary>
-        /// Represents a readonly instance of the LocalPlayer class.
-        /// </summary>
         readonly LocalPlayer player;
 
-        /// <summary>
-        /// Initializes a new instance of the PowerlevelCombatState class.
-        /// </summary>
         public PowerlevelCombatState(Stack<IBotState> botStates, IDependencyContainer container, WoWUnit target, WoWPlayer powerlevelTarget)
         {
             this.botStates = botStates;
@@ -159,9 +57,6 @@ namespace ElementalShamanBot
             player = ObjectManager.Player;
         }
 
-        /// <summary>
-        /// Updates the combat rotation for the player character.
-        /// </summary>
         public void Update()
         {
             if (Environment.TickCount - noLosStartTime > 1000)
@@ -241,9 +136,6 @@ namespace ElementalShamanBot
             targetLastPosition = target.Position;
         }
 
-        /// <summary>
-        /// Tries to cast a spell with the given name if the player meets the necessary conditions.
-        /// </summary>
         void TryCastSpell(string name, bool condition = true, Action callback = null)
         {
             var distanceToTarget = player.Position.DistanceTo(target.Position);
@@ -255,23 +147,14 @@ namespace ElementalShamanBot
             }
         }
 
-        /// <summary>
-        /// Determines if the target is moving toward the player.
-        /// </summary>
         bool TargetMovingTowardPlayer =>
-                    targetLastPosition != null &&
-                    targetLastPosition.DistanceTo(player.Position) > target.Position.DistanceTo(player.Position);
+            targetLastPosition != null &&
+            targetLastPosition.DistanceTo(player.Position) > target.Position.DistanceTo(player.Position);
 
-        /// <summary>
-        /// Gets a value indicating whether the target is fleeing.
-        /// </summary>
         bool TargetIsFleeing =>
-                    targetLastPosition != null &&
-                    targetLastPosition.DistanceTo(player.Position) < target.Position.DistanceTo(player.Position);
+            targetLastPosition != null &&
+            targetLastPosition.DistanceTo(player.Position) < target.Position.DistanceTo(player.Position);
 
-        /// <summary>
-        /// Event handler for error messages.
-        /// </summary>
         void OnErrorMessageCallback(object sender, OnUiMessageArgs e)
         {
             if (e.Message == LosErrorMessage)

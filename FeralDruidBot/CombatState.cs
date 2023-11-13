@@ -7,106 +7,40 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-/// <summary>
-/// This namespace contains the classes and functions related to the Feral Druid Bot.
-/// </summary>
 namespace FeralDruidBot
 {
-    /// <summary>
-    /// This class represents the combat state of a bot in a game.
-    /// </summary>
     class CombatState : IBotState
     {
-        /// <summary>
-        /// The Lua script for auto attacking. If the current action is not '12', it casts the 'Attack' spell.
-        /// </summary>
         const string AutoAttackLuaScript = "if IsCurrentAction('12') == nil then CastSpellByName('Attack') end";
 
-        /// <summary>
-        /// Represents the constant string value for "Bear Form" used for shapeshifting.
-        /// </summary>
         // Shapeshifting
         const string BearForm = "Bear Form";
-        /// <summary>
-        /// Represents the constant string "Cat Form".
-        /// </summary>
         const string CatForm = "Cat Form";
-        /// <summary>
-        /// Represents the human form.
-        /// </summary>
         const string HumanForm = "Human Form";
 
-        /// <summary>
-        /// Represents a bear.
-        /// </summary>
         // Bear
         const string Maul = "Maul";
-        /// <summary>
-        /// Represents the constant string "Enrage".
-        /// </summary>
         const string Enrage = "Enrage";
-        /// <summary>
-        /// Represents the constant string value for "Demoralizing Roar".
-        /// </summary>
         const string DemoralizingRoar = "Demoralizing Roar";
 
-        /// <summary>
-        /// Represents a cat.
-        /// </summary>
         // Cat
         const string Claw = "Claw";
-        /// <summary>
-        /// Represents a constant string with the value "Rake".
-        /// </summary>
         const string Rake = "Rake";
-        /// <summary>
-        /// Represents a constant string with the value "Rip".
-        /// </summary>
         const string Rip = "Rip";
-        /// <summary>
-        /// Represents the constant string "Tiger's Fury".
-        /// </summary>
         const string TigersFury = "Tiger's Fury";
 
-        /// <summary>
-        /// Represents a human with the ability to perform a healing touch.
-        /// </summary>
         // Human
         const string HealingTouch = "Healing Touch";
-        /// <summary>
-        /// Represents the constant string "Moonfire".
-        /// </summary>
         const string Moonfire = "Moonfire";
-        /// <summary>
-        /// Represents the constant string "Wrath".
-        /// </summary>
         const string Wrath = "Wrath";
 
-        /// <summary>
-        /// Represents a readonly stack of IBotState objects.
-        /// </summary>
         readonly Stack<IBotState> botStates;
-        /// <summary>
-        /// Represents a read-only dependency container.
-        /// </summary>
         readonly IDependencyContainer container;
-        /// <summary>
-        /// Represents a readonly instance of the LocalPlayer class.
-        /// </summary>
         readonly LocalPlayer player;
-        /// <summary>
-        /// Represents a read-only World of Warcraft unit target.
-        /// </summary>
         readonly WoWUnit target;
-
-        /// <summary>
-        /// Represents the last position of the target.
-        /// </summary>
+        
         Position targetLastPosition;
 
-        /// <summary>
-        /// Initializes a new instance of the CombatState class.
-        /// </summary>
         internal CombatState(Stack<IBotState> botStates, IDependencyContainer container, WoWUnit target)
         {
             this.botStates = botStates;
@@ -115,9 +49,6 @@ namespace FeralDruidBot
             this.target = target;
         }
 
-        /// <summary>
-        /// Updates the player's actions based on their health, mana, and target status.
-        /// </summary>
         public void Update()
         {
             if (player.HealthPercent < 30 && player.Mana >= player.GetManaCost(HealingTouch))
@@ -229,9 +160,6 @@ namespace FeralDruidBot
             targetLastPosition = target.Position;
         }
 
-        /// <summary>
-        /// Tries to use a bear ability with the specified name.
-        /// </summary>
         void TryUseBearAbility(string name, int requiredRage = 0, bool condition = true, Action callback = null)
         {
             if (player.IsSpellReady(name) && player.Rage >= requiredRage && !player.IsStunned && player.CurrentShapeshiftForm == BearForm && condition)
@@ -241,9 +169,6 @@ namespace FeralDruidBot
             }
         }
 
-        /// <summary>
-        /// Tries to use a cat ability with the specified name.
-        /// </summary>
         void TryUseCatAbility(string name, int requiredEnergy = 0, bool requiresComboPoints = false, bool condition = true, Action callback = null)
         {
             if (player.IsSpellReady(name) && player.Energy >= requiredEnergy && (!requiresComboPoints || player.ComboPoints > 0) && !player.IsStunned && player.CurrentShapeshiftForm == CatForm && condition)
@@ -253,18 +178,12 @@ namespace FeralDruidBot
             }
         }
 
-        /// <summary>
-        /// Casts a spell by name if the spell is ready and the player is not currently casting.
-        /// </summary>
         void CastSpell(string name)
         {
             if (player.IsSpellReady(name) && !player.IsCasting)
                 player.LuaCall($"CastSpellByName(\"{name}\")");
         }
 
-        /// <summary>
-        /// Tries to cast a spell with the given name within a specified range, under certain conditions, and with an optional callback.
-        /// </summary>
         void TryCastSpell(string name, int minRange, int maxRange, bool condition = true, Action callback = null)
         {
             var distanceToTarget = player.Position.DistanceTo(target.Position);
@@ -276,11 +195,8 @@ namespace FeralDruidBot
             }
         }
 
-        /// <summary>
-        /// Determines if the target is moving toward the player.
-        /// </summary>
         bool TargetMovingTowardPlayer =>
-                    targetLastPosition != null &&
-                    targetLastPosition.DistanceTo(player.Position) > target.Position.DistanceTo(player.Position);
+            targetLastPosition != null &&
+            targetLastPosition.DistanceTo(player.Position) > target.Position.DistanceTo(player.Position);
     }
 }

@@ -4,55 +4,25 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-/// <summary>
-/// Represents the state of the bot when queuing for arena skirmishes.
-/// </summary>
 namespace BloogBot.AI.SharedStates
 {
-    /// <summary>
-    /// Represents a state for the Arena Skirmish queue.
-    /// </summary>
-    /// <summary>
-    /// Represents a state for the Arena Skirmish queue.
-    /// </summary>
     public class ArenaSkirmishQueueState : IBotState
     {
-        /// <summary>
-        /// Represents a readonly stack of IBotState objects.
-        /// </summary>
         readonly Stack<IBotState> botStates;
-        /// <summary>
-        /// Represents a read-only dependency container.
-        /// </summary>
         readonly IDependencyContainer container;
-        /// <summary>
-        /// Represents a local player.
-        /// </summary>
         LocalPlayer player;
-        /// <summary>
-        /// Represents the current state of the ArenaQueue.
-        /// </summary>
         private ArenaQueueStates currentState;
-        /// <summary>
-        /// Represents a static random number generator.
-        /// </summary>
         private static Random rand = new Random();
 
-        /// <summary>
-        /// Initializes a new instance of the ArenaSkirmishQueueState class.
-        /// </summary>
         public ArenaSkirmishQueueState(
-                    Stack<IBotState> botStates,
-                    IDependencyContainer container)
+            Stack<IBotState> botStates,
+            IDependencyContainer container)
         {
             this.botStates = botStates;
             this.container = container;
             player = ObjectManager.Player;
         }
 
-        /// <summary>
-        /// Updates the current state of the arena queue process.
-        /// </summary>
         public void Update()
         {
             player = ObjectManager.Player;
@@ -60,7 +30,7 @@ namespace BloogBot.AI.SharedStates
             if (currentState == ArenaQueueStates.Initial)
             {
                 player.StopAllMovement();
-                player.LuaCall($"SendChatMessage('.go creature {(IsAlly() ? "68938" : "4762")}')");
+                player.LuaCall($"SendChatMessage('.go creature {(IsAlly() ? "68938": "4762")}')");
                 currentState = ArenaQueueStates.BotTeleported;
                 player.ShouldWaitForTeleportDelay = true;
                 return;
@@ -104,9 +74,6 @@ namespace BloogBot.AI.SharedStates
             }
         }
 
-        /// <summary>
-        /// Determines if the player is an ally.
-        /// </summary>
         private bool IsAlly()
         {
             // TODO: determine faction
@@ -115,9 +82,6 @@ namespace BloogBot.AI.SharedStates
         }
     }
 
-    /// <summary>
-    /// Represents the possible states of an arena queue.
-    /// </summary>
     enum ArenaQueueStates
     {
         Initial,

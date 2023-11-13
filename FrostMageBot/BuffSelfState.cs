@@ -6,56 +6,20 @@ using BloogBot.Game.Objects;
 using System;
 using System.Collections.Generic;
 
-/// <summary>
-/// This namespace contains classes related to the Frost Mage bot.
-/// </summary>
 namespace FrostMageBot
 {
-    /// <summary>
-    /// Represents the constant string value for "Ice Armor".
-    /// </summary>
-    /// <summary>
-    /// Represents the constant string value for "Ice Armor".
-    /// </summary>
     class BuffSelfState : IBotState
     {
-        /// <summary>
-        /// Represents the constant string value for "Arcane Intellect".
-        /// </summary>
         const string ArcaneIntellect = "Arcane Intellect";
-        /// <summary>
-        /// Represents the constant string "Dampen Magic".
-        /// </summary>
         const string DampenMagic = "Dampen Magic";
-        /// <summary>
-        /// Represents the constant string "Frost Armor".
-        /// </summary>
         const string FrostArmor = "Frost Armor";
-        /// <summary>
-        /// Represents the constant string "Ice Armor".
-        /// </summary>
         const string IceArmor = "Ice Armor";
-        /// <summary>
-        /// Represents the constant string "Mage Armor".
-        /// </summary>
         const string MageArmor = "Mage Armor";
 
-        /// <summary>
-        /// Represents a readonly stack of IBotState objects.
-        /// </summary>
         readonly Stack<IBotState> botStates;
-        /// <summary>
-        /// Represents a read-only dependency container.
-        /// </summary>
         readonly IDependencyContainer container;
-        /// <summary>
-        /// Represents a readonly instance of the LocalPlayer class.
-        /// </summary>
         readonly LocalPlayer player;
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="BuffSelfState"/> class.
-        /// </summary>
         public BuffSelfState(Stack<IBotState> botStates, IDependencyContainer container)
         {
             this.botStates = botStates;
@@ -63,18 +27,6 @@ namespace FrostMageBot
             player = ObjectManager.Player;
         }
 
-        /// <summary>
-        /// Updates the player's buffs and casts necessary spells.
-        /// If the player does not know the spell Arcane Intellect or has the buff Arcane Intellect,
-        /// and has either the Frost Armor, Ice Armor, or Mage Armor buff,
-        /// and does not know the spell Dampen Magic or has the buff Dampen Magic,
-        /// the bot state is changed to ConjureItemsState and returns.
-        /// Otherwise, the spell Arcane Intellect is cast on self.
-        /// If the player knows the spell Mage Armor, the spell Mage Armor is cast.
-        /// If the player knows the spell Ice Armor, the spell Ice Armor is cast.
-        /// Otherwise, the spell Frost Armor is cast.
-        /// Finally, the spell Dampen Magic is cast on self.
-        /// </summary>
         public void Update()
         {
             if ((!player.KnowsSpell(ArcaneIntellect) || player.HasBuff(ArcaneIntellect)) && (player.HasBuff(FrostArmor) || player.HasBuff(IceArmor) || player.HasBuff(MageArmor)) && (!player.KnowsSpell(DampenMagic) || player.HasBuff(DampenMagic)))
@@ -96,9 +48,6 @@ namespace FrostMageBot
             TryCastSpell(DampenMagic, castOnSelf: true);
         }
 
-        /// <summary>
-        /// Tries to cast a spell with the given name.
-        /// </summary>
         void TryCastSpell(string name, bool castOnSelf = false)
         {
             if (!player.HasBuff(name) && player.KnowsSpell(name) && player.IsSpellReady(name))
@@ -112,7 +61,7 @@ namespace FrostMageBot
                     else
                     {
                         player.CastSpell(name, player.Guid);
-                    }
+                    }    
                 }
                 else
                     player.LuaCall($"CastSpellByName('{name}')");

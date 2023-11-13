@@ -6,56 +6,20 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 
-/// <summary>
-/// This namespace contains the shared states for the AI system related to buying items.
-/// </summary>
 namespace BloogBot.AI.SharedStates
 {
-    /// <summary>
-    /// Represents the state of buying items in the bot.
-    /// </summary>
-    /// <summary>
-    /// Represents the state of buying items in the bot.
-    /// </summary>
     public class BuyItemsState : IBotState
     {
-        /// <summary>
-        /// Represents a readonly stack of IBotState objects.
-        /// </summary>
         readonly Stack<IBotState> botStates;
-        /// <summary>
-        /// Gets the name of the non-player character (NPC).
-        /// </summary>
         readonly string npcName;
-        /// <summary>
-        /// Represents a readonly instance of the LocalPlayer class.
-        /// </summary>
         readonly LocalPlayer player;
-        /// <summary>
-        /// Gets or sets the dictionary of items to buy, where the key is the item name and the value is the quantity.
-        /// </summary>
         readonly IDictionary<string, int> itemsToBuy;
 
-        /// <summary>
-        /// Initializes a new instance of the State class and sets the state to Uninitialized.
-        /// </summary>
         State state = State.Uninitialized;
-        /// <summary>
-        /// Represents a non-player character (NPC) in the World of Warcraft.
-        /// </summary>
         WoWUnit npc;
-        /// <summary>
-        /// Represents a dialog frame.
-        /// </summary>
         DialogFrame dialogFrame;
-        /// <summary>
-        /// Represents a merchant frame.
-        /// </summary>
         MerchantFrame merchantFrame;
-
-        /// <summary>
-        /// Initializes a new instance of the BuyItemsState class.
-        /// </summary>
+        
         public BuyItemsState(Stack<IBotState> botStates, string npcName, IDictionary<string, int> itemsToBuy)
         {
             this.botStates = botStates;
@@ -64,9 +28,6 @@ namespace BloogBot.AI.SharedStates
             player = ObjectManager.Player;
         }
 
-        /// <summary>
-        /// Updates the state of the bot and performs actions based on the current state.
-        /// </summary>
         public void Update()
         {
             if (state == State.Uninitialized)
@@ -74,7 +35,7 @@ namespace BloogBot.AI.SharedStates
                 npc = ObjectManager
                     .Units
                     .Single(u => u.Name == npcName);
-                state = State.Interacting;
+                state = State.Interacting; 
             }
             if (state == State.Interacting)
             {
@@ -121,9 +82,6 @@ namespace BloogBot.AI.SharedStates
         }
     }
 
-    /// <summary>
-    /// Represents the possible states of the program.
-    /// </summary>
     enum State
     {
         Uninitialized,

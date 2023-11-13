@@ -6,53 +6,20 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 
-/// <summary>
-/// This namespace contains shared states for the AI of the BloogBot bot, including the StuckState class.
-/// </summary>
 namespace BloogBot.AI.SharedStates
 {
-    /// <summary>
-    /// Represents a state in which the bot is stuck and unable to proceed.
-    /// </summary>
-    /// <summary>
-    /// Represents a state in which the bot is stuck and unable to proceed.
-    /// </summary>
     public class StuckState : IBotState
     {
-        /// <summary>
-        /// Represents a stopwatch that can measure elapsed time.
-        /// </summary>
         static readonly Stopwatch stopwatch = new Stopwatch();
-        /// <summary>
-        /// Represents a static, read-only instance of the Random class.
-        /// </summary>
         static readonly Random random = new Random();
 
-        /// <summary>
-        /// Represents a readonly stack of IBotState objects.
-        /// </summary>
         readonly Stack<IBotState> botStates;
-        /// <summary>
-        /// Represents a read-only dependency container.
-        /// </summary>
         readonly IDependencyContainer container;
-        /// <summary>
-        /// Represents a readonly instance of the LocalPlayer class.
-        /// </summary>
         readonly LocalPlayer player;
-        /// <summary>
-        /// Gets the starting position.
-        /// </summary>
         readonly Position startingPosition;
 
-        /// <summary>
-        /// Sets the state of the object to "Stuck".
-        /// </summary>
         State state = State.Stuck;
 
-        /// <summary>
-        /// Initializes a new instance of the StuckState class.
-        /// </summary>
         public StuckState(Stack<IBotState> botStates, IDependencyContainer container)
         {
             this.botStates = botStates;
@@ -61,17 +28,14 @@ namespace BloogBot.AI.SharedStates
             startingPosition = player.Position;
         }
 
-        /// <summary>
-        /// Updates the movement of the player.
-        /// </summary>
         public void Update()
         {
-            var wpStuckCount = player.WpStuckCount + 1;
-            var posDistance = wpStuckCount < 5 || (player.InGhostForm && wpStuckCount > 10) ? 3 : random.Next(wpStuckCount, (wpStuckCount * 20));
+            var wpStuckCount = player.WpStuckCount+1;
+            var posDistance = wpStuckCount < 5 || (player.InGhostForm && wpStuckCount > 10) ? 3 : random.Next(wpStuckCount, (wpStuckCount*20));
             var currWp = container.GetCurrentHotspot().Waypoints.Where(x => x.ID == player.CurrWpId).FirstOrDefault();
             var wpDistance = currWp == null ? 100 : player.Position.DistanceTo(currWp);
 
-            if (player.Position.DistanceTo(startingPosition) > posDistance || player.IsInCombat
+            if (player.Position.DistanceTo(startingPosition) > posDistance || player.IsInCombat 
                 || wpDistance < 3)
             {
                 StopMovement();
@@ -86,7 +50,7 @@ namespace BloogBot.AI.SharedStates
                     state = State.Stuck;
                 return;
             }
-
+                
             var ran = random.Next(0, 4);
             state = State.Moving;
             stopwatch.Restart();
@@ -118,9 +82,6 @@ namespace BloogBot.AI.SharedStates
             }
         }
 
-        /// <summary>
-        /// Stops the movement of the player in all directions.
-        /// </summary>
         void StopMovement()
         {
             player.StopMovement(ControlBits.Front);
@@ -129,9 +90,6 @@ namespace BloogBot.AI.SharedStates
             player.StopMovement(ControlBits.StrafeRight);
         }
 
-        /// <summary>
-        /// Represents the possible states of an object.
-        /// </summary>
         enum State
         {
             Stuck,

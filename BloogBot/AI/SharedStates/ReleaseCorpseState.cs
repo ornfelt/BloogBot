@@ -4,44 +4,20 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 
-/// <summary>
-/// This namespace contains shared states for AI behavior in the BloogBot project.
-/// </summary>
 namespace BloogBot.AI.SharedStates
 {
-    /// <summary>
-    /// Represents a state in which the bot releases a corpse.
-    /// </summary>
-    /// <summary>
-    /// Represents a state in which the bot releases a corpse.
-    /// </summary>
     public class ReleaseCorpseState : IBotState
     {
-        /// <summary>
-        /// Represents a readonly stack of IBotState objects.
-        /// </summary>
         readonly Stack<IBotState> botStates;
-        /// <summary>
-        /// Represents a read-only dependency container.
-        /// </summary>
         readonly IDependencyContainer container;
-        /// <summary>
-        /// Represents a static, read-only instance of the Random class.
-        /// </summary>
         static readonly Random random = new Random();
 
-        /// <summary>
-        /// Initializes a new instance of the ReleaseCorpseState class.
-        /// </summary>
         public ReleaseCorpseState(Stack<IBotState> botStates, IDependencyContainer container)
         {
             this.botStates = botStates;
             this.container = container;
         }
 
-        /// <summary>
-        /// Updates the game state.
-        /// </summary>
         public void Update()
         {
             if (Wait.For("StartReleaseCorpseStateDelay", 1000))

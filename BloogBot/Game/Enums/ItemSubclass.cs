@@ -1,11 +1,5 @@
-﻿/// <summary>
-/// This namespace contains the enum for item subclasses.
-/// </summary>
-namespace BloogBot.Game.Enums
+﻿namespace BloogBot.Game.Enums
 {
-    /// <summary>
-    /// Enum representing the subclass of an item.
-    /// </summary>
     public enum ItemSubclass
     {
         Consumable,

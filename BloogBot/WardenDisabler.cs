@@ -7,164 +7,62 @@ using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 
-/// <summary>
-/// This class handles disabling Warden, a security feature in the game client.
-/// </summary>
 namespace BloogBot
 {
-    /// <summary>
-    /// This class handles the disabling of Warden.
-    /// </summary>
-    /// <summary>
-    /// This class handles the disabling of Warden.
-    /// </summary>
     static class WardenDisabler
     {
-        /// <summary>
-        /// Represents the first 5 bytes of Warden's PageScan function.
-        /// </summary>
         static readonly byte[] pageScanOriginalBytes = { 0x8B, 0x45, 0x08, 0x8A, 0x04 }; // first 5 bytes of Warden's PageScan function
-        /// <summary>
-        /// Represents the first 5 bytes of Warden's MemScan function.
-        /// </summary>
         static readonly byte[] memScanOriginalBytes = { 0x56, 0x57, 0xFC, 0x8B, 0x54 }; // first 5 bytes of Warden's MemScan function
 
-        /// <summary>
-        /// Delegate for disabling Warden in the game. Different client versions may have different function signatures for this hook. The game may crash with an access violation if the wrong signature is used, possibly due to stack or register corruption.
-        /// </summary>
         // different client versions have different function signatures for this hook. the game crashes with an access violation unless you
         // use the right signature here (likely due to stack or register corruption)
         delegate void DisableWardenVanillaDelegate(IntPtr _);
-        /// <summary>
-        /// Represents a static delegate for disabling the Warden Vanilla.
-        /// </summary>
         static DisableWardenVanillaDelegate disableWardenVanillaDelegate;
-        /// <summary>
-        /// Represents a delegate that is used to disable the Warden TBC.
-        /// </summary>
         delegate void DisableWardenTBCDelegate();
-        /// <summary>
-        /// Represents a delegate used to disable the Warden TBC.
-        /// </summary>
         static DisableWardenTBCDelegate disableWardenTBCDelegate;
-        /// <summary>
-        /// Represents a delegate that is used to disable the Warden in World of Warcraft: Wrath of the Lich King.
-        /// </summary>
         delegate void DisableWardenWotLKDelegate();
-        /// <summary>
-        /// Represents a delegate used to disable the Warden in World of Warcraft: Wrath of the Lich King.
-        /// </summary>
         static DisableWardenWotLKDelegate disableWardenWotLKDelegate;
 
-        /// <summary>
-        /// Represents the pointer to the warden page scan function.
-        /// </summary>
         static IntPtr wardenPageScanFunPtr = IntPtr.Zero;
-        /// <summary>
-        /// Represents the pointer to the memory scan function in the Warden.
-        /// </summary>
         static IntPtr wardenMemScanFunPtr = IntPtr.Zero;
 
-        /// <summary>
-        /// Retrieves a handle to the specified module.
-        /// </summary>
         // Module scan
         [DllImport("kernel32.dll", CharSet = CharSet.Auto)]
         static extern IntPtr GetModuleHandle(string lpModuleName);
 
-        /// <summary>
-        /// Retrieves the address of an exported function or variable from the specified dynamic-link library (DLL).
-        /// </summary>
         [DllImport("kernel32", CharSet = CharSet.Ansi, ExactSpelling = true, SetLastError = true)]
         static extern IntPtr GetProcAddress(IntPtr hModule, string procName);
 
-        /// <summary>
-        /// Represents a module entry in a snapshot of the system's module list.
-        /// </summary>
         [StructLayout(LayoutKind.Sequential)]
         struct MODULEENTRY32
         {
-            /// <summary>
-            /// Gets or sets the size of the dwSize field.
-            /// </summary>
             internal uint dwSize;
-            /// <summary>
-            /// Gets or sets the module ID.
-            /// </summary>
             internal uint th32ModuleID;
-            /// <summary>
-            /// Gets or sets the process ID.
-            /// </summary>
             internal uint th32ProcessID;
-            /// <summary>
-            /// Represents the global count usage.
-            /// </summary>
             internal uint GlblcntUsage;
-            /// <summary>
-            /// Gets or sets the usage count of the Proccnt.
-            /// </summary>
             internal uint ProccntUsage;
-            /// <summary>
-            /// The base address of the module.
-            /// </summary>
             private readonly IntPtr modBaseAddr;
-            /// <summary>
-            /// Gets or sets the size of the module base.
-            /// </summary>
             internal uint modBaseSize;
-            /// <summary>
-            /// The handle to the loaded module.
-            /// </summary>
             private readonly IntPtr hModule;
-            /// <summary>
-            /// The module size constant.
-            /// </summary>
             [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 256)] internal string szModule;
-            /// <summary>
-            /// Gets or sets the path of the executable file.
-            /// </summary>
             [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 260)] internal string szExePath;
         }
 
-        /// <summary>
-        /// Retrieves information about the first module in a specified snapshot of the specified process.
-        /// </summary>
         [DllImport("kernel32.dll", SetLastError = true)]
         static extern bool Module32First(IntPtr hSnapshot, ref MODULEENTRY32 lpme);
 
-        /// <summary>
-        /// Retrieves information about the next module in a snapshot of the specified process.
-        /// </summary>
         [DllImport("kernel32.dll", SetLastError = true)]
         static extern bool Module32Next(IntPtr hSnapshot, ref MODULEENTRY32 lpme);
 
-        /// <summary>
-        /// Sets the last error code for the calling thread.
-        /// </summary>
         [DllImport("kernel32.dll", SetLastError = true)]
         static extern void SetLastError(uint dwErrCode);
 
-        /// <summary>
-        /// Delegate used by the Module32First function.
-        /// </summary>
         static Module32FirstDelegate module32FirstDelegate;
-        /// <summary>
-        /// Represents the hook for the module32First function in the Detour class.
-        /// </summary>
         static Detour module32FirstHook;
 
-        /// <summary>
-        /// Represents a delegate used to iterate through the modules in a process.
-        /// </summary>
         static Module32NextDelegate module32NextDelegate;
-        /// <summary>
-        /// Represents a static Detour module32NextHook.
-        /// </summary>
         static Detour module32NextHook;
 
-        /// <summary>
-        /// List of modules used by the program.
-        /// </summary>
         static readonly IList<string> modules = new List<string>
         {
             "wow.exe",
@@ -263,10 +161,6 @@ namespace BloogBot
             "winrnr.dll"
         };
 
-        /// <summary>
-        /// Initializes the inline hook for detouring the WardenLoad call to ensure the detouring of Warden's scanning functions before they are called for the first time.
-        /// The location of the 5 byte instruction used for the hook depends on the version of the WoW client being run.
-        /// </summary>
         // we need a 5 byte instruction to use as a valid inline hook option.
         // it gets called when Warden is dynamically added to the WoW process,
         // so we hook here to detour the WardenLoad call to ensure
@@ -336,33 +230,21 @@ namespace BloogBot
             }
         }
 
-        /// <summary>
-        /// Disables the vanilla Warden.
-        /// </summary>
         static void DisableWardenVanilla(IntPtr _)
         {
             DisableWardenInternal();
         }
 
-        /// <summary>
-        /// Disables the Warden for The Burning Crusade expansion.
-        /// </summary>
         static void DisableWardenTBC()
         {
             DisableWardenInternal();
         }
 
-        /// <summary>
-        /// Disables the Warden for the Wrath of the Lich King expansion.
-        /// </summary>
         static void DisableWardenWotLK()
         {
             DisableWardenInternal();
         }
 
-        /// <summary>
-        /// Disables the Warden internal functionality.
-        /// </summary>
         static void DisableWardenInternal()
         {
             Console.WriteLine("[WARDEN] DisableWardenHook called.");
@@ -388,30 +270,13 @@ namespace BloogBot
             }
         }
 
-        /// <summary>
-        /// Initializes the WardenPageScanHook delegate.
-        /// </summary>
         #region InitializeWardenPageScanHook
         delegate void WardenPageScanDelegate(IntPtr readBase, int readOffset, IntPtr writeTo);
-        /// <summary>
-        /// Represents a delegate for scanning a Warden page.
-        /// </summary>
         static WardenPageScanDelegate wardenPageScanDelegate;
 
-        /// <summary>
-        /// Represents a static readonly byte array with a length of 4.
-        /// </summary>
         static readonly byte[] seed = new byte[4];
-        /// <summary>
-        /// Represents a static readonly byte array with a length of 20.
-        /// </summary>
         static readonly byte[] buffer = new byte[20];
 
-        /// <summary>
-        /// Initializes the Warden page scan hook by searching for the function signature in memory.
-        /// If the function is found, it sets up the hook and prints a success message.
-        /// If the function is not found or the hook fails, it prints a warning message.
-        /// </summary>
         static void InitializeWardenPageScanHook(IntPtr wardenModuleStart)
         {
             IntPtr pageScanPtr = IntPtr.Zero;
@@ -473,9 +338,6 @@ namespace BloogBot
             Console.WriteLine($"[WARDEN] PageScan Hooked! WardenModulePtr=0x{wardenModuleStart.ToString("X")} OriginalPageScanFunPtr=0x{pageScanPtr.ToString("X")} DetourFunPtr=0x{wardenPageScanDetourPtr.ToString("X")}");
         }
 
-        /// <summary>
-        /// Scans a page for hacks and performs necessary actions.
-        /// </summary>
         static void WardenPageScanHook(IntPtr readBase, int readOffset, IntPtr writeTo)
         {
             // Logging this to the console lags the client like crazy.
@@ -496,21 +358,12 @@ namespace BloogBot
             foreach (var hack in hacksWithinRange)
                 HackManager.EnableHack(hack);
         }
-        /// <summary>
-        /// Initializes the Warden memory scan hook.
-        /// </summary>
         #endregion
 
         #region InitializeWardenMemScanHook
         delegate void WardenMemScanDelegate(IntPtr addr, int size, IntPtr bufferStart);
-        /// <summary>
-        /// Represents a delegate used for Warden memory scanning.
-        /// </summary>
         static WardenMemScanDelegate wardenMemScanDelegate;
 
-        /// <summary>
-        /// Initializes the Warden memory scan hook by searching for the memory address of the Warden module and setting up the necessary detour.
-        /// </summary>
         static void InitializeWardenMemScanHook(IntPtr wardenModuleStart)
         {
             IntPtr memScanPtr = IntPtr.Zero;
@@ -570,9 +423,6 @@ namespace BloogBot
             Console.WriteLine($"[WARDEN] MemScan Hooked! WardenModulePtr={wardenModuleStart.ToString("X")} OriginalMemScanFunPtr={memScanPtr.ToString("X")} DetourFunPtr={wardenMemScanDetourPtr.ToString("X")}");
         }
 
-        /// <summary>
-        /// Scans the memory for hacks within a specified range and performs necessary actions.
-        /// </summary>
         static void WardenMemScanHook(IntPtr addr, int size, IntPtr bufferStart)
         {
             // todo: will size ever be 0?
@@ -596,23 +446,14 @@ namespace BloogBot
                     HackManager.EnableHack(hack);
             }
         }
-        /// <summary>
-        /// Delegate for the Module32First function.
-        /// </summary>
         #endregion
 
         [UnmanagedFunctionPointer(CallingConvention.Winapi)]
         delegate bool Module32FirstDelegate(IntPtr snapshot, ref MODULEENTRY32 module);
 
-        /// <summary>
-        /// Delegate for the Module32Next function, which retrieves information about the next module in a snapshot of the specified process.
-        /// </summary>
         [UnmanagedFunctionPointer(CallingConvention.Winapi)]
         delegate bool Module32NextDelegate(IntPtr snapshot, ref MODULEENTRY32 module);
 
-        /// <summary>
-        /// Initializes the module scan hook by registering delegates pointing to the functions we want to detour.
-        /// </summary>
         static void InitializeModuleScanHook()
         {
             var handle = GetModuleHandle("kernel32.dll");
@@ -630,14 +471,8 @@ namespace BloogBot
             Console.WriteLine("[WARDEN] ModuleScan Hooked!");
         }
 
-        /// <summary>
-        /// A static HashSet that stores protected items.
-        /// </summary>
         static HashSet<string> protectedItems = new HashSet<string>();
 
-        /// <summary>
-        /// Detours the Module32First function to perform additional operations before calling the original function.
-        /// </summary>
         static bool Module32FirstDetour(IntPtr snapshot, ref MODULEENTRY32 module)
         {
             Console.WriteLine("[WARDEN ModuleScan] Started");
@@ -661,9 +496,6 @@ namespace BloogBot
             return ret;
         }
 
-        /// <summary>
-        /// Detours the Module32Next function to perform additional operations before and after calling the original function.
-        /// </summary>
         static bool Module32NextDetour(IntPtr snapshot, ref MODULEENTRY32 module)
         {
             module32NextHook.Remove();

@@ -8,28 +8,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-/// <summary>
-/// This namespace contains tests for the navigation functionality of the BloogBot application.
-/// </summary>
 namespace BloogBotTests
 {
-    /// <summary>
-    /// This class contains tests for navigation functionalities.
-    /// </summary>
     [TestClass]
     public class NavigationTests
     {
-        /// <summary>
-        /// The constant representing the map ID for Kalimdor.
-        /// </summary>
         const int KALIMDOR_MAP_ID = 1;
 
-        /// <summary>
-        /// This test actually uses the Navigation library to build a path between two points. This kind of test is helpful for troubleshooting
-        /// specific navigation issues based on the movemaps generated from the WoW client's static geometry.
-        /// For example, if the bot is struggling to move up a hill, you can debug that here.
-        /// See CalculatePath_1.png and CalculatePath_2.png.
-        /// </summary>
         // this test actually uses the Navigation library to build a path between two points. this kind of test is helpful for troubleshooting
         // specific navigation issues based on the movemaps generated from the WoW client's static geometry.
         // for example, if the bot is struggling to move up a hill, you can debug that here.
@@ -47,14 +32,6 @@ namespace BloogBotTests
             Assert.IsTrue(path.Length > 2);
         }
 
-        /// <summary>
-        /// This test mocks the result of Navigation.CalculatePath by manually building an array of Positions. This can be used, for example, to
-        /// experiment with targeting logic. You can place foes around the 2D coordinate plane close to your mocked navigation path, and assert
-        /// which mobs should be excluded as potential targets, and which one should be selected, based on the targeting logic you specify.
-        /// In this case, we have Target1 that is technically closer, which should make it a better target, but it's nearby a level 60 elite mob.
-        /// Therefore, we should exclude Target1, and instead choose Target2 as a target, even though it's farther away.
-        /// See TargetingLogicTest_1.
-        /// </summary>
         // this test mocks the result of Navigation.CalculatePath by manually building an array of Positions. this can be used, for example, to
         // experiment with targeting logic. you can place foes around the 2d coordinate plane close to your mocked navigation path, and assert
         // which mobs should be excluded as potential targets, and which one should be selected, based on the targeting logic you specify.

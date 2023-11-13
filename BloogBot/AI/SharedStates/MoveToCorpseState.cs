@@ -5,62 +5,23 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-/// <summary>
-/// Represents the state of the bot when it is moving towards a corpse.
-/// </summary>
 namespace BloogBot.AI.SharedStates
 {
-    /// <summary>
-    /// Represents a state where the bot moves to a corpse.
-    /// </summary>
-    /// <summary>
-    /// Represents a state where the bot moves to the corpse location.
-    /// </summary>
     public class MoveToCorpseState : IBotState
     {
-        /// <summary>
-        /// Represents a readonly stack of IBotState objects.
-        /// </summary>
         readonly Stack<IBotState> botStates;
-        /// <summary>
-        /// Represents a read-only dependency container.
-        /// </summary>
         readonly IDependencyContainer container;
-        /// <summary>
-        /// Represents a readonly instance of the LocalPlayer class.
-        /// </summary>
         readonly LocalPlayer player;
-        /// <summary>
-        /// Represents a helper class for handling stuck operations.
-        /// </summary>
         readonly StuckHelper stuckHelper;
 
-        /// <summary>
-        /// Represents a boolean value indicating whether the entity is capable of walking on water.
-        /// </summary>
         bool walkingOnWater;
-        /// <summary>
-        /// Represents the count of times the program got stuck.
-        /// </summary>
         int stuckCount;
 
-        /// <summary>
-        /// Represents a boolean value indicating whether the object has been initialized.
-        /// </summary>
         bool initialized;
-        /// <summary>
-        /// Indicates whether the specified waypoint is close to a corpse.
-        /// </summary>
         private static bool s_HasReachedWpCloseToCorpse;
 
-        /// <summary>
-        /// Represents a static, read-only instance of the Random class.
-        /// </summary>
         static readonly Random random = new Random();
-
-        /// <summary>
-        /// Initializes a new instance of the MoveToCorpseState class.
-        /// </summary>
+        
         public MoveToCorpseState(Stack<IBotState> botStates, IDependencyContainer container)
         {
             this.botStates = botStates;
@@ -71,9 +32,6 @@ namespace BloogBot.AI.SharedStates
             stuckCount = 0;
         }
 
-        /// <summary>
-        /// Updates the state of the object.
-        /// </summary>
         public void Update()
         {
             if (!initialized)
@@ -129,9 +87,6 @@ namespace BloogBot.AI.SharedStates
                     $" {player.CorpsePosition.Z.ToString().Replace(',', '.')}', 'GUILD', nil)");
         }
 
-        /// <summary>
-        /// Try to move to corpse with a path based on waypoints.
-        /// </summary>
         // Try to move to corpse with a path based on WPs
         public bool HasReachedWpCloseToCorpse()
         {
@@ -164,10 +119,7 @@ namespace BloogBot.AI.SharedStates
             player.MoveToward(currWp);
             return false;
         }
-
-        /// <summary>
-        /// Finds a path from a starting waypoint ID to an ending waypoint ID using a breadth-first search algorithm.
-        /// </summary>
+        
         private List<int> ForcedWpPathToCorpse(int startId, int endId)
         {
             var hotspot = container.GetCurrentHotspot();

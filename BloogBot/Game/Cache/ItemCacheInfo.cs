@@ -3,22 +3,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-/// <summary>
-/// This namespace contains classes related to caching item information.
-/// </summary>
 namespace BloogBot.Game.Cache
 {
-    /// <summary>
-    /// Represents a cache of item subclasses.
-    /// </summary>
-    /// <summary>
-    /// Represents a cache of item subclasses.
-    /// </summary>
     public class ItemCacheInfo
     {
-        /// <summary>
-        /// Represents a list of arrays containing different subclasses of items.
-        /// </summary>
         static readonly IList<ItemSubclass[]> ItemSubclasses = new List<ItemSubclass[]>
         {
             // these are untested for Vanilla
@@ -180,76 +168,37 @@ namespace BloogBot.Game.Cache
             }
         };
 
-        /// <summary>
-        /// Represents a read-only item cache entry.
-        /// </summary>
         readonly ItemCacheEntry itemCacheEntry;
 
-        /// <summary>
-        /// Initializes a new instance of the ItemCacheInfo class with the specified itemCacheEntry.
-        /// </summary>
         internal ItemCacheInfo(ItemCacheEntry itemCacheEntry)
         {
             this.itemCacheEntry = itemCacheEntry;
         }
 
-        /// <summary>
-        /// Gets the item class of the ItemClass property.
-        /// </summary>
         public ItemClass ItemClass => itemCacheEntry.ItemClass;
 
-        /// <summary>
-        /// Gets the item subclass based on the item class and item subclass ID.
-        /// </summary>
         public ItemSubclass ItemSubclass => ItemSubclasses.ElementAt((int)ItemClass)[itemCacheEntry.ItemSubclassID];
 
-        /// <summary>
-        /// Gets the quality of the item.
-        /// </summary>
         public ItemQuality Quality => itemCacheEntry.ItemQuality;
 
-        /// <summary>
-        /// Gets the equipment slot of the item cache entry.
-        /// </summary>
         public EquipSlot EquipSlot => itemCacheEntry.EquipSlot;
 
-        /// <summary>
-        /// Gets the required level of the item cache entry.
-        /// </summary>
         public int RequiredLevel => itemCacheEntry.RequiredLevel;
 
-        /// <summary>
-        /// Gets the maximum durability of the item.
-        /// </summary>
         public int MaxDurability => itemCacheEntry.MaxDurability;
 
-        /// <summary>
-        /// Gets the name by reading the string from the specified memory address.
-        /// </summary>
         public string Name => MemoryManager.ReadString(itemCacheEntry.NamePtr);
     }
 
-    /// <summary>
-    /// Represents an entry in the item cache.
-    /// </summary>
     public class ItemCacheEntry
     {
-        /// <summary>
-        /// Gets the base address of the pointer.
-        /// </summary>
         readonly IntPtr baseAddress;
 
-        /// <summary>
-        /// Initializes a new instance of the ItemCacheEntry class with the specified base address.
-        /// </summary>
         internal ItemCacheEntry(IntPtr baseAddress)
         {
             this.baseAddress = baseAddress;
         }
 
-        /// <summary>
-        /// Gets the item class based on the client version.
-        /// </summary>
         internal ItemClass ItemClass
         {
             get
@@ -265,9 +214,6 @@ namespace BloogBot.Game.Cache
             }
         }
 
-        /// <summary>
-        /// Gets the item subclass ID based on the client version.
-        /// </summary>
         internal int ItemSubclassID
         {
             get
@@ -283,9 +229,6 @@ namespace BloogBot.Game.Cache
             }
         }
 
-        /// <summary>
-        /// Gets the quality of the item based on the client version.
-        /// </summary>
         internal ItemQuality ItemQuality
         {
             get
@@ -301,9 +244,6 @@ namespace BloogBot.Game.Cache
             }
         }
 
-        /// <summary>
-        /// Gets the equipment slot based on the client version.
-        /// </summary>
         internal EquipSlot EquipSlot
         {
             get
@@ -319,9 +259,6 @@ namespace BloogBot.Game.Cache
             }
         }
 
-        /// <summary>
-        /// Gets the required level based on the client version.
-        /// </summary>
         internal int RequiredLevel
         {
             get
@@ -337,9 +274,6 @@ namespace BloogBot.Game.Cache
             }
         }
 
-        /// <summary>
-        /// Gets the maximum durability based on the client version.
-        /// </summary>
         internal int MaxDurability
         {
             get
@@ -355,9 +289,6 @@ namespace BloogBot.Game.Cache
             }
         }
 
-        /// <summary>
-        /// Gets the pointer to the name based on the client version.
-        /// </summary>
         internal IntPtr NamePtr
         {
             get

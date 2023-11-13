@@ -6,60 +6,21 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 
-/// <summary>
-/// This namespace contains the shared states for handling the selling of items in the AI.
-/// </summary>
 namespace BloogBot.AI.SharedStates
 {
-    /// <summary>
-    /// Represents a state in which the bot is selling items.
-    /// </summary>
-    /// <summary>
-    /// Represents a state in which the bot is selling items.
-    /// </summary>
     public class SellItemsState : IBotState
     {
-        /// <summary>
-        /// Represents a readonly stack of IBotState objects.
-        /// </summary>
         readonly Stack<IBotState> botStates;
-        /// <summary>
-        /// Gets the name of the non-player character (NPC).
-        /// </summary>
         readonly string npcName;
-        /// <summary>
-        /// Represents a readonly instance of the LocalPlayer class.
-        /// </summary>
         readonly LocalPlayer player;
-        /// <summary>
-        /// Gets or sets the collection of WoW items to sell.
-        /// </summary>
         readonly IEnumerable<WoWItem> itemsToSell;
 
-        /// <summary>
-        /// Initializes a new instance of the State class and sets the state to Uninitialized.
-        /// </summary>
         State state = State.Uninitialized;
-        /// <summary>
-        /// Represents a non-player character (NPC) in the World of Warcraft.
-        /// </summary>
         WoWUnit npc;
-        /// <summary>
-        /// Represents a dialog frame.
-        /// </summary>
         DialogFrame dialogFrame;
-        /// <summary>
-        /// Represents a merchant frame.
-        /// </summary>
         MerchantFrame merchantFrame;
-        /// <summary>
-        /// Represents the index of an item.
-        /// </summary>
         int itemIndex;
 
-        /// <summary>
-        /// Initializes a new instance of the SellItemsState class.
-        /// </summary>
         public SellItemsState(Stack<IBotState> botStates, IDependencyContainer container, string npcName)
         {
             this.botStates = botStates;
@@ -79,9 +40,6 @@ namespace BloogBot.AI.SharedStates
                 );
         }
 
-        /// <summary>
-        /// Updates the state of the NPC interaction.
-        /// </summary>
         public void Update()
         {
             if (state == State.Uninitialized)
@@ -144,21 +102,12 @@ namespace BloogBot.AI.SharedStates
             }
         }
 
-        /// <summary>
-        /// Event handler for when a dialog is opened.
-        /// </summary>
         void WowEventHandler_OnDialogOpened(object sender, OnDialogFrameOpenArgs e) =>
-                    dialogFrame = e.DialogFrame;
+            dialogFrame = e.DialogFrame;
 
-        /// <summary>
-        /// Event handler for when the merchant frame is opened.
-        /// </summary>
         void WowEventHandler_OnMerchantFrameOpened(object sender, OnMerchantFrameOpenArgs e) =>
-                    merchantFrame = e.MerchantFrame;
+            merchantFrame = e.MerchantFrame;
 
-        /// <summary>
-        /// Represents the possible states of the program.
-        /// </summary>
         enum State
         {
             Uninitialized,

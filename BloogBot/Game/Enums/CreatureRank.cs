@@ -1,11 +1,5 @@
-﻿/// <summary>
-/// Contains the different ranks that a creature can have.
-/// </summary>
-namespace BloogBot.Game.Enums
+﻿namespace BloogBot.Game.Enums
 {
-    /// <summary>
-    /// Represents the rank of a creature.
-    /// </summary>
     public enum CreatureRank
     {
         Normal = 0,

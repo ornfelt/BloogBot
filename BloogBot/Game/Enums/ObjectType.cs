@@ -1,11 +1,5 @@
-﻿/// <summary>
-/// This namespace contains the enumeration for different types of game objects.
-/// </summary>
-namespace BloogBot.Game.Enums
+﻿namespace BloogBot.Game.Enums
 {
-    /// <summary>
-    /// Represents the different types of objects in the game.
-    /// </summary>
     public enum ObjectType : byte
     {
         Item = 1,

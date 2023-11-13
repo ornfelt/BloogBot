@@ -1,21 +1,9 @@
 ﻿using BloogBot.Game.Enums;
 
-/// <summary>
-/// This namespace contains memory addresses used for interacting with the game client.
-/// </summary>
 namespace BloogBot.Game
 {
-    /// <summary>
-    /// Static class that contains memory addresses for various functions and offsets for the WotLK client.
-    /// </summary>
-    /// <summary>
-    /// Static class that contains memory addresses for various functions and offsets for the WotLK client.
-    /// </summary>
     public static class MemoryAddresses
     {
-        /// <summary>
-        /// Static class that contains memory addresses for various functions and offsets for the WotLK client.
-        /// </summary>
         static MemoryAddresses()
         {
             if (ClientHelper.ClientVersion == ClientVersion.WotLK)
@@ -299,374 +287,104 @@ namespace BloogBot.Game
             }
         }
 
-        /// <summary>
-        /// Represents a function pointer for enumerating visible objects.
-        /// </summary>
         // Functions
         public static int EnumerateVisibleObjectsFunPtr;
-        /// <summary>
-        /// Gets the function pointer for the object pointer.
-        /// </summary>
         public static int GetObjectPtrFunPtr;
-        /// <summary>
-        /// Gets the function pointer for the player GUID.
-        /// </summary>
         public static int GetPlayerGuidFunPtr;
-        /// <summary>
-        /// Sets the value of the facing function pointer.
-        /// </summary>
         public static int SetFacingFunPtr;
-        /// <summary>
-        /// Represents a static field that holds a function pointer for sending movement updates.
-        /// </summary>
         public static int SendMovementUpdateFunPtr;
-        /// <summary>
-        /// Sets the control bit function pointer.
-        /// </summary>
         public static int SetControlBitFunPtr;
-        /// <summary>
-        /// Sets the control bit device pointer.
-        /// </summary>
         public static int SetControlBitDevicePtr;
-        /// <summary>
-        /// Represents a static integer variable named JumpFunPtr.
-        /// </summary>
         public static int JumpFunPtr;
-        /// <summary>
-        /// Gets the function pointer for the creature type.
-        /// </summary>
         public static int GetCreatureTypeFunPtr;
-        /// <summary>
-        /// Gets the rank of the creature function pointer.
-        /// </summary>
         public static int GetCreatureRankFunPtr;
-        /// <summary>
-        /// Gets the function pointer for the unit reaction.
-        /// </summary>
         public static int GetUnitReactionFunPtr;
-        /// <summary>
-        /// Represents a static field that holds a Lua function pointer.
-        /// </summary>
         public static int LuaCallFunPtr;
-        /// <summary>
-        /// Gets the function pointer for the text.
-        /// </summary>
         public static int GetTextFunPtr;
-        /// <summary>
-        /// Represents a function pointer for casting a spell by its ID.
-        /// </summary>
         public static int CastSpellByIdFunPtr;
-        /// <summary>
-        /// Gets the value of the GetRow2FunPtr property.
-        /// </summary>
         public static int GetRow2FunPtr;
-        /// <summary>
-        /// Represents a static field that holds a function pointer for the Intersect method.
-        /// </summary>
         public static int IntersectFunPtr;
-        /// <summary>
-        /// Sets the target function pointer.
-        /// </summary>
         public static int SetTargetFunPtr;
-        /// <summary>
-        /// Retrieves the function pointer for the corpse.
-        /// </summary>
         public static int RetrieveCorpseFunPtr;
-        /// <summary>
-        /// Represents a static field that holds a function pointer for releasing a corpse.
-        /// </summary>
         public static int ReleaseCorpseFunPtr;
-        /// <summary>
-        /// Gets the function pointer for the item cache entry.
-        /// </summary>
         public static int GetItemCacheEntryFunPtr;
-        /// <summary>
-        /// Represents the base pointer for the item cache entry.
-        /// </summary>
         public static int ItemCacheEntryBasePtr;
-        /// <summary>
-        /// Represents a function pointer for checking if a spell is on cooldown.
-        /// </summary>
         public static int IsSpellOnCooldownFunPtr;
-        /// <summary>
-        /// Represents a static integer variable used as a function pointer for loot slot.
-        /// </summary>
         public static int LootSlotFunPtr;
-        /// <summary>
-        /// Represents a static field that holds a function pointer for using an item.
-        /// </summary>
         public static int UseItemFunPtr;
-        /// <summary>
-        /// Represents a static field that holds a function pointer for selling an item by its GUID.
-        /// </summary>
         public static int SellItemByGuidFunPtr;
-        /// <summary>
-        /// Represents a static field that holds a function pointer for buying a vendor item.
-        /// </summary>
         public static int BuyVendorItemFunPtr;
-        /// <summary>
-        /// Represents a static field that holds a function pointer for dismounting.
-        /// </summary>
         public static int DismountFunPtr;
-        /// <summary>
-        /// Represents a public static integer variable named CastAtPositionFunPtr.
-        /// </summary>
         public static int CastAtPositionFunPtr;
-        /// <summary>
-        /// Gets the function pointer for the Aura.
-        /// </summary>
         public static int GetAuraFunPtr;
-        /// <summary>
-        /// Gets the count of aura.
-        /// </summary>
         public static int GetAuraCountFunPtr;
-        /// <summary>
-        /// Gets the function pointer for the row.
-        /// </summary>
         public static int GetRowFunPtr;
-        /// <summary>
-        /// Gets the localized row function pointer.
-        /// </summary>
         public static int GetLocalizedRowFunPtr;
 
-        /// <summary>
-        /// Gets or sets the pointer to the zone text.
-        /// </summary>
         // Statics
         public static int ZoneTextPtr;
-        /// <summary>
-        /// Represents the pointer to the subzone text.
-        /// </summary>
         public static int SubZoneTextPtr;
-        /// <summary>
-        /// The pointer to the minimap zone text.
-        /// </summary>
         public static int MinimapZoneTextPtr;
-        /// <summary>
-        /// Gets or sets the MapId.
-        /// </summary>
         public static int MapId;
-        /// <summary>
-        /// Represents the name of the server.
-        /// </summary>
         public static int ServerName;
-        /// <summary>
-        /// Gets or sets the X position of the local player's corpse.
-        /// </summary>
         public static int LocalPlayerCorpsePositionX;
-        /// <summary>
-        /// Gets or sets the Y position of the local player's corpse.
-        /// </summary>
         public static int LocalPlayerCorpsePositionY;
-        /// <summary>
-        /// Gets or sets the Z position of the local player's corpse.
-        /// </summary>
         public static int LocalPlayerCorpsePositionZ;
-        /// <summary>
-        /// Gets the last hardware action.
-        /// </summary>
         public static int LastHardwareAction;
-        /// <summary>
-        /// Gets or sets the base value for the local player's spells.
-        /// </summary>
         public static int LocalPlayerSpellsBase;
-        /// <summary>
-        /// Determines if the local player can overpower.
-        /// </summary>
         public static int LocalPlayerCanOverpower;
-        /// <summary>
-        /// Represents a static field that holds a function pointer for signaling events.
-        /// </summary>
         public static int SignalEventFunPtr;
-        /// <summary>
-        /// Represents a static field that holds a function pointer for a signal event with no parameters.
-        /// </summary>
         public static int SignalEventNoParamsFunPtr;
-        /// <summary>
-        /// Represents the WardenLoadHook method.
-        /// </summary>
         public static int WardenLoadHook;
-        /// <summary>
-        /// Represents the base value for the Warden.
-        /// </summary>
         public static int WardenBase;
-        /// <summary>
-        /// Represents the offset value for the Warden page scan.
-        /// </summary>
         public static int WardenPageScanOffset;
-        /// <summary>
-        /// Represents the offset for Warden memory scanning.
-        /// </summary>
         public static int WardenMemScanOffset;
-        /// <summary>
-        /// Represents the index of the first extra bag for the local player.
-        /// </summary>
         public static int LocalPlayerFirstExtraBag;
-        /// <summary>
-        /// Represents the local player's class.
-        /// </summary>
         public static int LocalPlayerClass;
-        /// <summary>
-        /// Represents the base class for WowDbTable.
-        /// </summary>
         public static int WowDbTableBase;
 
-        /// <summary>
-        /// Represents the base pointer for the merchant frame items.
-        /// </summary>
         // Frames
         public static int MerchantFrameItemsBasePtr;
-        /// <summary>
-        /// Represents the pointer to the merchant frame item.
-        /// </summary>
         public static int MerchantFrameItemPtr;
-        /// <summary>
-        /// The offset value for the loot frame item.
-        /// </summary>
         public static int LootFrameItemOffset;
-        /// <summary>
-        /// Represents the offset value for the merchant frame item.
-        /// </summary>
         public static int MerchantFrameItemOffset;
-        /// <summary>
-        /// Represents the base value for a dialog frame.
-        /// </summary>
         public static int DialogFrameBase;
-        /// <summary>
-        /// The base pointer for the LootFrame items.
-        /// </summary>
         public static int LootFrameItemsBasePtr;
-        /// <summary>
-        /// Represents the number of coins in a collection.
-        /// </summary>
         public static int CoinCountPtr;
 
-        /// <summary>
-        /// Represents the offset of the first item in the local player's backpack.
-        /// </summary>
         // Descriptors
         public static int LocalPlayer_BackpackFirstItemOffset;
-        /// <summary>
-        /// Represents the offset value for the Item ID in World of Warcraft.
-        /// </summary>
         public static int WoWItem_ItemIdOffset;
-        /// <summary>
-        /// Represents the offset for the stack count of a World of Warcraft item.
-        /// </summary>
         public static int WoWItem_StackCountOffset;
-        /// <summary>
-        /// Represents the durability offset for a World of Warcraft item.
-        /// </summary>
         public static int WoWItem_DurabilityOffset;
-        /// <summary>
-        /// Represents the offset of the first item in a World of Warcraft container.
-        /// </summary>
         public static int WoWItem_ContainerFirstItemOffset;
-        /// <summary>
-        /// Represents the base spells for a World of Warcraft pet.
-        /// </summary>
         public static int WoWPet_SpellsBase;
-        /// <summary>
-        /// Represents the offset for the GUID of the unit that summoned the World of Warcraft unit.
-        /// </summary>
         public static int WoWUnit_SummonedByGuidOffset;
-        /// <summary>
-        /// Represents the offset for the target GUID in the World of Warcraft unit.
-        /// </summary>
         public static int WoWUnit_TargetGuidOffset;
-        /// <summary>
-        /// Represents the health offset for a World of Warcraft unit.
-        /// </summary>
         public static int WoWUnit_HealthOffset;
-        /// <summary>
-        /// Represents the offset value for the mana of a World of Warcraft unit.
-        /// </summary>
         public static int WoWUnit_ManaOffset;
-        /// <summary>
-        /// Represents the offset value for the rage of a World of Warcraft unit.
-        /// </summary>
         public static int WoWUnit_RageOffset;
-        /// <summary>
-        /// Represents the energy offset for a World of Warcraft unit.
-        /// </summary>
         public static int WoWUnit_EnergyOffset;
-        /// <summary>
-        /// Represents the maximum health offset for a World of Warcraft unit.
-        /// </summary>
         public static int WoWUnit_MaxHealthOffset;
-        /// <summary>
-        /// Represents the maximum mana offset for a World of Warcraft unit.
-        /// </summary>
         public static int WoWUnit_MaxManaOffset;
-        /// <summary>
-        /// Represents the level offset for a World of Warcraft unit.
-        /// </summary>
         public static int WoWUnit_LevelOffset;
-        /// <summary>
-        /// Represents the offset value for the Faction ID of a World of Warcraft unit.
-        /// </summary>
         public static int WoWUnit_FactionIdOffset;
-        /// <summary>
-        /// Represents the offset for the unit flags in the World of Warcraft game.
-        /// </summary>
         public static int WoWUnit_UnitFlagsOffset;
-        /// <summary>
-        /// Represents the offset for dynamic flags in the WoWUnit class.
-        /// </summary>
         public static int WoWUnit_DynamicFlagsOffset;
-        /// <summary>
-        /// Gets or sets the current channeling offset for the World of Warcraft unit.
-        /// </summary>
         public static int WoWUnit_CurrentChannelingOffset;
 
-        /// <summary>
-        /// Represents the offset for the WoWObject descriptor.
-        /// </summary>
         // Offsets
         public static int WoWObject_DescriptorOffset;
-        /// <summary>
-        /// Gets the offset for the World of Warcraft object position function.
-        /// </summary>
         public static int WoWObject_GetPositionFunOffset;
-        /// <summary>
-        /// Gets the offset for the facing function of a World of Warcraft object.
-        /// </summary>
         public static int WoWObject_GetFacingFunOffset;
-        /// <summary>
-        /// Represents the offset for the interaction function of a World of Warcraft object.
-        /// </summary>
         public static int WoWObject_InteractFunOffset;
-        /// <summary>
-        /// Gets the offset for the WoWObject_GetNameFun.
-        /// </summary>
         public static int WoWObject_GetNameFunOffset;
-        /// <summary>
-        /// Represents the offset of the first item in the equipment of the local player.
-        /// </summary>
         public static int LocalPlayer_EquipmentFirstItemOffset;
-        /// <summary>
-        /// Represents the offset for the number of container slots in World of Warcraft items.
-        /// </summary>
         public static int WoWItem_ContainerSlotsOffset;
-        /// <summary>
-        /// Sets the facing offset for the local player.
-        /// </summary>
         public static int LocalPlayer_SetFacingOffset;
-        /// <summary>
-        /// Represents the base offset for buffs in World of Warcraft units.
-        /// </summary>
         public static int WoWUnit_BuffsBaseOffset;
-        /// <summary>
-        /// Represents the base offset for debuffs in World of Warcraft units.
-        /// </summary>
         public static int WoWUnit_DebuffsBaseOffset;
-        /// <summary>
-        /// Represents the offset for the movement flags of a World of Warcraft unit.
-        /// </summary>
         public static int WoWUnit_MovementFlagsOffset;
-        /// <summary>
-        /// Represents the offset for the current spellcast of a World of Warcraft unit.
-        /// </summary>
         public static int WoWUnit_CurrentSpellcastOffset;
     }
 }

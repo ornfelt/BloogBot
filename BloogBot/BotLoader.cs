@@ -7,49 +7,24 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 
-/// <summary>
-/// The BloogBot namespace contains classes for loading and managing bots.
-/// </summary>
 namespace BloogBot
 {
-    /// <summary>
-    /// Represents a class that loads and manages bots.
-    /// </summary>
-    /// <summary>
-    /// Represents a class that loads and manages bots.
-    /// </summary>
     class BotLoader
     {
-        /// <summary>
-        /// Represents a read-only collection of assemblies.
-        /// </summary>
         readonly IDictionary<string, string> assemblies = new Dictionary<string, string>();
 
-        /// <summary>
-        /// Gets or sets the list of bots that implement the IBot interface.
-        /// </summary>
 #pragma warning disable 0649
         [ImportMany(typeof(IBot), AllowRecomposition = true)]
         List<IBot> bots;
-        /// <summary>
-        /// Creates a new instance of the AggregateCatalog class.
-        /// </summary>
 #pragma warning restore 0649
 
         AggregateCatalog catalog = new AggregateCatalog();
-        /// <summary>
-        /// Represents a container for managing composition of parts.
-        /// </summary>
         CompositionContainer container;
 
-        /// <summary>
-        /// Initializes a new instance of the BotLoader class.
-        /// </summary>
         public BotLoader()
         {
-            AppDomain.CurrentDomain.AssemblyResolve += (sender, args) =>
-            {
-
+            AppDomain.CurrentDomain.AssemblyResolve += (sender, args) => { 
+                
                 var currentAssembly = Assembly.GetExecutingAssembly();
                 var name = args.Name.Split(',')[0];
                 var assembly = Assembly.Load(name) ?? currentAssembly;
@@ -57,12 +32,6 @@ namespace BloogBot
             };
         }
 
-        /// <summary>
-        /// Reloads the list of bots by clearing the existing list and disposing the container. 
-        /// Loads the bot assemblies from the current folder and adds them to the catalog. 
-        /// Composes the parts of the container and returns the list of bots, 
-        /// selecting the last bot with each unique name.
-        /// </summary>
         internal List<IBot> ReloadBots()
         {
             bots?.Clear();

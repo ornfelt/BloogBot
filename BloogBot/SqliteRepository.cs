@@ -6,27 +6,12 @@ using System.Data.SQLite;
 using System.IO;
 using System.Reflection;
 
-/// <summary>
-/// This namespace contains classes for handling SQLite database operations.
-/// </summary>
 namespace BloogBot
 {
-    /// <summary>
-    /// Represents a repository that uses SQLite as the underlying database.
-    /// </summary>
-    /// <summary>
-    /// Represents a repository for interacting with a SQLite database.
-    /// </summary>
     internal class SqliteRepository : SqlRepository, IRepository
     {
-        /// <summary>
-        /// The connection string used for connecting to a database.
-        /// </summary>
         private string connectionString;
 
-        /// <summary>
-        /// Initializes the object by creating a SQLite database file and executing a SQL script to create the necessary tables and schema.
-        /// </summary>
         public override void Initialize(string _)
         {
             string strExeFilePath = Assembly.GetExecutingAssembly().Location;
@@ -49,25 +34,16 @@ namespace BloogBot
             }
         }
 
-        /// <summary>
-        /// Creates a new SQLite connection using the specified connection string.
-        /// </summary>
         public override dynamic NewConnection()
         {
             return new SQLiteConnection(connectionString);
         }
 
-        /// <summary>
-        /// Creates a new SQLiteCommand object with the specified SQL statement and database connection.
-        /// </summary>
         public override dynamic NewCommand(string sql, dynamic db)
         {
             return new SQLiteCommand(sql, db);
         }
 
-        /// <summary>
-        /// Adds a blacklisted mob with the specified GUID to the database.
-        /// </summary>
         public void AddBlacklistedMob(ulong guid)
         {
             string sql = $"INSERT INTO BlacklistedMobs (Guid) VALUES ('{guid}');";
@@ -75,21 +51,6 @@ namespace BloogBot
             RunSqlQuery(sql);
         }
 
-        /// <summary>
-        /// Adds a new hotspot with the specified description and optional parameters.
-        /// </summary>
-        /// <param name="description">The description of the hotspot.</param>
-        /// <param name="zone">The zone of the hotspot. Default is an empty string.</param>
-        /// <param name="faction">The faction of the hotspot. Default is an empty string.</param>
-        /// <param name="waypointsJson">The JSON representation of the waypoints. Default is an empty string.</param>
-        /// <param name="innkeeper">The innkeeper NPC associated with the hotspot. Default is null.</param>
-        /// <param name="repairVendor">The repair vendor NPC associated with the hotspot. Default is null.</param>
-        /// <param name="ammoVendor">The ammo vendor NPC associated with the hotspot. Default is null.</param>
-        /// <param name="minLevel">The minimum level required for the hotspot. Default is 0.</param>
-        /// <param name="travelPath">The travel path associated with the hotspot. Default is null.</param>
-        /// <param name="safeForGrinding">Specifies if the hotspot is safe for grinding. Default is false.</param>
-        /// <param name="waypoints">The array of positions representing the waypoints. Default is null.</param>
-        /// <returns>The newly created hotspot.</returns>
         public Hotspot AddHotspot(string description, string zone = "", string faction = "", string waypointsJson = "", Npc innkeeper = null, Npc repairVendor = null, Npc ammoVendor = null, int minLevel = 0, TravelPath travelPath = null, bool safeForGrinding = false, Position[] waypoints = null)
         {
             string insertSql = $"INSERT INTO Hotspots (Zone, Description, Faction, Waypoints, InnkeeperId, RepairVendorId, AmmoVendorId, MinimumLevel, TravelPathId, SafeForGrinding) VALUES ('{zone}', '{description}', '{faction}', '{waypointsJson}', {innkeeper?.Id.ToString() ?? "NULL"}, {repairVendor?.Id.ToString() ?? "NULL"}, {ammoVendor?.Id.ToString() ?? "NULL"}, {minLevel}, {travelPath?.Id.ToString() ?? "NULL"}, {Convert.ToInt32(safeForGrinding)});";
@@ -115,9 +76,6 @@ namespace BloogBot
             return new Hotspot(id, zone, description, faction, minLevel, waypoints, innkeeper, repairVendor, ammoVendor, travelPath, safeForGrinding);
         }
 
-        /// <summary>
-        /// Adds a new NPC to the database with the specified attributes.
-        /// </summary>
         public Npc AddNpc(string name, bool isInnkeeper, bool sellsAmmo, bool repairs, bool quest, bool horde, bool alliance, float positionX, float positionY, float positionZ, string zone)
         {
             string insertSql = $"INSERT INTO Npcs (Name, IsInnKeeper, SellsAmmo, Repairs, Quest, Horde, Alliance, PositionX, PositionY, PositionZ, Zone) VALUES ('{name}', {Convert.ToInt32(isInnkeeper)}, {Convert.ToInt32(sellsAmmo)}, {Convert.ToInt32(repairs)}, {Convert.ToInt32(quest)}, {Convert.ToInt32(horde)}, {Convert.ToInt32(alliance)}, {positionX}, {positionY}, {positionZ}, '{zone}');";
@@ -152,9 +110,6 @@ namespace BloogBot
 
         }
 
-        /// <summary>
-        /// Adds a report signature for a player with the specified name and command ID.
-        /// </summary>
         public void AddReportSignature(string playerName, int commandId)
         {
             string sql = $"INSERT INTO ReportSignatures (Player, CommandId) VALUES ('{playerName}', {commandId})";
@@ -170,9 +125,6 @@ namespace BloogBot
 
         }
 
-        /// <summary>
-        /// Adds a new travel path to the database with the specified name and waypoints.
-        /// </summary>
         public TravelPath AddTravelPath(string name, string waypointsJson)
         {
 
@@ -203,18 +155,12 @@ namespace BloogBot
             return travelPath;
         }
 
-        /// <summary>
-        /// Checks if a blacklisted mob with the specified GUID exists.
-        /// </summary>
         public bool BlacklistedMobExists(ulong guid)
         {
             string sql = $"SELECT Id FROM BlacklistedMobs WHERE Guid = '{guid}' LIMIT 1;";
             return RowExistsSql(sql);
         }
 
-        /// <summary>
-        /// Deletes a command from the database based on the provided ID.
-        /// </summary>
         public void DeleteCommand(int id)
         {
             string sql = $"DELETE FROM Commands WHERE Id = {id}";
@@ -231,9 +177,6 @@ namespace BloogBot
 
         }
 
-        /// <summary>
-        /// Deletes all commands for a specific player from the database.
-        /// </summary>
         public void DeleteCommandsForPlayer(string player)
         {
             string sql = $"DELETE FROM Commands WHERE Player = '{player}'";
@@ -250,9 +193,6 @@ namespace BloogBot
 
         }
 
-        /// <summary>
-        /// Retrieves a list of command models for a specific player.
-        /// </summary>
         public IList<CommandModel> GetCommandsForPlayer(string playerName)
         {
             string sql = $"SELECT * FROM Commands WHERE Player = '{playerName}'";
@@ -281,9 +221,6 @@ namespace BloogBot
 
         }
 
-        /// <summary>
-        /// Retrieves the latest report signatures by executing SQL queries on the database.
-        /// </summary>
         public ReportSummary GetLatestReportSignatures()
         {
             string sql = $"SELECT Id FROM Commands WHERE Command = '!report' ORDER BY Id DESC LIMIT 1";
@@ -328,9 +265,6 @@ namespace BloogBot
         }
 
 
-        /// <summary>
-        /// Retrieves a list of blacklisted mob IDs from the database.
-        /// </summary>
         public List<ulong> ListBlacklistedMobs()
         {
             List<ulong> mobIds = new List<ulong>();
@@ -352,14 +286,8 @@ namespace BloogBot
             }
         }
 
-        /// <summary>
-        /// Checks if the specified value is not null, not DBNull, and not zero.
-        /// </summary>
         bool IsNotNullOrZero(dynamic value) => value != null && value.GetType() != typeof(DBNull) && value != 0;
 
-        /// <summary>
-        /// Retrieves a list of hotspots from the database.
-        /// </summary>
         public List<Hotspot> ListHotspots()
         {
             string sql = @"
@@ -435,9 +363,6 @@ namespace BloogBot
             return hotspots;
         }
 
-        /// <summary>
-        /// Retrieves a list of all NPCs from the database.
-        /// </summary>
         public List<Npc> ListNPCs()
         {
             List<Npc> npcs = new List<Npc>();
@@ -475,9 +400,6 @@ namespace BloogBot
 
         }
 
-        /// <summary>
-        /// Retrieves a list of all travel paths from the database.
-        /// </summary>
         public List<TravelPath> ListTravelPaths()
         {
             string sql = $"SELECT * FROM TravelPaths ORDER BY Name";
@@ -507,27 +429,18 @@ namespace BloogBot
 
         }
 
-        /// <summary>
-        /// Checks if an NPC with the specified name exists in the database.
-        /// </summary>
         public bool NpcExists(string name)
         {
             string sql = $"SELECT Id FROM Npcs WHERE Name = '{name}' LIMIT 1;";
             return RowExistsSql(sql);
         }
 
-        /// <summary>
-        /// Removes a blacklisted mob with the specified GUID from the database.
-        /// </summary>
         public void RemoveBlacklistedMob(ulong guid)
         {
             string sql = $"DELETE FROM BlacklistedMobs WHERE Guid = '{guid}';";
             RunSqlQuery(sql);
         }
 
-        /// <summary>
-        /// Checks if a travel path with the specified name exists.
-        /// </summary>
         public bool TravelPathExists(string name)
         {
             string sql = $"SELECT Id FROM TravelPaths WHERE Name = '{name}' LIMIT 1";

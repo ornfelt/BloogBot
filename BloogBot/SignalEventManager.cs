@@ -2,49 +2,22 @@
 using System;
 using System.Runtime.InteropServices;
 
-/// <summary>
-/// This class handles the management of signal events.
-/// </summary>
 namespace BloogBot
 {
-    /// <summary>
-    /// Represents a class that manages signal events.
-    /// </summary>
-    /// <summary>
-    /// Represents a class that manages signal events.
-    /// </summary>
     public class SignalEventManager
     {
-        /// <summary>
-        /// Represents a delegate that handles signal events.
-        /// </summary>
-        /// <param name="eventName">The name of the event.</param>
-        /// <param name="format">The format of the event.</param>
-        /// <param name="firstArgPtr">The pointer to the first argument.</param>
         delegate void SignalEventDelegate(string eventName, string format, uint firstArgPtr);
-        /// <summary>
-        /// Represents a delegate that is used to signal an event with no arguments.
-        /// </summary>
         delegate void SignalEventNoArgsDelegate(string eventName);
 
-        /// <summary>
-        /// Initializes the SignalEventManager class.
-        /// </summary>
         static SignalEventManager()
         {
             //InitializeSignalEventHook();
             //InitializeSignalEventHookNoArgs();
         }
 
-        /// <summary>
-        /// Initializes the signal event hook.
-        /// </summary>
         #region InitializeSignalEventHook
         static SignalEventDelegate signalEventDelegate;
 
-        /// <summary>
-        /// Initializes the signal event hook.
-        /// </summary>
         static void InitializeSignalEventHook()
         {
             signalEventDelegate = new SignalEventDelegate(SignalEventHook);
@@ -52,18 +25,18 @@ namespace BloogBot
 
             var instructions = new[]
             {
-                "push ebx",
-                "push esi",
-                "call 0x007040D0",
-                "pushfd",
-                "pushad",
-                "mov eax, ebp",
-                "add eax, 0x10",
-                "push eax",
-                "mov eax, [ebp + 0xC]",
-                "push eax",
-                "mov edi, [edi]",
-                "push edi",
+                "push ebx",                
+                "push esi",                
+                "call 0x007040D0",         
+                "pushfd",                  
+                "pushad",                  
+                "mov eax, ebp",            
+                "add eax, 0x10",           
+                "push eax",                
+                "mov eax, [ebp + 0xC]",    
+                "push eax",                
+                "mov edi, [edi]",          
+                "push edi",                
                 $"call 0x{((uint) addrToDetour).ToString("X")}",
                 "popad",
                 "popfd",
@@ -73,9 +46,6 @@ namespace BloogBot
             MemoryManager.InjectAssembly("SignalEventHook", (uint)MemoryAddresses.SignalEventFunPtr, "jmp " + signalEventDetour);
         }
 
-        /// <summary>
-        /// Signals an event hook with the specified event name, types argument, and first argument pointer.
-        /// </summary>
         static void SignalEventHook(string eventName, string typesArg, uint firstArgPtr)
         {
             Logger.LogVerbose(eventName);
@@ -126,32 +96,17 @@ namespace BloogBot
             OnNewEventSignalEvent(eventName, list);
         }
 
-        /// <summary>
-        /// Invokes the OnNewSignalEvent event with the specified event name and list of parameters.
-        /// </summary>
         static internal void OnNewEventSignalEvent(string parEvent, params object[] parList) =>
-                    OnNewSignalEvent?.Invoke(parEvent, parList);
+            OnNewSignalEvent?.Invoke(parEvent, parList);
 
-        /// <summary>
-        /// Represents a delegate that handles signal events.
-        /// </summary>
         internal delegate void SignalEventEventHandler(string parEvent, params object[] parArgs);
 
-        /// <summary>
-        /// Event that is triggered when a new signal event occurs.
-        /// </summary>
         internal static event SignalEventEventHandler OnNewSignalEvent;
-        /// <summary>
-        /// Initializes the signal event hook with no arguments.
-        /// </summary>
         #endregion
 
         #region InitializeSignalEventHookNoArgs
         static SignalEventNoArgsDelegate signalEventNoArgsDelegate;
 
-        /// <summary>
-        /// Initializes the signal event hook with no arguments.
-        /// </summary>
         static void InitializeSignalEventHookNoArgs()
         {
             signalEventNoArgsDelegate = new SignalEventNoArgsDelegate(SignalEventNoArgsHook);
@@ -174,23 +129,14 @@ namespace BloogBot
             MemoryManager.InjectAssembly("SignalEventNoArgsHook", (uint)MemoryAddresses.SignalEventNoParamsFunPtr, "jmp " + signalEventNoArgsDetour);
         }
 
-        /// <summary>
-        /// Signals an event with no arguments and invokes the corresponding event handler.
-        /// </summary>
         static void SignalEventNoArgsHook(string eventName)
         {
             Logger.LogVerbose(eventName + "\n");
             OnNewSignalEventNoArgs?.Invoke(eventName);
         }
 
-        /// <summary>
-        /// Represents a delegate that handles an event with no arguments and returns no value.
-        /// </summary>
         internal delegate void SignalEventNoArgsEventHandler(string parEvent, params object[] parArgs);
 
-        /// <summary>
-        /// Event that is triggered when a new signal event with no arguments occurs.
-        /// </summary>
         internal static event SignalEventNoArgsEventHandler OnNewSignalEventNoArgs;
         #endregion
     }

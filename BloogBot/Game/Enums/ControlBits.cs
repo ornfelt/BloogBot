@@ -1,13 +1,7 @@
 ﻿using System;
 
-/// <summary>
-/// This namespace contains the enum for control bits used in the game.
-/// </summary>
 namespace BloogBot.Game.Enums
 {
-    /// <summary>
-    /// Represents control bits for a control system.
-    /// </summary>
     [Flags]
     public enum ControlBits
     {

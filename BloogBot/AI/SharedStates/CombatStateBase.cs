@@ -5,87 +5,30 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-/// <summary>
-/// This namespace contains the shared states for the AI combat system.
-/// </summary>
 namespace BloogBot.AI.SharedStates
 {
-    /// <summary>
-    /// Base class for combat states.
-    /// </summary>
-    /// <summary>
-    /// Base class for combat states.
-    /// </summary>
     public abstract class CombatStateBase
     {
-        /// <summary>
-        /// Error message displayed when the user is facing the wrong way.
-        /// </summary>
         const string FacingErrorMessage = "You are facing the wrong way!";
-        /// <summary>
-        /// Represents the error message for when the target is not in line of sight.
-        /// </summary>
         const string LosErrorMessage = "Target not in line of sight";
-        /// <summary>
-        /// The constant string representing the battle stance.
-        /// </summary>
         const string BattleStance = "Battle Stance";
 
-        /// <summary>
-        /// Represents a readonly stack of IBotState objects.
-        /// </summary>
         readonly Stack<IBotState> botStates;
-        /// <summary>
-        /// Represents a read-only dependency container.
-        /// </summary>
         readonly IDependencyContainer container;
-        /// <summary>
-        /// Represents the desired range for a value.
-        /// </summary>
         readonly int desiredRange;
-        /// <summary>
-        /// Represents a readonly instance of the LocalPlayer class.
-        /// </summary>
         readonly LocalPlayer player;
-        /// <summary>
-        /// Represents a read-only World of Warcraft unit target.
-        /// </summary>
         readonly WoWUnit target;
 
-        /// <summary>
-        /// Represents a boolean value indicating whether backpedaling is occurring.
-        /// </summary>
         bool backpedaling;
-        /// <summary>
-        /// Represents the start time of the backpedal.
-        /// </summary>
         int backpedalStartTime;
-        /// <summary>
-        /// Represents a boolean value indicating whether there are any line of sight (LOS) obstacles.
-        /// </summary>
         bool noLos;
-        /// <summary>
-        /// Represents the start time for the "no loss" period.
-        /// </summary>
         int noLosStartTime;
 
-        /// <summary>
-        /// Represents the loop timer.
-        /// </summary>
         private int loopTimer;
-        /// <summary>
-        /// Represents the last recorded health of the target.
-        /// </summary>
         private int lastTargetHealth;
 
-        /// <summary>
-        /// Represents a static, read-only instance of the Random class.
-        /// </summary>
         static readonly Random random = new Random();
 
-        /// <summary>
-        /// Initializes a new instance of the CombatStateBase class.
-        /// </summary>
         public CombatStateBase(Stack<IBotState> botStates, IDependencyContainer container, WoWUnit target, int desiredRange)
         {
             player = ObjectManager.Player;
@@ -101,9 +44,6 @@ namespace BloogBot.AI.SharedStates
             loopTimer = 0;
         }
 
-        /// <summary>
-        /// Updates the behavior of the player character.
-        /// </summary>
         public bool Update()
         {
             if (player.DeathsAtWp > 2 && player.CurrWpId != 0)
@@ -255,21 +195,12 @@ namespace BloogBot.AI.SharedStates
             return false;
         }
 
-        /// <summary>
-        /// Tries to cast a spell with the specified name and range.
-        /// </summary>
         public void TryCastSpell(string name, int minRange, int maxRange, bool condition = true, Action callback = null, bool castOnSelf = false) =>
-                    TryCastSpellInternal(name, minRange, maxRange, condition, callback, castOnSelf);
+            TryCastSpellInternal(name, minRange, maxRange, condition, callback, castOnSelf);
 
-        /// <summary>
-        /// Tries to cast a spell with the specified name.
-        /// </summary>
         public void TryCastSpell(string name, bool condition = true, Action callback = null, bool castOnSelf = false) =>
-                    TryCastSpellInternal(name, 0, int.MaxValue, condition, callback, castOnSelf);
+            TryCastSpellInternal(name, 0, int.MaxValue, condition, callback, castOnSelf);
 
-        /// <summary>
-        /// Tries to cast a spell with the given parameters.
-        /// </summary>
         void TryCastSpellInternal(string name, int minRange, int maxRange, bool condition = true, Action callback = null, bool castOnSelf = false)
         {
             var distanceToTarget = player.Position.DistanceTo(target.Position);
@@ -291,9 +222,6 @@ namespace BloogBot.AI.SharedStates
             }
         }
 
-        /// <summary>
-        /// Tries to use an ability with the given name, required resource, condition, and callback.
-        /// </summary>
         // shared by 
         public void TryUseAbility(string name, int requiredResource = 0, bool condition = true, Action callback = null)
         {
@@ -320,9 +248,6 @@ namespace BloogBot.AI.SharedStates
             }
         }
 
-        /// <summary>
-        /// Tries to use an ability by its ID.
-        /// </summary>
         // https://vanilla-wow.fandom.com/wiki/API_CastSpell
         // The id is counted from 1 through all spell types (tabs on the right side of SpellBookFrame).
         public void TryUseAbilityById(string name, int id, int requiredRage = 0, bool condition = true, Action callback = null)
@@ -339,13 +264,10 @@ namespace BloogBot.AI.SharedStates
                     player.CastSpell(name, target.Guid);
                     callback?.Invoke();
                 }
-
+                
             }
         }
 
-        /// <summary>
-        /// Cleans up the player's movement, pops the top state from the botStates stack, and unsubscribes from the OnErrorMessage event.
-        /// </summary>
         void CleanUp()
         {
             player.StopAllMovement();
@@ -353,9 +275,6 @@ namespace BloogBot.AI.SharedStates
             WoWEventHandler.OnErrorMessage -= OnErrorMessageCallback;
         }
 
-        /// <summary>
-        /// Callback method for handling error messages.
-        /// </summary>
         void OnErrorMessageCallback(object sender, OnUiMessageArgs e)
         {
             if (e.Message == FacingErrorMessage && !backpedaling)

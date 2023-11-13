@@ -8,138 +8,48 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-/// <summary>
-/// This namespace contains the classes and functions related to the Frost Mage Bot.
-/// </summary>
 namespace FrostMageBot
 {
-    /// <summary>
-    /// Represents a combat state for a bot with powerlevel abilities.
-    /// </summary>
-    /// <summary>
-    /// Represents a combat state for a bot with powerlevel abilities.
-    /// </summary>
     class PowerlevelCombatState : IBotState
     {
-        /// <summary>
-        /// Represents the error message for when the target is not in line of sight.
-        /// </summary>
         const string LosErrorMessage = "Target not in line of sight";
-        /// <summary>
-        /// The Lua script for casting the "Shoot" spell if the action with ID 11 is not set to auto-repeat.
-        /// </summary>
         const string WandLuaScript = "if IsAutoRepeatAction(11) == nil then CastSpellByName('Shoot') end";
 
-        /// <summary>
-        /// An array of strings representing the targets for a Fire Ward.
-        /// </summary>
         readonly string[] FireWardTargets = new[] { "Fire", "Flame", "Infernal", "Searing", "Hellcaller" };
-        /// <summary>
-        /// The targets that are affected by Frost Ward.
-        /// </summary>
         readonly string[] FrostWardTargets = new[] { "Ice", "Frost" };
 
-        /// <summary>
-        /// Represents the spell "Cone of Cold".
-        /// </summary>
         const string ConeOfCold = "Cone of Cold";
-        /// <summary>
-        /// Represents the name of the counterspell.
-        /// </summary>
         const string Counterspell = "Counterspell";
-        /// <summary>
-        /// Represents the constant string "Evocation".
-        /// </summary>
         const string Evocation = "Evocation";
-        /// <summary>
-        /// Represents a constant string value for "Fireball".
-        /// </summary>
         const string Fireball = "Fireball";
-        /// <summary>
-        /// Represents the constant string "Fire Blast".
-        /// </summary>
         const string FireBlast = "Fire Blast";
-        /// <summary>
-        /// Represents the constant string "Fire Ward".
-        /// </summary>
         const string FireWard = "Fire Ward";
-        /// <summary>
-        /// Represents the constant string "Frost Nova".
-        /// </summary>
         const string FrostNova = "Frost Nova";
-        /// <summary>
-        /// Represents the constant string "Frost Ward".
-        /// </summary>
         const string FrostWard = "Frost Ward";
-        /// <summary>
-        /// Represents the constant value "Frostbite".
-        /// </summary>
         const string Frostbite = "Frostbite";
-        /// <summary>
-        /// The constant string representing the spell "Frostbolt".
-        /// </summary>
         const string Frostbolt = "Frostbolt";
-        /// <summary>
-        /// Represents the constant string "Ice Barrier".
-        /// </summary>
         const string IceBarrier = "Ice Barrier";
 
-        /// <summary>
-        /// Represents a readonly stack of IBotState objects.
-        /// </summary>
         readonly Stack<IBotState> botStates;
-        /// <summary>
-        /// Represents a read-only dependency container.
-        /// </summary>
         readonly IDependencyContainer container;
-        /// <summary>
-        /// Represents a read-only World of Warcraft unit target.
-        /// </summary>
         readonly WoWUnit target;
-        /// <summary>
-        /// Represents a readonly instance of the LocalPlayer class.
-        /// </summary>
         readonly LocalPlayer player;
-        /// <summary>
-        /// Gets or sets the value of the nuke.
-        /// </summary>
         readonly string nuke;
-        /// <summary>
-        /// Represents a readonly integer range.
-        /// </summary>
         readonly int range;
 
-        /// <summary>
-        /// Represents a boolean value indicating whether there are any line of sight (LOS) obstacles.
-        /// </summary>
         bool noLos;
-        /// <summary>
-        /// Represents the start time for the "no loss" period.
-        /// </summary>
         int noLosStartTime;
 
-        /// <summary>
-        /// Represents a boolean value indicating whether backpedaling is occurring.
-        /// </summary>
         bool backpedaling;
-        /// <summary>
-        /// Represents the start time of the backpedal.
-        /// </summary>
         int backpedalStartTime;
 
-        /// <summary>
-        /// Callback function for Frost Nova action. Sets the backpedaling flag to true, records the start time of backpedaling, and starts the player's movement in the backward direction.
-        /// </summary>
         Action FrostNovaCallback => () =>
-                {
-                    backpedaling = true;
-                    backpedalStartTime = Environment.TickCount;
-                    player.StartMovement(ControlBits.Back);
-                };
+        {
+            backpedaling = true;
+            backpedalStartTime = Environment.TickCount;
+            player.StartMovement(ControlBits.Back);
+        };
 
-        /// <summary>
-        /// Initializes a new instance of the PowerlevelCombatState class.
-        /// </summary>
         public PowerlevelCombatState(Stack<IBotState> botStates, IDependencyContainer container, WoWUnit target, WoWPlayer powerlevelTarget)
         {
             this.botStates = botStates;
@@ -161,17 +71,11 @@ namespace FrostMageBot
             range = 29 + (ObjectManager.GetTalentRank(3, 11) * 3);
         }
 
-        /// <summary>
-        /// Destructor for the PowerlevelCombatState class. Unsubscribes from the OnErrorMessage event.
-        /// </summary>
         ~PowerlevelCombatState()
         {
             WoWEventHandler.OnErrorMessage -= OnErrorMessageCallback;
         }
 
-        /// <summary>
-        /// Updates the combat rotation for the player character.
-        /// </summary>
         public void Update()
         {
             if (player.IsChanneling)
@@ -268,9 +172,6 @@ namespace FrostMageBot
             }
         }
 
-        /// <summary>
-        /// Tries to cast a spell with the given name within a specified range, under certain conditions, and with an optional callback.
-        /// </summary>
         void TryCastSpell(string name, int minRange, int maxRange, bool condition = true, Action callback = null)
         {
             var distanceToTarget = player.Position.DistanceTo(target.Position);
@@ -282,9 +183,6 @@ namespace FrostMageBot
             }
         }
 
-        /// <summary>
-        /// Event handler for error messages.
-        /// </summary>
         void OnErrorMessageCallback(object sender, OnUiMessageArgs e)
         {
             if (e.Message == LosErrorMessage)
@@ -294,9 +192,6 @@ namespace FrostMageBot
             }
         }
 
-        /// <summary>
-        /// Checks if the target is frozen by checking if it has the debuffs Frostbite or FrostNova.
-        /// </summary>
         bool IsTargetFrozen => target.HasDebuff(Frostbite) || target.HasDebuff(FrostNova);
     }
 }

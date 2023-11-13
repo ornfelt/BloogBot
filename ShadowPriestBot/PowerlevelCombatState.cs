@@ -8,123 +8,39 @@ using System.Linq;
 using BloogBot.AI.SharedStates;
 using BloogBot.Game.Enums;
 
-/// <summary>
-/// This namespace contains the implementation of the PowerlevelCombatState class which represents the state of the bot when in combat and focusing on power leveling.
-/// </summary>
 namespace ShadowPriestBot
 {
-    /// <summary>
-    /// Represents the combat state of a bot with powerleveling capabilities.
-    /// </summary>
     class PowerlevelCombatState : IBotState
     {
-        /// <summary>
-        /// The Lua script for auto attacking. If the current action is not '12', it casts the 'Attack' spell.
-        /// </summary>
         const string AutoAttackLuaScript = "if IsCurrentAction('12') == nil then CastSpellByName('Attack') end";
-        /// <summary>
-        /// Represents the error message for when the target is not in line of sight.
-        /// </summary>
         const string LosErrorMessage = "Target not in line of sight";
-        /// <summary>
-        /// The Lua script for casting the "Shoot" spell if the action with ID 11 is not set to auto-repeat.
-        /// </summary>
         const string WandLuaScript = "if IsAutoRepeatAction(11) == nil then CastSpellByName('Shoot') end";
-        /// <summary>
-        /// Lua script to turn off the wand if the action is set to auto-repeat.
-        /// </summary>
         const string TurnOffWandLuaScript = "if IsAutoRepeatAction(11) ~= nil then CastSpellByName('Shoot') end";
 
-        /// <summary>
-        /// Represents the constant string "Abolish Disease".
-        /// </summary>
         const string AbolishDisease = "Abolish Disease";
-        /// <summary>
-        /// Represents the constant string "Cure Disease".
-        /// </summary>
         const string CureDisease = "Cure Disease";
-        /// <summary>
-        /// Represents the constant string "Dispel Magic".
-        /// </summary>
         const string DispelMagic = "Dispel Magic";
-        /// <summary>
-        /// Represents the constant string "Inner Fire".
-        /// </summary>
         const string InnerFire = "Inner Fire";
-        /// <summary>
-        /// Represents the constant string "Lesser Heal".
-        /// </summary>
         const string LesserHeal = "Lesser Heal";
-        /// <summary>
-        /// Represents the constant string "Mind Blast".
-        /// </summary>
         const string MindBlast = "Mind Blast";
-        /// <summary>
-        /// Represents the constant string "Mind Flay".
-        /// </summary>
         const string MindFlay = "Mind Flay";
-        /// <summary>
-        /// Represents the constant string "Power Word: Shield".
-        /// </summary>
         const string PowerWordShield = "Power Word: Shield";
-        /// <summary>
-        /// Represents the constant string "Psychic Scream".
-        /// </summary>
         const string PsychicScream = "Psychic Scream";
-        /// <summary>
-        /// The constant string representing "Shadowform".
-        /// </summary>
         const string ShadowForm = "Shadowform";
-        /// <summary>
-        /// Represents the constant string "Shadow Word: Pain".
-        /// </summary>
         const string ShadowWordPain = "Shadow Word: Pain";
-        /// <summary>
-        /// Represents the constant string "Smite".
-        /// </summary>
         const string Smite = "Smite";
-        /// <summary>
-        /// Represents the constant string "Vampiric Embrace".
-        /// </summary>
         const string VampiricEmbrace = "Vampiric Embrace";
-        /// <summary>
-        /// Represents the constant string "Weakened Soul".
-        /// </summary>
         const string WeakenedSoul = "Weakened Soul";
 
-        /// <summary>
-        /// Represents a boolean value indicating whether there are any line of sight (LOS) obstacles.
-        /// </summary>
         bool noLos;
-        /// <summary>
-        /// Represents the start time for the "no loss" period.
-        /// </summary>
         int noLosStartTime;
 
-        /// <summary>
-        /// Represents a readonly stack of IBotState objects.
-        /// </summary>
         readonly Stack<IBotState> botStates;
-        /// <summary>
-        /// Represents a read-only dependency container.
-        /// </summary>
         readonly IDependencyContainer container;
-        /// <summary>
-        /// Represents a read-only World of Warcraft unit target.
-        /// </summary>
         readonly WoWUnit target;
-        /// <summary>
-        /// Represents a World of Warcraft player who is the target of power leveling.
-        /// </summary>
         readonly WoWPlayer powerlevelTarget;
-        /// <summary>
-        /// Represents a readonly instance of the LocalPlayer class.
-        /// </summary>
         readonly LocalPlayer player;
 
-        /// <summary>
-        /// Initializes a new instance of the PowerlevelCombatState class.
-        /// </summary>
         public PowerlevelCombatState(Stack<IBotState> botStates, IDependencyContainer container, WoWUnit target, WoWPlayer powerlevelTarget)
         {
             this.botStates = botStates;
@@ -136,17 +52,11 @@ namespace ShadowPriestBot
             WoWEventHandler.OnErrorMessage += OnErrorMessageCallback;
         }
 
-        /// <summary>
-        /// Destructor for the PowerlevelCombatState class. Unsubscribes from the OnErrorMessage event.
-        /// </summary>
         ~PowerlevelCombatState()
         {
             WoWEventHandler.OnErrorMessage -= OnErrorMessageCallback;
         }
 
-        /// <summary>
-        /// Updates the combat rotation for the player character.
-        /// </summary>
         public void Update()
         {
             if (Environment.TickCount - noLosStartTime > 1000)
@@ -252,9 +162,6 @@ namespace ShadowPriestBot
             }
         }
 
-        /// <summary>
-        /// Tries to cast a spell with the given name within a specified range, under certain conditions, and with optional callback and self-casting options.
-        /// </summary>
         void TryCastSpell(string name, int minRange, int maxRange, bool condition = true, Action callback = null, bool castOnSelf = false)
         {
             var distanceToTarget = player.Position.DistanceTo(target.Position);
@@ -267,9 +174,6 @@ namespace ShadowPriestBot
             }
         }
 
-        /// <summary>
-        /// Event handler for error messages.
-        /// </summary>
         void OnErrorMessageCallback(object sender, OnUiMessageArgs e)
         {
             if (e.Message == LosErrorMessage)

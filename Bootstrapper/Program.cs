@@ -8,22 +8,10 @@ using System.Text;
 using System.Threading;
 using static Bootstrapper.WinImports;
 
-/// <summary>
-/// This namespace contains the main entry point for the bootstrapper program.
-/// </summary>
 namespace Bootstrapper
 {
-    /// <summary>
-    /// The main entry point for the application. It executes the BloogBot application by creating a new process and loading the necessary DLL files.
-    /// </summary>
-    /// <summary>
-    /// The main entry point for the application. It executes the BloogBot application by creating a new process and loading the necessary DLL files.
-    /// </summary>
     class Program
     {
-        /// <summary>
-        /// Executes the BloogBot application by creating a new process and loading the necessary DLL files.
-        /// </summary>
         static void Main()
         {
             var currentFolder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
@@ -33,7 +21,7 @@ namespace Bootstrapper
             var startupInfo = new STARTUPINFO();
 
             // run BloogBot.exe in a new process
-            CreateProcess(
+            CreateProcess(                                                                          
                 bootstrapperSettings.PathToWoW,
                 null,
                 IntPtr.Zero,
@@ -41,7 +29,7 @@ namespace Bootstrapper
                 false,
                 ProcessCreationFlag.CREATE_DEFAULT_ERROR_MODE,
                 IntPtr.Zero,
-                null,
+                null, 
                 ref startupInfo,
                 out PROCESS_INFORMATION processInfo);
 
@@ -56,10 +44,10 @@ namespace Bootstrapper
 
             // allocate enough memory to hold the full file path to Loader.dll within the BloogBot process
             var loaderPathPtr = VirtualAllocEx(
-                processHandle,
-                (IntPtr)0,
-                loaderPath.Length,
-                MemoryAllocationType.MEM_COMMIT,
+                processHandle, 
+                (IntPtr)0, 
+                loaderPath.Length, 
+                MemoryAllocationType.MEM_COMMIT, 
                 MemoryProtectionType.PAGE_EXECUTE_READWRITE);
 
             // this seems to help prevent timing issues

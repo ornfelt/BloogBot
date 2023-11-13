@@ -46,7 +46,7 @@ namespace BloogBot.AI.SharedStates
             // Initialize variables
             var hotspot = container.GetCurrentHotspot();
             player = ObjectManager.Player;
-            isInBg = HotspotIsBg(hotspot.Id);
+            isInBg = IsHotspotBg(hotspot.Id);
             playerLevel = player.Level;
             player.StuckInStateOrPosCount = 0;
 
@@ -297,7 +297,10 @@ namespace BloogBot.AI.SharedStates
             }
         }
 
-        private bool HotspotIsBg(int hotspotId)
+        /// <summary>
+        /// Determines if the given hotspot ID is a battleground hotspot.
+        /// </summary>
+        private bool IsHotspotBg(int hotspotId)
         {
             return (hotspotId > 8 && hotspotId < 13);
         }

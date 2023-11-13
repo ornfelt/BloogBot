@@ -224,7 +224,7 @@ namespace BloogBot.AI.SharedStates
         private Position SelectOverleveledWaypoint(IEnumerable<Position> waypoints, Position waypoint)
         {
             var stayOnWp = false;
-            if (player.ForcedWpPath.Count == 0 || player.WpStuckCount > 10)
+            if (player.ForcedWpPath == null || player.ForcedWpPath?.Count == 0 || player.WpStuckCount > 10)
             {
                 // If stuck on forcedwppath get new forcedwppath to new zone but make sure it's a new path
                 if (player.WpStuckCount > 10)

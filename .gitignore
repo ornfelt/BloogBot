@@ -282,3 +282,6 @@ main.min.css
 Bot
 bootstrapperSettings.json
 botSettings.json
+
+# Doxygen
+**/generated-docs/

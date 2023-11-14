@@ -555,7 +555,7 @@ namespace BloogBot.AI
                                 player.BlackListedTargets.Add(target.Guid);
 
                             // Force teleport to current WP
-                            ForceTeleport(container, player, "Stuck in combat state - target blacklisted)!");
+                            ForceTeleport(container, player, $"Stuck in combat state - target: {(target == null ? "" : target.Name)} blacklisted)!");
                             player.SetTarget(player.Guid);
                             botStates.Pop();
                             botStates.Push(new GrindState(botStates, container));

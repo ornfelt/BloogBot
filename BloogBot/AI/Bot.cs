@@ -431,6 +431,7 @@ namespace BloogBot.AI
                             player.LuaCall($"SendChatMessage('.npcb wp go {player.LastWpId}')");
                             player.ShouldTeleportToLastWp = false;
                             player.ShouldWaitForTeleportDelay = true;
+                            return;
                         }
 
                         var playerInBg = IsPlayerInBg();
@@ -444,6 +445,7 @@ namespace BloogBot.AI
                                 player.LuaCall("LeaveBattlefield()");
                                 player.LuaCallWithResults("LeaveBattlefield()");
                                 player.HasEnteredNewMap = true;
+                                return;
                             }
                         }
 

@@ -97,10 +97,12 @@ namespace BloogBot.AI
         public WoWUnit FindThreat()
         {
             var player = ObjectManager.Player;
-            var botFriend = ObjectManager.Units.Where(u => u.Name == player.BotFriend).FirstOrDefault();
+            var botFriendName = player.BotFriend;
+            var botFriend = ObjectManager.Units.Where(u => u.Name == botFriendName).FirstOrDefault();
             var potentialThreats = ObjectManager.Units
                 .Where(u =>
-                    (botFriend != null && u.TargetGuid == botFriend.Guid && u.Guid != botFriend.Guid) || // Required to help npcbots
+                    (botFriend != null && u.Name != botFriendName && u.TargetGuid == botFriend.Guid 
+                    && u.Guid != botFriend.Guid) || // Required to help npcbots
                     u.TargetGuid == player.Guid ||
                     u.TargetGuid == ObjectManager.Pet?.Guid &&
                     !Probe.BlacklistedMobIds.Contains(u.Guid));

@@ -215,14 +215,11 @@ namespace BloogBot.AI.SharedStates
                 else
                 {
                     // Check level requirement
-                    if (linkWp.MinLevel <= playerLevel && !player.BlackListedWps.Contains(linkWp.ID))
+                    if (linkWp.MinLevel <= playerLevel && linkWp.MaxLevel > playerLevel 
+                        && !player.BlackListedWps.Contains(linkWp.ID))
                     {
-                        //if (!player.HasVisitedWp(linkWp.ID) && linkWp.MinLevel <= player.Level && linkWp.MaxLevel > player.Level)
-                        if (linkWp.MinLevel <= playerLevel && linkWp.MaxLevel > playerLevel)
-                        {
-                            waypoint = linkWp;
-                            newWpFound = true;
-                        }
+                        waypoint = linkWp;
+                        newWpFound = true;
                     }
                 }
                 if (linkSearchCount > 15)

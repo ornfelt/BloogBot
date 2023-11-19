@@ -381,7 +381,8 @@ namespace BloogBot.AI.SharedStates
                     return null;
                 }
 
-                if (currentWaypoint.MaxLevel > player.Level && currentWaypoint.MinLevel <= player.Level
+                if (currentWaypoint.MaxLevel > playerLevel && currentWaypoint.MinLevel <= playerLevel
+                    && currentWaypoint.Zone != "41" && currentWaypoint.Zone != "25" // Skip deadwind and Blackrock
                     && (ignoreBlacklistedWps || (!player.HasVisitedWp(currentId))))
                 {
                     Console.WriteLine($"Found new WP matching player level (ignoreBlacklistedWps: {ignoreBlacklistedWps}): " + currentWaypoint.ToStringFull() + "\n");
@@ -390,9 +391,9 @@ namespace BloogBot.AI.SharedStates
                 // Player could be above all WP maxlevels, so make an exception
                 // for those players so that they can move through the zones.
                 // Hotspot 1-4 are Azeroth WPs, 5,6 Outland, and 7,8 Northrend
-                else if (currentWaypoint.Zone != player.CurrZone && ((hotspot.Id < 5 && player.Level >= 60)
-                    || ((hotspot.Id == 5 || hotspot.Id == 6) && player.Level >= 70)
-                    || ((hotspot.Id == 7 || hotspot.Id == 8) && player.Level >= 80)))
+                else if (currentWaypoint.Zone != player.CurrZone && ((hotspot.Id < 5 && playerLevel >= 60)
+                    || ((hotspot.Id == 5 || hotspot.Id == 6) && playerLevel >= 70)
+                    || ((hotspot.Id == 7 || hotspot.Id == 8) && playerLevel >= 80)))
                 {
                     // Try to visit new zones
                     bool currWpIsNewZone = true;

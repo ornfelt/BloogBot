@@ -432,7 +432,7 @@ namespace BloogBot.AI.SharedStates
                     }
                 }
             }
-            return null;
+            return ignoreBlacklistedWps ? currentPath : null; // Return current path or null
         }
 
         /// <summary>

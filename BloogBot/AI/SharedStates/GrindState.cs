@@ -376,7 +376,7 @@ namespace BloogBot.AI.SharedStates
                     }
                 }
             }
-            return currentPath; // Return last currentPath set or null
+            return null;
         }
 
         void LogToFile(string text)

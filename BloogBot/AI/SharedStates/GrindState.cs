@@ -325,7 +325,6 @@ namespace BloogBot.AI.SharedStates
                 }
 
                 if (currentWaypoint.MaxLevel > playerLevel && currentWaypoint.MinLevel <= playerLevel
-                    && currentWaypoint.Zone != "41" && currentWaypoint.Zone != "25" // Skip deadwind and Blackrock
                     && (ignoreBlacklistedWps || (!player.HasVisitedWp(currentId))))
                 {
                     Console.WriteLine($"Found new WP matching player level (ignoreBlacklistedWps: {ignoreBlacklistedWps}): " + currentWaypoint.ToStringFull() + "\n");

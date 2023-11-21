@@ -509,10 +509,10 @@ namespace BloogBot.Game.Objects
         public HashSet<int> VisitedWps { get { return m_VisitedWps; } set { m_VisitedWps = value; } }
 
         private static HashSet<int> m_BlackListedWps = new HashSet<int> { 
-            35, 118, 168, 300, 320, 359, 627, 628, 629, 795, 796, 857, 993, 1093,
-            1094, 1100, 1180, 1359, 1364, 1369, 1426, 1438, 1444, 1445, 1456, 
-            1462, 1463, 1464, 1465, 1466, 1566, 1614, 2388, 2571, 2584, 5050,
-            5067, 5068, 5069, 5070 };
+            35, 118, 168, 300, 320, 359, 627, 628, 629, 795, 796, 804, 805, 
+            806, 807, 808, 809, 857, 993, 1093, 1094, 1100, 1180, 1359, 1364,
+            1369, 1426, 1438, 1444, 1445, 1456, 1462, 1463, 1464, 1465, 1466,
+            1566, 1614, 2388, 2571, 2584, 5050, 5067, 5068, 5069, 5070 };
         public HashSet<int> BlackListedWps { get { return m_BlackListedWps; } set { m_BlackListedWps = value; } }
 
         private static bool m_HasBeenStuckAtWp;
@@ -626,7 +626,7 @@ namespace BloogBot.Game.Objects
             {12, new List<int> { 145, 597, 604, }}, // Fireball R3, Conjure Food R2, Dampen Magic R1
             {14, new List<int> { 1460, 837, 2137 }}, // Arcane Intellect R2, Frostbolt R3, Fire Blast R2
             {18, new List<int> { 3140 }}, // Fireball R4
-            {20, new List<int> { 543, 5506, 7301, 7322, 12051 }}, // Fire ward R1, Conjure Water R3, Frost Armor R3, Frostbolt R4, Evocation
+            {20, new List<int> { 543, 1953, 5506, 7301, 7322, 12051 }}, // Fire ward R1, Blink R1, Conjure Water R3, Frost Armor R3, Frostbolt R4, Evocation
             {22, new List<int> { 990, 2138, 6143 }}, // Conjure Food R3, Fire Blast R3, Frost Ward R1
             {24, new List<int> { 8450, 2139, 8400 }}, // Dampen Magic R2, Counterspell, Fireball R5
             {26, new List<int> { 120, 865, 8406 }}, // Cone of Cold R1, Frost Nova R2, Frostbolt R5

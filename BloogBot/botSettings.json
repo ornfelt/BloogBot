@@ -9,7 +9,7 @@
   "Food": "Conjured Sweet Roll",
   "Drink": "Conjured Sparkling Water",
   "TargetingIncludedNames": "",
-  "TargetingExcludedNames": "Silithid|Kodo|Silithid|Centipaar|Darkmist|Ooze|Steam Rager|Infernal Attacker|Simmer|R-3D0|Imprisoned Beryl Sorcerer|Snowblind Follower",
+  "TargetingExcludedNames": "Silithid|Kodo|Silithid|Centipaar|Darkmist|Ooze|Steam Rager|Infernal Attacker|Simmer|R-3D0|Imprisoned Beryl Sorcerer|Snowblind Follower|Dreadcaller",
   "LevelRangeMin": 2,
   "LevelRangeMax": 2,
   "CreatureTypeBeast": true,

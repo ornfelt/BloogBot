@@ -84,6 +84,31 @@ namespace AfflictionWarlockBot
         /// Calculates the distance to the target and if it is less than 27, the player is not casting, and the pullingSpell is ready, stops all movement, casts the pullingSpell, pops the current state from the stack, and pushes a new CombatState to the stack.
         /// Gets the next waypoint using the Navigation class and moves the player toward it.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// Update -> Target: Check TappedByOther or FindClosestTarget
+        /// Target --> Update: Return Guid
+        /// Update -> Player: StopAllMovement
+        /// Update -> BotStates: Pop
+        /// Update -> ObjectManager: Check Pet
+        /// Update -> Player: KnowsSpell(SummonImp) or KnowsSpell(SummonVoidwalker)
+        /// Update -> Player: StopAllMovement
+        /// Update -> BotStates: Push(new SummonVoidwalkerState)
+        /// Update -> StuckHelper: CheckIfStuck
+        /// Update -> Player: Get Position
+        /// Update -> Target: Get Position
+        /// Update -> Player: Check IsCasting and IsSpellReady
+        /// Update -> Player: StopAllMovement
+        /// Update -> Wait: For "AfflictionWarlockPullDelay"
+        /// Update -> Player: StopAllMovement
+        /// Update -> Player: LuaCall
+        /// Update -> BotStates: Pop
+        /// Update -> BotStates: Push(new CombatState)
+        /// Update -> Navigation: GetNextWaypoint
+        /// Update -> Player: MoveToward(nextWaypoint)
+        /// \enduml
+        /// </remarks>
         public void Update()
         {
             if (target.TappedByOther || container.FindClosestTarget()?.Guid != target.Guid)

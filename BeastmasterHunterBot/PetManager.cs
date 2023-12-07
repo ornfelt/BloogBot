@@ -70,6 +70,25 @@ namespace BeastmasterHunterBot
         /// <summary>
         /// Updates the player's state by checking if they are currently casting a spell. If not, it checks if the player knows the spell "CallPet" and if the pet object is not null. If either condition is true, the player stands, pops the current state from the stack, pushes a new "BuffSelfState" onto the stack, and returns. Otherwise, it calls the Lua function "CastSpellByName" with the parameter "CallPet".
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// Update -> Player: IsCasting
+        /// alt Player Is Casting
+        ///   Update -> Update: return
+        /// else Player Not Casting
+        ///   Update -> Player: KnowsSpell(CallPet)
+        ///   Update -> ObjectManager: Pet != null
+        ///   alt Player Knows Spell and Pet Exists
+        ///     Update -> Player: Stand
+        ///     Update -> BotStates: Pop
+        ///     Update -> BotStates: Push(new BuffSelfState)
+        ///   else Player Doesn't Know Spell or Pet Doesn't Exist
+        ///     Update -> Player: LuaCall(CastSpellByName(CallPet))
+        ///   end
+        /// end
+        /// \enduml
+        /// </remarks>
         public void Update()
         {
             if (player.IsCasting)
@@ -89,6 +108,20 @@ namespace BeastmasterHunterBot
         /// <summary>
         /// Feeds the pet with the specified food name.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// Feed -> Inventory: GetItemCount(parFoodName)
+        /// Inventory --> Feed: ItemCount
+        /// Feed -> Player: LuaCallWithResults(checkFeedPet)
+        /// Player --> Feed: Result
+        /// alt Result contains "0"
+        ///     Feed -> Player: LuaCall(feedPet)
+        /// end
+        /// Feed -> Player: LuaCall(usePetFood1 + parFoodName + usePetFood2)
+        /// Feed -> Player: LuaCall("ClearCursor()")
+        /// \enduml
+        /// </remarks>
         public void Feed(string parFoodName)
         {
             if (true /*Inventory.Instance.GetItemCount(parFoodName) != 0*/)

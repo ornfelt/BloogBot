@@ -46,6 +46,29 @@ namespace BloogBot.AI.SharedStates
         /// Otherwise, gets the bag ID and slot ID of the new bag. If the slot ID is 0, sets the new bag to null. 
         /// Calls the Lua function "UseContainerItem" with the bag ID and slot ID as parameters. Sets the new bag to null afterwards.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// ObjectManager -> Update: Is Player in combat?
+        /// alt Player is in combat
+        ///     Update -> botStates: Pop state
+        /// else Player is not in combat
+        ///     Update -> Inventory: Get all items
+        ///     alt New bag is null or no empty bag slots
+        ///         Update -> botStates: Pop state
+        ///         Update -> botStates: Push new EquipArmorState
+        ///     else New bag is not null and there are empty bag slots
+        ///         Update -> Inventory: Get bag ID
+        ///         Update -> Inventory: Get slot ID
+        ///         alt Slot ID is 0
+        ///             Update -> newBag: Set to null
+        ///         else Slot ID is not 0
+        ///             ObjectManager -> Player: LuaCall UseContainerItem
+        ///             Update -> newBag: Set to null
+        ///         end
+        ///     end
+        /// end
+        /// \enduml
+        /// </remarks>
         public void Update()
         {
             if (ObjectManager.Player.IsInCombat)

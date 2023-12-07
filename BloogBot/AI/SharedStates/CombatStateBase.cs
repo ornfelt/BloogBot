@@ -104,6 +104,45 @@ namespace BloogBot.AI.SharedStates
         /// <summary>
         /// Updates the behavior of the player character.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// participant "Update()" as U
+        /// participant "player" as P
+        /// participant "hotspot" as H
+        /// participant "waypoint" as W
+        /// participant "linkWp" as L
+        /// participant "target" as T
+        /// participant "nextWaypoint" as N
+        /// participant "checkTarget" as C
+        /// participant "wand" as Wd
+        /// 
+        /// U -> P: DeathsAtWp, CurrWpId
+        /// U -> H: GetCurrentHotspot()
+        /// U -> W: Waypoints
+        /// U -> L: Waypoints
+        /// U -> P: LuaCall()
+        /// U -> P: StopMovement(ControlBits.Back)
+        /// U -> P: StopMovement(ControlBits.Front)
+        /// U -> T: Health
+        /// U -> P: StartMovement(ControlBits.Back), StartMovement(ControlBits.StrafeLeft), Jump()
+        /// U -> P: StartMovement(ControlBits.Back), StartMovement(ControlBits.StrafeRight), Jump()
+        /// U -> P: StopAllMovement()
+        /// U -> N: GetNextWaypoint(ObjectManager.MapId, player.Position, target.Position, false)
+        /// U -> P: MoveToward(nextWaypoint)
+        /// U -> P: Health, BotFriend
+        /// U -> C: Units.FirstOrDefault(u => u.Guid == target.Guid)
+        /// U -> P: StopAllMovement()
+        /// U -> P: SetTarget(target.Guid)
+        /// U -> P: IsFacing(target.Position)
+        /// U -> P: Face(target.Position)
+        /// U -> P: IsCasting, IsChanneling, Class
+        /// U -> P: Position.DistanceTo(target.Position)
+        /// U -> P: IsMoving
+        /// U -> Wd: GetEquippedItem(EquipSlot.Ranged)
+        /// U -> P: LuaCallWithResults(), LuaCall()
+        /// \enduml
+        /// </remarks>
         public bool Update()
         {
             if (player.DeathsAtWp > 2 && player.CurrWpId != 0)
@@ -258,18 +297,50 @@ namespace BloogBot.AI.SharedStates
         /// <summary>
         /// Tries to cast a spell with the specified name and range.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "TryCastSpell" as T
+        /// participant "TryCastSpellInternal" as TI
+        /// T -> TI: TryCastSpellInternal(name, minRange, maxRange, condition, callback, castOnSelf)
+        /// \enduml
+        /// </remarks>
         public void TryCastSpell(string name, int minRange, int maxRange, bool condition = true, Action callback = null, bool castOnSelf = false) =>
-                    TryCastSpellInternal(name, minRange, maxRange, condition, callback, castOnSelf);
+                            TryCastSpellInternal(name, minRange, maxRange, condition, callback, castOnSelf);
 
         /// <summary>
         /// Tries to cast a spell with the specified name.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// :User: -> TryCastSpell: name, condition, callback, castOnSelf
+        /// TryCastSpell -> TryCastSpellInternal: name, 0, int.MaxValue, condition, callback, castOnSelf
+        /// \enduml
+        /// </remarks>
         public void TryCastSpell(string name, bool condition = true, Action callback = null, bool castOnSelf = false) =>
-                    TryCastSpellInternal(name, 0, int.MaxValue, condition, callback, castOnSelf);
+                            TryCastSpellInternal(name, 0, int.MaxValue, condition, callback, castOnSelf);
 
         /// <summary>
         /// Tries to cast a spell with the given parameters.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// TryCastSpellInternal -> Player: IsSpellReady(name)
+        /// Player --> TryCastSpellInternal: Spell ready status
+        /// TryCastSpellInternal -> Player: GetManaCost(name)
+        /// Player --> TryCastSpellInternal: Mana cost
+        /// TryCastSpellInternal -> Player: IsStunned
+        /// Player --> TryCastSpellInternal: Stunned status
+        /// TryCastSpellInternal -> Player: IsCasting
+        /// Player --> TryCastSpellInternal: Casting status
+        /// TryCastSpellInternal -> Player: IsChanneling
+        /// Player --> TryCastSpellInternal: Channeling status
+        /// TryCastSpellInternal -> ClientHelper: ClientVersion
+        /// ClientHelper --> TryCastSpellInternal: Client version
+        /// TryCastSpellInternal -> Player: LuaCall("CastSpellByName")
+        /// TryCastSpellInternal -> Player: CastSpell(name, targetGuid)
+        /// TryCastSpellInternal -> Action: Invoke()
+        /// \enduml
+        /// </remarks>
         void TryCastSpellInternal(string name, int minRange, int maxRange, bool condition = true, Action callback = null, bool castOnSelf = false)
         {
             var distanceToTarget = player.Position.DistanceTo(target.Position);
@@ -295,6 +366,22 @@ namespace BloogBot.AI.SharedStates
         /// Tries to use an ability with the given name, required resource, condition, and callback.
         /// </summary>
         // shared by 
+        /// <remarks>
+        /// \startuml
+        /// TryUseAbility -> Player: Get Class
+        /// TryUseAbility -> Player: Get Resource
+        /// TryUseAbility -> Player: IsSpellReady(name)
+        /// TryUseAbility -> Player: IsStunned
+        /// TryUseAbility -> Player: IsCasting
+        /// alt ClientVersion is Vanilla
+        ///     TryUseAbility -> Player: LuaCall(CastSpellByName)
+        ///     TryUseAbility -> Callback: Invoke
+        /// else ClientVersion is not Vanilla
+        ///     TryUseAbility -> Player: CastSpell(name, target.Guid)
+        ///     TryUseAbility -> Callback: Invoke
+        /// end
+        /// \enduml
+        /// </remarks>
         public void TryUseAbility(string name, int requiredResource = 0, bool condition = true, Action callback = null)
         {
             int playerResource = 0;
@@ -325,6 +412,26 @@ namespace BloogBot.AI.SharedStates
         /// </summary>
         // https://vanilla-wow.fandom.com/wiki/API_CastSpell
         // The id is counted from 1 through all spell types (tabs on the right side of SpellBookFrame).
+        /// <remarks>
+        /// \startuml
+        /// TryUseAbilityById -> player: Check if spell is ready
+        /// player --> TryUseAbilityById: Spell is ready
+        /// TryUseAbilityById -> player: Check if player has enough rage
+        /// player --> TryUseAbilityById: Player has enough rage
+        /// TryUseAbilityById -> player: Check if condition is true
+        /// player --> TryUseAbilityById: Condition is true
+        /// TryUseAbilityById -> player: Check if player is stunned
+        /// player --> TryUseAbilityById: Player is not stunned
+        /// TryUseAbilityById -> player: Check if player is casting
+        /// player --> TryUseAbilityById: Player is not casting
+        /// TryUseAbilityById -> ClientHelper: Check client version
+        /// ClientHelper --> TryUseAbilityById: Client version is Vanilla
+        /// TryUseAbilityById -> player: Call Lua function to cast spell
+        /// player --> TryUseAbilityById: Spell is casted
+        /// TryUseAbilityById -> callback: Invoke callback function
+        /// callback --> TryUseAbilityById: Callback function invoked
+        /// \enduml
+        /// </remarks>
         public void TryUseAbilityById(string name, int id, int requiredRage = 0, bool condition = true, Action callback = null)
         {
             if (player.IsSpellReady(name) && player.Rage >= requiredRage && condition && !player.IsStunned && !player.IsCasting)
@@ -346,6 +453,13 @@ namespace BloogBot.AI.SharedStates
         /// <summary>
         /// Cleans up the player's movement, pops the top state from the botStates stack, and unsubscribes from the OnErrorMessage event.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// CleanUp -> player: StopAllMovement()
+        /// CleanUp -> botStates: Pop()
+        /// CleanUp -> WoWEventHandler: OnErrorMessage -= OnErrorMessageCallback
+        /// \enduml
+        /// </remarks>
         void CleanUp()
         {
             player.StopAllMovement();
@@ -356,6 +470,26 @@ namespace BloogBot.AI.SharedStates
         /// <summary>
         /// Callback method for handling error messages.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "sender" as S
+        /// participant "OnErrorMessageCallback" as O
+        /// participant "player" as P
+        /// 
+        /// S -> O: OnUiMessageArgs e
+        /// activate O
+        /// O -> O: Check if e.Message == FacingErrorMessage && !backpedaling
+        /// alt e.Message == FacingErrorMessage && !backpedaling
+        ///     O -> O: Set backpedaling = true
+        ///     O -> O: Set backpedalStartTime = Environment.TickCount
+        ///     O -> P: StartMovement(ControlBits.Back)
+        /// else e.Message == LosErrorMessage
+        ///     O -> O: Set noLos = true
+        ///     O -> O: Set noLosStartTime = Environment.TickCount
+        /// end
+        /// deactivate O
+        /// \enduml
+        /// </remarks>
         void OnErrorMessageCallback(object sender, OnUiMessageArgs e)
         {
             if (e.Message == FacingErrorMessage && !backpedaling)

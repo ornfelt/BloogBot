@@ -162,6 +162,34 @@ namespace ElementalShamanBot
         /// <summary>
         /// Updates the combat rotation for the player character.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// Update -> Environment: TickCount
+        /// Update -> player: StopAllMovement
+        /// Update -> Navigation: GetNextWaypoint
+        /// Update -> player: MoveToward
+        /// Update -> botStates: Push(new HealSelfState)
+        /// Update -> botStates: Pop
+        /// Update -> botStates: Push(new RestState)
+        /// Update -> player: SetTarget
+        /// Update -> player: Face
+        /// Update -> player: LuaCall
+        /// Update -> Navigation: GetNextWaypoint
+        /// Update -> player: MoveToward
+        /// Update -> player: StopAllMovement
+        /// Update -> ObjectManager: GetPartyMembers
+        /// Update -> player: SetTarget
+        /// Update -> Update: TryCastSpell(HealingWave)
+        /// Update -> Update: TryCastSpell(LightningBolt)
+        /// Update -> Update: TryCastSpell(FlameShock)
+        /// Update -> Update: TryCastSpell(LightningShield)
+        /// Update -> Update: TryCastSpell(RockbiterWeapon)
+        /// Update -> Update: TryCastSpell(FlametongueWeapon)
+        /// Update -> Update: TryCastSpell(ManaSpringTotem)
+        /// Update -> Update: TryCastSpell(ElementalMastery)
+        /// \enduml
+        /// </remarks>
         public void Update()
         {
             if (Environment.TickCount - noLosStartTime > 1000)
@@ -244,6 +272,37 @@ namespace ElementalShamanBot
         /// <summary>
         /// Tries to cast a spell with the given name if the player meets the necessary conditions.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "TryCastSpell Function" as TCS
+        /// participant "Player" as P
+        /// TCS -> P: IsSpellReady(name)
+        /// activate P
+        /// P --> TCS: Spell Ready Status
+        /// deactivate P
+        /// TCS -> P: GetManaCost(name)
+        /// activate P
+        /// P --> TCS: Mana Cost
+        /// deactivate P
+        /// TCS -> P: IsStunned
+        /// activate P
+        /// P --> TCS: Stunned Status
+        /// deactivate P
+        /// TCS -> P: IsCasting
+        /// activate P
+        /// P --> TCS: Casting Status
+        /// deactivate P
+        /// TCS -> P: IsChanneling
+        /// activate P
+        /// P --> TCS: Channeling Status
+        /// deactivate P
+        /// TCS -> P: LuaCall(CastSpellByName(name))
+        /// activate P
+        /// P --> TCS: Spell Cast
+        /// deactivate P
+        /// TCS -> TCS: callback?.Invoke()
+        /// \enduml
+        /// </remarks>
         void TryCastSpell(string name, bool condition = true, Action callback = null)
         {
             var distanceToTarget = player.Position.DistanceTo(target.Position);
@@ -272,6 +331,17 @@ namespace ElementalShamanBot
         /// <summary>
         /// Event handler for error messages.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// OnErrorMessageCallback -> sender: object
+        /// OnErrorMessageCallback -> e: OnUiMessageArgs
+        /// OnErrorMessageCallback --> e: Message
+        /// e --> LosErrorMessage: ==
+        /// LosErrorMessage --> noLos: ==
+        /// noLos --> true
+        /// noLosStartTime --> Environment: TickCount
+        /// \enduml
+        /// </remarks>
         void OnErrorMessageCallback(object sender, OnUiMessageArgs e)
         {
             if (e.Message == LosErrorMessage)

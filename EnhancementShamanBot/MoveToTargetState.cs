@@ -59,6 +59,29 @@ namespace EnhancementShamanBot
         /// <summary>
         /// Updates the current state of the bot. If the target is tapped by another player or if there are aggressors targeting the target, the bot will remove all waiting actions, pop the current state from the stack, and return. Otherwise, it checks if the player is stuck. If the player is within a certain distance to the target, not casting a spell, the LightningBolt spell is ready, and the player has line of sight with the target, the bot will attempt to pull the target using the LightningBolt spell. If the player is moving, it will stop all movement. If a certain delay has passed, the bot will cast the LightningBolt spell and if successful, stop all movement, remove all waiting actions, pop the current state from the stack, and push a new CombatState onto the stack. If none of the above conditions are met, the bot will calculate the next waypoint using the Navigation class and move towards it.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// Update -> target: Check TappedByOther or Aggressors
+        /// target --> Update: Return status
+        /// Update -> stuckHelper: CheckIfStuck
+        /// stuckHelper --> Update: Return status
+        /// Update -> player: Check Position, IsCasting, IsSpellReady, InLosWith
+        /// player --> Update: Return status
+        /// Update -> player: StopAllMovement
+        /// Update -> Wait: For "PullWithLightningBoltDelay"
+        /// Wait --> Update: Return status
+        /// Update -> player: LuaCall, Check IsInCombat
+        /// player --> Update: Return status
+        /// Update -> player: StopAllMovement
+        /// Update -> Wait: RemoveAll
+        /// Update -> botStates: Pop
+        /// Update -> botStates: Push new CombatState
+        /// Update -> Navigation: GetNextWaypoint
+        /// Navigation --> Update: Return nextWaypoint
+        /// Update -> player: MoveToward nextWaypoint
+        /// \enduml
+        /// </remarks>
         public void Update()
         {
             if (target.TappedByOther || (ObjectManager.Aggressors.Count() > 0 && !ObjectManager.Aggressors.Any(a => a.Guid == target.Guid)))

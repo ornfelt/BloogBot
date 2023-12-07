@@ -76,6 +76,35 @@ namespace BloogBot.AI.SharedStates
         /// <summary>
         /// Updates the current state of the player.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// player -> player: Check Distance to Target
+        /// player -> Navigation: GetNextWaypoint
+        /// player -> player: MoveToward(nextWaypoint)
+        /// player -> stuckHelper: CheckIfStuck()
+        /// player -> player: Increment stuckCount
+        /// player -> player: Check if Target CanBeLooted
+        /// player -> player: StopAllMovement()
+        /// player -> target: Interact()
+        /// player -> player: Change currentState to RightClicked
+        /// player -> player: Check State Transition Conditions
+        /// player -> player: StopAllMovement()
+        /// botStates -> botStates: Pop()
+        /// botStates -> botStates: Push(new EquipBagsState)
+        /// player -> container: Get nearestWaypoint
+        /// botStates -> botStates: Push(new MoveToPositionState)
+        /// player -> player: Check if currentState is RightClicked
+        /// player -> LootFrame: Create new LootFrame
+        /// player -> player: Change currentState to LootFrameReady
+        /// player -> player: Check if currentState is LootFrameReady
+        /// player -> lootFrame: Get itemToLoot
+        /// player -> itemToLoot: Check itemQuality
+        /// player -> DiscordClientWrapper: SendItemNotification
+        /// player -> itemToLoot: Loot()
+        /// player -> player: Increment lootIndex
+        /// \enduml
+        /// </remarks>
         public void Update()
         {
             if (player.Position.DistanceTo(target.Position) >= 5)

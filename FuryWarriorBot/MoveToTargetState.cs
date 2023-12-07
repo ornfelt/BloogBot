@@ -53,6 +53,34 @@ namespace FuryWarriorBot
         /// <summary>
         /// Updates the current state of the bot.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// Update -> Target: Check TappedByOther or FindClosestTarget
+        /// Target --> Update: Return Guid
+        /// Update -> Player: StopAllMovement
+        /// Update -> BotStates: Pop
+        /// Update -> Player: Check IsInCombat
+        /// Player --> Update: Return IsInCombat status
+        /// Update -> Player: StopAllMovement
+        /// Update -> BotStates: Pop
+        /// Update -> BotStates: Push new CombatState
+        /// Update -> StuckHelper: CheckIfStuck
+        /// Update -> Player: Get Position
+        /// Player --> Update: Return Position
+        /// Update -> Target: Get Position
+        /// Target --> Update: Return Position
+        /// Update -> Player: Check IsCasting, IsSpellReady, InLosWith
+        /// Player --> Update: Return status
+        /// Update -> Player: LuaCall CastSpellByName
+        /// Update -> Player: StopAllMovement
+        /// Update -> BotStates: Pop
+        /// Update -> BotStates: Push new CombatState
+        /// Update -> Navigation: GetNextWaypoint
+        /// Navigation --> Update: Return nextWaypoint
+        /// Update -> Player: MoveToward nextWaypoint
+        /// \enduml
+        /// </remarks>
         public void Update()
         {
             if (target.TappedByOther || container.FindClosestTarget()?.Guid != target.Guid)

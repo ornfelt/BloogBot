@@ -84,6 +84,26 @@ namespace AfflictionWarlockBot
         /// If the player has a wand equipped and their mana is low, or the target's health is between 20% and 60%, and the player is not channeling or casting, uses the wand.
         /// Otherwise, tries to cast various spells based on different conditions.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// ObjectManager -> Pet: Attack()
+        /// if (target.HealthPercent <= 20) then
+        ///     player -> LuaCall: TurnOffWandLuaScript
+        ///     player -> TryCastSpell: DrainSoul, 0, 29
+        /// endif
+        /// if (player.ManaPercent <= 10 || (target.HealthPercent <= 60 && target.HealthPercent > 20) && !player.IsChanneling && !player.IsCasting) then
+        ///     player -> LuaCall: WandLuaScript
+        /// else
+        ///     player -> TryCastSpell: DeathCoil, 0, 30, (target.IsCasting || target.IsChanneling) && target.HealthPercent > 20
+        ///     player -> TryCastSpell: LifeTap, 0, int.MaxValue, player.HealthPercent > 85 && player.ManaPercent < 80
+        ///     player -> TryCastSpell: CurseOfAgony, 0, 30, !target.HasDebuff(CurseOfAgony) && target.HealthPercent > 90
+        ///     player -> TryCastSpell: Immolate, 0, 30, !target.HasDebuff(Immolate) && target.HealthPercent > 30
+        ///     player -> TryCastSpell: Corruption, 0, 30, !target.HasDebuff(Corruption) && target.HealthPercent > 30
+        ///     player -> TryCastSpell: SiphonLife, 0, 30, !target.HasDebuff(SiphonLife) && target.HealthPercent > 50
+        ///     player -> TryCastSpell: ShadowBolt, 0, 30, target.HealthPercent > 40 || wand == null
+        /// endif
+        /// \enduml
+        /// </remarks>
         public new void Update()
         {
             if (base.Update())

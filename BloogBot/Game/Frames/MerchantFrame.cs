@@ -58,12 +58,31 @@ namespace BloogBot.Game.Frames
         /// <summary>
         /// Sells an item by its GUID to an NPC.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "Function Caller" as A
+        /// participant "Functions" as B
+        /// A -> B: SellItemByGuid(itemCount, npcGuid, itemGuid)
+        /// \enduml
+        /// </remarks>
         public void SellItemByGuid(uint itemCount, ulong npcGuid, ulong itemGuid) =>
-                    Functions.SellItemByGuid(itemCount, npcGuid, itemGuid);
+                            Functions.SellItemByGuid(itemCount, npcGuid, itemGuid);
 
         /// <summary>
         /// Buys an item by its name from a vendor.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "BuyItemByName Function" as B
+        /// participant "Items Collection" as I
+        /// participant "Functions" as F
+        /// B -> I: Get item by name
+        /// activate I
+        /// I --> B: Return item
+        /// deactivate I
+        /// B -> F: BuyVendorItem(vendorGuid, item.ItemId, quantity)
+        /// \enduml
+        /// </remarks>
         public void BuyItemByName(ulong vendorGuid, string itemName, int quantity)
         {
             var item = items.Single(i => i.Name == itemName);
@@ -73,11 +92,24 @@ namespace BloogBot.Game.Frames
         /// <summary>
         /// Repairs all items.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "Functions" as F
+        /// participant "RepairAll" as R
+        /// R -> F: LuaCall("RepairAllItems()")
+        /// \enduml
+        /// </remarks>
         public void RepairAll() => Functions.LuaCall("RepairAllItems()");
 
         /// <summary>
         /// Closes the merchant frame.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// :User: -> CloseMerchantFrame: Call function
+        /// CloseMerchantFrame -> Functions: LuaCall("CloseMerchant()")
+        /// \enduml
+        /// </remarks>
         public void CloseMerchantFrame() => Functions.LuaCall("CloseMerchant()");
     }
 

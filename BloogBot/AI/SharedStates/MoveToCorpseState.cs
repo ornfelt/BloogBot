@@ -74,6 +74,32 @@ namespace BloogBot.AI.SharedStates
         /// <summary>
         /// Updates the state of the object.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// Update -> Update: Check if initialized
+        /// Update -> Container: DisableTeleportChecker
+        /// Update -> StuckHelper: CheckIfStuck
+        /// StuckHelper --> Update: Return result
+        /// Update -> Console: Write stuckCount
+        /// Update -> Player: Check Position DistanceTo2D
+        /// Player --> Update: Return result
+        /// Update -> Player: ForcedWpPath
+        /// Update -> Player: StopAllMovement
+        /// Update -> BotStates: Pop
+        /// Update -> Update: Check HasReachedWpCloseToCorpse
+        /// Update -> Update: Set HasReachedWpCloseToCorpse
+        /// Update -> Console: Write HasReachedWpCloseToCorpse
+        /// Update -> Navigation: GetNextWaypoint
+        /// Navigation --> Update: Return nextWaypoint
+        /// Update -> Update: Check if walkingOnWater
+        /// Update -> Player: StartMovement
+        /// Update -> Update: Check if stop walkingOnWater
+        /// Update -> Player: StopMovement
+        /// Update -> Player: MoveToward
+        /// Update -> Player: LuaCall
+        /// \enduml
+        /// </remarks>
         public void Update()
         {
             if (!initialized)
@@ -133,6 +159,22 @@ namespace BloogBot.AI.SharedStates
         /// Try to move to corpse with a path based on waypoints.
         /// </summary>
         // Try to move to corpse with a path based on WPs
+        /// <remarks>
+        /// \startuml
+        /// container -> hotspot: GetCurrentHotspot()
+        /// hotspot -> player: OrderBy(w => player.Position.DistanceTo(w))
+        /// hotspot -> player: OrderBy(w => player.CorpsePosition.DistanceTo(w)).FirstOrDefault()
+        /// player -> hotspot: Where(x => x.ID == player.CurrWpId).FirstOrDefault()
+        /// player -> player: Position.DistanceTo(wpCloseToCorpse) < 20 || stuckCount > 20 || Position.DistanceTo2D(player.CorpsePosition) < 20
+        /// player -> player: ForcedWpPath.Count == 0 && currWp != wpCloseToCorpse
+        /// player -> Console: WriteLine("New WP path (to corpse):")
+        /// player -> player: Position.DistanceTo(currWp) < 3
+        /// hotspot -> player: Where(x => x.ID == player.ForcedWpPath.First()).FirstOrDefault()
+        /// player -> player: ForcedWpPath.Remove(player.ForcedWpPath.First())
+        /// player -> player: CurrWpId = currWp.ID
+        /// player -> player: MoveToward(currWp)
+        /// \enduml
+        /// </remarks>
         public bool HasReachedWpCloseToCorpse()
         {
             var hotspot = container.GetCurrentHotspot();
@@ -168,6 +210,61 @@ namespace BloogBot.AI.SharedStates
         /// <summary>
         /// Finds a path from a starting waypoint ID to an ending waypoint ID using a breadth-first search algorithm.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "ForcedWpPathToCorpse()" as F
+        /// participant "Hotspot" as H
+        /// participant "Queue" as Q
+        /// participant "HashSet" as HS
+        /// participant "Waypoint" as W
+        /// 
+        /// F -> H: GetCurrentHotspot()
+        /// activate H
+        /// H --> F: Return current hotspot
+        /// deactivate H
+        /// 
+        /// F -> Q: Enqueue(startId)
+        /// activate Q
+        /// Q --> F: Enqueue successful
+        /// deactivate Q
+        /// 
+        /// loop while queue.Count > 0
+        ///     F -> Q: Dequeue()
+        ///     activate Q
+        ///     Q --> F: Return currentPath
+        ///     deactivate Q
+        /// 
+        ///     F -> H: Waypoints.Where(x => x.ID == currentId).FirstOrDefault()
+        ///     activate H
+        ///     H --> F: Return currentWaypoint
+        ///     deactivate H
+        /// 
+        ///     alt if currentId == endId
+        ///         F --> F: return currentPath
+        ///     else if !visited.Contains(currentId)
+        ///         F -> HS: Add(currentId)
+        ///         activate HS
+        ///         HS --> F: Add successful
+        ///         deactivate HS
+        /// 
+        ///         F -> W: Parse and split links
+        ///         activate W
+        ///         W --> F: Return linkSplit
+        ///         deactivate W
+        /// 
+        ///         loop for each linkWp in linkSplit
+        ///             alt if !visited.Contains(linkId)
+        ///                 F -> Q: Enqueue(newPath)
+        ///                 activate Q
+        ///                 Q --> F: Enqueue successful
+        ///                 deactivate Q
+        ///             end
+        ///         end
+        ///     end
+        /// end
+        /// F --> F: return currentPath
+        /// \enduml
+        /// </remarks>
         private List<int> ForcedWpPathToCorpse(int startId, int endId)
         {
             var hotspot = container.GetCurrentHotspot();

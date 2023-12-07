@@ -38,6 +38,12 @@ namespace FeralDruidBot
         /// <summary>
         /// Updates the object.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "Update Method" as Update
+        /// Update -> Update: TODO
+        /// \enduml
+        /// </remarks>
         public void Update()
         {
             // TODO

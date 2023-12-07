@@ -16,12 +16,27 @@ namespace BloogBot.Game
         /// <summary>
         /// Calls the BuyVendorItem function from the FastCall.dll library to purchase a vendor item.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "FastCall.dll" as DLL
+        /// participant "BuyVendorItemFunction" as BVI
+        /// DLL -> BVI: Load Function
+        /// BVI -> DLL: BuyVendorItem(itemId, quantity, vendorGuid, ptr)
+        /// \enduml
+        /// </remarks>
         [DllImport("FastCall.dll", EntryPoint = "BuyVendorItem")]
         static extern void BuyVendorItemFunction(int itemId, int quantity, ulong vendorGuid, IntPtr ptr);
 
         /// <summary>
         /// Buys a vendor item with the specified vendor GUID, item ID, and quantity.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "BuyVendorItem" as B
+        /// participant "BuyVendorItemFunction" as BF
+        /// B -> BF: BuyVendorItemFunction(itemId, quantity, vendorGuid, (IntPtr)MemoryAddresses.BuyVendorItemFunPtr)
+        /// \enduml
+        /// </remarks>
         public void BuyVendorItem(ulong vendorGuid, int itemId, int quantity)
         {
             BuyVendorItemFunction(itemId, quantity, vendorGuid, (IntPtr)MemoryAddresses.BuyVendorItemFunPtr);
@@ -44,6 +59,14 @@ namespace BloogBot.Game
         /// <summary>
         /// Casts a spell at the specified position.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// CastAtPosition -> MemoryManager: WriteByte((IntPtr)0xCECAC0, 0)
+        /// CastAtPosition --> LuaCall: CastSpellByName(spellName)
+        /// CastAtPosition -> position: ToXYZ()
+        /// CastAtPosition --> CastAtPositionFunction: ref pos
+        /// \enduml
+        /// </remarks>
         public void CastAtPosition(string spellName, Position position)
         {
             MemoryManager.WriteByte((IntPtr)0xCECAC0, 0);
@@ -55,6 +78,14 @@ namespace BloogBot.Game
         /// <summary>
         /// Casts a spell by its ID on a target with the specified GUID.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "Caller" as C
+        /// participant "CastSpellById" as CS
+        /// C -> CS: CastSpellById(spellId, targetGuid)
+        /// CS --> C: Throws NotImplementedException
+        /// \enduml
+        /// </remarks>
         public int CastSpellById(int spellId, ulong targetGuid)
         {
             // not used in vanilla
@@ -64,6 +95,13 @@ namespace BloogBot.Game
         /// <summary>
         /// Dismounts the specified unit.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// actor User
+        /// User -> Dismount: unitPtr
+        /// note right: Not implemented yet
+        /// \enduml
+        /// </remarks>
         public int Dismount(IntPtr unitPtr)
         {
             // TODO
@@ -73,6 +111,14 @@ namespace BloogBot.Game
         /// <summary>
         /// Calls the EnumerateVisibleObjects function from the FastCall.dll library.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "FastCall.dll" as DLL
+        /// participant "EnumerateVisibleObjectsFunction" as EVF
+        /// DLL -> EVF: Load function
+        /// EVF -> DLL: Pass parameters (callback, filter, ptr)
+        /// \enduml
+        /// </remarks>
         [DllImport("FastCall.dll", EntryPoint = "EnumerateVisibleObjects")]
         static extern void EnumerateVisibleObjectsFunction(IntPtr callback, int filter, IntPtr ptr);
 
@@ -80,6 +126,13 @@ namespace BloogBot.Game
         /// Enumerates the visible objects using the specified callback and filter.
         /// </summary>
         // what does this do? [HandleProcessCorruptedStateExceptions]
+        /// <remarks>
+        /// \startuml
+        /// actor User
+        /// User -> EnumerateVisibleObjects: callback, filter
+        /// EnumerateVisibleObjects -> EnumerateVisibleObjectsFunction: callback, filter, MemoryAddresses.EnumerateVisibleObjectsFunPtr
+        /// \enduml
+        /// </remarks>
         public void EnumerateVisibleObjects(IntPtr callback, int filter)
         {
             EnumerateVisibleObjectsFunction(callback, filter, (IntPtr)MemoryAddresses.EnumerateVisibleObjectsFunPtr);
@@ -101,6 +154,14 @@ namespace BloogBot.Game
         /// <summary>
         /// Retrieves the rank of a creature based on its unit pointer.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// actor Client
+        /// participant "GetCreatureRankFunction" as GCRF
+        /// Client -> GCRF : unitPtr
+        /// GCRF --> Client : return rank
+        /// \enduml
+        /// </remarks>
         public int GetCreatureRank(IntPtr unitPtr)
         {
             return GetCreatureRankFunction(unitPtr);
@@ -121,6 +182,15 @@ namespace BloogBot.Game
         /// <summary>
         /// Gets the creature type of the specified unit.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "unitPtr" as A
+        /// participant "GetCreatureTypeFunction" as B
+        /// participant "CreatureType" as C
+        /// A -> B: GetCreatureTypeFunction(unitPtr)
+        /// B --> C: return (CreatureType)
+        /// \enduml
+        /// </remarks>
         public CreatureType GetCreatureType(IntPtr unitPtr)
         {
             return (CreatureType)GetCreatureTypeFunction(unitPtr);
@@ -147,6 +217,13 @@ namespace BloogBot.Game
         /// <summary>
         /// Retrieves the cache entry for a specific item.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "GetItemCacheEntryFunction" as G
+        /// participant "GetItemCacheEntry" as GCE
+        /// GCE -> G: GetItemCacheEntryFunction((IntPtr)MemoryAddresses.ItemCacheEntryBasePtr, itemId, IntPtr.Zero, 0, 0, (char)0)
+        /// \enduml
+        /// </remarks>
         public IntPtr GetItemCacheEntry(int itemId, ulong guid)
         {
             return GetItemCacheEntryFunction((IntPtr)MemoryAddresses.ItemCacheEntryBasePtr, itemId, IntPtr.Zero, 0, 0, (char)0);
@@ -167,6 +244,18 @@ namespace BloogBot.Game
         /// <summary>
         /// Retrieves the pointer to the object with the specified GUID.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "Caller" as C
+        /// participant "GetObjectPtr" as G
+        /// participant "GetObjectPtrFunction" as F
+        /// 
+        /// C -> G: GetObjectPtr(guid)
+        /// G -> F: GetObjectPtrFunction(guid)
+        /// F --> G: return IntPtr
+        /// G --> C: return IntPtr
+        /// \enduml
+        /// </remarks>
         public IntPtr GetObjectPtr(ulong guid)
         {
             return GetObjectPtrFunction(guid);
@@ -187,6 +276,14 @@ namespace BloogBot.Game
         /// <summary>
         /// Retrieves the player's GUID.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "Caller" as C
+        /// participant "GetPlayerGuid" as G
+        /// C -> G: Call GetPlayerGuid()
+        /// G -> C: Return PlayerGuid
+        /// \enduml
+        /// </remarks>
         public ulong GetPlayerGuid()
         {
             return GetPlayerGuidFunction();
@@ -195,6 +292,14 @@ namespace BloogBot.Game
         /// <summary>
         /// Retrieves the spell database entry at the specified index.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "Caller" as C
+        /// participant "GetSpellDBEntry" as G
+        /// C -> G: GetSpellDBEntry(index)
+        /// G -> C: throw new NotImplementedException()
+        /// \enduml
+        /// </remarks>
         public Spell GetSpellDBEntry(int index)
         {
             // we don't use this in Vanilla, because we can get the spell entry directly from a static memory address
@@ -204,12 +309,27 @@ namespace BloogBot.Game
         /// <summary>
         /// Calls the GetText function from the FastCall.dll library, passing a variable name and a pointer, and returns an IntPtr.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "FastCall.dll" as F
+        /// participant "Program" as P
+        /// P -> F : GetTextFunction(varName, ptr)
+        /// \enduml
+        /// </remarks>
         [DllImport("FastCall.dll", EntryPoint = "GetText")]
         static extern IntPtr GetTextFunction(string varName, IntPtr ptr);
 
         /// <summary>
         /// Retrieves the text associated with the specified variable name.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "Caller" as C
+        /// participant "GetText" as G
+        /// C -> G: GetText(varName)
+        /// G -> C: return IntPtr
+        /// \enduml
+        /// </remarks>
         public IntPtr GetText(string varName)
         {
             return GetTextFunction(varName, (IntPtr)MemoryAddresses.GetTextFunPtr);
@@ -230,6 +350,14 @@ namespace BloogBot.Game
         /// <summary>
         /// Gets the reaction between two units.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// actor "unitPtr1" as a
+        /// actor "unitPtr2" as b
+        /// a -> b: GetUnitReactionFunction(unitPtr1, unitPtr2)
+        /// b --> a: return (UnitReaction)
+        /// \enduml
+        /// </remarks>
         public UnitReaction GetUnitReaction(IntPtr unitPtr1, IntPtr unitPtr2)
         {
             return (UnitReaction)GetUnitReactionFunction(unitPtr1, unitPtr2);
@@ -238,6 +366,16 @@ namespace BloogBot.Game
         /// <summary>
         /// Calls the Intersect2 function from the FastCall.dll library to calculate the intersection point and distance between two XYZ points.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// note over FastCall.dll: DLL Import
+        /// XYZ -> FastCall.dll: p1, p2
+        /// FastCall.dll -> XYZ: intersection, distance
+        /// FastCall.dll -> uint: flags
+        /// FastCall.dll -> IntPtr: Ptr
+        /// FastCall.dll --> bool: return
+        /// \enduml
+        /// </remarks>
         [DllImport("FastCall.dll", EntryPoint = "Intersect2")]
         static extern bool IntersectFunction(ref XYZ p1, ref XYZ p2, ref XYZ intersection, ref float distance, uint flags, IntPtr Ptr);
 
@@ -248,6 +386,19 @@ namespace BloogBot.Game
         /// <param name="start">The start of the raycast.</param>
         /// <param name="end">The end of the raycast.</param>
         /// <returns>The result of the collision check.</returns>
+        /// <remarks>
+        /// \startuml
+        /// Position -> XYZ: start
+        /// Position -> XYZ: end
+        /// XYZ -> XYZ: intersection
+        /// Position -> Position: DistanceTo(end)
+        /// Position -> XYZ: p1
+        /// Position -> XYZ: p2
+        /// XYZ -> XYZ: IntersectFunction(ref p1, ref p2, ref intersection, ref distance, 0x00100111, (IntPtr)MemoryAddresses.IntersectFunPtr)
+        /// XYZ -> XYZ: collisionDetected
+        /// XYZ -> XYZ: return
+        /// \enduml
+        /// </remarks>
         public XYZ Intersect(Position start, Position end)
         {
             var intersection = new XYZ();
@@ -283,6 +434,14 @@ namespace BloogBot.Game
         /// <summary>
         /// Checks if a spell is currently on cooldown.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// User -> IsSpellOnCooldown : spellId
+        /// IsSpellOnCooldown -> IsSpellOnCooldownFunction : (IntPtr)0x00CECAEC, spellId, 0, ref cooldownDuration, 0, false
+        /// IsSpellOnCooldownFunction --> IsSpellOnCooldown : cooldownDuration
+        /// IsSpellOnCooldown --> User : cooldownDuration != 0
+        /// \enduml
+        /// </remarks>
         public bool IsSpellOnCooldown(int spellId)
         {
             var cooldownDuration = 0;
@@ -300,6 +459,14 @@ namespace BloogBot.Game
         /// <summary>
         /// Jumps to the next position.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        ///  participant " " as Caller
+        ///  participant "Jump Method" as Jump
+        ///  Caller -> Jump : Call Jump()
+        ///  Jump --> Caller : Throw NotImplementedException
+        /// \enduml
+        /// </remarks>
         public void Jump()
         {
             // TODO
@@ -309,12 +476,26 @@ namespace BloogBot.Game
         /// <summary>
         /// Calls the LootSlotFunction from the FastCall.dll library to retrieve the loot from a specified slot.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "FastCall.dll" as DLL
+        /// participant "Program" as P
+        /// P -> DLL: LootSlotFunction(slot, ptr)
+        /// \enduml
+        /// </remarks>
         [DllImport("FastCall.dll", EntryPoint = "LootSlot")]
         static extern byte LootSlotFunction(int slot, IntPtr ptr);
 
         /// <summary>
         /// Loots the specified slot.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// actor User
+        /// User -> LootSlot: slot
+        /// LootSlot -> LootSlotFunction: slot, MemoryAddresses.LootSlotFunPtr
+        /// \enduml
+        /// </remarks>
         public void LootSlot(int slot)
         {
             LootSlotFunction(slot, (IntPtr)MemoryAddresses.LootSlotFunPtr);
@@ -323,12 +504,26 @@ namespace BloogBot.Game
         /// <summary>
         /// Calls a Lua function with the specified code and pointer.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "FastCall.dll" as F
+        /// participant "Program" as P
+        /// P -> F: LuaCallFunction(code, ptr)
+        /// \enduml
+        /// </remarks>
         [DllImport("FastCall.dll", EntryPoint = "LuaCall")]
         static extern void LuaCallFunction(string code, int ptr);
 
         /// <summary>
         /// Calls a Lua function with the given code.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "LuaCall Function" as A
+        /// participant "LuaCallFunction Function" as B
+        /// A -> B: code, MemoryAddresses.LuaCallFunPtr
+        /// \enduml
+        /// </remarks>
         public void LuaCall(string code)
         {
             LuaCallFunction(code, MemoryAddresses.LuaCallFunPtr);
@@ -349,6 +544,14 @@ namespace BloogBot.Game
         /// <summary>
         /// Releases a corpse by calling the ReleaseCorpseFunction with the specified pointer. If an AccessViolationException occurs, it is caught and a message is printed to the console indicating that this is most likely a transient error. The bot should continue trying to release and recover from this error.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// Application -> ReleaseCorpse: ptr
+        /// ReleaseCorpse -> ReleaseCorpseFunction: ptr
+        /// ReleaseCorpseFunction --> ReleaseCorpse: AccessViolationException
+        /// ReleaseCorpse -> Console: "AccessViolationException occurred while trying to release corpse. Most likely, this is due to a transient error that caused the player pointer to temporarily equal IntPtr.Zero. The bot should keep trying to release and recover from this error."
+        /// \enduml
+        /// </remarks>
         [HandleProcessCorruptedStateExceptions]
         public void ReleaseCorpse(IntPtr ptr)
         {
@@ -376,6 +579,11 @@ namespace BloogBot.Game
         /// <summary>
         /// Retrieves the corpse.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// RetrieveCorpse -> RetrieveCorpseFunction : call
+        /// \enduml
+        /// </remarks>
         public void RetrieveCorpse()
         {
             RetrieveCorpseFunction();
@@ -396,6 +604,14 @@ namespace BloogBot.Game
         /// <summary>
         /// Sets the target using the specified GUID.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "Caller" as C
+        /// participant "SetTarget" as ST
+        /// C -> ST: SetTarget(guid)
+        /// ST -> ST: SetTargetFunction(guid)
+        /// \enduml
+        /// </remarks>
         public void SetTarget(ulong guid)
         {
             SetTargetFunction(guid);
@@ -404,12 +620,26 @@ namespace BloogBot.Game
         /// <summary>
         /// Calls the SellItemByGuid function from the FastCall.dll library to sell an item by its GUID.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "FastCall.dll" as A
+        /// participant "Program" as B
+        /// B -> A: SellItemByGuidFunction(itemCount, npcGuid, itemGuid, sellItemFunPtr)
+        /// \enduml
+        /// </remarks>
         [DllImport("FastCall.dll", EntryPoint = "SellItemByGuid")]
         static extern void SellItemByGuidFunction(uint itemCount, ulong npcGuid, ulong itemGuid, IntPtr sellItemFunPtr);
 
         /// <summary>
         /// Sells an item by its unique identifier.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "Function : SellItemByGuid" as F
+        /// participant "Function : SellItemByGuidFunction" as S
+        /// F -> S: SellItemByGuidFunction(itemCount, vendorGuid, itemGuid, (IntPtr)MemoryAddresses.SellItemByGuidFunPtr)
+        /// \enduml
+        /// </remarks>
         public void SellItemByGuid(uint itemCount, ulong vendorGuid, ulong itemGuid)
         {
             SellItemByGuidFunction(itemCount, vendorGuid, itemGuid, (IntPtr)MemoryAddresses.SellItemByGuidFunPtr);
@@ -435,6 +665,13 @@ namespace BloogBot.Game
         /// <summary>
         /// Sends a movement update to the specified player.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "playerPtr" as A
+        /// participant "SendMovementUpdateFunction" as B
+        /// A -> B: SendMovementUpdateFunction(playerPtr, (IntPtr)0x00BE1E2C, opcode, 0, 0)
+        /// \enduml
+        /// </remarks>
         public void SendMovementUpdate(IntPtr playerPtr, int opcode)
         {
             SendMovementUpdateFunction(playerPtr, (IntPtr)0x00BE1E2C, opcode, 0, 0);
@@ -455,6 +692,20 @@ namespace BloogBot.Game
         /// <summary>
         /// Sets the control bit of a device.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "SetControlBit Function" as SCB
+        /// participant "MemoryManager" as MM
+        /// participant "SetControlBitDevicePtr" as SCDP
+        /// 
+        /// SCB -> MM: ReadIntPtr((IntPtr)MemoryAddresses.SetControlBitDevicePtr)
+        /// activate MM
+        /// MM --> SCB: ptr
+        /// deactivate MM
+        /// 
+        /// SCB -> SCB: SetControlBitFunction(ptr, bit, state, tickCount)
+        /// \enduml
+        /// </remarks>
         public void SetControlBit(int bit, int state, int tickCount)
         {
             var ptr = MemoryManager.ReadIntPtr((IntPtr)MemoryAddresses.SetControlBitDevicePtr);
@@ -476,6 +727,13 @@ namespace BloogBot.Game
         /// <summary>
         /// Sets the facing direction of the player.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "SetFacingFunction" as SFF
+        /// participant "SetFacing" as SF
+        /// SF -> SFF: playerSetFacingPtr, facing
+        /// \enduml
+        /// </remarks>
         public void SetFacing(IntPtr playerSetFacingPtr, float facing)
         {
             SetFacingFunction(playerSetFacingPtr, facing);
@@ -496,6 +754,13 @@ namespace BloogBot.Game
         /// <summary>
         /// Uses the specified item.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// actor User
+        /// User -> UseItem : itemPtr
+        /// UseItem -> UseItemFunction : itemPtr, unused1, 0
+        /// \enduml
+        /// </remarks>
         public void UseItem(IntPtr itemPtr)
         {
             ulong unused1 = 0;
@@ -505,6 +770,15 @@ namespace BloogBot.Game
         /// <summary>
         /// Retrieves a pointer to the specified row in the table.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// actor User
+        /// User -> GetRow: tablePtr, index
+        /// note right: User calls GetRow with a tablePtr and an index.
+        /// GetRow -> NotImplementedException: throw
+        /// note right: GetRow throws NotImplementedException.
+        /// \enduml
+        /// </remarks>
         public IntPtr GetRow(IntPtr tablePtr, int index)
         {
             throw new NotImplementedException();
@@ -513,6 +787,15 @@ namespace BloogBot.Game
         /// <summary>
         /// Gets the localized row from the specified table at the given index.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// actor User
+        /// User -> GetLocalizedRow : tablePtr, index, rowPtr
+        /// note right: User calls GetLocalizedRow with\na tablePtr, index, and rowPtr.
+        /// GetLocalizedRow -> NotImplementedException : throw
+        /// note right: GetLocalizedRow throws a\nNotImplementedException.
+        /// \enduml
+        /// </remarks>
         public IntPtr GetLocalizedRow(IntPtr tablePtr, int index, IntPtr rowPtr)
         {
             throw new NotImplementedException();
@@ -521,6 +804,17 @@ namespace BloogBot.Game
         /// <summary>
         /// Gets the aura count for the specified unit pointer.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// actor Client
+        /// participant "GetAuraCount()" as G
+        /// 
+        /// Client -> G: unitPtr
+        /// note right: Client calls GetAuraCount() with unitPtr
+        /// G --> Client: int
+        /// note right: Returns an integer representing the aura count
+        /// \enduml
+        /// </remarks>
         public int GetAuraCount(IntPtr unitPtr)
         {
             throw new NotImplementedException();
@@ -529,6 +823,16 @@ namespace BloogBot.Game
         /// <summary>
         /// Gets the pointer to the aura at the specified index for the given unit.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "unitPtr" as A
+        /// participant "GetAuraPointer" as B
+        /// participant "index" as C
+        /// A -> B: Request Aura Pointer
+        /// B -> C: Pass index
+        /// note right: Not Implemented Exception
+        /// \enduml
+        /// </remarks>
         public IntPtr GetAuraPointer(IntPtr unitPtr, int index)
         {
             throw new NotImplementedException();

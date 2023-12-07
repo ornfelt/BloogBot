@@ -50,6 +50,35 @@ namespace RetributionPaladinBot
         /// <summary>
         /// Updates the player's buffs by casting appropriate spells.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// Update -> Player: KnowsSpell(BlessingOfMight)
+        /// Player --> Update: Response
+        /// Update -> Player: HasBuff(BlessingOfMight)
+        /// Player --> Update: Response
+        /// Update -> Player: HasBuff(BlessingOfKings)
+        /// Player --> Update: Response
+        /// Update -> Player: HasBuff(BlessingOfSanctuary)
+        /// Player --> Update: Response
+        /// Update -> BotStates: Pop()
+        /// Update -> Player: KnowsSpell(BlessingOfMight)
+        /// Player --> Update: Response
+        /// Update -> Player: KnowsSpell(BlessingOfKings)
+        /// Player --> Update: Response
+        /// Update -> Player: KnowsSpell(BlessingOfSanctuary)
+        /// Player --> Update: Response
+        /// Update -> Update: TryCastSpell(BlessingOfMight)
+        /// Update -> Player: KnowsSpell(BlessingOfKings)
+        /// Player --> Update: Response
+        /// Update -> Player: KnowsSpell(BlessingOfSanctuary)
+        /// Player --> Update: Response
+        /// Update -> Update: TryCastSpell(BlessingOfKings)
+        /// Update -> Player: KnowsSpell(BlessingOfSanctuary)
+        /// Player --> Update: Response
+        /// Update -> Update: TryCastSpell(BlessingOfSanctuary)
+        /// \enduml
+        /// </remarks>
         public void Update()
         {
             if (!player.KnowsSpell(BlessingOfMight) || player.HasBuff(BlessingOfMight) || player.HasBuff(BlessingOfKings) || player.HasBuff(BlessingOfSanctuary))
@@ -71,6 +100,29 @@ namespace RetributionPaladinBot
         /// <summary>
         /// Tries to cast a spell by the given name if the player does not have the specified buff, the spell is ready, and the player has enough mana.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "TryCastSpell Function" as TCS
+        /// participant "Player" as P
+        /// 
+        /// TCS -> P: HasBuff(name)
+        /// activate P
+        /// P --> TCS: Buff status
+        /// deactivate P
+        /// 
+        /// TCS -> P: IsSpellReady(name)
+        /// activate P
+        /// P --> TCS: Spell readiness status
+        /// deactivate P
+        /// 
+        /// TCS -> P: GetManaCost(name)
+        /// activate P
+        /// P --> TCS: Mana cost
+        /// deactivate P
+        /// 
+        /// TCS -> P: LuaCall("CastSpellByName('name',1)")
+        /// \enduml
+        /// </remarks>
         void TryCastSpell(string name)
         {
             if (!player.HasBuff(name) && player.IsSpellReady(name) && player.Mana > player.GetManaCost(name))

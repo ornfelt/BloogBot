@@ -69,12 +69,26 @@ namespace BloogBot
         /// Retrieves a handle to the specified module.
         /// </summary>
         // Module scan
+        /// <remarks>
+        /// \startuml
+        /// note over Developer: DllImport is used to import the 'GetModuleHandle' function from 'kernel32.dll'
+        /// Developer -> kernel32.dll: GetModuleHandle(string lpModuleName)
+        /// kernel32.dll --> Developer: Returns IntPtr
+        /// \enduml
+        /// </remarks>
         [DllImport("kernel32.dll", CharSet = CharSet.Auto)]
         static extern IntPtr GetModuleHandle(string lpModuleName);
 
         /// <summary>
         /// Retrieves the address of an exported function or variable from the specified dynamic-link library (DLL).
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// note over Developer: DllImport is used to import the 'GetProcAddress' function from 'kernel32' library
+        /// Developer -> kernel32: GetProcAddress(hModule, procName)
+        /// kernel32 --> Developer: Returns IntPtr
+        /// \enduml
+        /// </remarks>
         [DllImport("kernel32", CharSet = CharSet.Ansi, ExactSpelling = true, SetLastError = true)]
         static extern IntPtr GetProcAddress(IntPtr hModule, string procName);
 
@@ -129,18 +143,42 @@ namespace BloogBot
         /// <summary>
         /// Retrieves information about the first module in a specified snapshot of the specified process.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "Caller" as C
+        /// participant "Module32First Function" as M
+        /// C -> M: Call Module32First(hSnapshot, lpme)
+        /// M --> C: Return result
+        /// \enduml
+        /// </remarks>
         [DllImport("kernel32.dll", SetLastError = true)]
         static extern bool Module32First(IntPtr hSnapshot, ref MODULEENTRY32 lpme);
 
         /// <summary>
         /// Retrieves information about the next module in a snapshot of the specified process.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "Caller" as C
+        /// participant "Module32Next Function" as M
+        /// C -> M: Call Module32Next(hSnapshot, ref lpme)
+        /// M --> C: Returns bool
+        /// \enduml
+        /// </remarks>
         [DllImport("kernel32.dll", SetLastError = true)]
         static extern bool Module32Next(IntPtr hSnapshot, ref MODULEENTRY32 lpme);
 
         /// <summary>
         /// Sets the last error code for the calling thread.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "kernel32.dll" as K
+        /// participant "SetLastError function" as S
+        /// K -> S: Call SetLastError
+        /// note right: dwErrCode is passed as parameter
+        /// \enduml
+        /// </remarks>
         [DllImport("kernel32.dll", SetLastError = true)]
         static extern void SetLastError(uint dwErrCode);
 
@@ -273,6 +311,18 @@ namespace BloogBot
         // we can detour Warden's various scanning functions before they're
         // called for the first time. the location of this 5 byte instruction
         // depends on which version of the WoW client we're running.
+        /// <remarks>
+        /// \startuml
+        /// Initialize -> ClientHelper: ClientVersion
+        /// ClientHelper --> Initialize: ClientVersion.Vanilla
+        /// Initialize -> Marshal: GetFunctionPointerForDelegate(disableWardenVanillaDelegate)
+        /// Marshal --> Initialize: addrToDetour
+        /// Initialize -> MemoryManager: InjectAssembly("WardenLoadDetour", instructions)
+        /// MemoryManager --> Initialize: wardenLoadDetour
+        /// Initialize -> MemoryManager: InjectAssembly("WardenLoadHook", (uint)MemoryAddresses.WardenLoadHook, "JMP " + wardenLoadDetour)
+        /// Initialize -> Initialize: InitializeModuleScanHook()
+        /// \enduml
+        /// </remarks>
         static internal void Initialize()
         {
             bool useWarden = false;
@@ -339,6 +389,12 @@ namespace BloogBot
         /// <summary>
         /// Disables the vanilla Warden.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// :User: -> DisableWardenVanilla: Call method with IntPtr
+        /// DisableWardenVanilla -> DisableWardenInternal: Call method
+        /// \enduml
+        /// </remarks>
         static void DisableWardenVanilla(IntPtr _)
         {
             DisableWardenInternal();
@@ -347,6 +403,13 @@ namespace BloogBot
         /// <summary>
         /// Disables the Warden for The Burning Crusade expansion.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "DisableWardenTBC()" as A
+        /// participant "DisableWardenInternal()" as B
+        /// A -> B: Call DisableWardenInternal
+        /// \enduml
+        /// </remarks>
         static void DisableWardenTBC()
         {
             DisableWardenInternal();
@@ -355,6 +418,12 @@ namespace BloogBot
         /// <summary>
         /// Disables the Warden for the Wrath of the Lich King expansion.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// :User: -> DisableWardenWotLK: Call method
+        /// DisableWardenWotLK -> DisableWardenInternal: Call method
+        /// \enduml
+        /// </remarks>
         static void DisableWardenWotLK()
         {
             DisableWardenInternal();
@@ -363,6 +432,25 @@ namespace BloogBot
         /// <summary>
         /// Disables the Warden internal functionality.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// actor User
+        /// User -> System: DisableWardenInternal()
+        /// System -> System: ReadIntPtr(MemoryAddresses.WardenBase)
+        /// System -> System: Check if wardenPtr != IntPtr.Zero
+        /// alt wardenPtr != IntPtr.Zero
+        ///   System -> System: Check if (int)wardenPtr < 80000
+        ///   alt (int)wardenPtr < 80000
+        ///     System -> System: Check if ClientVersion == WotLK
+        ///     System -> User: "[WARDEN] Warden Module is at an unexpected memory address. Not hooking. PLAY AT YOUR OWN RISK!"
+        ///   else (int)wardenPtr >= 80000
+        ///     System -> System: ReadIntPtr(wardenPtr)
+        ///     System -> System: InitializeWardenPageScanHook(wardenBaseAddr)
+        ///     System -> System: InitializeWardenMemScanHook(wardenBaseAddr)
+        ///   end
+        /// end
+        /// \enduml
+        /// </remarks>
         static void DisableWardenInternal()
         {
             Console.WriteLine("[WARDEN] DisableWardenHook called.");
@@ -412,6 +500,24 @@ namespace BloogBot
         /// If the function is found, it sets up the hook and prints a success message.
         /// If the function is not found or the hook fails, it prints a warning message.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// InitializeWardenPageScanHook -> MemoryManager: ReadBytes(tempPageScanPtr, 5)
+        /// MemoryManager --> InitializeWardenPageScanHook: currentBytes
+        /// InitializeWardenPageScanHook -> InitializeWardenPageScanHook: Check if currentBytes match pageScanOriginalBytes
+        /// InitializeWardenPageScanHook -> InitializeWardenPageScanHook: If match, set pageScanPtr to tempPageScanPtr and break loop
+        /// InitializeWardenPageScanHook -> InitializeWardenPageScanHook: Check if pageScanPtr is zero or equals wardenPageScanFunPtr
+        /// InitializeWardenPageScanHook -> Console: If check is true and ClientVersion is WotLK, print warning message
+        /// InitializeWardenPageScanHook -> Console: If check is false, print success message
+        /// InitializeWardenPageScanHook -> Marshal: GetFunctionPointerForDelegate(wardenPageScanDelegate)
+        /// Marshal --> InitializeWardenPageScanHook: addrToDetour
+        /// InitializeWardenPageScanHook -> MemoryManager: InjectAssembly("WardenPageScanDetour", instructions)
+        /// MemoryManager --> InitializeWardenPageScanHook: wardenPageScanDetourPtr
+        /// InitializeWardenPageScanHook -> MemoryManager: InjectAssembly("WardenPageScanHook", (uint)pageScanPtr, "JMP 0x" + wardenPageScanDetourPtr.ToString("X"))
+        /// InitializeWardenPageScanHook -> Console: Print success message with WardenModulePtr, OriginalPageScanFunPtr and DetourFunPtr
+        /// \enduml
+        /// </remarks>
         static void InitializeWardenPageScanHook(IntPtr wardenModuleStart)
         {
             IntPtr pageScanPtr = IntPtr.Zero;
@@ -476,6 +582,23 @@ namespace BloogBot
         /// <summary>
         /// Scans a page for hacks and performs necessary actions.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// Example_WardenPageScanHook -> Example_HackManager: Get hacks within scan range
+        /// loop for each hack
+        ///     Example_WardenPageScanHook -> Example_Console: Log disabling hack
+        ///     Example_Console --> Example_WardenPageScanHook: Log message
+        ///     Example_WardenPageScanHook -> Example_HackManager: Disable hack
+        ///     Example_HackManager --> Example_WardenPageScanHook: Hack disabled
+        /// end loop
+        /// Example_WardenPageScanHook -> Example_MemoryManager: Write byte
+        /// Example_MemoryManager --> Example_WardenPageScanHook: Byte written
+        /// loop for each hack
+        ///     Example_WardenPageScanHook -> Example_HackManager: Enable hack
+        ///     Example_HackManager --> Example_WardenPageScanHook: Hack enabled
+        /// end loop
+        /// \enduml
+        /// </remarks>
         static void WardenPageScanHook(IntPtr readBase, int readOffset, IntPtr writeTo)
         {
             // Logging this to the console lags the client like crazy.
@@ -511,6 +634,26 @@ namespace BloogBot
         /// <summary>
         /// Initializes the Warden memory scan hook by searching for the memory address of the Warden module and setting up the necessary detour.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// WardenModule -> MemoryManager: ReadBytes(tempMemScanPtr, 5)
+        /// MemoryManager --> WardenModule: currentBytes
+        /// WardenModule -> WardenModule: Check if currentBytes match memScanOriginalBytes
+        /// WardenModule -> WardenModule: If match, set memScanPtr to tempMemScanPtr
+        /// WardenModule -> WardenModule: If memScanPtr is zero or equals wardenMemScanFunPtr, check ClientVersion
+        /// WardenModule -> WardenModule: If ClientVersion is WotLK, print warning message
+        /// WardenModule -> WardenModule: If memScanPtr is not zero and not equals wardenMemScanFunPtr, print success message
+        /// WardenModule -> Marshal: GetFunctionPointerForDelegate(wardenMemScanDelegate)
+        /// Marshal --> WardenModule: addrToDetour
+        /// WardenModule -> MemoryManager: InjectAssembly("WardenMemScanDetour", instructions)
+        /// MemoryManager --> WardenModule: wardenMemScanDetourPtr
+        /// WardenModule -> MemoryManager: InjectAssembly("WardenMemScanHook", (uint)memScanPtr, "JMP 0x" + wardenMemScanDetourPtr.ToString("X"))
+        /// MemoryManager --> WardenModule: Confirmation of injection
+        /// WardenModule -> WardenModule: Set wardenMemScanFunPtr to memScanPtr
+        /// WardenModule -> Console: Print success message with details
+        /// \enduml
+        /// </remarks>
         static void InitializeWardenMemScanHook(IntPtr wardenModuleStart)
         {
             IntPtr memScanPtr = IntPtr.Zero;
@@ -573,6 +716,16 @@ namespace BloogBot
         /// <summary>
         /// Scans the memory for hacks within a specified range and performs necessary actions.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// Example_Warden -> Example_HackManager: GetHacks()
+        /// loop for each hack in hacksWithinRange
+        ///     Example_Warden -> Example_Hack: DisableHack(hack)
+        ///     Example_Warden -> Example_MemoryManager: WriteBytes(bufferStart, ReadBytes(addr, size))
+        ///     Example_Warden -> Example_Hack: EnableHack(hack)
+        /// end loop
+        /// \enduml
+        /// </remarks>
         static void WardenMemScanHook(IntPtr addr, int size, IntPtr bufferStart)
         {
             // todo: will size ever be 0?
@@ -613,6 +766,25 @@ namespace BloogBot
         /// <summary>
         /// Initializes the module scan hook by registering delegates pointing to the functions we want to detour.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// InitializeModuleScanHook -> GetModuleHandle: "kernel32.dll"
+        /// GetModuleHandle --> InitializeModuleScanHook: handle
+        /// InitializeModuleScanHook -> GetProcAddress: handle, "Module32First"
+        /// GetProcAddress --> InitializeModuleScanHook: firstAddr
+        /// InitializeModuleScanHook -> GetProcAddress: handle, "Module32Next"
+        /// GetProcAddress --> InitializeModuleScanHook: nextAddr
+        /// InitializeModuleScanHook -> Marshal.GetDelegateForFunctionPointer: firstAddr
+        /// Marshal.GetDelegateForFunctionPointer --> InitializeModuleScanHook: module32FirstDelegate
+        /// InitializeModuleScanHook -> Detour: module32FirstDelegate, new Module32FirstDelegate(Module32FirstDetour), "Module32First"
+        /// Detour --> InitializeModuleScanHook: module32FirstHook
+        /// InitializeModuleScanHook -> Marshal.GetDelegateForFunctionPointer: nextAddr
+        /// Marshal.GetDelegateForFunctionPointer --> InitializeModuleScanHook: module32NextDelegate
+        /// InitializeModuleScanHook -> Detour: module32NextDelegate, new Module32NextDelegate(Module32NextDetour), "Module32Next"
+        /// Detour --> InitializeModuleScanHook: module32NextHook
+        /// InitializeModuleScanHook -> Console.WriteLine: "[WARDEN] ModuleScan Hooked!"
+        /// \enduml
+        /// </remarks>
         static void InitializeModuleScanHook()
         {
             var handle = GetModuleHandle("kernel32.dll");
@@ -638,6 +810,21 @@ namespace BloogBot
         /// <summary>
         /// Detours the Module32First function to perform additional operations before calling the original function.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "Module32FirstDetour Function" as MFD
+        /// participant "Console" as C
+        /// participant "module32FirstHook" as MH
+        /// participant "Module32First Function" as MF
+        ///
+        /// MFD -> C: Write("[WARDEN ModuleScan] Started")
+        /// MFD -> MH: Remove()
+        /// MFD -> MF: Module32First(snapshot, ref module)
+        /// MFD <-- MF: Return ret
+        /// MFD -> MH: Apply()
+        /// MFD --> : Return ret
+        /// \enduml
+        /// </remarks>
         static bool Module32FirstDetour(IntPtr snapshot, ref MODULEENTRY32 module)
         {
             Console.WriteLine("[WARDEN ModuleScan] Started");
@@ -664,6 +851,27 @@ namespace BloogBot
         /// <summary>
         /// Detours the Module32Next function to perform additional operations before and after calling the original function.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// Module32NextDetour -> MODULEENTRY32: Get module
+        /// MODULEENTRY32 --> Module32NextDetour: Return module
+        /// Module32NextDetour -> HMACSHA1: Create HMAC with seed
+        /// HMACSHA1 --> Module32NextDetour: Return HMAC
+        /// Module32NextDetour -> HMACSHA1: Compute hash of module name
+        /// HMACSHA1 --> Module32NextDetour: Return hash
+        /// Module32NextDetour -> Module32NextDetour: Check if hash matches buffer
+        /// Module32NextDetour -> Console: Write detection message if match
+        /// Module32NextDetour -> MODULEENTRY32: Loop until module is in modules list
+        /// MODULEENTRY32 --> Module32NextDetour: Return module
+        /// Module32NextDetour -> MODULEENTRY32: Add module to protected items if not already present
+        /// MODULEENTRY32 --> Module32NextDetour: Return module
+        /// Module32NextDetour -> MODULEENTRY32: Remove and reapply hook
+        /// MODULEENTRY32 --> Module32NextDetour: Return module
+        /// Module32NextDetour -> MODULEENTRY32: Set error and return if module not in modules list
+        /// MODULEENTRY32 --> Module32NextDetour: Return module
+        /// \enduml
+        /// </remarks>
         static bool Module32NextDetour(IntPtr snapshot, ref MODULEENTRY32 module)
         {
             module32NextHook.Remove();

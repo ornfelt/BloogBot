@@ -70,6 +70,16 @@ namespace BloogBot.Game
         /// <summary>
         /// Initializes the probe with the given parameter.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// ClientHelper -> Initialize: ClientVersion
+        /// Initialize -> Probe: parProbe
+        /// note right: Initialize the probe
+        /// Initialize -> Marshal: GetFunctionPointerForDelegate
+        /// note right: Get function pointer for delegate
+        /// \enduml
+        /// </remarks>
         static internal void Initialize(Probe parProbe)
         {
             probe = parProbe;
@@ -260,6 +270,13 @@ namespace BloogBot.Game
         /// <summary>
         /// Retrieves a collection of party members in the game.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// GetPartyMembers -> GetPartyMember: GetPartyMember(i)
+        /// GetPartyMember --> GetPartyMembers: return result
+        /// GetPartyMembers -> List<WoWPlayer>: Add(result)
+        /// \enduml
+        /// </remarks>
         static public IEnumerable<WoWPlayer> GetPartyMembers()
         {
             var partyMembers = new List<WoWPlayer>();
@@ -278,6 +295,17 @@ namespace BloogBot.Game
         /// Retrieves a party member based on the specified index.
         /// </summary>
         // index should be 1-4
+        /// <remarks>
+        /// \startuml
+        /// WoWPlayer -> WoWPlayer: GetPartyMember(int index)
+        /// WoWPlayer -> Player: LuaCallWithResults(string)
+        /// Player -> Player: UnitName(string)
+        /// Player -> WoWPlayer: result.Length > 0
+        /// WoWPlayer -> Players: FirstOrDefault(Func<WoWPlayer, bool>)
+        /// Players -> WoWPlayer: return Players.FirstOrDefault(p => p.Name == result[0])
+        /// WoWPlayer -> null: return null
+        /// \enduml
+        /// </remarks>
         static WoWPlayer GetPartyMember(int index)
         {
             var result = Player?.LuaCallWithResults($"{{0}} = UnitName('party{index}')");
@@ -309,6 +337,19 @@ namespace BloogBot.Game
         // https://vanilla-wow.fandom.com/wiki/API_GetTalentInfo
         // tab index is 1, 2 or 3
         // talentIndex is counter left to right, top to bottom, starting at 1
+        /// <remarks>
+        /// \startuml
+        /// GetTalentRank -> Player: LuaCallWithResults("GetTalentInfo(tabIndex,talentIndex)")
+        /// Player --> GetTalentRank: results
+        /// GetTalentRank -> GetTalentRank: Check if results.Length == 5
+        /// alt results.Length == 5
+        ///     GetTalentRank -> Convert: ToSByte(results[4])
+        ///     Convert --> GetTalentRank: sbyte
+        /// else results.Length != 5
+        ///     GetTalentRank --> GetTalentRank: return -1
+        /// end
+        /// \enduml
+        /// </remarks>
         static public sbyte GetTalentRank(int tabIndex, int talentIndex)
         {
             var results = Player.LuaCallWithResults($"{{0}}, {{1}}, {{2}}, {{3}}, {{4}} = GetTalentInfo({tabIndex},{talentIndex})");
@@ -322,6 +363,14 @@ namespace BloogBot.Game
         /// <summary>
         /// Starts the enumeration of visible objects.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// StartEnumeration -> EnumerateVisibleObjects: EnumerateVisibleObjects()
+        /// EnumerateVisibleObjects --> StartEnumeration: 
+        /// StartEnumeration -> StartEnumeration: Task.Delay(500)
+        /// StartEnumeration -> Logger: Log(e)
+        /// \enduml
+        /// </remarks>
         static internal async void StartEnumeration()
         {
             while (true)
@@ -341,6 +390,26 @@ namespace BloogBot.Game
         /// <summary>
         /// Enumerates the visible objects on the main thread.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// ThreadSynchronizer -> EnumerateVisibleObjects: RunOnMainThread
+        /// EnumerateVisibleObjects -> IsLoggedIn: Check
+        /// IsLoggedIn --> EnumerateVisibleObjects: True
+        /// EnumerateVisibleObjects -> Functions: GetPlayerGuid
+        /// Functions --> EnumerateVisibleObjects: playerGuid
+        /// EnumerateVisibleObjects -> ObjectsBuffer: Clear
+        /// EnumerateVisibleObjects -> Functions: EnumerateVisibleObjects
+        /// EnumerateVisibleObjects -> Objects: new List
+        /// EnumerateVisibleObjects -> Player: Check
+        /// Player --> EnumerateVisibleObjects: Not null
+        /// EnumerateVisibleObjects -> Units: foreach
+        /// Units -> unit: Check SummonedByGuid
+        /// unit --> EnumerateVisibleObjects: True
+        /// EnumerateVisibleObjects -> Pet: new LocalPet
+        /// EnumerateVisibleObjects -> Player: RefreshSpells
+        /// EnumerateVisibleObjects -> UpdateProbe: Call
+        /// \enduml
+        /// </remarks>
         static void EnumerateVisibleObjects()
         {
             ThreadSynchronizer.RunOnMainThread(() =>
@@ -380,6 +449,11 @@ namespace BloogBot.Game
         /// EnumerateVisibleObjects callback with swapped parameter order between Vanilla and other client versions.
         /// </summary>
         // EnumerateVisibleObjects callback has the parameter order swapped between Vanilla and other client versions.
+        /// <remarks>
+        /// \startuml
+        /// CallbackVanilla -> CallbackInternal: guid, filter
+        /// \enduml
+        /// </remarks>
         static int CallbackVanilla(int filter, ulong guid)
         {
             return CallbackInternal(guid, filter);
@@ -389,6 +463,17 @@ namespace BloogBot.Game
         /// EnumerateVisibleObjects callback has the parameter order swapped between Vanilla and other client versions.
         /// </summary>
         // EnumerateVisibleObjects callback has the parameter order swapped between Vanilla and other client versions.
+        /// <remarks>
+        /// \startuml
+        /// participant "Caller" as C
+        /// participant "CallbackNonVanilla" as CNV
+        /// participant "CallbackInternal" as CI
+        /// C -> CNV: Calls with guid and filter
+        /// CNV -> CI: Passes guid and filter
+        /// CI --> CNV: Returns result
+        /// CNV --> C: Returns result
+        /// \enduml
+        /// </remarks>
         static int CallbackNonVanilla(ulong guid, int filter)
         {
             return CallbackInternal(guid, filter);
@@ -397,6 +482,20 @@ namespace BloogBot.Game
         /// <summary>
         /// Callback function that handles the internal logic for adding objects to the ObjectsBuffer based on the given guid and filter.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// CallbackInternal -> Functions : GetObjectPtr(guid)
+        /// CallbackInternal -> MemoryManager : ReadInt(IntPtr.Add(pointer, OBJECT_TYPE_OFFSET))
+        /// alt objectType
+        ///   ObjectType.Container -> ObjectsBuffer : Add(new WoWContainer(pointer, guid, objectType))
+        ///   ObjectType.Item -> ObjectsBuffer : Add(new WoWItem(pointer, guid, objectType))
+        ///   ObjectType.Player -> ObjectsBuffer : Add(new WoWPlayer(pointer, guid, objectType))
+        ///   ObjectType.GameObject -> ObjectsBuffer : Add(new WoWGameObject(pointer, guid, objectType))
+        ///   ObjectType.Unit -> ObjectsBuffer : Add(new WoWUnit(pointer, guid, objectType))
+        /// end
+        /// CallbackInternal -> Logger : Log(e)
+        /// \enduml
+        /// </remarks>
         static int CallbackInternal(ulong guid, int filter)
         {
             var pointer = Functions.GetObjectPtr(guid);
@@ -443,6 +542,31 @@ namespace BloogBot.Game
         /// If the player is in GM Island and the killswitch has not been triggered,
         /// engages the killswitch, stops player movement, and sends a killswitch alert.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// UpdateProbe -> Player: Check if Player is not null
+        /// UpdateProbe -> MinimapZoneText: Check if Player is in "GM Island"
+        /// UpdateProbe -> KillswitchTriggered: Check if Killswitch is not triggered
+        /// UpdateProbe -> Logger: Log "Killswitch Engaged"
+        /// UpdateProbe -> Player: StopAllMovement
+        /// UpdateProbe -> probe: Killswitch
+        /// UpdateProbe -> DiscordClientWrapper: KillswitchAlert(Player.Name)
+        /// UpdateProbe -> probe: Set CurrentPosition
+        /// UpdateProbe -> probe: Set CurrentZone
+        /// UpdateProbe -> Units: Find target
+        /// UpdateProbe -> probe: Set TargetName
+        /// UpdateProbe -> Player: LuaCallWithResults
+        /// UpdateProbe -> probe: Set TargetClass
+        /// UpdateProbe -> probe: Set TargetCreatureType
+        /// UpdateProbe -> probe: Set TargetPosition
+        /// UpdateProbe -> probe: Set TargetRange
+        /// UpdateProbe -> probe: Set TargetFactionId
+        /// UpdateProbe -> probe: Set TargetIsCasting
+        /// UpdateProbe -> probe: Set TargetIsChanneling
+        /// UpdateProbe -> probe: Callback
+        /// \enduml
+        /// </remarks>
         static void UpdateProbe()
         {
             if (Player != null)

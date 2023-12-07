@@ -58,6 +58,31 @@ namespace BloogBot.AI.SharedStates
         /// <summary>
         /// Updates the behavior of the bot.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// Update -> Container: FindThreat
+        /// Container --> Update: threat
+        /// alt threat is not null
+        ///     Update -> Player: StopAllMovement
+        ///     Update -> Container: CreateMoveToTargetState(botStates, container, threat)
+        ///     Container --> Update: MoveToTargetState
+        ///     Update -> BotStates: Push(MoveToTargetState)
+        /// else threat is null and player is close to waypoint
+        ///     Update -> Player: Position.DistanceTo(travelPathWaypoints[travelPathIndex])
+        ///     Player --> Update: distance
+        ///     alt distance < 3
+        ///         Update -> Update: travelPathIndex++
+        ///     else travelPathIndex equals travelPathWaypoints.Length
+        ///         Update -> Player: StopAllMovement
+        ///         Update -> BotStates: Pop
+        ///         Update -> Callback: Invoke
+        ///     else player moves toward waypoint
+        ///         Update -> Player: MoveToward(travelPathWaypoints[travelPathIndex])
+        ///     end
+        /// end
+        /// \enduml
+        /// </remarks>
         public void Update()
         {
             var threat = container.FindThreat();

@@ -43,6 +43,22 @@ namespace ShadowPriestBot
         /// <summary>
         /// Updates the player's buffs by casting Power Word Fortitude and Shadow Protection if necessary.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// Update -> Player: KnowsSpell(PowerWordFortitude)
+        /// Player --> Update: Response
+        /// Update -> Player: HasBuff(PowerWordFortitude)
+        /// Player --> Update: Response
+        /// Update -> Player: KnowsSpell(ShadowProtection)
+        /// Player --> Update: Response
+        /// Update -> Player: HasBuff(ShadowProtection)
+        /// Player --> Update: Response
+        /// Update -> BotStates: Pop
+        /// Update -> Update: TryCastSpell(PowerWordFortitude)
+        /// Update -> Update: TryCastSpell(ShadowProtection)
+        /// \enduml
+        /// </remarks>
         public void Update()
         {
             if ((!player.KnowsSpell(PowerWordFortitude) || player.HasBuff(PowerWordFortitude)) && (!player.KnowsSpell(ShadowProtection) || player.HasBuff(ShadowProtection)))
@@ -59,6 +75,17 @@ namespace ShadowPriestBot
         /// <summary>
         /// Tries to cast a spell by the given name if the player has the required level and the spell is ready.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "TryCastSpell Function" as TCS
+        /// participant "Player" as P
+        /// TCS -> P: HasBuff(name)
+        /// alt player does not have buff and level is sufficient and spell is ready
+        ///     TCS -> P: IsSpellReady(name)
+        ///     TCS -> P: LuaCall("CastSpellByName('name',1)")
+        /// end
+        /// \enduml
+        /// </remarks>
         void TryCastSpell(string name, int requiredLevel = 1)
         {
             if (!player.HasBuff(name) && player.Level >= requiredLevel && player.IsSpellReady(name))

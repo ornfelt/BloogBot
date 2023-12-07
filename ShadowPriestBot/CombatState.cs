@@ -113,6 +113,46 @@ namespace ShadowPriestBot
         /// <summary>
         /// Updates the behavior of the player character.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "Update()" as U
+        /// participant "player" as P
+        /// participant "target" as T
+        /// participant "botStates" as B
+        /// participant "Inventory" as I
+        /// participant "ObjectManager" as O
+        /// U -> P: HealthPercent
+        /// U -> T: HealthPercent
+        /// U -> P: Mana
+        /// U -> P: GetManaCost(LesserHeal)
+        /// U -> B: Push(new HealSelfState)
+        /// U -> U: base.Update()
+        /// U -> I: GetEquippedItem(EquipSlot.Ranged)
+        /// U -> P: IsCasting
+        /// U -> P: IsChanneling
+        /// U -> P: ManaPercent
+        /// U -> T: CreatureType
+        /// U -> T: HealthPercent
+        /// U -> P: LuaCall(WandLuaScript)
+        /// U -> O: Aggressors
+        /// U -> U: TryCastSpell(ShadowForm)
+        /// U -> U: TryCastSpell(VampiricEmbrace)
+        /// U -> O: Units
+        /// U -> U: TryCastSpell(PsychicScream)
+        /// U -> U: TryCastSpell(ShadowWordPain)
+        /// U -> U: TryCastSpell(DispelMagic)
+        /// U -> P: KnowsSpell(AbolishDisease)
+        /// U -> U: TryCastSpell(AbolishDisease)
+        /// U -> P: KnowsSpell(CureDisease)
+        /// U -> U: TryCastSpell(CureDisease)
+        /// U -> U: TryCastSpell(InnerFire)
+        /// U -> U: TryCastSpell(PowerWordShield)
+        /// U -> U: TryCastSpell(MindBlast)
+        /// U -> P: KnowsSpell(MindFlay)
+        /// U -> U: TryCastSpell(MindFlay)
+        /// U -> U: TryCastSpell(Smite)
+        /// \enduml
+        /// </remarks>
         public new void Update()
         {
             if (player.HealthPercent < 30 && target.HealthPercent > 50 && player.Mana >= player.GetManaCost(LesserHeal))

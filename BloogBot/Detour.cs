@@ -78,6 +78,11 @@ namespace BloogBot
         /// <summary>
         /// Applies the new bytes to the target memory.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// Apply -> MemoryManager: WriteBytes(target, newBytes.ToArray())
+        /// \enduml
+        /// </remarks>
         public void Apply()
         {
             MemoryManager.WriteBytes(target, newBytes.ToArray());
@@ -86,6 +91,13 @@ namespace BloogBot
         /// <summary>
         /// Removes the target by writing the original bytes to the memory manager.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "Remove Method" as R
+        /// participant "MemoryManager" as M
+        /// R -> M: WriteBytes(target, orginalBytes.ToArray())
+        /// \enduml
+        /// </remarks>
         public void Remove()
         {
             MemoryManager.WriteBytes(target, orginalBytes.ToArray());

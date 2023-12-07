@@ -63,6 +63,25 @@ namespace ArcaneMageBot
         /// <summary>
         /// Updates the player's food and drink items based on the bot settings and current state.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// Update -> Inventory: GetAllItems()
+        /// Inventory --> Update: foodItem
+        /// Update -> Inventory: GetAllItems()
+        /// Inventory --> Update: drinkItem
+        /// Update -> player: IsCasting
+        /// Update -> player: ManaPercent
+        /// Update -> botStates: Pop()
+        /// Update -> botStates: Push(new RestState)
+        /// Update -> Inventory: GetItemCount(foodItem.ItemId)
+        /// Update -> Update: Wait.For("ArcaneMageConjureFood", 3000)
+        /// Update -> Update: TryCastSpell(ConjureFood)
+        /// Update -> Inventory: GetItemCount(drinkItem.ItemId)
+        /// Update -> Update: Wait.For("ArcaneMageConjureDrink", 3000)
+        /// Update -> Update: TryCastSpell(ConjureWater)
+        /// \enduml
+        /// </remarks>
         public void Update()
         {
             foodItem = Inventory.GetAllItems()
@@ -103,6 +122,16 @@ namespace ArcaneMageBot
         /// <summary>
         /// Tries to cast a spell by its name if the spell is ready and the player is not currently casting.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "TryCastSpell Method" as T
+        /// participant "Player" as P
+        /// T -> P: IsSpellReady(name)
+        /// alt spell is ready and player is not casting
+        /// T -> P: LuaCall("CastSpellByName('name')")
+        /// end
+        /// \enduml
+        /// </remarks>
         void TryCastSpell(string name)
         {
             if (player.IsSpellReady(name) && !player.IsCasting)

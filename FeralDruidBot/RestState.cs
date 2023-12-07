@@ -78,6 +78,53 @@ namespace FeralDruidBot
         /// <summary>
         /// Updates the player's actions based on various conditions, such as combat status, health and mana levels, and current shapeshift form.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// Update -> player: IsCasting
+        /// alt player.IsCasting is true
+        ///     Update -> Update: return
+        /// else InCombat is true
+        ///     Update -> Wait: RemoveAll
+        ///     Update -> player: Stand
+        ///     Update -> botStates: Pop
+        ///     Update -> Update: return
+        /// else HealthOk and ManaOk are true
+        ///     alt player.HasBuff(BearForm) and Wait.For("BearFormDelay", 1000, true) are true
+        ///         Update -> Update: CastSpell(BearForm)
+        ///     else player.HasBuff(CatForm) and Wait.For("CatFormDelay", 1000, true) are true
+        ///         Update -> Update: CastSpell(CatForm)
+        ///     else
+        ///         Update -> Wait: RemoveAll
+        ///         Update -> player: Stand
+        ///         Update -> botStates: Pop
+        ///         Update -> Inventory: GetItemCount(drinkItem.ItemId)
+        ///         alt !InCombat and drinkCount == 0 and !container.RunningErrands are true
+        ///             Update -> container: GetCurrentHotspot
+        ///             Update -> botStates: Push(new TravelState)
+        ///             Update -> botStates: Push(new MoveToPositionState)
+        ///             Update -> botStates: Push(new BuyItemsState)
+        ///             Update -> botStates: Push(new SellItemsState)
+        ///             Update -> botStates: Push(new MoveToPositionState)
+        ///             Update -> container: CheckForTravelPath
+        ///             Update -> container: RunningErrands = true
+        ///         else
+        ///             Update -> botStates: Push(new BuffSelfState)
+        ///         end
+        ///     end
+        /// else player.CurrentShapeshiftForm == BearForm
+        ///     Update -> Update: CastSpell(BearForm)
+        /// else player.CurrentShapeshiftForm == CatForm
+        ///     Update -> Update: CastSpell(CatForm)
+        /// else player.HealthPercent < 60 and player.CurrentShapeshiftForm == HumanForm and !player.HasBuff(Regrowth) and Wait.For("SelfHealDelay", 5000, true) are true
+        ///     Update -> Update: TryCastSpell(Regrowth)
+        /// else player.HealthPercent < 80 and player.CurrentShapeshiftForm == HumanForm and !player.HasBuff(Rejuvenation) and !player.HasBuff(Regrowth) and Wait.For("SelfHealDelay", 5000, true) are true
+        ///     Update -> Update: TryCastSpell(Rejuvenation)
+        /// else player.Level > 8 and drinkItem != null and !player.IsDrinking and player.ManaPercent < 60 and player.CurrentShapeshiftForm == HumanForm are true
+        ///     Update -> drinkItem: Use
+        /// end
+        /// \enduml
+        /// </remarks>
         public void Update()
         {
             if (player.IsCasting)
@@ -165,6 +212,28 @@ namespace FeralDruidBot
         /// <summary>
         /// Casts a spell by its name if the spell is ready and the player is not currently drinking.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "player" as P
+        /// participant "CastSpell" as C
+        /// 
+        /// C -> P: IsSpellReady(name)
+        /// activate P
+        /// P --> C: true/false
+        /// deactivate P
+        /// 
+        /// C -> P: IsDrinking
+        /// activate P
+        /// P --> C: true/false
+        /// deactivate P
+        /// 
+        /// alt spell is ready and player is not drinking
+        ///     C -> P: LuaCall("CastSpellByName('name')")
+        ///     activate P
+        ///     deactivate P
+        /// end
+        /// \enduml
+        /// </remarks>
         void CastSpell(string name)
         {
             if (player.IsSpellReady(name) && !player.IsDrinking)
@@ -174,6 +243,43 @@ namespace FeralDruidBot
         /// <summary>
         /// Tries to cast a spell by the given name if the player is able to cast it.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "TryCastSpell Method" as T
+        /// participant "Player" as P
+        /// 
+        /// T -> P: IsSpellReady(name)
+        /// activate P
+        /// P --> T: Spell Ready Status
+        /// deactivate P
+        /// 
+        /// T -> P: IsCasting
+        /// activate P
+        /// P --> T: Casting Status
+        /// deactivate P
+        /// 
+        /// T -> P: Mana
+        /// activate P
+        /// P --> T: Current Mana
+        /// deactivate P
+        /// 
+        /// T -> P: GetManaCost(name)
+        /// activate P
+        /// P --> T: Mana Cost
+        /// deactivate P
+        /// 
+        /// T -> P: IsDrinking
+        /// activate P
+        /// P --> T: Drinking Status
+        /// deactivate P
+        /// 
+        /// T -> P: LuaCall("CastSpellByName('name',1)")
+        /// activate P
+        /// P --> T: Spell Casted
+        /// deactivate P
+        /// 
+        /// \enduml
+        /// </remarks>
         void TryCastSpell(string name)
         {
             if (player.IsSpellReady(name) && !player.IsCasting && player.Mana > player.GetManaCost(name) && !player.IsDrinking)

@@ -55,6 +55,24 @@ namespace BalanceDruidBot
         /// <summary>
         /// Updates the player's buffs and casts spells if necessary.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// Update -> player: HasBuff(MarkOfTheWild)
+        /// Update -> player: KnowsSpell(MarkOfTheWild)
+        /// Update -> player: HasBuff(Thorns)
+        /// Update -> player: KnowsSpell(Thorns)
+        /// Update -> player: HasBuff(OmenOfClarity)
+        /// Update -> player: KnowsSpell(OmenOfClarity)
+        /// Update -> botStates: Pop()
+        /// Update -> player: HasBuff(MarkOfTheWild)
+        /// Update -> player: HasBuff(MoonkinForm)
+        /// player -> player: LuaCall("CastSpellByName('MoonkinForm')")
+        /// Update -> Update: TryCastSpell(MarkOfTheWild)
+        /// Update -> Update: TryCastSpell(Thorns)
+        /// Update -> Update: TryCastSpell(OmenOfClarity)
+        /// \enduml
+        /// </remarks>
         public void Update()
         {
             if ((player.HasBuff(MarkOfTheWild) || !player.KnowsSpell(MarkOfTheWild)) &&
@@ -82,6 +100,17 @@ namespace BalanceDruidBot
         /// <summary>
         /// Tries to cast a spell by the given name if the player does not have the specified buff and the spell is ready.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "TryCastSpell Method" as T
+        /// participant "Player" as P
+        /// T -> P: HasBuff(name)
+        /// alt not HasBuff(name) and IsSpellReady(name)
+        /// T -> P: IsSpellReady(name)
+        /// T -> P: LuaCall("CastSpellByName(name,1)")
+        /// end
+        /// \enduml
+        /// </remarks>
         void TryCastSpell(string name)
         {
             if (!player.HasBuff(name) && player.IsSpellReady(name))

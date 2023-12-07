@@ -61,6 +61,36 @@ namespace FeralDruidBot
         /// <summary>
         /// Updates the player's actions based on certain conditions.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// Update -> player: IsCasting?
+        /// player --> Update: true
+        /// Update -> player: CurrentShapeshiftForm?
+        /// player --> Update: BearForm
+        /// Update -> Wait: BearFormDelay
+        /// Wait --> Update: true
+        /// Update -> Update: CastSpell(BearForm)
+        /// Update -> player: CurrentShapeshiftForm?
+        /// player --> Update: CatForm
+        /// Update -> Wait: CatFormDelay
+        /// Wait --> Update: true
+        /// Update -> Update: CastSpell(CatForm)
+        /// Update -> player: HealthPercent
+        /// player --> Update: > 70
+        /// Update -> player: Mana
+        /// player --> Update: < player.GetManaCost(HealingTouch)
+        /// Update -> Wait: RemoveAll
+        /// Update -> botStates: Pop
+        /// Update --> Update
+        /// Update -> player: IsSpellReady(WarStomp)
+        /// player --> Update: true
+        /// Update -> player.Position: DistanceTo(target.Position)
+        /// player.Position --> Update: <= 8
+        /// Update -> player: LuaCall
+        /// player --> Update: CastSpellByName('WarStomp')
+        /// Update -> Update: CastSpell(HealingTouch, castOnSelf: true)
+        /// \enduml
+        /// </remarks>
         public void Update()
         {
             if (player.IsCasting) return;
@@ -89,6 +119,17 @@ namespace FeralDruidBot
         /// </summary>
         /// <param name="name">The name of the spell to cast.</param>
         /// <param name="castOnSelf">Optional. Determines whether the spell should be cast on self. Default is false.</param>
+        /// <remarks>
+        /// \startuml
+        /// participant "Player" as P
+        /// participant "CastSpell Function" as CS
+        /// 
+        /// P -> CS: IsSpellReady(name)
+        /// alt spell is ready
+        ///   CS -> P: LuaCall("CastSpellByName('name', castOnSelf)")
+        /// end
+        /// \enduml
+        /// </remarks>
         void CastSpell(string name, bool castOnSelf = false)
         {
             if (player.IsSpellReady(name))

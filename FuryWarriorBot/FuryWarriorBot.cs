@@ -35,16 +35,30 @@ namespace FuryWarriorBot
         /// Omit any targets that bring the player too close to another threat while moving to that target.
         /// </summary>
         // omit any targets that bring the player too close to another threat while moving to that target
+        /// <remarks>
+        /// \startuml
+        /// ObjectManager -> WoWUnit: Get Unit
+        /// ObjectManager -> Player: Get Player Level
+        /// ObjectManager -> WoWUnit: Get Unit Level
+        /// ObjectManager -> WoWUnit: Get Unit Reaction
+        /// ObjectManager -> Player: Get Player Guid
+        /// ObjectManager -> WoWUnit: Get Unit Guid
+        /// Navigation -> ObjectManager: Calculate Path
+        /// ObjectManager -> WoWUnit: Get Unit Position
+        /// ObjectManager -> Player: Get Player Position
+        /// ObjectManager -> WoWUnit: Check Distance
+        /// \enduml
+        /// </remarks>
         bool AdditionalTargetingCriteria(WoWUnit u) =>
-            !ObjectManager.Units.Any(o =>
-                o.Level > ObjectManager.Player.Level - 4 &&
-                (o.UnitReaction == UnitReaction.Hated || o.UnitReaction == UnitReaction.Hostile) &&
-                o.Guid != ObjectManager.Player.Guid &&
-                o.Guid != u.Guid &&
-                false &&
-                Navigation.CalculatePath(ObjectManager.MapId, ObjectManager.Player.Position, u.Position, false).Any(p => p.DistanceTo(o.Position) < 30) &&
-                u.Position.DistanceTo(o.Position) < 30
-            );
+                    !ObjectManager.Units.Any(o =>
+                        o.Level > ObjectManager.Player.Level - 4 &&
+                        (o.UnitReaction == UnitReaction.Hated || o.UnitReaction == UnitReaction.Hostile) &&
+                        o.Guid != ObjectManager.Player.Guid &&
+                        o.Guid != u.Guid &&
+                        false &&
+                        Navigation.CalculatePath(ObjectManager.MapId, ObjectManager.Player.Position, u.Position, false).Any(p => p.DistanceTo(o.Position) < 30) &&
+                        u.Position.DistanceTo(o.Position) < 30
+                    );
 
         /// <summary>
         /// Creates a new instance of the RestState class with the specified botStates and container.
@@ -67,15 +81,26 @@ namespace FuryWarriorBot
         /// <summary>
         /// Gets the dependency container for the bot.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "BotSettings" as A
+        /// participant "Probe" as B
+        /// participant "Hotspot" as C
+        /// participant "DependencyContainer" as D
+        /// A -> D: botSettings
+        /// B -> D: probe
+        /// C -> D: hotspots
+        /// \enduml
+        /// </remarks>
         public IDependencyContainer GetDependencyContainer(BotSettings botSettings, Probe probe, IEnumerable<Hotspot> hotspots) =>
-                    new DependencyContainer(
-                        AdditionalTargetingCriteria,
-                        CreateRestState,
-                        CreateMoveToTargetState,
-                        CreatePowerlevelCombatState,
-                        botSettings,
-                        probe,
-                        hotspots);
+                            new DependencyContainer(
+                                AdditionalTargetingCriteria,
+                                CreateRestState,
+                                CreateMoveToTargetState,
+                                CreatePowerlevelCombatState,
+                                botSettings,
+                                probe,
+                                hotspots);
 
         /// <summary>
         /// This method is used to test the functionality of the dependency container.

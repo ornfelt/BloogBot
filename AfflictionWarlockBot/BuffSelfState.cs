@@ -48,6 +48,25 @@ namespace AfflictionWarlockBot
         /// <summary>
         /// Updates the player's buffs and casts the appropriate spell if necessary.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// Update -> Player: HasBuff(DemonSkin) or HasBuff(DemonArmor)
+        /// Player --> Update: Buff status
+        /// alt HasEnoughSoulShards
+        ///     Update -> BotStates: Pop()
+        /// else NoEnoughSoulShards
+        ///     Update -> Update: DeleteSoulShard()
+        /// end
+        /// Update -> Player: KnowsSpell(DemonArmor)
+        /// Player --> Update: Spell status
+        /// alt KnowsSpell(DemonArmor)
+        ///     Update -> Update: TryCastSpell(DemonArmor)
+        /// else DoesNotKnowSpell(DemonArmor)
+        ///     Update -> Update: TryCastSpell(DemonSkin)
+        /// end
+        /// \enduml
+        /// </remarks>
         public void Update()
         {
             if (player.HasBuff(DemonSkin) || player.HasBuff(DemonArmor))
@@ -70,6 +89,13 @@ namespace AfflictionWarlockBot
         /// <summary>
         /// Tries to cast a spell with the given name and required level.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "User" as U
+        /// participant "TryCastSpell Function" as F
+        /// U -> F: TryCastSpell(name, requiredLevel)
+        /// \enduml
+        /// </remarks>
         void TryCastSpell(string name, int requiredLevel = 1)
         {
 
@@ -78,6 +104,28 @@ namespace AfflictionWarlockBot
         /// <summary>
         /// Deletes the last soul shard from the player's inventory.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "DeleteSoulShard Method" as D
+        /// participant "Player" as P
+        /// participant "Inventory" as I
+        /// 
+        /// D -> I: Get last Soul Shard
+        /// activate I
+        /// I --> D: Return Soul Shard
+        /// deactivate I
+        /// 
+        /// D -> P: PickupContainerItem
+        /// activate P
+        /// P --> D: Item picked up
+        /// deactivate P
+        /// 
+        /// D -> P: DeleteCursorItem
+        /// activate P
+        /// P --> D: Item deleted
+        /// deactivate P
+        /// \enduml
+        /// </remarks>
         void DeleteSoulShard()
         {
             var ss = GetSoulShards.Last();

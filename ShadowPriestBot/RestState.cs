@@ -75,6 +75,44 @@ namespace ShadowPriestBot
         /// <summary>
         /// Updates the player's actions based on their current state.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// Update -> Player: IsCasting
+        /// Update -> Player: KnowsSpell(ShadowForm)
+        /// Update -> Player: HasBuff(ShadowForm)
+        /// Update -> Player: IsDiseased
+        /// Update -> Player: KnowsSpell(AbolishDisease)
+        /// Update -> Player: LuaCall(CastSpellByName(AbolishDisease,1))
+        /// Update -> Player: KnowsSpell(CureDisease)
+        /// Update -> Player: LuaCall(CastSpellByName(CureDisease,2))
+        /// Update -> Player: LuaCall(CastSpellByName(ShadowForm))
+        /// Update -> Wait: RemoveAll
+        /// Update -> Player: Stand
+        /// Update -> BotStates: Pop
+        /// Update -> Inventory: GetItemCount(drinkItem.ItemId)
+        /// Update -> Container: GetCurrentHotspot
+        /// Update -> BotStates: Push(TravelState)
+        /// Update -> BotStates: Push(MoveToPositionState)
+        /// Update -> BotStates: Push(BuyItemsState)
+        /// Update -> BotStates: Push(SellItemsState)
+        /// Update -> BotStates: Push(MoveToPositionState)
+        /// Update -> Container: CheckForTravelPath
+        /// Update -> BotStates: Push(BuffSelfState)
+        /// Update -> Player: IsDrinking
+        /// Update -> Wait: For("HealSelfDelay", 3500, true)
+        /// Update -> Player: HealthPercent
+        /// Update -> Player: LuaCall(CastSpellByName(ShadowForm))
+        /// Update -> Player: KnowsSpell(Heal)
+        /// Update -> Player: LuaCall(CastSpellByName(Heal,1))
+        /// Update -> Player: LuaCall(CastSpellByName(LesserHeal,1))
+        /// Update -> Player: LuaCall(CastSpellByName(LesserHeal,1))
+        /// Update -> Player: Level
+        /// Update -> Player: IsDrinking
+        /// Update -> Player: ManaPercent
+        /// Update -> DrinkItem: Use
+        /// \enduml
+        /// </remarks>
         public void Update()
         {
             if (player.IsCasting) return;

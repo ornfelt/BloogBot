@@ -72,6 +72,31 @@ namespace ArcaneMageBot
         /// <summary>
         /// Updates the current state of the bot.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// Update -> Target: Check TappedByOther or FindClosestTarget
+        /// Target --> Update: Return Guid
+        /// Update -> Player: StopAllMovement
+        /// Update -> BotStates: Pop
+        /// Update -> StuckHelper: CheckIfStuck
+        /// Update -> Player: Calculate DistanceToTarget
+        /// Player --> Update: Return distance
+        /// Update -> Player: Check IsMoving
+        /// Player --> Update: Return IsMoving status
+        /// Update -> Player: StopAllMovement
+        /// Update -> Player: Check IsCasting and IsSpellReady
+        /// Player --> Update: Return status
+        /// Update -> Player: StopAllMovement
+        /// Update -> Wait: RemoveAll
+        /// Update -> Player: LuaCall
+        /// Update -> BotStates: Pop
+        /// Update -> BotStates: Push new CombatState
+        /// Update -> Navigation: GetNextWaypoint
+        /// Navigation --> Update: Return nextWaypoint
+        /// Update -> Player: MoveToward nextWaypoint
+        /// \enduml
+        /// </remarks>
         public void Update()
         {
             if (target.TappedByOther || container.FindClosestTarget()?.Guid != target.Guid)

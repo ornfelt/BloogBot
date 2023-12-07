@@ -75,6 +75,27 @@ namespace FrostMageBot
         /// Otherwise, the spell Frost Armor is cast.
         /// Finally, the spell Dampen Magic is cast on self.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// Update -> player: KnowsSpell(ArcaneIntellect)
+        /// Update -> player: HasBuff(ArcaneIntellect)
+        /// Update -> player: HasBuff(FrostArmor)
+        /// Update -> player: HasBuff(IceArmor)
+        /// Update -> player: HasBuff(MageArmor)
+        /// Update -> player: KnowsSpell(DampenMagic)
+        /// Update -> player: HasBuff(DampenMagic)
+        /// Update -> botStates: Pop()
+        /// Update -> botStates: Push(new ConjureItemsState)
+        /// Update -> TryCastSpell: ArcaneIntellect, castOnSelf: true
+        /// Update -> player: KnowsSpell(MageArmor)
+        /// Update -> TryCastSpell: MageArmor
+        /// Update -> player: KnowsSpell(IceArmor)
+        /// Update -> TryCastSpell: IceArmor
+        /// Update -> TryCastSpell: FrostArmor
+        /// Update -> TryCastSpell: DampenMagic, castOnSelf: true
+        /// \enduml
+        /// </remarks>
         public void Update()
         {
             if ((!player.KnowsSpell(ArcaneIntellect) || player.HasBuff(ArcaneIntellect)) && (player.HasBuff(FrostArmor) || player.HasBuff(IceArmor) || player.HasBuff(MageArmor)) && (!player.KnowsSpell(DampenMagic) || player.HasBuff(DampenMagic)))
@@ -99,6 +120,28 @@ namespace FrostMageBot
         /// <summary>
         /// Tries to cast a spell with the given name.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "TryCastSpell Method" as T
+        /// participant "Player" as P
+        /// participant "ClientHelper" as C
+        /// 
+        /// T -> P: HasBuff(name)
+        /// T -> P: KnowsSpell(name)
+        /// T -> P: IsSpellReady(name)
+        /// 
+        /// alt castOnSelf is true
+        ///     T -> C: ClientVersion
+        ///     alt ClientVersion is Vanilla
+        ///         T -> P: LuaCall(CastSpellByName(name,1))
+        ///     else ClientVersion is not Vanilla
+        ///         T -> P: CastSpell(name, player.Guid)
+        ///     end
+        /// else castOnSelf is false
+        ///     T -> P: LuaCall(CastSpellByName(name))
+        /// end
+        /// \enduml
+        /// </remarks>
         void TryCastSpell(string name, bool castOnSelf = false)
         {
             if (!player.HasBuff(name) && player.KnowsSpell(name) && player.IsSpellReady(name))

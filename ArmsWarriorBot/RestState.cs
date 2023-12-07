@@ -57,6 +57,30 @@ namespace ArmsWarriorBot
         /// <summary>
         /// Updates the player's actions based on certain conditions.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// Update -> Player: Check HealthPercent
+        /// Update -> Player: Check IsEating
+        /// Update -> ObjectManager: Check Player.IsInCombat
+        /// Update -> ObjectManager: Check Units.TargetGuid
+        /// Update -> Wait: RemoveAll
+        /// Update -> Player: Stand
+        /// Update -> BotStates: Pop
+        /// Update -> Inventory: GetItemCount
+        /// Update -> Container: Check RunningErrands
+        /// Update -> Container: GetCurrentHotspot
+        /// Update -> BotStates: Push TravelState
+        /// Update -> BotStates: Push MoveToPositionState
+        /// Update -> BotStates: Push BuyItemsState
+        /// Update -> BotStates: Push SellItemsState
+        /// Update -> BotStates: Push MoveToPositionState
+        /// Update -> Container: CheckForTravelPath
+        /// Update -> ObjectManager: Check Player.IsEating
+        /// Update -> Wait: For "EatDelay"
+        /// Update -> FoodItem: Use
+        /// \enduml
+        /// </remarks>
         public void Update()
         {
             if (player.HealthPercent >= 95 ||

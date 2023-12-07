@@ -95,6 +95,14 @@ namespace BloogBot.Game
         /// <summary>
         /// Calculates the distance between this position and the specified position.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// Position -> Position: DistanceTo(Position)
+        /// Position -> Position: Calculate deltaX, deltaY, deltaZ
+        /// Position -> Math: Sqrt(deltaX^2 + deltaY^2 + deltaZ^2)
+        /// Math --> Position: Return distance
+        /// \enduml
+        /// </remarks>
         public float DistanceTo(Position position)
         {
             var deltaX = X - position.X;
@@ -107,6 +115,15 @@ namespace BloogBot.Game
         /// <summary>
         /// Calculates the 2D distance between this position and the specified position.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// Position -> Position: DistanceTo2D(position)
+        /// Position -> Position: Calculate deltaX
+        /// Position -> Position: Calculate deltaY
+        /// Position -> Math: Sqrt(deltaX * deltaX + deltaY * deltaY)
+        /// Math --> Position: return distance
+        /// \enduml
+        /// </remarks>
         public float DistanceTo2D(Position position)
         {
             var deltaX = X - position.X;
@@ -118,6 +135,13 @@ namespace BloogBot.Game
         /// <summary>
         /// Returns a normalized vector of the current position.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// Position -> Math: Calculate magnitude
+        /// Math --> Position: Return magnitude
+        /// Position -> Position: Create new normalized Position
+        /// \enduml
+        /// </remarks>
         public Position GetNormalizedVector()
         {
             var magnitude = Math.Sqrt(X * X + Y * Y + Z * Z);
@@ -147,15 +171,65 @@ namespace BloogBot.Game
         /// <summary>
         /// Converts the current object to an instance of XYZ.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "XYZ" as A
+        /// participant "Caller" as B
+        /// B -> A: ToXYZ()
+        /// activate A
+        /// A --> B: new XYZ(X, Y, Z)
+        /// deactivate A
+        /// \enduml
+        /// </remarks>
         public XYZ ToXYZ() => new XYZ(X, Y, Z);
 
         /// <summary>
         /// Returns a string representation of the object with rounded X, Y, and Z values.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "ToString Method" as T
+        /// participant "Math.Round Method" as M
+        /// T -> M: Round(X, 2)
+        /// activate M
+        /// M --> T: return rounded X
+        /// deactivate M
+        /// T -> M: Round(Y, 2)
+        /// activate M
+        /// M --> T: return rounded Y
+        /// deactivate M
+        /// T -> M: Round(Z, 2)
+        /// activate M
+        /// M --> T: return rounded Z
+        /// deactivate M
+        /// \enduml
+        /// </remarks>
         public override string ToString() => $"X: {Math.Round(X, 2)}, Y: {Math.Round(Y, 2)}, Z: {Math.Round(Z, 2)}";
         /// <summary>
         /// Returns a string representation of the object including ID, Zone, MinLevel, MaxLevel, X, Y, Z, and Links.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "ToStringFull Method" as T
+        /// participant "ID" as I
+        /// participant "Zone" as Z
+        /// participant "MinLevel" as Min
+        /// participant "MaxLevel" as Max
+        /// participant "X" as X
+        /// participant "Y" as Y
+        /// participant "Z" as Z
+        /// participant "Links" as L
+        /// T -> I: Get ID
+        /// T -> Z: Get Zone
+        /// T -> Min: Get MinLevel
+        /// T -> Max: Get MaxLevel
+        /// T -> X: Get X
+        /// T -> Y: Get Y
+        /// T -> Z: Get Z
+        /// T -> L: Get Links
+        /// T --> T: Return formatted string
+        /// \enduml
+        /// </remarks>
         public string ToStringFull() => $"ID: {ID}, Zone: {GetZoneName(Int32.Parse(Zone))} ({Zone}), MinLevel: {MinLevel}, MaxLevel: {MaxLevel}, X: {Math.Round(X, 2)}, Y: {Math.Round(Y, 2)}, Z: {Math.Round(Z, 2)}, Links: {Links}";
 
         /// <summary>
@@ -191,6 +265,18 @@ namespace BloogBot.Game
         /// If the zone ID is found in the ZoneIdNameDict dictionary, the corresponding name is returned.
         /// Otherwise, "Unknown Zone" is returned.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "GetZoneName Method" as A
+        /// participant "ZoneIdNameDict Dictionary" as B
+        /// A -> B: Check if zone exists
+        /// alt zone exists in ZoneIdNameDict
+        ///   B --> A: Return zone name
+        /// else zone does not exist in ZoneIdNameDict
+        ///   B --> A: Return "Unknown Zone"
+        /// end
+        /// \enduml
+        /// </remarks>
         private static string GetZoneName(int zone)
         {
             return ZoneIdNameDict.ContainsKey(zone) ? ZoneIdNameDict[zone] : "Unknown Zone";
@@ -199,6 +285,17 @@ namespace BloogBot.Game
         /// <summary>
         /// Retrieves the name of the zone.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        ///  participant "GetZoneName()" as A
+        ///  participant "Int32.Parse()" as B
+        ///  participant "GetZoneName(int)" as C
+        ///  A -> B: Zone
+        ///  B --> A: Parsed Zone
+        ///  A -> C: Parsed Zone
+        ///  C --> A: Zone Name
+        /// \enduml
+        /// </remarks>
         public string GetZoneName()
         {
             return GetZoneName(Int32.Parse(Zone));

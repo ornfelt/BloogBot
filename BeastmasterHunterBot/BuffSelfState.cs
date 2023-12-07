@@ -50,6 +50,26 @@ namespace BeastMasterHunterBot
         /// <summary>
         /// Updates the player's state by checking if they know the spell AspectOfTheHawk and if they have the buff AspectOfTheHawk. If either condition is true, the bot state is popped and the method returns. Otherwise, the method tries to cast the spell AspectOfTheHawk.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// Update -> Player: KnowsSpell(AspectOfTheHawk)
+        /// Player --> Update: Response
+        /// alt Response is False
+        ///     Update -> BotStates: Pop()
+        ///     return
+        /// else Response is True
+        ///     Update -> Player: HasBuff(AspectOfTheHawk)
+        ///     Player --> Update: Response
+        ///     alt Response is True
+        ///         Update -> BotStates: Pop()
+        ///         return
+        ///     else Response is False
+        ///         Update -> Update: TryCastSpell(AspectOfTheHawk)
+        ///     end
+        /// end
+        /// \enduml
+        /// </remarks>
         public void Update()
         {
             if (!player.KnowsSpell(AspectOfTheHawk) || player.HasBuff(AspectOfTheHawk))
@@ -64,6 +84,17 @@ namespace BeastMasterHunterBot
         /// <summary>
         /// Tries to cast a spell by the given name if the player has the required level and the spell is ready.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "TryCastSpell Method" as T
+        /// participant "Player" as P
+        /// T -> P: HasBuff(name)
+        /// alt player has no buff and level is sufficient and spell is ready
+        ///     T -> P: IsSpellReady(name)
+        ///     T -> P: LuaCall("CastSpellByName('name')")
+        /// end
+        /// \enduml
+        /// </remarks>
         void TryCastSpell(string name, int requiredLevel = 1)
         {
             if (!player.HasBuff(name) && player.Level >= requiredLevel && player.IsSpellReady(name))

@@ -54,15 +54,22 @@ namespace FeralDruidBot
         /// <summary>
         /// Gets the dependency container for the bot.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "GetDependencyContainer Method" as GDC
+        /// participant "DependencyContainer" as DC
+        /// GDC -> DC: new DependencyContainer(AdditionalTargetingCriteria, CreateRestState, CreateMoveToTargetState, CreatePowerlevelCombatState, botSettings, probe, hotspots)
+        /// \enduml
+        /// </remarks>
         public IDependencyContainer GetDependencyContainer(BotSettings botSettings, Probe probe, IEnumerable<Hotspot> hotspots) =>
-                    new DependencyContainer(
-                        AdditionalTargetingCriteria,
-                        CreateRestState,
-                        CreateMoveToTargetState,
-                        CreatePowerlevelCombatState,
-                        botSettings,
-                        probe,
-                        hotspots);
+                            new DependencyContainer(
+                                AdditionalTargetingCriteria,
+                                CreateRestState,
+                                CreateMoveToTargetState,
+                                CreatePowerlevelCombatState,
+                                botSettings,
+                                probe,
+                                hotspots);
 
         /// <summary>
         /// This method is used to test the functionality of the dependency container.

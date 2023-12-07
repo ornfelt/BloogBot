@@ -49,25 +49,47 @@ namespace BloogBot
         /// <summary>
         /// Imports the VirtualProtect function from the kernel32.dll library.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "Caller" as C
+        /// participant "VirtualProtect Function" as VP
+        /// C -> VP : Calls VirtualProtect
+        /// VP --> C : Returns bool result
+        /// \enduml
+        /// </remarks>
         [DllImport("kernel32.dll")]
         static extern bool VirtualProtect(IntPtr address, int size, uint newProtect, out uint oldProtect);
 
         /// <summary>
         /// Opens an existing local process object.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "Caller" as C
+        /// participant "OpenProcess Function" as O
+        /// C -> O: Call OpenProcess(desiredAccess, inheritHandle, processId)
+        /// O --> C: Returns IntPtr
+        /// \enduml
+        /// </remarks>
         [DllImport("kernel32.dll")]
         static extern IntPtr OpenProcess(ProcessAccessFlags desiredAccess, bool inheritHandle, int processId);
 
         /// <summary>
         /// Writes data to an area of memory in a specified process.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// :Program: -> kernel32.dll: WriteProcessMemory(hProcess, lpBaseAddress, lpBuffer, dwSize, lpNumberOfBytesWritten)
+        /// kernel32.dll --> :Program: return bool
+        /// \enduml
+        /// </remarks>
         [DllImport("kernel32.dll")]
         static extern bool WriteProcessMemory(
-                    IntPtr hProcess,
-                    IntPtr lpBaseAddress,
-                    byte[] lpBuffer,
-                    int dwSize,
-                    ref int lpNumberOfBytesWritten);
+                            IntPtr hProcess,
+                            IntPtr lpBaseAddress,
+                            byte[] lpBuffer,
+                            int dwSize,
+                            ref int lpNumberOfBytesWritten);
 
         /// <summary>
         /// Specifies the protection options for a memory page.
@@ -91,6 +113,14 @@ namespace BloogBot
         /// <summary>
         /// The VirtualProtect function changes the protection on a region of committed pages in the virtual address space of the calling process.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "Caller" as C
+        /// participant "VirtualProtect Function" as VP
+        /// C -> VP: Call VirtualProtect(lpAddress, dwSize, flNewProtect, lpflOldProtect)
+        /// VP --> C: Returns bool
+        /// \enduml
+        /// </remarks>
         [DllImport("kernel32.dll")]
         static extern bool VirtualProtect(IntPtr lpAddress, UIntPtr dwSize, uint flNewProtect, out uint lpflOldProtect);
 
@@ -106,6 +136,16 @@ namespace BloogBot
         /// <summary>
         /// Reads a byte from the specified memory address.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// ReadByte -> IntPtr: Check if address is Zero
+        /// IntPtr --> ReadByte: Return 0 if true
+        /// ReadByte -> byte: Try to return byte at address
+        /// byte --> ReadByte: Return byte if successful
+        /// ReadByte -> Logger: Log Access Violation if unsuccessful
+        /// Logger --> ReadByte: Return default byte
+        /// \enduml
+        /// </remarks>
         [HandleProcessCorruptedStateExceptions]
         static internal byte ReadByte(IntPtr address)
         {
@@ -126,6 +166,22 @@ namespace BloogBot
         /// <summary>
         /// Reads an integer value from the specified memory address.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// activate "ReadInt"
+        /// "ReadInt" -> "ReadInt": Check if address is IntPtr.Zero
+        /// alt address is IntPtr.Zero
+        /// "ReadInt" --> "ReadInt": Return 0
+        /// else address is not IntPtr.Zero
+        /// "ReadInt" -> "ReadInt": Try to return value at address
+        /// alt AccessViolationException is thrown
+        /// "ReadInt" -> Logger: Log "Access Violation on " + address.ToString("X") + " with type Int"
+        /// "ReadInt" --> "ReadInt": Return default
+        /// end
+        /// end
+        /// deactivate "ReadInt"
+        /// \enduml
+        /// </remarks>
         [HandleProcessCorruptedStateExceptions]
         static public int ReadInt(IntPtr address)
         {
@@ -146,6 +202,25 @@ namespace BloogBot
         /// <summary>
         /// Reads an unsigned integer from the specified memory address.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "ReadUint Function" as R
+        /// participant "Logger" as L
+        /// 
+        /// R -> R: Check if address is IntPtr.Zero
+        /// alt address is IntPtr.Zero
+        ///   R --> R: Return 0
+        /// else address is not IntPtr.Zero
+        ///   R -> R: Try to read uint from address
+        ///   alt AccessViolationException is thrown
+        ///     R -> L: Log "Access Violation on " + address.ToString("X") + " with type Uint"
+        ///     R --> R: Return default
+        ///   else No exception is thrown
+        ///     R --> R: Return read uint
+        ///   end
+        /// end
+        /// \enduml
+        /// </remarks>
         [HandleProcessCorruptedStateExceptions]
         static public uint ReadUint(IntPtr address)
         {
@@ -166,6 +241,22 @@ namespace BloogBot
         /// <summary>
         /// Reads an unsigned long integer from the specified memory address.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// ReadUlong -> address: Check if address is IntPtr.Zero
+        /// alt address is IntPtr.Zero
+        ///   ReadUlong --> ReadUlong: Return 0
+        /// else address is not IntPtr.Zero
+        ///   ReadUlong -> address: Try to read ulong from address
+        ///   alt AccessViolationException is thrown
+        ///     ReadUlong -> Logger: Log "Access Violation on " + address.ToString("X") + " with type Ulong"
+        ///     ReadUlong --> ReadUlong: Return default
+        ///   else no exception is thrown
+        ///     ReadUlong --> ReadUlong: Return read ulong
+        ///   end
+        /// end
+        /// \enduml
+        /// </remarks>
         [HandleProcessCorruptedStateExceptions]
         static public ulong ReadUlong(IntPtr address)
         {
@@ -186,6 +277,23 @@ namespace BloogBot
         /// <summary>
         /// Reads an IntPtr value from the specified memory address.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "ReadIntPtr Function" as R
+        /// participant "Logger" as L
+        /// 
+        /// R -> R: Check if address is IntPtr.Zero
+        /// alt address is IntPtr.Zero
+        ///   R --> R: Return IntPtr.Zero
+        /// else address is not IntPtr.Zero
+        ///   R -> R: Try to return *(IntPtr*)address
+        ///   alt AccessViolationException is thrown
+        ///     R -> L: Log "Access Violation on " + address.ToString("X") + " with type IntPtr"
+        ///     R --> R: Return default
+        ///   end
+        /// end
+        /// \enduml
+        /// </remarks>
         [HandleProcessCorruptedStateExceptions]
         static public IntPtr ReadIntPtr(IntPtr address)
         {
@@ -206,6 +314,22 @@ namespace BloogBot
         /// <summary>
         /// Reads a float value from the specified memory address.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// activate "ReadFloat"
+        /// "ReadFloat" -> "ReadFloat": Check if address is IntPtr.Zero
+        /// alt address is IntPtr.Zero
+        /// "ReadFloat" --> "ReadFloat": Return 0
+        /// else address is not IntPtr.Zero
+        /// "ReadFloat" -> "ReadFloat": Try to return value at address
+        /// alt AccessViolationException is thrown
+        /// "ReadFloat" -> Logger: Log "Access Violation on " + address.ToString("X") + " with type Float"
+        /// "ReadFloat" --> "ReadFloat": Return default
+        /// end
+        /// end
+        /// deactivate "ReadFloat"
+        /// \enduml
+        /// </remarks>
         [HandleProcessCorruptedStateExceptions]
         static public float ReadFloat(IntPtr address)
         {
@@ -226,6 +350,21 @@ namespace BloogBot
         /// <summary>
         /// Reads a string from the specified memory address.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// ReadString -> IntPtr: Check if address is Zero
+        /// ReadString -> ReadBytes: Call ReadBytes with address and size
+        /// ReadBytes --> ReadString: Return buffer
+        /// ReadString -> Encoding: Get ASCII string from buffer
+        /// Encoding --> ReadString: Return string
+        /// ReadString -> String: Check for null character
+        /// String --> ReadString: Return index
+        /// ReadString -> String: Remove null character
+        /// String --> ReadString: Return modified string
+        /// ReadString -> Logger: Log Access Violation Exception
+        /// Logger --> ReadString: Return default
+        /// \enduml
+        /// </remarks>
         [HandleProcessCorruptedStateExceptions]
         static public string ReadString(IntPtr address, int size = 512)
         {
@@ -257,6 +396,12 @@ namespace BloogBot
         /// <summary>
         /// Reads a specified number of bytes from the memory address.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// ReadBytes:IntPtr, int --> ret:byte[]
+        /// ret:byte[] --> ReadBytes:IntPtr, int
+        /// \enduml
+        /// </remarks>
         [HandleProcessCorruptedStateExceptions]
         static public byte[] ReadBytes(IntPtr address, int count)
         {
@@ -286,6 +431,27 @@ namespace BloogBot
         /// <summary>
         /// Reads an item cache entry from the specified memory address.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "ReadItemCacheEntry Function" as R
+        /// participant "ItemCacheEntry Constructor" as I
+        /// participant "Logger" as L
+        /// 
+        /// R -> R: Check if address is IntPtr.Zero
+        /// alt address is IntPtr.Zero
+        ///   R -> R: Return null
+        /// else address is not IntPtr.Zero
+        ///   R -> I: Create new ItemCacheEntry
+        ///   alt AccessViolationException is thrown
+        ///     I -> R: Throw AccessViolationException
+        ///     R -> L: Log "Access Violation on " + address.ToString("X") + " with type ItemCacheEntry"
+        ///     R -> R: Return default
+        ///   else No exception is thrown
+        ///     I -> R: Return new ItemCacheEntry
+        ///   end
+        /// end
+        /// \enduml
+        /// </remarks>
         [HandleProcessCorruptedStateExceptions]
         static public ItemCacheEntry ReadItemCacheEntry(IntPtr address)
         {
@@ -306,11 +472,29 @@ namespace BloogBot
         /// <summary>
         /// Writes a byte value to the specified memory address.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "Caller" as C
+        /// participant "WriteByte Function" as W
+        /// participant "Marshal" as M
+        /// C -> W: WriteByte(address, value)
+        /// W -> M: StructureToPtr(value, address, false)
+        /// \enduml
+        /// </remarks>
         static internal void WriteByte(IntPtr address, byte value) => Marshal.StructureToPtr(value, address, false);
 
         /// <summary>
         /// Writes an integer value to the specified memory address.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "Caller" as C
+        /// participant "WriteInt Function" as W
+        /// participant "Marshal" as M
+        /// C -> W: WriteInt(address, value)
+        /// W -> M: StructureToPtr(value, address, false)
+        /// \enduml
+        /// </remarks>
         static internal void WriteInt(IntPtr address, int value) => Marshal.StructureToPtr(value, address, false);
 
         /// <summary>
@@ -321,6 +505,29 @@ namespace BloogBot
         // you can check whether memory is successfully being modified by setting a breakpoint
         // here and checking Debug -> Windows -> Disassembly.
         // if you have further issues, you may need to use VirtualProtect from the Win32 API.
+        /// <remarks>
+        /// \startuml
+        /// participant "WriteBytes Function" as WriteBytes
+        /// participant "OpenProcess Function" as OpenProcess
+        /// participant "WriteProcessMemory Function" as WriteProcessMemory
+        /// participant "VirtualProtect Function" as VirtualProtect
+        /// 
+        /// WriteBytes -> OpenProcess: access, false, Process.GetCurrentProcess().Id
+        /// activate OpenProcess
+        /// OpenProcess --> WriteBytes: process
+        /// deactivate OpenProcess
+        /// 
+        /// WriteBytes -> WriteProcessMemory: process, address, bytes, bytes.Length, ref ret
+        /// activate WriteProcessMemory
+        /// WriteProcessMemory --> WriteBytes: ret
+        /// deactivate WriteProcessMemory
+        /// 
+        /// WriteBytes -> VirtualProtect: address, bytes.Length, (uint)protection, out uint _
+        /// activate VirtualProtect
+        /// VirtualProtect --> WriteBytes: protection
+        /// deactivate VirtualProtect
+        /// \enduml
+        /// </remarks>
         static internal void WriteBytes(IntPtr address, byte[] bytes)
         {
             if (address == IntPtr.Zero)
@@ -348,6 +555,35 @@ namespace BloogBot
         /// <summary>
         /// Injects an assembly into memory and returns the starting address of the allocated area.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "InjectAssembly()" as IA
+        /// participant "Fasm" as F
+        /// participant "Logger" as L
+        /// participant "Marshal" as M
+        /// participant "Hack" as H
+        /// participant "HackManager" as HM
+        ///
+        /// IA -> F: Clear()
+        /// loop for each instruction
+        /// IA -> F: AddLine(instruction)
+        /// end
+        /// IA -> F: Assemble()
+        /// alt Exception occurs
+        /// F -> IA: Throws FasmAssemblerException
+        /// IA -> L: Log(ex)
+        /// end
+        /// IA -> M: AllocHGlobal(byteCode.Length)
+        /// IA -> F: Clear()
+        /// loop for each instruction
+        /// IA -> F: AddLine(instruction)
+        /// end
+        /// IA -> F: Assemble(start)
+        /// IA -> H: new Hack(hackName, start, byteCode)
+        /// IA -> HM: AddHack(hack)
+        /// IA --> : return start
+        /// \enduml
+        /// </remarks>
         static internal IntPtr InjectAssembly(string hackName, string[] instructions)
         {
             // first get the assembly as bytes for the allocated area before overwriting the memory
@@ -382,6 +618,21 @@ namespace BloogBot
         /// <summary>
         /// Injects an assembly into the game process.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "InjectAssembly Function" as IA
+        /// participant "Fasm" as F
+        /// participant "Hack" as H
+        /// participant "HackManager" as HM
+        /// 
+        /// IA -> F: Clear()
+        /// IA -> F: AddLine("use32")
+        /// IA -> F: AddLine(instructions)
+        /// IA -> F: Assemble(start)
+        /// IA -> H: new Hack(hackName, start, byteCode)
+        /// IA -> HM: AddHack(hack)
+        /// \enduml
+        /// </remarks>
         static internal void InjectAssembly(string hackName, uint ptr, string instructions)
         {
             fasm.Clear();

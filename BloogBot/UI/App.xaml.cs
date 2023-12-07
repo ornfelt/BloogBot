@@ -18,6 +18,18 @@ namespace BloogBot.UI
         /// <summary>
         /// Overrides the OnStartup method and initializes the application.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// App -> Debugger: Launch()
+        /// App -> WardenDisabler: Initialize()
+        /// App -> MainWindow: new MainWindow()
+        /// App -> App: Current.MainWindow = mainWindow
+        /// App -> mainWindow: Closed += Environment.Exit(0)
+        /// App -> mainWindow: Show()
+        /// App -> App: base.OnStartup(e)
+        /// \enduml
+        /// </remarks>
         protected override void OnStartup(StartupEventArgs e)
         {
 #if DEBUG

@@ -59,6 +59,22 @@ namespace BloogBot.AI.SharedStates
         /// <summary>
         /// Updates the player's target and bot states based on the closest enemy target and the player's position.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// Update -> Container: FindClosestTarget()
+        /// Container --> Update: enemyTarget
+        /// Update -> Math: Abs(enemyTarget.Position.Z - player.Position.Z)
+        /// Math --> Update: distance
+        /// Update -> Player: SetTarget(enemyTarget.Guid)
+        /// Update -> Container: CreateMoveToTargetState(botStates, container, enemyTarget)
+        /// Container --> Update: moveToTargetState
+        /// Update -> BotStates: Push(moveToTargetState)
+        /// alt enemyTarget is null or distance >= 16.0F
+        /// Update -> Update: HandleWpSelection()
+        /// end
+        /// \enduml
+        /// </remarks>
         public void Update()
         {
             var enemyTarget = container.FindClosestTarget();
@@ -77,6 +93,29 @@ namespace BloogBot.AI.SharedStates
         /// <summary>
         /// Handles the selection of a waypoint for the bot to move to.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// HandleWpSelection -> container: GetCurrentHotspot()
+        /// HandleWpSelection -> ObjectManager: Player
+        /// HandleWpSelection -> HandleWpSelection: IsHotspotBg(hotspot.Id)
+        /// HandleWpSelection -> player: Level
+        /// HandleWpSelection -> player: StuckInStateOrPosCount = 0
+        /// HandleWpSelection -> HandleWpSelection: EnsurePlayerHasZone(hotspot)
+        /// HandleWpSelection -> hotspot: Waypoints
+        /// HandleWpSelection -> player: Position.DistanceTo(w)
+        /// HandleWpSelection -> player: CurrWpId == 0 ? nearestWps.FirstOrDefault() : waypoints.Where(x => x.ID == player.CurrWpId).FirstOrDefault()
+        /// alt player.CurrWpId == 0
+        ///   HandleWpSelection -> HandleWpSelection: SelectNewWaypoint(nearestWps)
+        /// else
+        ///   HandleWpSelection -> HandleWpSelection: SelectNewWaypointFromExisting(waypoints, waypoint, hotspot)
+        /// end
+        /// HandleWpSelection -> HandleWpSelection: TryToMount()
+        /// HandleWpSelection -> player: CurrWpId = waypoint.ID
+        /// HandleWpSelection -> Console: WriteLine("Selected waypoint: " + waypoint.ToStringFull() + ", HasOverleveled: " + player.HasOverLeveled)
+        /// HandleWpSelection -> botStates: Push(new MoveToHotspotWaypointState(botStates, container, waypoint))
+        /// \enduml
+        /// </remarks>
         private void HandleWpSelection()
         {
             // Initialize variables
@@ -108,6 +147,19 @@ namespace BloogBot.AI.SharedStates
         /// <summary>
         /// Ensures that the player has a zone assigned based on the nearest waypoint.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// EnsurePlayerHasZone -> player: Check CurrZone
+        /// alt CurrZone is "0"
+        ///   EnsurePlayerHasZone -> hotspot: Get Waypoints
+        ///   hotspot --> EnsurePlayerHasZone: Return Waypoints
+        ///   EnsurePlayerHasZone -> player: Calculate DistanceTo each Waypoint
+        ///   player --> EnsurePlayerHasZone: Return Distances
+        ///   EnsurePlayerHasZone -> player: Set CurrZone to nearest Waypoint's Zone
+        ///   EnsurePlayerHasZone -> Console: Write "No zone currently set. Setting zone based on nearest WP: " + player.CurrZone
+        /// end
+        /// \enduml
+        /// </remarks>
         private void EnsurePlayerHasZone(Hotspot hotspot)
         {
             if (player.CurrZone == "0")
@@ -122,6 +174,24 @@ namespace BloogBot.AI.SharedStates
         /// Selects a new waypoint from the given list of nearest waypoints.
         /// </summary>
         //private void SelectNewWaypoint(ref Position waypoint, IOrderedEnumerable<Position> nearestWps)
+        /// <remarks>
+        /// \startuml
+        /// participant "SelectNewWaypoint()" as A
+        /// participant "Console" as B
+        /// participant "nearestWps" as C
+        /// participant "player" as D
+        /// 
+        /// A -> B: WriteLine("No CurrWpId... Selecting new one")
+        /// A -> C: FirstOrDefault()
+        /// A -> D: BlackListedWps.Contains(waypoint.ID)
+        /// loop until newWpFound
+        ///     A -> C: ElementAtOrDefault(wpCounter)
+        ///     A -> D: BlackListedWps.Contains(waypoint.ID)
+        ///     note over A: If wpCounter > 100, set newWpFound to true
+        /// end
+        /// A --> A: return waypoint
+        /// \enduml
+        /// </remarks>
         private Position SelectNewWaypoint(IOrderedEnumerable<Position> nearestWps)
         {
             Console.WriteLine("No CurrWpId... Selecting new one");
@@ -146,6 +216,37 @@ namespace BloogBot.AI.SharedStates
         /// <summary>
         /// Selects a new waypoint from the existing list of waypoints based on certain conditions.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// Position -> Player: DistanceTo(waypoint)
+        /// Player -> Position: Return distance
+        /// Position -> Player: WpStuckCount
+        /// Player -> Position: Return WpStuckCount
+        /// Position -> Console: WriteLine
+        /// Position -> Player: HasOverLeveled
+        /// Player -> Position: Return HasOverLeveled
+        /// Position -> Player: DistanceTo(waypoint)
+        /// Player -> Position: Return distance
+        /// Position -> Position: HandleWaypointReachedActions(waypoint, hotspot.Id)
+        /// Position -> Player: HasOverLeveled
+        /// Player -> Position: Return HasOverLeveled
+        /// Position -> Position: SelectOverleveledWaypoint(waypoints, waypoint)
+        /// Position -> Player: WpStuckCount
+        /// Player -> Position: Return WpStuckCount
+        /// Position -> Player: HasBeenStuckAtWp
+        /// Player -> Position: Return HasBeenStuckAtWp
+        /// Position -> Console: WriteLine
+        /// Position -> Player: LuaCall
+        /// Position -> Position: SelectNewLinkedWaypoint(waypoints, waypoint)
+        /// Position -> Player: DeathsAtWp
+        /// Player -> Position: Return DeathsAtWp
+        /// Position -> Player: WpStuckCount
+        /// Player -> Position: Return WpStuckCount
+        /// Position -> Console: WriteLine
+        /// Position -> Position: Return waypoint
+        /// \enduml
+        /// </remarks>
         private Position SelectNewWaypointFromExisting(IEnumerable<Position> waypoints, Position waypoint, Hotspot hotspot)
         {
             if (player.Position.DistanceTo(waypoint) < 3.0F || player.WpStuckCount > 10)
@@ -183,6 +284,24 @@ namespace BloogBot.AI.SharedStates
         /// <summary>
         /// Selects a new linked waypoint based on the given list of waypoints and current waypoint.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "SelectNewLinkedWaypoint()" as S
+        /// participant "Player" as P
+        /// participant "Waypoint" as W
+        /// S -> P: player.WpStuckCount
+        /// S -> P: player.HasBeenStuckAtWp
+        /// S -> W: waypoint.Links
+        /// S -> W: waypoint.ID
+        /// S -> P: player.BlackListedWps
+        /// S -> P: player.HasVisitedWp
+        /// S -> W: linkWp.MinLevel
+        /// S -> W: linkWp.MaxLevel
+        /// S -> P: playerLevel
+        /// S -> W: waypoint
+        /// S --> S: Return waypoint
+        /// \enduml
+        /// </remarks>
         private Position SelectNewLinkedWaypoint(IEnumerable<Position> waypoints, Position waypoint)
         {
             if (player.WpStuckCount > 10)
@@ -215,7 +334,7 @@ namespace BloogBot.AI.SharedStates
                 else
                 {
                     // Check level requirement
-                    if (linkWp.MinLevel <= playerLevel && linkWp.MaxLevel > playerLevel 
+                    if (linkWp.MinLevel <= playerLevel && linkWp.MaxLevel > playerLevel
                         && !player.BlackListedWps.Contains(linkWp.ID))
                     {
                         waypoint = linkWp;
@@ -235,6 +354,30 @@ namespace BloogBot.AI.SharedStates
         /// <summary>
         /// Handles the actions when a waypoint is reached.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// HandleWaypointReachedActions -> player : VisitedWps.Add(waypoint.ID)
+        /// HandleWaypointReachedActions -> : LogToFile(waypoint.ID + "  (" + waypoint.GetZoneName() + ")")
+        /// HandleWaypointReachedActions -> ObjectManager : MapId != 559
+        /// ObjectManager --> HandleWaypointReachedActions : MapId
+        /// HandleWaypointReachedActions -> player : LastWpId = waypoint.ID
+        /// HandleWaypointReachedActions -> player : CurrZone != waypoint.Zone
+        /// player --> HandleWaypointReachedActions : CurrZone
+        /// HandleWaypointReachedActions -> Console : WriteLine("Bot arrived at new zone!")
+        /// HandleWaypointReachedActions -> player : CurrZone = waypoint.Zone
+        /// HandleWaypointReachedActions -> player : HasBeenStuckAtWp = false
+        /// HandleWaypointReachedActions -> : random.Next(99) + 1 < (player.HasOverLeveled ? 0 : 10)
+        /// HandleWaypointReachedActions -> botStates : Push(new BattlegroundQueueState(botStates, container))
+        /// HandleWaypointReachedActions -> : random.Next(99) + 1 < (player.HasOverLeveled ? 0 : 5)
+        /// HandleWaypointReachedActions -> botStates : Push(new ArenaSkirmishQueueState(botStates, container))
+        /// HandleWaypointReachedActions -> player : playerLevel >= 70 && hotspotId != 7 && hotspotId != 8
+        /// HandleWaypointReachedActions -> player : LuaCall($"SendChatMessage('.npcb wp go 2706')")
+        /// HandleWaypointReachedActions -> player : HasEnteredNewMap = true
+        /// HandleWaypointReachedActions -> player : playerLevel >= 60 && playerLevel < 70 && hotspotId != 5 && hotspotId != 6
+        /// HandleWaypointReachedActions -> player : LuaCall($"SendChatMessage('.npcb wp go 2583')")
+        /// HandleWaypointReachedActions -> player : HasEnteredNewMap = true
+        /// \enduml
+        /// </remarks>
         private void HandleWaypointReachedActions(Position waypoint, int hotspotId)
         {
             player.VisitedWps.Add(waypoint.ID);
@@ -272,6 +415,32 @@ namespace BloogBot.AI.SharedStates
         /// <summary>
         /// Selects an overleveled waypoint from a collection of waypoints based on the current waypoint.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// Player -> SelectOverleveledWaypoint: waypoints, waypoint
+        /// SelectOverleveledWaypoint -> Player: ForcedWpPath, WpStuckCount
+        /// alt WpStuckCount > 10
+        ///     SelectOverleveledWaypoint -> Player: LastWpId
+        ///     alt waypoint.ID == LastWpId
+        ///         SelectOverleveledWaypoint -> Console: WriteLine
+        ///         SelectOverleveledWaypoint -> Player: LuaCall
+        ///         SelectOverleveledWaypoint -> Player: ForcedWpPathViaBFS
+        ///     else
+        ///         SelectOverleveledWaypoint -> Player: BlackListedWps.Add
+        ///         SelectOverleveledWaypoint -> Player: ForcedWpPathViaBFS
+        ///         SelectOverleveledWaypoint -> Player: BlackListedWps.Remove
+        ///         SelectOverleveledWaypoint -> Player: LuaCall
+        ///     end
+        /// else
+        ///     SelectOverleveledWaypoint -> Player: ForcedWpPathViaBFS
+        ///     SelectOverleveledWaypoint -> Player: ForcedWpPath.Remove
+        /// end
+        /// SelectOverleveledWaypoint -> Console: WriteLine
+        /// SelectOverleveledWaypoint -> Player: ForcedWpPath.First
+        /// SelectOverleveledWaypoint -> Player: ForcedWpPath.Remove
+        /// SelectOverleveledWaypoint --> Player: waypoint
+        /// \enduml
+        /// </remarks>
         private Position SelectOverleveledWaypoint(IEnumerable<Position> waypoints, Position waypoint)
         {
             var stayOnWp = false;
@@ -341,6 +510,14 @@ namespace BloogBot.AI.SharedStates
         /// <summary>
         /// Tries to mount the player character.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// TryToMount -> Player: Check if player is mounted
+        /// alt not in BG and player level >= 40 or in BG
+        /// TryToMount -> Player: CastSpellByName('white polar bear')
+        /// end
+        /// \enduml
+        /// </remarks>
         private void TryToMount()
         {
             string MountName = "white polar bear";
@@ -354,6 +531,14 @@ namespace BloogBot.AI.SharedStates
         /// <summary>
         /// Determines if the given hotspot ID is a battleground hotspot.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "Caller Method" as Caller
+        /// participant "IsHotspotBg Method" as IsHotspotBg
+        /// Caller -> IsHotspotBg: hotspotId
+        /// IsHotspotBg --> Caller: return (hotspotId > 8 && hotspotId < 13)
+        /// \enduml
+        /// </remarks>
         private bool IsHotspotBg(int hotspotId)
         {
             return (hotspotId > 8 && hotspotId < 13);
@@ -362,6 +547,38 @@ namespace BloogBot.AI.SharedStates
         /// <summary>
         /// Performs a breadth-first search to find a forced waypoint path.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// ForcedWpPathViaBFS -> GetCurrentHotspot: Get current hotspot
+        /// ForcedWpPathViaBFS -> Queue: Initialize queue with startId
+        /// loop while queue.Count > 0
+        ///     ForcedWpPathViaBFS -> Queue: Dequeue currentPath
+        ///     ForcedWpPathViaBFS -> Waypoints: Get current waypoint
+        ///     alt if currentWaypoint is null
+        ///         ForcedWpPathViaBFS -> Console: Write error message
+        ///         ForcedWpPathViaBFS --> ForcedWpPathViaBFS: Return null
+        ///     else if currentWaypoint matches player level
+        ///         ForcedWpPathViaBFS -> Console: Write success message
+        ///         ForcedWpPathViaBFS --> ForcedWpPathViaBFS: Return currentPath
+        ///     else if currentWaypoint is in new zone
+        ///         loop for each visited waypoint
+        ///             ForcedWpPathViaBFS -> Waypoints: Get visited waypoint
+        ///         end
+        ///         alt if current waypoint is in new zone
+        ///             ForcedWpPathViaBFS -> Console: Write success message
+        ///             ForcedWpPathViaBFS --> ForcedWpPathViaBFS: Return currentPath
+        ///         end
+        ///     else if currentId is not visited
+        ///         ForcedWpPathViaBFS -> HashSet: Add currentId to visited
+        ///         ForcedWpPathViaBFS -> Waypoints: Get linked waypoints
+        ///         loop for each linked waypoint
+        ///             ForcedWpPathViaBFS -> Queue: Enqueue newPath
+        ///         end
+        ///     end
+        /// end
+        /// ForcedWpPathViaBFS --> ForcedWpPathViaBFS: Return currentPath or null
+        /// \enduml
+        /// </remarks>
         public List<int> ForcedWpPathViaBFS(int startId, bool ignoreBlacklistedWps)
         {
             var hotspot = container.GetCurrentHotspot();
@@ -438,6 +655,28 @@ namespace BloogBot.AI.SharedStates
         /// <summary>
         /// Logs the specified text to a file.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// LogToFile -> Path.GetDirectoryName: Get directory of MainViewModel assembly
+        /// Path.GetDirectoryName --> LogToFile: Directory path
+        /// LogToFile -> UriBuilder: Create UriBuilder with directory path
+        /// UriBuilder --> LogToFile: UriBuilder object
+        /// LogToFile -> Path.Combine: Combine directory path and "VisitedWanderNodes.txt"
+        /// Path.Combine --> LogToFile: File path
+        /// LogToFile -> File.Exists: Check if file exists at file path
+        /// File.Exists --> LogToFile: Boolean result
+        /// LogToFile -> File.AppendText: Open file for appending
+        /// File.AppendText --> LogToFile: StreamWriter object
+        /// LogToFile -> StreamWriter.WriteLine: Write text to file
+        /// StreamWriter.WriteLine --> LogToFile: 
+        /// LogToFile -> File.Exists: Check if alternative file exists at altFileName
+        /// File.Exists --> LogToFile: Boolean result
+        /// LogToFile -> File.AppendText: Open alternative file for appending
+        /// File.AppendText --> LogToFile: StreamWriter object
+        /// LogToFile -> StreamWriter.WriteLine: Write text to alternative file
+        /// StreamWriter.WriteLine --> LogToFile: 
+        /// \enduml
+        /// </remarks>
         void LogToFile(string text)
         {
             var dir = Path.GetDirectoryName(Assembly.GetAssembly(typeof(MainViewModel)).CodeBase);

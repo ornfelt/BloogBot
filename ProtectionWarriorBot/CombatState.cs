@@ -97,6 +97,29 @@ namespace ProtectionWarriorBot
         /// <summary>
         /// Updates the character's abilities and performs actions based on the current state.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// Update -> Update: base.Update()
+        /// Update -> TryUseAbility: Bloodrage
+        /// Update -> ObjectManager: Aggressors.Count()
+        /// ObjectManager --> Update: return count
+        /// Update -> TryUseAbility: Retaliation
+        /// Update -> ObjectManager: Aggressors.Count()
+        /// ObjectManager --> Update: return count
+        /// Update -> TryUseAbility: DemoralizingShout
+        /// Update -> TryUseAbility: ThunderClap
+        /// Update -> TryUseAbility: LastStand
+        /// Update -> TryUseAbility: Overpower
+        /// Update -> TryUseAbility: Berserking
+        /// Update -> TryUseAbility: ShieldBash
+        /// Update -> TryUseAbility: Rend
+        /// Update -> TryUseAbility: BattleShout
+        /// Update -> TryUseAbility: ConcussionBlow
+        /// Update -> TryUseAbility: Execute
+        /// Update -> TryUseAbility: ShieldSlam
+        /// Update -> TryUseAbility: HeroicStrike
+        /// \enduml
+        /// </remarks>
         public new void Update()
         {
             if (base.Update())

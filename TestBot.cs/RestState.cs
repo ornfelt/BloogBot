@@ -27,6 +27,13 @@ namespace TestBot
         /// <summary>
         /// Updates the bot state by removing the topmost state from the stack.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// actor User
+        /// User -> Update : Call Update()
+        /// Update -> botStates : Pop()
+        /// \enduml
+        /// </remarks>
         public void Update()
         {
             botStates.Pop();

@@ -89,6 +89,43 @@ namespace BloogBot.AI.SharedStates
         /// If there is an item to equip and the equip delay has passed, uses the item and equips it if it is of a quality higher than common. 
         /// Resets the empty slot and item to equip variables after equipping the item.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// Update -> Player: IsInCombat
+        /// Player --> Update: Response
+        /// alt Player is in combat
+        ///     Update -> BotStates: Pop
+        /// else Player is not in combat
+        ///     Update -> Inventory: GetEquippedItem
+        ///     Inventory --> Update: equippedItem
+        ///     alt equippedItem is null
+        ///         Update -> SlotsToCheck: Remove
+        ///         Update -> Inventory: GetAllItems
+        ///         Inventory --> Update: itemToEquip
+        ///         alt itemToEquip is null
+        ///             Update -> SlotsToCheck: Clear
+        ///         else itemToEquip is not null
+        ///             Update -> Wait: For
+        ///             Wait --> Update: Response
+        ///             alt Response is true
+        ///                 Update -> Inventory: GetBagId
+        ///                 Inventory --> Update: bagId
+        ///                 Update -> Inventory: GetSlotId
+        ///                 Inventory --> Update: slotId
+        ///                 Update -> Player: LuaCall
+        ///                 alt itemToEquip.Quality > 1
+        ///                     Update -> Player: LuaCall
+        ///                 end
+        ///             end
+        ///         end
+        ///     else equippedItem is not null
+        ///         Update -> BotStates: Pop
+        ///         Update -> BotStates: Push
+        ///     end
+        /// end
+        /// \enduml
+        /// </remarks>
         public void Update()
         {
             if (player.IsInCombat)

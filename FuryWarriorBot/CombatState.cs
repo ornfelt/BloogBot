@@ -195,6 +195,35 @@ namespace FuryWarriorBot
         /// <summary>
         /// Updates the player's actions and abilities based on the current game state.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// Update -> Environment: TickCount
+        /// Update -> player: StopMovement(ControlBits.Back)
+        /// Update -> player: CurrentStance
+        /// Update -> ObjectManager: Aggressors
+        /// Update -> TryUseAbility: BerserkerStance
+        /// Update -> TryUseAbility: Pummel
+        /// Update -> TryUseAbility: DeathWish
+        /// Update -> TryUseAbility: BattleShout
+        /// Update -> TryUseAbilityById: BloodFury
+        /// Update -> TryUseAbility: Bloodrage
+        /// Update -> TryUseAbility: Execute
+        /// Update -> TryUseAbility: BerserkerRage
+        /// Update -> TryUseAbility: Overpower
+        /// Update -> ObjectManager: Aggressors.Count()
+        /// Update -> TryUseAbility: IntimidatingShout
+        /// Update -> TryUseAbility: DemoralizingShout
+        /// Update -> TryUseAbility: Whirlwind
+        /// Update -> TryUseAbility: Retaliation
+        /// Update -> TryUseAbility: Slam
+        /// Update -> TryUseAbility: Bloodthirst
+        /// Update -> TryUseAbility: Hamstring
+        /// Update -> TryUseAbility: HeroicStrike
+        /// Update -> TryUseAbility: Execute
+        /// Update -> TryUseAbility: SunderArmor
+        /// \enduml
+        /// </remarks>
         public new void Update()
         {
             if (Environment.TickCount - backpedalStartTime > backpedalDuration)
@@ -283,6 +312,12 @@ namespace FuryWarriorBot
         /// <summary>
         /// Callback method for when the slam is ready.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// object -> OnSlamReadyCallback : EventArgs e
+        /// OnSlamReadyCallback -> OnSlamReady : 
+        /// \enduml
+        /// </remarks>
         void OnSlamReadyCallback(object sender, EventArgs e)
         {
             OnSlamReady();
@@ -291,6 +326,16 @@ namespace FuryWarriorBot
         /// <summary>
         /// Sets the slamReady flag to true and records the start time.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "OnSlamReady Method" as O
+        /// participant "Environment" as E
+        /// 
+        /// O -> E: Get TickCount
+        /// E --> O: Return TickCount
+        /// 
+        /// \enduml
+        /// </remarks>
         void OnSlamReady()
         {
             slamReady = true;
@@ -300,6 +345,12 @@ namespace FuryWarriorBot
         /// <summary>
         /// Callback function for Slam. Sets the slamReady flag to false.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        ///  :SlamCallback() is called;
+        ///  note right: slamReady is set to false
+        /// \enduml
+        /// </remarks>
         void SlamCallback()
         {
             slamReady = false;
@@ -332,6 +383,14 @@ namespace FuryWarriorBot
         /// <summary>
         /// Sets the player to walk backwards for a specified duration in milliseconds.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// activate "WalkBack"
+        /// "WalkBack" -> "Environment": TickCount
+        /// "WalkBack" -> "Player": StartMovement(ControlBits.Back)
+        /// deactivate "WalkBack"
+        /// \enduml
+        /// </remarks>
         void WalkBack(int milleseconds)
         {
             backpedaling = true;

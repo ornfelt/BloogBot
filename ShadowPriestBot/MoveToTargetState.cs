@@ -90,6 +90,43 @@ namespace ShadowPriestBot
         /// If the player knows the Power Word Shield spell and does not have the Weakened Soul debuff or the Power Word Shield buff, casts the Power Word Shield spell.
         /// If the distance to the target is greater than or equal to 27, checks if the player is stuck using the stuckHelper. Gets the next waypoint using the Navigation class and moves toward it.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// Update -> Target: Check TappedByOther or FindClosestTarget
+        /// Target --> Update: Return Guid
+        /// Update -> Player: StopAllMovement
+        /// Update -> BotStates: Pop
+        /// Update -> Player: Get Position
+        /// Player --> Update: Return Position
+        /// Update -> Target: Get Position
+        /// Target --> Update: Return Position
+        /// Update -> Player: Check IsMoving
+        /// Player --> Update: Return IsMoving
+        /// Update -> Player: StopAllMovement
+        /// Update -> Player: Check IsCasting and IsSpellReady
+        /// Player --> Update: Return Status
+        /// Update -> Player: Check KnowsSpell, HasBuff, IsInCombat
+        /// Player --> Update: Return Status
+        /// Update -> Wait: For "ShadowPriestPullDelay"
+        /// Wait --> Update: Return Status
+        /// Update -> Player: SetTarget
+        /// Update -> Wait: Remove "ShadowPriestPullDelay"
+        /// Update -> Player: Check IsInCombat
+        /// Player --> Update: Return IsInCombat
+        /// Update -> Player: LuaCall
+        /// Update -> Player: StopAllMovement
+        /// Update -> BotStates: Pop
+        /// Update -> BotStates: Push new CombatState
+        /// Update -> Player: Check KnowsSpell, HasDebuff, HasBuff
+        /// Player --> Update: Return Status
+        /// Update -> Player: LuaCall
+        /// Update -> StuckHelper: CheckIfStuck
+        /// Update -> Navigation: GetNextWaypoint
+        /// Navigation --> Update: Return nextWaypoint
+        /// Update -> Player: MoveToward nextWaypoint
+        /// \enduml
+        /// </remarks>
         public void Update()
         {
             if (target.TappedByOther || container.FindClosestTarget()?.Guid != target.Guid)

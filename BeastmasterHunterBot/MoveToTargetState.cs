@@ -78,6 +78,25 @@ namespace BeastMasterHunterBot
         /// If the distance to the target is less than 33 and the player is not currently casting, stops all movement, calls the GunLuaScript, pops the current state from the stack, and pushes a new CombatState onto the stack.
         /// Gets the next waypoint using the Navigation class and moves the player towards it.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// Update -> Target: Check TappedByOther or FindClosestTarget
+        /// Target --> Update: Return result
+        /// Update -> Player: StopAllMovement
+        /// Update -> BotStates: Pop
+        /// Update -> StuckHelper: CheckIfStuck
+        /// Update -> Player: Calculate DistanceTo
+        /// Player --> Update: Return distance
+        /// Update -> Player: StopAllMovement
+        /// Update -> Player: LuaCall(GunLuaScript)
+        /// Update -> BotStates: Pop
+        /// Update -> BotStates: Push(new CombatState)
+        /// Update -> Navigation: GetNextWaypoint
+        /// Navigation --> Update: Return nextWaypoint
+        /// Update -> Player: MoveToward(nextWaypoint)
+        /// \enduml
+        /// </remarks>
         public void Update()
         {
             if (target.TappedByOther || container.FindClosestTarget()?.Guid != target.Guid)

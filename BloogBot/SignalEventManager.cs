@@ -45,6 +45,18 @@ namespace BloogBot
         /// <summary>
         /// Initializes the signal event hook.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "InitializeSignalEventHook()" as A
+        /// participant "SignalEventDelegate" as B
+        /// participant "Marshal" as C
+        /// participant "MemoryManager" as D
+        /// A -> B: Create new SignalEventDelegate
+        /// A -> C: Get function pointer for delegate
+        /// A -> D: Inject assembly "SignalEventDetour"
+        /// A -> D: Inject assembly "SignalEventHook"
+        /// \enduml
+        /// </remarks>
         static void InitializeSignalEventHook()
         {
             signalEventDelegate = new SignalEventDelegate(SignalEventHook);
@@ -76,6 +88,30 @@ namespace BloogBot
         /// <summary>
         /// Signals an event hook with the specified event name, types argument, and first argument pointer.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// SignalEventHook -> Logger : LogVerbose(eventName)
+        /// SignalEventHook -> MemoryManager : ReadInt((IntPtr)tmpPtr)
+        /// MemoryManager --> SignalEventHook : return ptr
+        /// SignalEventHook -> MemoryManager : ReadString((IntPtr)ptr)
+        /// MemoryManager --> SignalEventHook : return str
+        /// SignalEventHook -> Logger : LogVerbose(str)
+        /// SignalEventHook -> MemoryManager : ReadFloat((IntPtr)tmpPtr)
+        /// MemoryManager --> SignalEventHook : return val
+        /// SignalEventHook -> Logger : LogVerbose(val)
+        /// SignalEventHook -> MemoryManager : ReadUint((IntPtr)tmpPtr)
+        /// MemoryManager --> SignalEventHook : return val
+        /// SignalEventHook -> Logger : LogVerbose(val)
+        /// SignalEventHook -> MemoryManager : ReadInt((IntPtr)tmpPtr)
+        /// MemoryManager --> SignalEventHook : return val
+        /// SignalEventHook -> Logger : LogVerbose(val)
+        /// SignalEventHook -> MemoryManager : ReadInt((IntPtr)tmpPtr)
+        /// MemoryManager --> SignalEventHook : return val
+        /// SignalEventHook -> Logger : LogVerbose(val)
+        /// SignalEventHook -> Logger : LogVerbose("")
+        /// SignalEventHook -> OnNewEventSignalEvent : eventName, list
+        /// \enduml
+        /// </remarks>
         static void SignalEventHook(string eventName, string typesArg, uint firstArgPtr)
         {
             Logger.LogVerbose(eventName);
@@ -129,8 +165,14 @@ namespace BloogBot
         /// <summary>
         /// Invokes the OnNewSignalEvent event with the specified event name and list of parameters.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// :Caller: -> OnNewEventSignalEvent: parEvent, parList
+        /// OnNewEventSignalEvent -> OnNewSignalEvent: Invoke(parEvent, parList)
+        /// \enduml
+        /// </remarks>
         static internal void OnNewEventSignalEvent(string parEvent, params object[] parList) =>
-                    OnNewSignalEvent?.Invoke(parEvent, parList);
+                            OnNewSignalEvent?.Invoke(parEvent, parList);
 
         /// <summary>
         /// Represents a delegate that handles signal events.
@@ -152,6 +194,18 @@ namespace BloogBot
         /// <summary>
         /// Initializes the signal event hook with no arguments.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "InitializeSignalEventHookNoArgs()" as A
+        /// participant "SignalEventNoArgsDelegate" as B
+        /// participant "Marshal" as C
+        /// participant "MemoryManager" as D
+        /// A -> B: Create new SignalEventNoArgsDelegate
+        /// A -> C: GetFunctionPointerForDelegate(signalEventNoArgsDelegate)
+        /// A -> D: InjectAssembly("SignalEventNoArgsDetour", instructions)
+        /// A -> D: InjectAssembly("SignalEventNoArgsHook", (uint)MemoryAddresses.SignalEventNoParamsFunPtr, "jmp " + signalEventNoArgsDetour)
+        /// \enduml
+        /// </remarks>
         static void InitializeSignalEventHookNoArgs()
         {
             signalEventNoArgsDelegate = new SignalEventNoArgsDelegate(SignalEventNoArgsHook);
@@ -177,6 +231,18 @@ namespace BloogBot
         /// <summary>
         /// Signals an event with no arguments and invokes the corresponding event handler.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "Caller" as C
+        /// participant "SignalEventNoArgsHook" as S
+        /// participant "Logger" as L
+        /// participant "OnNewSignalEventNoArgs" as O
+        /// 
+        /// C -> S: Call(eventName)
+        /// S -> L: LogVerbose(eventName)
+        /// S -> O: Invoke(eventName)
+        /// \enduml
+        /// </remarks>
         static void SignalEventNoArgsHook(string eventName)
         {
             Logger.LogVerbose(eventName + "\n");

@@ -67,6 +67,22 @@ namespace BloogBot.AI.SharedStates
         /// <summary>
         /// Updates the state of the bot and performs actions based on the current state.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// Update -> ObjectManager: Get Units
+        /// ObjectManager --> Update: Return NPC
+        /// Update -> NPC: Interact
+        /// Update -> MerchantFrame: Initialize
+        /// MerchantFrame --> Update: Ready status
+        /// Update -> DialogFrame: Initialize
+        /// Update -> MerchantFrame: BuyItemByName
+        /// Update -> DialogFrame: SelectFirstGossipOfType
+        /// Update -> MerchantFrame: CloseMerchantFrame
+        /// Update -> Wait: RemoveAll
+        /// Update -> BotStates: Pop
+        /// \enduml
+        /// </remarks>
         public void Update()
         {
             if (state == State.Uninitialized)

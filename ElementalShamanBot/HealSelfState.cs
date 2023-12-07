@@ -49,6 +49,24 @@ namespace ElementalShamanBot
         /// <summary>
         /// Updates the player's actions based on their health and mana levels.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// Update -> Player: IsCasting
+        /// alt player is casting
+        ///   Update -> Update: return
+        /// else player is not casting
+        ///   Update -> Player: HealthPercent
+        ///   Update -> Player: GetManaCost(HealingWave)
+        ///   alt HealthPercent > 70 or Mana < ManaCost
+        ///     Update -> BotStates: Pop
+        ///     Update -> Update: return
+        ///   else HealthPercent <= 70 and Mana >= ManaCost
+        ///     Update -> Player: LuaCall(CastSpellByName)
+        ///   end
+        /// end
+        /// \enduml
+        /// </remarks>
         public void Update()
         {
             if (player.IsCasting) return;

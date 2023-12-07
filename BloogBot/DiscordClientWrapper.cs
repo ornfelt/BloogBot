@@ -57,6 +57,24 @@ namespace BloogBot
         /// <summary>
         /// Initializes the bot with the provided settings.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// Initialize -> BotSettings: Receive botSettings
+        /// Initialize -> BotSettings: Set discordBotEnabled
+        /// alt discordBotEnabled is true
+        ///     Initialize -> ServicePointManager: Set SecurityProtocol to Tls12
+        ///     Initialize -> BotSettings: Get DiscordGuildId, DiscordChannelId, DiscordBotToken
+        ///     Initialize -> Convert: Convert DiscordGuildId, DiscordChannelId to UInt64
+        ///     Initialize -> DiscordSocketClient: Create new client
+        ///     Initialize -> client: Attach Log and ClientReady events
+        ///     Initialize -> Task: Start new task
+        ///     Task -> client: LoginAsync and StartAsync
+        ///     alt Exception occurs
+        ///         Task -> Console: Write exception message
+        ///     end
+        /// end
+        /// \enduml
+        /// </remarks>
         static internal void Initialize(BotSettings botSettings)
         {
             discordBotEnabled = botSettings.DiscordBotEnabled;
@@ -90,6 +108,12 @@ namespace BloogBot
         /// <summary>
         /// Logs a message using the Logger class.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// LogMessage -> Logger: Log(msg.ToString())
+        /// Logger --> LogMessage: Task.CompletedTask
+        /// \enduml
+        /// </remarks>
         static Task Log(LogMessage msg)
         {
             Logger.Log(msg.ToString());
@@ -99,6 +123,18 @@ namespace BloogBot
         /// <summary>
         /// Method to handle when the client is ready.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// activate "ClientReady" 
+        /// "ClientReady" -> "client" : GetGuild(bloogsMinionsGuildId)
+        /// "client" --> "ClientReady" : guild
+        /// "ClientReady" -> "guild" : GetRole(botsmithsRoleId)
+        /// "guild" --> "ClientReady" : botsmithsRole
+        /// "ClientReady" -> "client" : GetChannel(bloogBotChannelId)
+        /// "client" --> "ClientReady" : channel
+        /// deactivate "ClientReady"
+        /// \enduml
+        /// </remarks>
         static Task ClientReady()
         {
             guild = client.GetGuild(bloogsMinionsGuildId);
@@ -111,6 +147,17 @@ namespace BloogBot
         /// <summary>
         /// Sends a killswitch alert message to the specified player.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "KillswitchAlert Method" as K
+        /// participant "Discord Bot" as D
+        /// 
+        /// K -> D: Check if discordBotEnabled
+        /// alt discordBotEnabled is true
+        ///     K -> D: Send message to channel
+        /// end
+        /// \enduml
+        /// </remarks>
         static internal void KillswitchAlert(string playerName)
         {
             if (discordBotEnabled)
@@ -122,6 +169,13 @@ namespace BloogBot
         /// <summary>
         /// Sends a teleport alert message to the Discord channel.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// TeleportAlert -> "if discordBotEnabled": Check if discord bot is enabled
+        /// "if discordBotEnabled" -> Task: Run Task
+        /// Task -> channel: Send message
+        /// \enduml
+        /// </remarks>
         static internal void TeleportAlert(string playerName)
         {
             if (discordBotEnabled)
@@ -133,6 +187,14 @@ namespace BloogBot
         /// <summary>
         /// Sends a message using the Discord bot if it is enabled.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// Application -> DiscordBot: SendMessage(message)
+        /// activate DiscordBot
+        /// DiscordBot -> Channel: SendMessageAsync(message)
+        /// deactivate DiscordBot
+        /// \enduml
+        /// </remarks>
         static public void SendMessage(string message)
         {
             if (discordBotEnabled)
@@ -144,6 +206,19 @@ namespace BloogBot
         /// <summary>
         /// Sends a notification to the Discord channel with information about a found item.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "SendItemNotification Method" as Method
+        /// participant "Discord Bot" as Bot
+        /// participant "Channel" as Channel
+        ///
+        /// Method -> Bot: Check if discordBotEnabled
+        /// alt discordBotEnabled is true
+        ///     Method -> Method: Create message with playerName, quality, itemId
+        ///     Method -> Channel: Send message asynchronously
+        /// end
+        /// \enduml
+        /// </remarks>
         static public void SendItemNotification(string playerName, ItemQuality quality, int itemId)
         {
             if (discordBotEnabled)

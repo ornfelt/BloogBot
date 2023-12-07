@@ -50,6 +50,16 @@ namespace BeastMasterHunterBot
         /// <summary>
         /// Updates the player's actions.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// Update -> Player: Check if player is casting
+        /// Update -> Player: Check player's health and mana
+        /// Update -> Player: Set target
+        /// Update -> BotStates: Pop state
+        /// Update -> Player: LuaCall to cast spell
+        /// \enduml
+        /// </remarks>
         public void Update()
         {
             //if (player.IsCasting) return;

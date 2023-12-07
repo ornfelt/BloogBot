@@ -82,11 +82,35 @@ namespace BloogBot.AI
         /// <summary>
         /// Checks if the program is currently running.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "Caller" as C
+        /// participant "Running Method" as R
+        /// C -> R: Call Running()
+        /// R --> C: Return running
+        /// \enduml
+        /// </remarks>
         public bool Running() => running;
 
         /// <summary>
         /// Stops the execution of the code and resets the current level and bot states.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "Stop Method" as Stop
+        /// participant "BotStates Stack" as BotStates
+        /// participant "StopCallback Delegate" as StopCallback
+        /// 
+        /// Stop -> Stop: running = false
+        /// Stop -> Stop: currentLevel = 0
+        /// 
+        /// loop while botStates.Count > 0
+        ///     Stop -> BotStates: Pop()
+        /// end
+        /// 
+        /// Stop -> StopCallback: Invoke()
+        /// \enduml
+        /// </remarks>
         public void Stop()
         {
             running = false;
@@ -101,6 +125,18 @@ namespace BloogBot.AI
         /// <summary>
         /// Starts the process with the specified dependency container and stop callback.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// Start -> IDependencyContainer: container
+        /// Start -> Action: stopCallback
+        /// Start -> ThreadSynchronizer: RunOnMainThread
+        /// ThreadSynchronizer -> Start: ResetValues(container, true)
+        /// Start -> IDependencyContainer: CheckForTravelPath(botStates, false)
+        /// Start -> Start: StartInternal(container)
+        /// Start -> Logger: Log(e)
+        /// \enduml
+        /// </remarks>
         public void Start(IDependencyContainer container, Action stopCallback)
         {
             this.stopCallback = stopCallback;
@@ -126,6 +162,36 @@ namespace BloogBot.AI
         /// <summary>
         /// Resets the values of the bot.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// ResetValues -> ObjectManager: Get Player
+        /// ObjectManager --> ResetValues: Return Player
+        /// ResetValues -> Player: Get Level
+        /// Player --> ResetValues: Return Level
+        /// ResetValues -> Player: Set LastWpId = 0
+        /// ResetValues -> Player: LuaCallWithResults
+        /// Player --> ResetValues: Return Result
+        /// ResetValues -> Player: Set IsAlly
+        /// ResetValues -> Player: Set BotFriend
+        /// ResetValues -> GrindState: new GrindState
+        /// GrindState --> ResetValues: Return GrindState
+        /// ResetValues -> Player: Get Position
+        /// Player --> ResetValues: Return Position
+        /// ResetValues -> Player: Set CurrWpId = 0
+        /// ResetValues -> Player: Set CurrZone = "0"
+        /// ResetValues -> Player: Set DeathsAtWp = 0
+        /// ResetValues -> Player: Set WpStuckCount = 0
+        /// ResetValues -> Player: Set StuckInStateOrPosCount = 0
+        /// ResetValues -> Player: Set ForcedWpPath = new List<int>()
+        /// ResetValues -> Player: Set VisitedWps = new HashSet<int>()
+        /// ResetValues -> Player: Set HasBeenStuckAtWp = false
+        /// ResetValues -> Player: Set HasJoinedBg = false
+        /// ResetValues -> Player: Set HasOverLeveled = false
+        /// ResetValues -> ObjectManager: Get MapId
+        /// ObjectManager --> ResetValues: Return MapId
+        /// ResetValues -> Player: Set LastKnownMapId
+        /// \enduml
+        /// </remarks>
         private void ResetValues(IDependencyContainer container, bool resetLevel)
         {
             var player = ObjectManager.Player;
@@ -165,6 +231,38 @@ namespace BloogBot.AI
         /// Triggers a travel action using the provided dependency container, with the option to reverse the travel path. 
         /// Executes the provided callback action upon completion.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// participant "Travel()" as T
+        /// participant "IDependencyContainer" as DC
+        /// participant "BotSettings" as BS
+        /// participant "CurrentTravelPath" as CTP
+        /// participant "Waypoints" as W
+        /// participant "ObjectManager" as OM
+        /// participant "Player" as P
+        /// participant "ThreadSynchronizer" as TS
+        /// participant "TravelState" as TS
+        /// participant "MoveToPositionState" as MPS
+        /// participant "StartInternal()" as SI
+        /// participant "Logger" as L
+        ///
+        /// T -> DC: Get BotSettings
+        /// DC -> BS: Return BotSettings
+        /// T -> BS: Get CurrentTravelPath
+        /// BS -> CTP: Return CurrentTravelPath
+        /// T -> CTP: Get Waypoints
+        /// CTP -> W: Return Waypoints
+        /// T -> OM: Get Player Position
+        /// OM -> P: Return Player Position
+        /// T -> TS: RunOnMainThread
+        /// TS -> T: Execute MainThread
+        /// T -> TS: Push TravelState
+        /// T -> TS: Push MoveToPositionState
+        /// T -> SI: StartInternal
+        /// T -> L: Log Exception (if any)
+        /// \enduml
+        /// </remarks>
         public void Travel(IDependencyContainer container, bool reverseTravelPath, Action callback)
         {
             try
@@ -221,6 +319,22 @@ namespace BloogBot.AI
         /// <summary>
         /// Starts the powerlevel process.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// StartPowerlevel -> IDependencyContainer: container
+        /// StartPowerlevel -> Action: stopCallback
+        /// StartPowerlevel -> ThreadSynchronizer: RunOnMainThread
+        /// ThreadSynchronizer -> PowerlevelState: new(botStates, container)
+        /// PowerlevelState -> StartPowerlevel: currentState
+        /// StartPowerlevel -> Environment: TickCount
+        /// StartPowerlevel -> ObjectManager.Player: Position
+        /// StartPowerlevel -> Environment: TickCount
+        /// StartPowerlevel -> ObjectManager.Player: Position
+        /// StartPowerlevel -> StartPowerlevelInternal: container
+        /// StartPowerlevel -> Logger: Log(e)
+        /// \enduml
+        /// </remarks>
         public void StartPowerlevel(IDependencyContainer container, Action stopCallback)
         {
             this.stopCallback = stopCallback;
@@ -251,6 +365,38 @@ namespace BloogBot.AI
         /// <summary>
         /// Starts the internal power leveling process asynchronously.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// StartPowerlevelInternal -> ThreadSynchronizer: RunOnMainThread
+        /// ThreadSynchronizer -> ObjectManager: Player
+        /// ObjectManager --> ThreadSynchronizer: player
+        /// ThreadSynchronizer -> player: AntiAfk
+        /// ThreadSynchronizer -> player: IsFalling
+        /// ThreadSynchronizer -> container: DisableTeleportChecker
+        /// ThreadSynchronizer -> player: Position.DistanceTo
+        /// ThreadSynchronizer -> DiscordClientWrapper: TeleportAlert
+        /// ThreadSynchronizer -> player: Position
+        /// ThreadSynchronizer -> botStates: Peek
+        /// ThreadSynchronizer -> container: RunningErrands
+        /// ThreadSynchronizer -> Environment: TickCount
+        /// ThreadSynchronizer -> LogToFile: msg
+        /// ThreadSynchronizer -> DiscordClientWrapper: SendMessage
+        /// ThreadSynchronizer -> player: Health
+        /// ThreadSynchronizer -> player: InGhostForm
+        /// ThreadSynchronizer -> container: CreateRestState
+        /// ThreadSynchronizer -> botStates: Push
+        /// ThreadSynchronizer -> container: GetCurrentHotspot
+        /// ThreadSynchronizer -> Inventory: GetEquippedItem
+        /// ThreadSynchronizer -> ShapeshiftToHumanForm: container
+        /// ThreadSynchronizer -> botStates: Push
+        /// ThreadSynchronizer -> container: Probe.CurrentState
+        /// ThreadSynchronizer -> botStates: Peek
+        /// ThreadSynchronizer -> Task: Delay
+        /// ThreadSynchronizer -> container: Probe.UpdateLatency
+        /// ThreadSynchronizer -> Logger: Log
+        /// \enduml
+        /// </remarks>
         async void StartPowerlevelInternal(IDependencyContainer container)
         {
             while (running)
@@ -390,6 +536,50 @@ namespace BloogBot.AI
         /// <summary>
         /// Asynchronously starts the internal logic of the bot.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// StartInternal -> ObjectManager.Player: Get player
+        /// ObjectManager.Player --> StartInternal: Return player
+        /// StartInternal -> Wait: For "ShortDelay", 600
+        /// Wait --> StartInternal: Return result
+        /// StartInternal -> HandleLevelUp: Handle level up
+        /// HandleLevelUp --> StartInternal: Return result
+        /// StartInternal -> Wait: For "JoinedBGDelay", 30000
+        /// Wait --> StartInternal: Return result
+        /// StartInternal -> Wait: For "EnteredNewMapDelay", 16000
+        /// Wait --> StartInternal: Return result
+        /// StartInternal -> Wait: For "TeleportDelay", 5000
+        /// Wait --> StartInternal: Return result
+        /// StartInternal -> ObjectManager.MapId: Get MapId
+        /// ObjectManager.MapId --> StartInternal: Return MapId
+        /// StartInternal -> ResetValues: Reset values
+        /// ResetValues --> StartInternal: Return result
+        /// StartInternal -> Stop: Stop bot
+        /// Stop --> StartInternal: Return result
+        /// StartInternal -> DiscordClientWrapper.SendMessage: Send message
+        /// DiscordClientWrapper.SendMessage --> StartInternal: Return result
+        /// StartInternal -> HandleLevelUp: Handle level up
+        /// HandleLevelUp --> StartInternal: Return result
+        /// StartInternal -> SmtpClient: Send email
+        /// SmtpClient --> StartInternal: Return result
+        /// StartInternal -> container.UpdatePlayerTrackers: Update player trackers
+        /// container.UpdatePlayerTrackers --> StartInternal: Return result
+        /// StartInternal -> DiscordClientWrapper.TeleportAlert: Send teleport alert
+        /// DiscordClientWrapper.TeleportAlert --> StartInternal: Return result
+        /// StartInternal -> HandleBotStuck: Handle bot stuck
+        /// HandleBotStuck --> StartInternal: Return result
+        /// StartInternal -> container.CreateRestState: Create rest state
+        /// container.CreateRestState --> StartInternal: Return result
+        /// StartInternal -> ShapeshiftToHumanForm: Shapeshift to human form
+        /// ShapeshiftToHumanForm --> StartInternal: Return result
+        /// StartInternal -> RepairEquipmentState: Repair equipment
+        /// RepairEquipmentState --> StartInternal: Return result
+        /// StartInternal -> botStates.Peek: Peek bot state
+        /// botStates.Peek --> StartInternal: Return bot state
+        /// StartInternal -> Task.Delay: Delay task
+        /// Task.Delay --> StartInternal: Return result
+        /// \enduml
+        /// </remarks>
         async void StartInternal(IDependencyContainer container)
         {
             while (running)
@@ -709,6 +899,34 @@ namespace BloogBot.AI
         /// <summary>
         /// Handles the level up event for a local player.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// HandleLevelUp -> LocalPlayer: Get Level
+        /// HandleLevelUp -> LocalPlayer: TryGetValue LevelItemsDict
+        /// alt isSecondTry is false and LevelItemsDict contains Level
+        ///     HandleLevelUp -> LocalPlayer: LuaCall with itemIds
+        ///     HandleLevelUp -> LocalPlayer: Set HasItemsToEquip to true
+        ///     HandleLevelUp -> LocalPlayer: Set ShouldWaitForShortDelay to true
+        /// end
+        /// HandleLevelUp -> LocalPlayer: TryGetValue LevelSpellsDict
+        /// alt LevelSpellsDict contains Level
+        ///     HandleLevelUp -> LocalPlayer: LuaCall with spellIds
+        /// end
+        /// HandleLevelUp -> LocalPlayer: TryGetValue LevelTalentsDict
+        /// alt LevelTalentsDict contains Level
+        ///     HandleLevelUp -> LocalPlayer: LuaCall with talentIndex
+        /// end
+        /// alt isSecondTry is false
+        ///     alt Level is 60
+        ///         HandleLevelUp -> LocalPlayer: LuaCall to teleport to Outland
+        ///         HandleLevelUp -> LocalPlayer: Set HasEnteredNewMap to true
+        ///     else Level is 70
+        ///         HandleLevelUp -> LocalPlayer: LuaCall to teleport to Northrend
+        ///         HandleLevelUp -> LocalPlayer: Set HasEnteredNewMap to true
+        ///     end
+        /// end
+        /// \enduml
+        /// </remarks>
         private void HandleLevelUp(LocalPlayer player, bool isSecondTry)
         {
             var playerLevel = player.Level;
@@ -748,6 +966,28 @@ namespace BloogBot.AI
         /// <summary>
         /// Handles the situation when the bot is stuck.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// HandleBotStuck -> LocalPlayer: Check player health and ghost form
+        /// alt player health <= 1 or player in ghost form
+        ///     HandleBotStuck -> Console: Write "Forcing teleport to corpse"
+        ///     HandleBotStuck -> LocalPlayer: LuaCall to teleport to corpse
+        /// else
+        ///     HandleBotStuck -> ForceTeleport: Call with player and killswitch
+        ///     HandleBotStuck -> botStates: Pop state
+        ///     HandleBotStuck -> botStates: Push new GrindState
+        /// end
+        /// HandleBotStuck -> LocalPlayer: Reset WpStuckCount
+        /// HandleBotStuck -> LocalPlayer: LuaCall to click popup button
+        /// HandleBotStuck -> LocalPlayer: Increment StuckInStateOrPosCount
+        /// alt StuckInStateOrPosCount > 50
+        ///     HandleBotStuck -> Stop: Call method
+        ///     HandleBotStuck -> Console: Write "Bot stuck in state or pos for more than 50 times. Exiting bot..."
+        ///     HandleBotStuck -> System: Exit application
+        /// end
+        /// \enduml
+        /// </remarks>
         private void HandleBotStuck(IDependencyContainer container, LocalPlayer player, bool StuckInState)
         {
             // Force teleport to current WP, or to corpse if dead
@@ -781,6 +1021,24 @@ namespace BloogBot.AI
         /// <summary>
         /// Force teleport to current or nearby WP.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// ForceTeleport -> IDependencyContainer: Get current hotspot
+        /// IDependencyContainer --> ForceTeleport: Return current hotspot
+        /// ForceTeleport -> LocalPlayer: Get current position
+        /// LocalPlayer --> ForceTeleport: Return current position
+        /// ForceTeleport -> LocalPlayer: Set CurrWpId
+        /// ForceTeleport -> Random: Generate random number
+        /// Random --> ForceTeleport: Return random number
+        /// ForceTeleport -> IDependencyContainer: Get current hotspot
+        /// IDependencyContainer --> ForceTeleport: Return current hotspot
+        /// ForceTeleport -> LocalPlayer: Get current position
+        /// LocalPlayer --> ForceTeleport: Return current position
+        /// ForceTeleport -> LocalPlayer: Set CurrWpId
+        /// ForceTeleport -> Console: Write message
+        /// ForceTeleport -> LocalPlayer: Call Lua function
+        /// \enduml
+        /// </remarks>
         private void ForceTeleport(IDependencyContainer container, LocalPlayer player, string reason)
         {
             if (player.CurrWpId == 0)
@@ -794,6 +1052,12 @@ namespace BloogBot.AI
         /// <summary>
         /// Checks if the player is in a battleground.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// ObjectManager -> IsPlayerInBg: MapId
+        /// IsPlayerInBg --> ObjectManager: return (mapId == 30 || mapId == 489 || mapId == 529 || mapId == 559)
+        /// \enduml
+        /// </remarks>
         private bool IsPlayerInBg()
         {
             var mapId = ObjectManager.MapId;
@@ -803,6 +1067,16 @@ namespace BloogBot.AI
         /// <summary>
         /// Determines if the background is finished for the specified player.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "LocalPlayer" as A
+        /// participant "IsBgFinished()" as B
+        /// A -> B: LuaCallWithResults("GetBattlefieldWinner()")
+        /// activate B
+        /// B -> A: return result
+        /// deactivate B
+        /// \enduml
+        /// </remarks>
         private bool IsBgFinished(LocalPlayer player)
         {
             var result = player.LuaCallWithResults($"{{0}} = GetBattlefieldWinner()");
@@ -816,6 +1090,19 @@ namespace BloogBot.AI
         /// <summary>
         /// Logs the specified text to a file.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// LogToFile -> Path : GetDirectoryName(Assembly.GetAssembly(typeof(MainViewModel)).CodeBase)
+        /// LogToFile -> UriBuilder : new UriBuilder(dir)
+        /// LogToFile -> Path : Combine(path, "StuckLog.txt")
+        /// LogToFile -> File : Exists(file)
+        /// alt File Exists
+        ///   LogToFile -> File : AppendText(file)
+        ///   File --> LogToFile : StreamWriter sw
+        ///   LogToFile -> StreamWriter : WriteLine(text)
+        /// end
+        /// \enduml
+        /// </remarks>
         private void LogToFile(string text)
         {
             var dir = Path.GetDirectoryName(Assembly.GetAssembly(typeof(MainViewModel)).CodeBase);
@@ -834,6 +1121,26 @@ namespace BloogBot.AI
         /// <summary>
         /// Logs the specified text to a file with the given file name.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// LogToFile -> Path.GetDirectoryName: Get directory name of the assembly
+        /// Path.GetDirectoryName --> LogToFile: Directory name
+        /// LogToFile -> Assembly.GetAssembly: Get the assembly of type MainViewModel
+        /// Assembly.GetAssembly --> LogToFile: Assembly
+        /// LogToFile -> UriBuilder: Create a new UriBuilder with the directory path
+        /// UriBuilder --> LogToFile: UriBuilder object
+        /// LogToFile -> UriBuilder.Path: Get the path from the UriBuilder
+        /// UriBuilder.Path --> LogToFile: Path
+        /// LogToFile -> Path.Combine: Combine the path and fileName
+        /// Path.Combine --> LogToFile: Combined path and fileName
+        /// LogToFile -> File.Exists: Check if the file exists
+        /// File.Exists --> LogToFile: Boolean result
+        /// LogToFile -> File.AppendText: Open the file for appending
+        /// File.AppendText --> LogToFile: StreamWriter object
+        /// LogToFile -> StreamWriter.WriteLine: Write the text to the file
+        /// StreamWriter.WriteLine --> LogToFile: None
+        /// \enduml
+        /// </remarks>
         private void LogToFile(string fileName, string text)
         {
             var dir = Path.GetDirectoryName(Assembly.GetAssembly(typeof(MainViewModel)).CodeBase);
@@ -859,6 +1166,17 @@ namespace BloogBot.AI
         /// <summary>
         /// Shapeshifts the player character to human form if the player character is a Druid and currently in Bear Form or Cat Form.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// ObjectManager.Player -> ShapeshiftToHumanForm: Call method
+        /// ShapeshiftToHumanForm -> ObjectManager.Player: Check Class and CurrentShapeshiftForm
+        /// alt Bear Form
+        ///     ShapeshiftToHumanForm -> ObjectManager.Player: LuaCall("CastSpellByName('Bear Form')")
+        /// else Cat Form
+        ///     ShapeshiftToHumanForm -> ObjectManager.Player: LuaCall("CastSpellByName('Cat Form')")
+        /// end
+        /// \enduml
+        /// </remarks>
         void ShapeshiftToHumanForm(IDependencyContainer container)
         {
             if (ObjectManager.Player.Class == Class.Druid && ObjectManager.Player.CurrentShapeshiftForm == "Bear Form")
@@ -870,6 +1188,15 @@ namespace BloogBot.AI
         /// <summary>
         /// Pops the stack to the base state.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// activate PopStackToBaseState
+        /// loop while botStates.Count > 1
+        /// PopStackToBaseState -> botStates: Pop()
+        /// end
+        /// deactivate PopStackToBaseState
+        /// \enduml
+        /// </remarks>
         void PopStackToBaseState()
         {
             while (botStates.Count > 1)

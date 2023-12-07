@@ -66,6 +66,22 @@ namespace BloogBot.AI.SharedStates
         /// <summary>
         /// Updates the state of the bot and performs actions based on the current state.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// ObjectManager -> Update: Units
+        /// Update -> npc: Single(u => u.Name == npcName)
+        /// npc -> Update: Interact()
+        /// Update -> MerchantFrame: new MerchantFrame()
+        /// MerchantFrame -> Update: Ready
+        /// Update -> DialogFrame: new DialogFrame()
+        /// DialogFrame -> Update: SelectFirstGossipOfType(player, DialogType.vendor)
+        /// MerchantFrame -> Update: RepairAll()
+        /// MerchantFrame -> Update: CloseMerchantFrame()
+        /// Update -> Wait: RemoveAll()
+        /// Update -> botStates: Pop()
+        /// \enduml
+        /// </remarks>
         public void Update()
         {
             if (state == State.Uninitialized)
@@ -117,14 +133,26 @@ namespace BloogBot.AI.SharedStates
         /// <summary>
         /// Event handler for when a dialog is opened.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// object -> WowEventHandler: OnDialogOpened
+        /// WowEventHandler -> DialogFrame: e.DialogFrame
+        /// \enduml
+        /// </remarks>
         void WowEventHandler_OnDialogOpened(object sender, OnDialogFrameOpenArgs e) =>
-                    dialogFrame = e.DialogFrame;
+                            dialogFrame = e.DialogFrame;
 
         /// <summary>
         /// Event handler for when the merchant frame is opened.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// object -> WowEventHandler_OnMerchantFrameOpened: OnMerchantFrameOpenArgs e
+        /// WowEventHandler_OnMerchantFrameOpened -> merchantFrame: e.MerchantFrame
+        /// \enduml
+        /// </remarks>
         void WowEventHandler_OnMerchantFrameOpened(object sender, OnMerchantFrameOpenArgs e) =>
-                    merchantFrame = e.MerchantFrame;
+                            merchantFrame = e.MerchantFrame;
 
         /// <summary>
         /// Represents the possible states of the program.

@@ -116,6 +116,36 @@ namespace ProtectionPaladinBot
         /// <summary>
         /// Updates the bot's actions based on the current state of the player and target.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// Update -> player: Get HealthPercent
+        /// Update -> target: Get HealthPercent
+        /// Update -> player: Get Mana
+        /// Update -> player: GetManaCost(HolyLight)
+        /// alt player.HealthPercent < 30 && target.HealthPercent > 50 && player.Mana >= player.GetManaCost(HolyLight)
+        ///     Update -> botStates: Push(new HealSelfState(botStates, container))
+        /// else base.Update()
+        ///     Update -> base: Update()
+        /// else TryCastSpell
+        ///     Update -> TryCastSpell: LayOnHands, player.Mana < player.GetManaCost(HolyLight) && player.HealthPercent < 10, castOnSelf: true
+        ///     Update -> TryCastSpell: Purify, player.IsPoisoned || player.IsDiseased, castOnSelf: true
+        ///     Update -> TryCastSpell: RighteousFury, !player.HasBuff(RighteousFury)
+        ///     Update -> TryCastSpell: DevotionAura, !player.HasBuff(DevotionAura) && !player.KnowsSpell(RetributionAura)
+        ///     Update -> TryCastSpell: RetributionAura, !player.HasBuff(RetributionAura) && player.KnowsSpell(RetributionAura)
+        ///     Update -> TryCastSpell: Exorcism, 0, 30, target.CreatureType == CreatureType.Undead || target.CreatureType == CreatureType.Demon
+        ///     Update -> TryCastSpell: HammerOfJustice, 0, 10, (target.CreatureType != CreatureType.Humanoid || (target.CreatureType == CreatureType.Humanoid && target.HealthPercent < 20))
+        ///     Update -> TryCastSpell: Consecration, ObjectManager.Aggressors.Count() > 1
+        ///     alt ClientHelper.ClientVersion == ClientVersion.WotLK
+        ///         Update -> TryCastSpell: JudgementOfLight, 0, 10, !target.HasDebuff(JudgementOfLight) && player.Buffs.Any(b => b.Name.StartsWith("Seal of"))
+        ///     else
+        ///         Update -> TryCastSpell: Judgement, 0, 10, player.HasBuff(SealOfTheCrusader) || (player.HasBuff(SealOfRighteousness) && (player.ManaPercent >= 95 || target.HealthPercent <= 3))
+        ///     end
+        ///     Update -> TryCastSpell: SealOfTheCrusader, !player.HasBuff(SealOfTheCrusader) && !target.HasDebuff(JudgementOfTheCrusader)
+        ///     Update -> TryCastSpell: SealOfRighteousness, !player.HasBuff(SealOfRighteousness) && (target.HasDebuff(JudgementOfTheCrusader) || !player.KnowsSpell(JudgementOfTheCrusader))
+        ///     Update -> TryCastSpell: HolyShield, !player.HasBuff(HolyShield) && target.HealthPercent > 50
+        /// end
+        /// \enduml
+        /// </remarks>
         public new void Update()
         {
             if (player.HealthPercent < 30 && target.HealthPercent > 50 && player.Mana >= player.GetManaCost(HolyLight))

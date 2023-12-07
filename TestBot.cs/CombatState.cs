@@ -28,6 +28,16 @@ namespace TestBot
         /// <summary>
         /// Updates the bot state by removing the topmost state from the stack.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "Function Caller" as FC
+        /// participant "Update Function" as UF
+        /// participant "botStates Stack" as BS
+        /// 
+        /// FC -> UF: Call Update()
+        /// UF -> BS: Pop()
+        /// \enduml
+        /// </remarks>
         public void Update()
         {
             botStates.Pop();

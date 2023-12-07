@@ -57,6 +57,12 @@ namespace BloogBot.Game
             /// Retrieves a row from the database.
             /// </summary>
             // For all DBs, we should use GetRow, except for Spells.db, which should use GetLocalizedRow
+            /// <remarks>
+            /// \startuml
+            /// actor User
+            /// User -> Functions : GetRow(pointer, index)
+            /// \enduml
+            /// </remarks>
             public IntPtr GetRow(int index)
             {
                 return Functions.GetRow(pointer, index);
@@ -66,6 +72,22 @@ namespace BloogBot.Game
             /// Retrieves a localized row from the Spells.db database.
             /// </summary>
             // For all DBs, we should use GetRow, except for Spells.db, which should use GetLocalizedRow
+            /// <remarks>
+            /// \startuml
+            /// participant "GetLocalizedRow Function" as A
+            /// participant "Marshal" as B
+            /// participant "Functions" as C
+            /// A -> B: AllocHGlobal(4 * 4 * 256)
+            /// activate B
+            /// B --> A: return rowPtr
+            /// deactivate B
+            /// A -> C: GetLocalizedRow(IntPtr.Subtract(pointer, 0x18), index, rowPtr)
+            /// activate C
+            /// C --> A: return result
+            /// deactivate C
+            /// A --> A: return rowPtr
+            /// \enduml
+            /// </remarks>
             public IntPtr GetLocalizedRow(int index)
             {
                 var rowPtr = Marshal.AllocHGlobal(4 * 4 * 256);

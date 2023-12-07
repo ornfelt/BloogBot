@@ -47,6 +47,31 @@ namespace AfflictionWarlockBot
         /// <summary>
         /// Updates the player's pet based on their known spells and current pet status.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// Update -> Player: IsCasting
+        /// alt Player IsCasting
+        ///   Update -> Update: return
+        /// else Player Not Casting
+        ///   Update -> Player: KnowsSpell(SummonImp)
+        ///   Update -> Player: KnowsSpell(SummonVoidwalker)
+        ///   Update -> ObjectManager: Pet
+        ///   alt Player KnowsSpell(SummonImp) or KnowsSpell(SummonVoidwalker) and Pet Exists
+        ///     Update -> BotStates: Pop
+        ///     Update -> BotStates: Push(new BuffSelfState)
+        ///     Update -> Update: return
+        ///   else Player Doesn't Know Spells or Pet Doesn't Exist
+        ///     Update -> Player: KnowsSpell(SummonVoidwalker)
+        ///     alt Player KnowsSpell(SummonVoidwalker)
+        ///       Update -> Player: LuaCall(CastSpellByName(SummonVoidwalker))
+        ///     else Player Doesn't Know SummonVoidwalker
+        ///       Update -> Player: LuaCall(CastSpellByName(SummonImp))
+        ///     end
+        ///   end
+        /// end
+        /// \enduml
+        /// </remarks>
         public void Update()
         {
             if (player.IsCasting)

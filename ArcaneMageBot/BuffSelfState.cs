@@ -59,6 +59,29 @@ namespace ArcaneMageBot
         /// <summary>
         /// Updates the player's buffs and casts necessary spells if conditions are met.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// player -> Update: Check conditions
+        /// Update -> player: KnowsSpell(ArcaneIntellect)
+        /// Update -> player: HasBuff(ArcaneIntellect)
+        /// Update -> player: HasBuff(FrostArmor)
+        /// Update -> player: HasBuff(IceArmor)
+        /// Update -> player: KnowsSpell(DampenMagic)
+        /// Update -> player: HasBuff(DampenMagic)
+        /// alt all conditions are true
+        ///     Update -> botStates: Pop()
+        ///     Update -> botStates: Push(new ConjureItemsState)
+        /// else
+        ///     Update -> Update: TryCastSpell(ArcaneIntellect, true)
+        ///     alt player knows IceArmor spell
+        ///         Update -> Update: TryCastSpell(IceArmor)
+        ///     else
+        ///         Update -> Update: TryCastSpell(FrostArmor)
+        ///     end
+        ///     Update -> Update: TryCastSpell(DampenMagic, true)
+        /// end
+        /// \enduml
+        /// </remarks>
         public void Update()
         {
             if ((!player.KnowsSpell(ArcaneIntellect) || player.HasBuff(ArcaneIntellect)) && (player.HasBuff(FrostArmor) || player.HasBuff(IceArmor)) && (!player.KnowsSpell(DampenMagic) || player.HasBuff(DampenMagic)))
@@ -83,6 +106,19 @@ namespace ArcaneMageBot
         /// </summary>
         /// <param name="name">The name of the spell to cast.</param>
         /// <param name="castOnSelf">Optional parameter to specify whether the spell should be casted on self. Default is false.</param>
+        /// <remarks>
+        /// \startuml
+        /// TryCastSpell -> Player: HasBuff(name)
+        /// Player --> TryCastSpell: Buff status
+        /// TryCastSpell -> Player: KnowsSpell(name)
+        /// Player --> TryCastSpell: Knowledge status
+        /// TryCastSpell -> Player: IsSpellReady(name)
+        /// Player --> TryCastSpell: Readiness status
+        /// alt spell is ready and player knows it and doesn't have buff
+        ///     TryCastSpell -> Player: LuaCall("CastSpellByName('name', castOnSelf)")
+        /// end
+        /// \enduml
+        /// </remarks>
         void TryCastSpell(string name, bool castOnSelf = false)
         {
             if (!player.HasBuff(name) && player.KnowsSpell(name) && player.IsSpellReady(name))

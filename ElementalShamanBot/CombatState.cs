@@ -132,6 +132,30 @@ namespace ElementalShamanBot
         /// <summary>
         /// Updates the behavior of the player character.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "Update()" as U
+        /// participant "HealSelfState()" as H
+        /// participant "TryCastSpell()" as T
+        /// U -> U: Check player health, target health, player mana
+        /// U -> H: Push new HealSelfState
+        /// U -> U: Check base.Update()
+        /// U -> T: TryCastSpell(GroundingTotem)
+        /// U -> T: TryCastSpell(EarthShock)
+        /// U -> T: TryCastSpell(LightningBolt)
+        /// U -> T: TryCastSpell(TremorTotem)
+        /// U -> T: TryCastSpell(StoneclawTotem)
+        /// U -> T: TryCastSpell(StoneskinTotem)
+        /// U -> T: TryCastSpell(SearingTotem)
+        /// U -> T: TryCastSpell(ManaSpringTotem)
+        /// U -> T: TryCastSpell(FlameShock)
+        /// U -> T: TryCastSpell(LightningShield)
+        /// U -> T: TryCastSpell(RockbiterWeapon)
+        /// U -> T: TryCastSpell(FlametongueWeapon)
+        /// U -> T: TryCastSpell(ElementalMastery)
+        /// U -> U: Set targetLastPosition
+        /// \enduml
+        /// </remarks>
         public new void Update()
         {
             if (player.HealthPercent < 30 && target.HealthPercent > 50 && player.Mana >= player.GetManaCost(HealingWave))

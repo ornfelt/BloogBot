@@ -66,6 +66,24 @@ namespace ElementalShamanBot
         /// Gets the next waypoint for the player to move towards based on the current map, the player's position, and the target's position,
         /// and moves the player towards the next waypoint.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// Update -> target: Check TappedByOther or Aggressors
+        /// target --> Update: Return status
+        /// Update -> player: StopAllMovement
+        /// Update -> botStates: Pop
+        /// Update -> stuckHelper: CheckIfStuck
+        /// Update -> player: Check Position, IsCasting, IsSpellReady, InLosWith
+        /// player --> Update: Return status
+        /// Update -> player: StopAllMovement
+        /// Update -> botStates: Pop
+        /// Update -> botStates: Push new CombatState
+        /// Update -> Navigation: GetNextWaypoint
+        /// Navigation --> Update: Return nextWaypoint
+        /// Update -> player: MoveToward nextWaypoint
+        /// \enduml
+        /// </remarks>
         public void Update()
         {
             if (target.TappedByOther || (ObjectManager.Aggressors.Count() > 0 && !ObjectManager.Aggressors.Any(a => a.Guid == target.Guid)))

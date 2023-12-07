@@ -102,6 +102,47 @@ namespace BloogBot.AI.SharedStates
         /// <summary>
         /// Updates the behavior of the bot.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// Update -> Random: Next(3, 15)
+        /// Random --> Update: playerStopDistance
+        /// Update -> Random: NextDouble() * 0.05
+        /// Random --> Update: searchFrequency
+        /// Update -> Random: NextDouble() * 0.005
+        /// Random --> Update: jumpFrequency
+        /// Update -> ObjectManager: GetTalentRank(3, 11)
+        /// ObjectManager --> Update: range
+        /// Update -> Random: NextDouble()
+        /// Random --> Update: Jump() decision
+        /// Update -> Player: LuaCall("Jump()")
+        /// Update -> Random: NextDouble()
+        /// Random --> Update: Emote decision
+        /// Update -> Update: Emote()
+        /// Update -> ObjectManager: Players.FirstOrDefault()
+        /// ObjectManager --> Update: targetPlayer
+        /// Update -> ObjectManager: Units.FirstOrDefault()
+        /// ObjectManager --> Update: target
+        /// Update -> Player: SetTarget(targetPlayer.Guid)
+        /// Update -> Random: Next(200, 2000)
+        /// Random --> Update: startDelay
+        /// Update -> Player: Position.DistanceTo(target.Position)
+        /// Player --> Update: distance
+        /// Update -> Player: SetTarget(target.Guid)
+        /// Update -> Navigation: GetNextWaypoint()
+        /// Navigation --> Update: nextWaypoint
+        /// Update -> Player: MoveToward(nextWaypoint)
+        /// Update -> Player: Position.DistanceTo(targetPlayer.Position)
+        /// Player --> Update: distance
+        /// Update -> Navigation: GetNextWaypoint()
+        /// Navigation --> Update: nextWaypoint
+        /// Update -> Player: MoveToward(nextWaypoint)
+        /// Update -> Player: StopAllMovement()
+        /// Update -> Random: NextDouble()
+        /// Random --> Update: newFacing decision
+        /// Update -> Player: SetFacing(newFacing)
+        /// \enduml
+        /// </remarks>
         public void Update()
         {
             if (!initialized)
@@ -189,6 +230,20 @@ namespace BloogBot.AI.SharedStates
         /// <summary>
         /// Performs an emote action based on the current target player.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "player" as P
+        /// participant "targetPlayer" as TP
+        /// 
+        /// P -> P: TargetGuid == Guid
+        /// alt true
+        ///     P -> P: Select emote from playerEmotes
+        /// else false
+        ///     P -> P: Select emote from targetEmotes
+        /// end
+        /// P -> P: LuaCall(DoEmote)
+        /// \enduml
+        /// </remarks>
         void Emote()
         {
             string emote;

@@ -185,6 +185,23 @@ namespace BloogBot.Game.Objects
         /// Calculates the facing angle in radians for a given position.
         /// </summary>
         // in radians
+        /// <remarks>
+        /// \startuml
+        /// Position -> GetFacingForPosition: Provide position
+        /// GetFacingForPosition -> Math: Atan2(position.Y - Position.Y, position.X - Position.X)
+        /// Math --> GetFacingForPosition: Return f
+        /// alt f < 0.0f
+        ///     GetFacingForPosition -> Math: PI * 2.0f
+        ///     Math --> GetFacingForPosition: Return value
+        ///     GetFacingForPosition -> GetFacingForPosition: f += value
+        /// else f > PI * 2
+        ///     GetFacingForPosition -> Math: PI * 2.0f
+        ///     Math --> GetFacingForPosition: Return value
+        ///     GetFacingForPosition -> GetFacingForPosition: f -= value
+        /// end
+        /// GetFacingForPosition --> Position: Return f
+        /// \enduml
+        /// </remarks>
         public float GetFacingForPosition(Position position)
         {
             var f = (float)Math.Atan2(position.Y - Position.Y, position.X - Position.X);
@@ -201,6 +218,24 @@ namespace BloogBot.Game.Objects
         /// <summary>
         /// Determines if the current object is behind the specified target.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "WoWUnit target" as Target
+        /// participant "IsBehind Method" as Method
+        /// 
+        /// Target -> Method: Provide Facing and Position
+        /// Method -> Method: Calculate halfPi, twoPi, leftThreshold, rightThreshold
+        /// Method -> Method: Check if leftThreshold < 0
+        /// alt leftThreshold < 0
+        ///     Method -> Method: Set condition as (Facing < rightThreshold || Facing > twoPi + leftThreshold)
+        /// else rightThreshold > twoPi
+        ///     Method -> Method: Set condition as (Facing > leftThreshold || Facing < rightThreshold - twoPi)
+        /// else
+        ///     Method -> Method: Set condition as (Facing > leftThreshold && Facing < rightThreshold)
+        /// end
+        /// Method -> Method: Return condition && IsFacing(target.Position)
+        /// \enduml
+        /// </remarks>
         public bool IsBehind(WoWUnit target)
         {
             var halfPi = Math.PI / 2;
@@ -267,6 +302,30 @@ namespace BloogBot.Game.Objects
         /// <summary>
         /// Retrieves a spell by its ID.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// ClientHelper -> MemoryManager: ReadIntPtr((IntPtr)0x00C0D788)
+        /// MemoryManager --> ClientHelper: spellsBasePtr
+        /// ClientHelper -> MemoryManager: ReadIntPtr(spellsBasePtr + spellId * 4)
+        /// MemoryManager --> ClientHelper: spellPtr
+        /// ClientHelper -> MemoryManager: ReadInt(spellPtr + 0x0080)
+        /// MemoryManager --> ClientHelper: spellCost
+        /// ClientHelper -> MemoryManager: ReadIntPtr(spellPtr + 0x1E0)
+        /// MemoryManager --> ClientHelper: spellNamePtr
+        /// ClientHelper -> MemoryManager: ReadString(spellNamePtr)
+        /// MemoryManager --> ClientHelper: spellName
+        /// ClientHelper -> MemoryManager: ReadIntPtr(spellPtr + 0x228)
+        /// MemoryManager --> ClientHelper: spellDescriptionPtr
+        /// ClientHelper -> MemoryManager: ReadString(spellDescriptionPtr)
+        /// MemoryManager --> ClientHelper: spellDescription
+        /// ClientHelper -> MemoryManager: ReadIntPtr(spellPtr + 0x24C)
+        /// MemoryManager --> ClientHelper: spellTooltipPtr
+        /// ClientHelper -> MemoryManager: ReadString(spellTooltipPtr)
+        /// MemoryManager --> ClientHelper: spellTooltip
+        /// ClientHelper -> Spell: new Spell(spellId, spellCost, spellName, spellDescription, spellTooltip)
+        /// Spell --> ClientHelper: Spell
+        /// \enduml
+        /// </remarks>
         public Spell GetSpellById(int spellId)
         {
             if (ClientHelper.ClientVersion == ClientVersion.Vanilla)
@@ -410,6 +469,12 @@ namespace BloogBot.Game.Objects
         /// <summary>
         /// Retrieves a collection of debuffs for the specified LuaTarget.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// Example_Object_A -> Example_Object_B: Hello Example_Object_B, how are you?
+        /// Example_Object_B --> Example_Object_A: I am good!
+        /// \enduml
+        /// </remarks>
         public IEnumerable<SpellEffect> GetDebuffs(LuaTarget target)
         {
             var debuffs = new List<SpellEffect>();

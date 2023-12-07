@@ -63,6 +63,25 @@ namespace BloogBot
         /// Composes the parts of the container and returns the list of bots, 
         /// selecting the last bot with each unique name.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// ReloadBots -> Assembly: GetExecutingAssembly().Location
+        /// ReloadBots -> Path: GetDirectoryName(location)
+        /// ReloadBots -> Path: Combine(currentFolder, botPath)
+        /// ReloadBots -> File: ReadAllBytes(path)
+        /// ReloadBots -> Assembly: Load(bytes)
+        /// ReloadBots -> Assembly: FullName.Split(',')
+        /// ReloadBots -> AssemblyCatalog: new(assembly)
+        /// ReloadBots -> Catalogs: Add(AssemblyCatalog)
+        /// ReloadBots -> Assemblies: Add(assemblyName, assembly.FullName)
+        /// ReloadBots -> CompositionContainer: new(catalog)
+        /// ReloadBots -> CompositionContainer: ComposeParts(this)
+        /// ReloadBots -> Bots: GroupBy(b => b.Name)
+        /// ReloadBots -> Bots: Select(b => b.Last())
+        /// ReloadBots -> List: ToList()
+        /// \enduml
+        /// </remarks>
         internal List<IBot> ReloadBots()
         {
             bots?.Clear();

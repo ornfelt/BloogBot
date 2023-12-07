@@ -94,6 +94,32 @@ namespace BackstabRogueBot
         /// <summary>
         /// Updates the behavior of the player character.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// Update -> Target: Check TappedByOther or FindClosestTarget
+        /// Update -> Player: StopAllMovement
+        /// Update -> BotStates: Pop
+        /// Update -> StuckHelper: CheckIfStuck
+        /// Update -> Player: Calculate DistanceToTarget
+        /// Update -> Player: Check Buff, Spell, Combat Status
+        /// Update -> Player: LuaCall CastSpellByName Stealth
+        /// Update -> ThreadSynchronizer: RunOnMainThread
+        /// ThreadSynchronizer -> Inventory: GetEquippedItem MainHand, OffHand
+        /// ThreadSynchronizer -> Inventory: GetItem SwapSlotWeap
+        /// ThreadSynchronizer -> MainHand: Check ItemSubclass
+        /// ThreadSynchronizer -> SwapSlotWeap: Check ItemSubclass
+        /// ThreadSynchronizer -> Player: LuaCall UseContainerItem
+        /// Update -> Player: Check DistanceToTarget, Spell, Buff
+        /// Update -> Player: CastSpellAtPosition Distract
+        /// Update -> Player: Check DistanceToTarget, Buff, Spell, Combat Status, Position
+        /// Update -> Player: LuaCall CastSpellByName Ambush, Garrote, CheapShot
+        /// Update -> Player: StopAllMovement
+        /// Update -> BotStates: Pop, Push new CombatState
+        /// Update -> Navigation: GetNextWaypoint
+        /// Update -> Player: MoveToward nextWaypoint
+        /// \enduml
+        /// </remarks>
         public void Update()
         {
             if (target.TappedByOther || container.FindClosestTarget()?.Guid != target.Guid)

@@ -25,21 +25,53 @@ namespace BloogBot
         /// <summary>
         /// Creates a new connection.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// :User: -> :System: : NewConnection()
+        /// \enduml
+        /// </remarks>
         public abstract dynamic NewConnection();
 
         /// <summary>
         /// Creates a new command object for executing the specified SQL statement using the provided database connection.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "Caller" as C
+        /// participant "NewCommand Method" as M
+        /// C -> M: NewCommand(sql, db)
+        /// M --> C: Return dynamic
+        /// \enduml
+        /// </remarks>
         public abstract dynamic NewCommand(string sql, dynamic db);
 
         /// <summary>
         /// Initializes the object with the specified connection string.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        ///  participant "Caller" as A
+        ///  participant "Database" as B
+        ///  A -> B : Initialize(connectionString)
+        /// \enduml
+        /// </remarks>
         public abstract void Initialize(string connectionString);
 
         /// <summary>
         /// Runs a SQL query and executes it against the database.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// RunSqlQuery -> NewConnection : Create new connection
+        /// NewConnection --> RunSqlQuery : Return db
+        /// RunSqlQuery -> db : Open
+        /// RunSqlQuery -> NewCommand : Create new command
+        /// NewCommand --> RunSqlQuery : Return command
+        /// RunSqlQuery -> command : Prepare
+        /// RunSqlQuery -> command : ExecuteNonQuery
+        /// RunSqlQuery -> db : Close
+        /// \enduml
+        /// </remarks>
         public void RunSqlQuery(string sql)
         {
             using (var db = NewConnection())
@@ -57,6 +89,20 @@ namespace BloogBot
         /// <summary>
         /// Checks if a row exists in the database based on the provided SQL query.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "RowExistsSql Method" as Method
+        /// participant "Database Connection" as DB
+        /// participant "SQL Command" as Command
+        /// 
+        /// Method -> DB: Open Connection
+        /// Method -> Command: Create Command with SQL
+        /// Command -> DB: Execute Reader
+        /// DB --> Command: Return if has rows
+        /// Method -> DB: Close Connection
+        /// Method --> : Return if rows exist
+        /// \enduml
+        /// </remarks>
         public bool RowExistsSql(string sql)
         {
             using (var db = this.NewConnection())
@@ -74,6 +120,23 @@ namespace BloogBot
         /// <summary>
         /// Parses an NPC from a query result.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "ParseNpcFromQueryResult()" as P
+        /// participant "Position" as Pos
+        /// participant "Npc" as N
+        /// 
+        /// P -> Pos: Create new Position
+        /// activate Pos
+        /// Pos --> P: Return Position
+        /// deactivate Pos
+        /// 
+        /// P -> N: Create new Npc
+        /// activate N
+        /// N --> P: Return Npc
+        /// deactivate N
+        /// \enduml
+        /// </remarks>
         public Npc ParseNpcFromQueryResult(dynamic reader, int id, string prefix)
         {
             var positionX = (float)Convert.ToDecimal(reader[$"{prefix}PositionX"]);
@@ -96,6 +159,24 @@ namespace BloogBot
         /// <summary>
         /// Builds and returns an Npc object based on the provided prefix and reader.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// BuildStartNpc -> Convert : Convert.ToDecimal for positionX
+        /// BuildStartNpc -> Convert : Convert.ToDecimal for positionY
+        /// BuildStartNpc -> Convert : Convert.ToDecimal for positionZ
+        /// BuildStartNpc -> Position : new Position
+        /// BuildStartNpc -> Convert : Convert.ToInt32 for NpcId
+        /// BuildStartNpc -> Convert : Convert.ToString for NpcName
+        /// BuildStartNpc -> Convert : Convert.ToBoolean for NpcIsInnkeeper
+        /// BuildStartNpc -> Convert : Convert.ToBoolean for NpcSellsAmmo
+        /// BuildStartNpc -> Convert : Convert.ToBoolean for NpcRepairs
+        /// BuildStartNpc -> Convert : Convert.ToBoolean for NpcQuest
+        /// BuildStartNpc -> Convert : Convert.ToBoolean for NpcHorde
+        /// BuildStartNpc -> Convert : Convert.ToBoolean for NpcAlliance
+        /// BuildStartNpc -> Convert : Convert.ToString for NpcZone
+        /// BuildStartNpc -> Npc : new Npc
+        /// \enduml
+        /// </remarks>
         public Npc BuildStartNpc(string prefix, dynamic reader)
         {
             var positionX = (float)Convert.ToDecimal(reader[$"{prefix}NpcPositionX"]);
@@ -118,6 +199,17 @@ namespace BloogBot
         /// <summary>
         /// Parses a travel path from a query result.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "TravelPathParser" as T
+        /// participant "JsonConvert" as J
+        /// T -> T: ParseTravelPathFromQueryResult(reader, id, prefix)
+        /// T -> T: Convert.ToString(reader[prefix + "Name"])
+        /// T -> T: Convert.ToString(reader[prefix + "Waypoints"])
+        /// T -> J: DeserializeObject<Position[]>(waypointsJson)
+        /// T -> T: new TravelPath(id, name, waypoints)
+        /// \enduml
+        /// </remarks>
         public TravelPath ParseTravelPathFromQueryResult(dynamic reader, int id, string prefix)
         {
             var name = Convert.ToString(reader[$"{prefix}Name"]);

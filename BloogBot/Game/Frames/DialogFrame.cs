@@ -75,11 +75,34 @@ namespace BloogBot.Game.Frames
         /// <summary>
         /// Closes the dialog frame for the specified WoWPlayer.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// WoWPlayer -> CloseDialogFrame: CloseGossip()
+        /// \enduml
+        /// </remarks>
         public void CloseDialogFrame(WoWPlayer player) => player.LuaCall("CloseGossip()");
 
         /// <summary>
         /// Selects the first gossip option of the specified type for the given player.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "SelectFirstGossipOfType()" as S
+        /// participant "WoWPlayer" as P
+        /// participant "DialogOptions" as D
+        /// 
+        /// S -> D: Get DialogOptions
+        /// loop i over DialogOptions.Count
+        ///     D -> S: Return DialogOption[i].Type
+        ///     alt DialogOption[i].Type != type
+        ///         S -> S: Continue
+        ///     else DialogOption[i].Type == type
+        ///         S -> P: LuaCall("SelectGossipOption(" + (i + 1) + ")")
+        ///         S -> S: Return
+        ///     end
+        /// end
+        /// \enduml
+        /// </remarks>
         public void SelectFirstGossipOfType(WoWPlayer player, DialogType type)
         {
             for (var i = 0; i < DialogOptions.Count; i++)

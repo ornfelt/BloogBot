@@ -48,6 +48,24 @@ namespace BloogBot
         /// <summary>
         /// Determines if the specified memory range is within the scan range.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "IsWithinScanRange Method" as Method
+        /// participant "Memory Scan" as Scan
+        /// participant "Hack Range" as Hack
+        /// 
+        /// Method -> Scan: Get scanStart and scanEnd
+        /// Method -> Hack: Get hackStart and hackEnd
+        /// 
+        /// alt hackStart is within scan range
+        ///     Method -> Method: Return true
+        /// else hackEnd is within scan range
+        ///     Method -> Method: Return true
+        /// else
+        ///     Method -> Method: Return false
+        /// end
+        /// \enduml
+        /// </remarks>
         internal bool IsWithinScanRange(IntPtr scanStartAddress, int size)
         {
             var scanStart = (int)scanStartAddress;

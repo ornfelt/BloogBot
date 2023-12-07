@@ -53,19 +53,36 @@ namespace EnhancementShamanBot
         /// <summary>
         /// Gets the dependency container for the bot.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "BotSettings" as A
+        /// participant "Probe" as B
+        /// participant "Hotspot" as C
+        /// participant "DependencyContainer" as D
+        /// A -> D: botSettings
+        /// B -> D: probe
+        /// C -> D: hotspots
+        /// \enduml
+        /// </remarks>
         public IDependencyContainer GetDependencyContainer(BotSettings botSettings, Probe probe, IEnumerable<Hotspot> hotspots) =>
-                    new DependencyContainer(
-                        AdditionalTargetingCriteria,
-                        CreateRestState,
-                        CreateMoveToTargetState,
-                        CreatePowerlevelCombatState,
-                        botSettings,
-                        probe,
-                        hotspots);
+                            new DependencyContainer(
+                                AdditionalTargetingCriteria,
+                                CreateRestState,
+                                CreateMoveToTargetState,
+                                CreatePowerlevelCombatState,
+                                botSettings,
+                                probe,
+                                hotspots);
 
         /// <summary>
         /// Executes the Test method on the main thread, causing the player to jump.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// Test -> ThreadSynchronizer: RunOnMainThread
+        /// ThreadSynchronizer -> ObjectManager: Player.Jump
+        /// \enduml
+        /// </remarks>
         public void Test(IDependencyContainer container)
         {
             ThreadSynchronizer.RunOnMainThread(() =>

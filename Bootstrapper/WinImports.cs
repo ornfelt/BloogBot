@@ -17,18 +17,29 @@ namespace Bootstrapper
         /// <summary>
         /// Creates a new process and its primary thread. The new process runs the specified executable file.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "Caller" as C
+        /// participant "CreateProcess Function" as CP
+        /// C -> CP: Calls CreateProcess
+        /// activate CP
+        /// CP -> CP: Processes parameters
+        /// CP --> C: Returns result (bool)
+        /// deactivate CP
+        /// \enduml
+        /// </remarks>
         [DllImport("kernel32.dll")]
         internal static extern bool CreateProcess(
-                    string lpApplicationName,
-                    string lpCommandLine,
-                    IntPtr lpProcessAttributes,
-                    IntPtr lpThreadAttributes,
-                    bool bInheritHandles,
-                    ProcessCreationFlag dwCreationFlags,
-                    IntPtr lpEnvironment,
-                    string lpCurrentDirectory,
-                    ref STARTUPINFO lpStartupInfo,
-                    out PROCESS_INFORMATION lpProcessInformation);
+                            string lpApplicationName,
+                            string lpCommandLine,
+                            IntPtr lpProcessAttributes,
+                            IntPtr lpThreadAttributes,
+                            bool bInheritHandles,
+                            ProcessCreationFlag dwCreationFlags,
+                            IntPtr lpEnvironment,
+                            string lpCurrentDirectory,
+                            ref STARTUPINFO lpStartupInfo,
+                            out PROCESS_INFORMATION lpProcessInformation);
 
         /// <summary>
         /// Retrieves the address of an exported function or variable from the specified dynamic-link library (DLL).
@@ -45,47 +56,84 @@ namespace Bootstrapper
         /// <summary>
         /// Allocates memory within the virtual address space of a specified process.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "Caller Function" as Caller
+        /// participant "VirtualAllocEx Function" as VirtualAllocEx
+        /// Caller -> VirtualAllocEx: Call VirtualAllocEx(hProcess, dwAddress, nSize, dwAllocationType, dwProtect)
+        /// VirtualAllocEx --> Caller: Returns IntPtr
+        /// \enduml
+        /// </remarks>
         [DllImport("kernel32.dll")]
         internal static extern IntPtr VirtualAllocEx(
-                    IntPtr hProcess,
-                    IntPtr dwAddress,
-                    int nSize,
-                    MemoryAllocationType dwAllocationType,
-                    MemoryProtectionType dwProtect);
+                            IntPtr hProcess,
+                            IntPtr dwAddress,
+                            int nSize,
+                            MemoryAllocationType dwAllocationType,
+                            MemoryProtectionType dwProtect);
 
         /// <summary>
         /// Writes data to an area of memory in a specified process.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "Caller" as C
+        /// participant "WriteProcessMemory" as W
+        /// C -> W: Call WriteProcessMemory(hProcess, lpBaseAddress, lpBuffer, dwSize, lpNumberOfBytesWritten)
+        /// W --> C: Returns bool
+        /// \enduml
+        /// </remarks>
         [DllImport("kernel32.dll")]
         internal static extern bool WriteProcessMemory(
-                    IntPtr hProcess,
-                    IntPtr lpBaseAddress,
-                    byte[] lpBuffer,
-                    int dwSize,
-                    ref int lpNumberOfBytesWritten);
+                            IntPtr hProcess,
+                            IntPtr lpBaseAddress,
+                            byte[] lpBuffer,
+                            int dwSize,
+                            ref int lpNumberOfBytesWritten);
 
         /// <summary>
         /// Creates a thread that runs in the address space of another process.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "Caller Function" as Caller
+        /// participant "CreateRemoteThread Function" as CRT
+        /// 
+        /// Caller -> CRT: Call CreateRemoteThread
+        /// activate CRT
+        /// CRT -> CRT: Initialize Remote Thread
+        /// CRT --> Caller: Return Remote Thread Handle
+        /// deactivate CRT
+        /// \enduml
+        /// </remarks>
         [DllImport("kernel32.dll")]
         internal static extern IntPtr CreateRemoteThread(
-                    IntPtr hProcess,
-                    IntPtr lpThreadAttribute,
-                    IntPtr dwStackSize,
-                    IntPtr lpStartAddress,
-                    IntPtr lpParameter,
-                    uint dwCreationFlags,
-                    IntPtr lpThreadId);
+                            IntPtr hProcess,
+                            IntPtr lpThreadAttribute,
+                            IntPtr dwStackSize,
+                            IntPtr lpStartAddress,
+                            IntPtr lpParameter,
+                            uint dwCreationFlags,
+                            IntPtr lpThreadId);
 
         /// <summary>
         /// Frees a block of memory within a specified process.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "Caller" as C
+        /// participant "VirtualFreeEx Function" as V
+        /// C -> V: Calls VirtualFreeEx
+        /// note over V: Parameters: hProcess, dwAddress, nSize, dwFreeType
+        /// V --> C: Returns bool
+        /// \enduml
+        /// </remarks>
         [DllImport("kernel32.dll")]
         internal static extern bool VirtualFreeEx(
-                    IntPtr hProcess,
-                    IntPtr dwAddress,
-                    int nSize,
-                    MemoryFreeType dwFreeType);
+                            IntPtr hProcess,
+                            IntPtr dwAddress,
+                            int nSize,
+                            MemoryFreeType dwFreeType);
 
         /// <summary>
         /// Represents the type of memory allocation.

@@ -58,19 +58,46 @@ namespace TestBot
         /// <summary>
         /// Gets the dependency container for the bot.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "BotSettings" as A
+        /// participant "Probe" as B
+        /// participant "Hotspot" as C
+        /// participant "DependencyContainer" as D
+        /// A -> D: botSettings
+        /// B -> D: probe
+        /// C -> D: hotspots
+        /// \enduml
+        /// </remarks>
         public IDependencyContainer GetDependencyContainer(BotSettings botSettings, Probe probe, IEnumerable<Hotspot> hotspots) =>
-                    new DependencyContainer(
-                        AdditionalTargetingCriteria,
-                        CreateRestState,
-                        CreateMoveToTargetState,
-                        CreatePowerlevelCombatState,
-                        botSettings,
-                        probe,
-                        hotspots);
+                            new DependencyContainer(
+                                AdditionalTargetingCriteria,
+                                CreateRestState,
+                                CreateMoveToTargetState,
+                                CreatePowerlevelCombatState,
+                                botSettings,
+                                probe,
+                                hotspots);
 
         /// <summary>
         /// Executes a test on the specified dependency container.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// Test -> ThreadSynchronizer: RunOnMainThread()
+        /// ThreadSynchronizer --> Test: Action
+        /// Test -> ObjectManager: Player
+        /// ObjectManager --> Test: Player
+        /// Test -> player: LuaCallWithResults("{0} = IsAttackAction(84)")
+        /// player --> Test: result
+        /// Test -> Console: WriteLine(result.Length)
+        /// Console --> Test: void
+        /// Test -> result: foreach (var r in result)
+        /// result --> Test: void
+        /// Test -> Console: WriteLine(r)
+        /// Console --> Test: void
+        /// \enduml
+        /// </remarks>
         public void Test(IDependencyContainer container)
         {
             ThreadSynchronizer.RunOnMainThread(() =>

@@ -60,6 +60,39 @@ namespace RetributionPaladinBot
         /// <summary>
         /// Updates the player's actions based on their current state.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// Update -> Player: IsCasting
+        /// Update -> Player: InCombat
+        /// Update -> Player: HealthOk
+        /// Update -> Player: ManaOk
+        /// Update -> Wait: RemoveAll
+        /// Update -> Player: Stand
+        /// Update -> BotStates: Pop
+        /// Update -> Inventory: GetItemCount
+        /// Update -> Container: RunningErrands
+        /// Update -> Container: GetCurrentHotspot
+        /// Update -> BotStates: Push(TravelState)
+        /// Update -> BotStates: Push(MoveToPositionState)
+        /// Update -> BotStates: Push(BuyItemsState)
+        /// Update -> BotStates: Push(SellItemsState)
+        /// Update -> BotStates: Push(MoveToPositionState)
+        /// Update -> Container: CheckForTravelPath
+        /// Update -> Container: RunningErrands = true
+        /// Update -> BotStates: Push(BuffSelfState)
+        /// Update -> Player: IsDrinking
+        /// Update -> Wait: For("HealSelfDelay")
+        /// Update -> Player: Stand
+        /// Update -> Player: HealthPercent
+        /// Update -> Player: LuaCall
+        /// Update -> Player: Level
+        /// Update -> Player: IsDrinking
+        /// Update -> Player: ManaPercent
+        /// Update -> Wait: For("UseDrinkDelay")
+        /// Update -> DrinkItem: Use
+        /// \enduml
+        /// </remarks>
         public void Update()
         {
             if (player.IsCasting) return;

@@ -65,6 +65,35 @@ namespace BackstabRogueBot
         /// <summary>
         /// Updates the player's actions based on certain conditions.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// Update -> Player: IsChanneling
+        /// Update -> Player: HealthPercent
+        /// Update -> Player: IsEating
+        /// Update -> ObjectManager: Player.IsInCombat
+        /// Update -> ObjectManager: Units.Any
+        /// Update -> Wait: RemoveAll
+        /// Update -> Player: Stand
+        /// Update -> BotStates: Pop
+        /// Update -> Inventory: GetItemCount
+        /// Update -> Container: RunningErrands
+        /// Update -> Container: GetCurrentHotspot
+        /// Update -> BotStates: Push(TravelState)
+        /// Update -> BotStates: Push(MoveToPositionState)
+        /// Update -> BotStates: Push(BuyItemsState)
+        /// Update -> BotStates: Push(SellItemsState)
+        /// Update -> BotStates: Push(MoveToPositionState)
+        /// Update -> Container: CheckForTravelPath
+        /// Update -> Container: RunningErrands
+        /// Update -> Player: IsSpellReady
+        /// Update -> Player: TastyCorpsesNearby
+        /// Update -> Player: LuaCall
+        /// Update -> ObjectManager: Player.IsEating
+        /// Update -> Wait: For
+        /// Update -> FoodItem: Use
+        /// \enduml
+        /// </remarks>
         public void Update()
         {
             if (player.IsChanneling)

@@ -34,6 +34,19 @@ namespace BloogBotTests
         // specific navigation issues based on the movemaps generated from the WoW client's static geometry.
         // for example, if the bot is struggling to move up a hill, you can debug that here.
         // see CalculatePath_1.png and CalculatePath_2.png
+        /// <remarks>
+        /// \startuml
+        /// participant "CalculatePathTest()" as CPT
+        /// participant "Navigation" as N
+        /// 
+        /// CPT -> N: CalculatePath(KALIMDOR_MAP_ID, playerPosition, targetPosition, false)
+        /// activate N
+        /// N --> CPT: path
+        /// deactivate N
+        /// 
+        /// CPT -> CPT: Assert.IsTrue(path.Length > 2)
+        /// \enduml
+        /// </remarks>
         [TestMethod]
         public void CalculatePathTest()
         {
@@ -61,6 +74,20 @@ namespace BloogBotTests
         // in this case, we have Target1 that is technically closer, which should make it a better target, but it's nearby a level 60 elite mob.
         // therefore, we should exclude Target1, and instead choose Target2 as a target, even though it's farther away.
         // see TargetingLogicTest_1
+        /// <remarks>
+        /// \startuml
+        /// TestMethod -> Position: Create pathToTarget1
+        /// TestMethod -> Position: Create pathToTarget2
+        /// TestMethod -> Mock: Create target1
+        /// TestMethod -> Mock: Create eliteMob
+        /// TestMethod -> Mock: Create target2
+        /// TestMethod -> ObjectManager.Units: Get units
+        /// TestMethod -> additionalTargetingCriteria: Check criteria
+        /// TestMethod -> Dictionary: Create dict
+        /// TestMethod -> additionalTargetingCriteria: Filter dict
+        /// TestMethod -> Assert: Check targetResult
+        /// \enduml
+        /// </remarks>
         [TestMethod]
         public void TargetingLogicTest()
         {

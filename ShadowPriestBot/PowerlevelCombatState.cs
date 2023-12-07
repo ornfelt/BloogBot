@@ -147,6 +147,42 @@ namespace ShadowPriestBot
         /// <summary>
         /// Updates the combat rotation for the player character.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// Update -> Environment: TickCount
+        /// Update -> player: StopAllMovement
+        /// Update -> Navigation: GetNextWaypoint
+        /// Update -> player: MoveToward
+        /// Update -> botStates: Push(new HealSelfState)
+        /// Update -> botStates: Pop
+        /// Update -> ObjectManager: Units.FirstOrDefault
+        /// Update -> botStates: Pop
+        /// Update -> botStates: Push(new LootState)
+        /// Update -> player: SetTarget
+        /// Update -> player: IsFacing
+        /// Update -> player: Face
+        /// Update -> player: MoveToward
+        /// Update -> player: StopAllMovement
+        /// Update -> Inventory: GetEquippedItem
+        /// Update -> player: LuaCall
+        /// Update -> ObjectManager: Aggressors
+        /// Update -> TryCastSpell: ShadowForm
+        /// Update -> TryCastSpell: VampiricEmbrace
+        /// Update -> TryCastSpell: PsychicScream
+        /// Update -> TryCastSpell: ShadowWordPain
+        /// Update -> TryCastSpell: DispelMagic
+        /// Update -> TryCastSpell: AbolishDisease
+        /// Update -> TryCastSpell: CureDisease
+        /// Update -> TryCastSpell: InnerFire
+        /// Update -> TryCastSpell: PowerWordShield
+        /// Update -> TryCastSpell: MindBlast
+        /// Update -> TryCastSpell: MindFlay
+        /// Update -> TryCastSpell: Smite
+        /// Update -> player: SetTarget
+        /// Update -> TryCastSpell: LesserHeal
+        /// \enduml
+        /// </remarks>
         public void Update()
         {
             if (Environment.TickCount - noLosStartTime > 1000)
@@ -255,6 +291,21 @@ namespace ShadowPriestBot
         /// <summary>
         /// Tries to cast a spell with the given name within a specified range, under certain conditions, and with optional callback and self-casting options.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// TryCastSpell -> player: Get player position
+        /// player -> target: Get target position
+        /// player -> player: Check if spell is ready
+        /// player -> player: Check if player has enough mana
+        /// player -> player: Check if distance to target is within range
+        /// player -> player: Check if condition is true
+        /// player -> player: Check if player is not stunned
+        /// player -> player: Check if player is not casting
+        /// player -> player: Check if player is not channeling
+        /// player -> player: Cast spell by name
+        /// player -> callback: Invoke callback function
+        /// \enduml
+        /// </remarks>
         void TryCastSpell(string name, int minRange, int maxRange, bool condition = true, Action callback = null, bool castOnSelf = false)
         {
             var distanceToTarget = player.Position.DistanceTo(target.Position);
@@ -270,6 +321,19 @@ namespace ShadowPriestBot
         /// <summary>
         /// Event handler for error messages.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// Participant sender as Sender
+        /// Participant e as OnUiMessageArgs
+        /// Participant this as EventHandler
+        /// 
+        /// sender -> this: Event Triggered
+        /// alt e.Message == LosErrorMessage
+        ///     this -> this: Set noLos = true
+        ///     this -> this: Record noLosStartTime
+        /// end
+        /// \enduml
+        /// </remarks>
         void OnErrorMessageCallback(object sender, OnUiMessageArgs e)
         {
             if (e.Message == LosErrorMessage)

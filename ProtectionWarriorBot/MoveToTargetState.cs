@@ -53,6 +53,31 @@ namespace ProtectionWarriorBot
         /// <summary>
         /// Updates the behavior of the bot.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// Update -> target: TappedByOther
+        /// Update -> container: FindClosestTarget
+        /// Update -> player: StopAllMovement
+        /// Update -> botStates: Pop
+        /// Update -> stuckHelper: CheckIfStuck
+        /// Update -> player: Position
+        /// Update -> target: Position
+        /// Update -> player: IsCasting
+        /// Update -> player: IsSpellReady("Charge")
+        /// Update -> player: InLosWith(target.Position)
+        /// Update -> player: LuaCall("CastSpellByName('Charge')")
+        /// Update -> player: IsInCombat
+        /// Update -> player: StopAllMovement
+        /// Update -> botStates: Pop
+        /// Update -> botStates: Push(new CombatState)
+        /// Update -> player: StopAllMovement
+        /// Update -> botStates: Pop
+        /// Update -> botStates: Push(new CombatState)
+        /// Update -> Navigation: GetNextWaypoint
+        /// Update -> player: MoveToward(nextWaypoint)
+        /// \enduml
+        /// </remarks>
         public void Update()
         {
             if (target.TappedByOther || container.FindClosestTarget()?.Guid != target.Guid)

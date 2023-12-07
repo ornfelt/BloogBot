@@ -54,6 +54,30 @@ namespace ProtectionPaladinBot
         /// <summary>
         /// Updates the current state of the bot. If the target is tapped by another player or if there are aggressors targeting the target and none of them have the same GUID as the target, the bot stops all movement and pops the current state from the stack. Otherwise, it checks if the bot is stuck. If the player is within 3 units of the target's position or if the player is in combat, the bot stops all movement, pops the current state from the stack, and pushes a new CombatState onto the stack. Finally, it calculates the next waypoint using the Navigation class and moves the player towards it.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// Update -> target: Check TappedByOther
+        /// Update -> ObjectManager: Check Aggressors
+        /// alt TappedByOther is true or Aggressors exist
+        ///     Update -> player: StopAllMovement
+        ///     Update -> botStates: Pop
+        ///     Update -> Update: return
+        /// else TappedByOther is false and no Aggressors
+        ///     Update -> stuckHelper: CheckIfStuck
+        ///     Update -> player: Check Position and IsInCombat
+        ///     alt Distance < 3 or IsInCombat is true
+        ///         Update -> player: StopAllMovement
+        ///         Update -> botStates: Pop
+        ///         Update -> botStates: Push new CombatState
+        ///         Update -> Update: return
+        ///     else Distance >= 3 and IsInCombat is false
+        ///         Update -> Navigation: GetNextWaypoint
+        ///         Update -> player: MoveToward nextWaypoint
+        ///     end
+        /// end
+        /// \enduml
+        /// </remarks>
         public void Update()
         {
             if (target.TappedByOther || (ObjectManager.Aggressors.Count() > 0 && !ObjectManager.Aggressors.Any(a => a.Guid == target.Guid)))

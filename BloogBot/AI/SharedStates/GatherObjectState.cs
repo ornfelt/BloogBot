@@ -52,6 +52,20 @@ namespace BloogBot.AI.SharedStates
         /// <summary>
         /// Updates the state of the bot.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// Update -> player: IsInCombat
+        /// Update -> Environment: TickCount
+        /// Update -> botStates: Pop
+        /// Update -> Wait: For("InteractWithObjectDelay", 15000, true)
+        /// Update -> target: Interact
+        /// Update -> Inventory: GetItemCount(target.Name)
+        /// Update -> Wait: For("PopGatherObjectStateDelay", 2000)
+        /// Update -> Wait: RemoveAll
+        /// Update -> botStates: Pop
+        /// \enduml
+        /// </remarks>
         public void Update()
         {
             if (player.IsInCombat || (Environment.TickCount - startTime > 15000))

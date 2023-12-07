@@ -99,6 +99,26 @@ namespace RetributionPaladinBot
         /// <summary>
         /// Updates the behavior of the player character.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// Update -> "player.HealthPercent < 30\n&& target.HealthPercent > 50\n&& player.Mana >= player.GetManaCost(HolyLight)": Check condition
+        /// "player.HealthPercent < 30\n&& target.HealthPercent > 50\n&& player.Mana >= player.GetManaCost(HolyLight)" --> Update: If true
+        /// Update -> HealSelfState: Push new state
+        /// Update -> base.Update: Call base update
+        /// base.Update --> Update: If true
+        /// Update -> TryCastSpell: Try to cast Purify
+        /// Update -> TryCastSpell: Try to cast DevotionAura
+        /// Update -> TryCastSpell: Try to cast RetributionAura
+        /// Update -> TryCastSpell: Try to cast SanctityAura
+        /// Update -> TryCastSpell: Try to cast Exorcism
+        /// Update -> TryCastSpell: Try to cast HammerOfJustice
+        /// Update -> TryCastSpell: Try to cast SealOfTheCrusader
+        /// Update -> TryCastSpell: Try to cast SealOfRighteousness
+        /// Update -> TryCastSpell: Try to cast SealOfCommand
+        /// Update -> TryCastSpell: Try to cast HolyShield
+        /// Update -> TryCastSpell: Try to cast Judgement
+        /// \enduml
+        /// </remarks>
         public new void Update()
         {
             if (player.HealthPercent < 30 && target.HealthPercent > 50 && player.Mana >= player.GetManaCost(HolyLight))

@@ -123,6 +123,29 @@ namespace EnhancementShamanBot
         /// <summary>
         /// Updates the behavior of the player character.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// Update -> "player:Player": HealthPercent, Mana
+        /// Update -> "target:Target": HealthPercent
+        /// Update -> "HealingWave:Spell": GetManaCost
+        /// Update -> "botStates:Stack": Push(new HealSelfState)
+        /// Update -> "base:BaseClass": Update()
+        /// Update -> "GroundingTotem:Spell": TryCastSpell
+        /// Update -> "TremorTotem:Spell": TryCastSpell
+        /// Update -> "WindfuryWeapon:Spell": TryCastSpell
+        /// Update -> "StoneclawTotem:Spell": TryCastSpell
+        /// Update -> "ManaSpringTotem:Spell": TryCastSpell
+        /// Update -> "StoneskinTotem:Spell": TryCastSpell
+        /// Update -> "SearingTotem:Spell": TryCastSpell
+        /// Update -> "Stormstrike:Spell": TryCastSpell
+        /// Update -> "FlameShock:Spell": TryCastSpell
+        /// Update -> "EarthShock:Spell": TryCastSpell
+        /// Update -> "LightningShield:Spell": TryCastSpell
+        /// Update -> "RockbiterWeapon:Spell": TryCastSpell
+        /// Update -> "FlametongueWeapon:Spell": TryCastSpell
+        /// \enduml
+        /// </remarks>
         public new void Update()
         {
             if (player.HealthPercent < 30 && target.HealthPercent > 50 && player.Mana >= player.GetManaCost(HealingWave))

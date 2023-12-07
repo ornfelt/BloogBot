@@ -70,6 +70,37 @@ namespace BalanceDruidBot
         /// <summary>
         /// Updates the player's actions based on various conditions, such as combat status, health and mana levels, and available items.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// Update -> Player: IsCasting
+        /// Update -> Player: InCombat
+        /// Update -> Player: HealthOk
+        /// Update -> Player: ManaOk
+        /// Update -> Inventory: GetItemCount
+        /// Update -> Container: GetCurrentHotspot
+        /// Update -> BotStates: Push(new TravelState)
+        /// Update -> BotStates: Push(new MoveToPositionState)
+        /// Update -> BotStates: Push(new BuyItemsState)
+        /// Update -> BotStates: Push(new SellItemsState)
+        /// Update -> BotStates: Push(new MoveToPositionState)
+        /// Update -> Container: CheckForTravelPath
+        /// Update -> BotStates: Push(new BuffSelfState)
+        /// Update -> Player: HealthPercent
+        /// Update -> Player: HasBuff(Regrowth)
+        /// Update -> Player: TryCastSpell(MoonkinForm)
+        /// Update -> Player: TryCastSpell(Regrowth)
+        /// Update -> Player: HealthPercent
+        /// Update -> Player: HasBuff(Rejuvenation)
+        /// Update -> Player: HasBuff(Regrowth)
+        /// Update -> Player: TryCastSpell(MoonkinForm)
+        /// Update -> Player: TryCastSpell(Rejuvenation)
+        /// Update -> Player: Level
+        /// Update -> Player: IsDrinking
+        /// Update -> Player: ManaPercent
+        /// Update -> DrinkItem: Use
+        /// \enduml
+        /// </remarks>
         public void Update()
         {
             if (player.IsCasting)
@@ -150,6 +181,20 @@ namespace BalanceDruidBot
         /// <summary>
         /// Tries to cast a spell with the given name if the spell is ready, the player is not currently casting, the player has enough mana, the player is not currently drinking, and the given condition is true.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// TryCastSpell -> Player: IsSpellReady(name)
+        /// Player --> TryCastSpell: SpellReady
+        /// TryCastSpell -> Player: IsCasting
+        /// Player --> TryCastSpell: NotCasting
+        /// TryCastSpell -> Player: GetManaCost(name)
+        /// Player --> TryCastSpell: ManaCost
+        /// TryCastSpell -> Player: IsDrinking
+        /// Player --> TryCastSpell: NotDrinking
+        /// TryCastSpell -> Player: Stand()
+        /// TryCastSpell -> Player: LuaCall("CastSpellByName('name',1)")
+        /// \enduml
+        /// </remarks>
         void TryCastSpell(string name, bool condition = true)
         {
             if (player.IsSpellReady(name) && !player.IsCasting && player.Mana > player.GetManaCost(name) && !player.IsDrinking && condition)

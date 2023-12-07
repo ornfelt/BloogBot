@@ -62,6 +62,30 @@ namespace FrostMageBot
         /// <summary>
         /// Updates the player's food and drink items based on their inventory and current state.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// Update -> Inventory: GetAllItems()
+        /// Inventory --> Update: foodItem
+        /// Update -> Inventory: GetAllItems()
+        /// Inventory --> Update: drinkItem
+        /// Update -> player: IsCasting
+        /// Update -> player: ManaPercent
+        /// Update -> botStates: Pop()
+        /// botStates -> RestState: new(botStates, container)
+        /// Update -> botStates: Push(RestState)
+        /// Update -> Inventory: CountFreeSlots(false)
+        /// Update -> player: KnowsSpell(ConjureFood)
+        /// Update -> player: KnowsSpell(ConjureWater)
+        /// Update -> botStates: Pop()
+        /// botStates -> RestState: new(botStates, container)
+        /// Update -> botStates: Push(RestState)
+        /// Update -> Inventory: GetItemCount(foodItem.ItemId)
+        /// Update -> Update: TryCastSpell(ConjureFood)
+        /// Update -> Inventory: GetItemCount(drinkItem.ItemId)
+        /// Update -> Update: TryCastSpell(ConjureWater)
+        /// \enduml
+        /// </remarks>
         public void Update()
         {
             foodItem = Inventory.GetAllItems()
@@ -104,6 +128,16 @@ namespace FrostMageBot
         /// <summary>
         /// Tries to cast a spell by its name if the spell is ready and the player is not currently casting.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "TryCastSpell Method" as T
+        /// participant "Player" as P
+        /// T -> P: IsSpellReady(name)
+        /// alt spell is ready and player is not casting
+        /// T -> P: LuaCall("CastSpellByName('name')")
+        /// end
+        /// \enduml
+        /// </remarks>
         void TryCastSpell(string name)
         {
             if (player.IsSpellReady(name) && !player.IsCasting)

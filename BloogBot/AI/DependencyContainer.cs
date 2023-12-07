@@ -94,6 +94,23 @@ namespace BloogBot.AI
         /// Finds the threat for the player character.
         /// </summary>
         // this is broken up into multiple sub-expressions to improve readability and debuggability
+        /// <remarks>
+        /// \startuml
+        /// ObjectManager -> WoWUnit: Player
+        /// ObjectManager -> WoWUnit: BotFriend
+        /// ObjectManager -> WoWUnit: Units
+        /// WoWUnit -> ObjectManager: Filter Units
+        /// ObjectManager -> WoWUnit: PotentialThreats
+        /// WoWUnit -> ObjectManager: Check if any PotentialThreats
+        /// ObjectManager -> WoWUnit: Return first PotentialThreat
+        /// ObjectManager -> WoWUnit: Filter Units for Totems
+        /// WoWUnit -> ObjectManager: Check if any Totem Threats
+        /// ObjectManager -> WoWUnit: Return first Totem Threat
+        /// ObjectManager -> WoWUnit: Filter Units for Stoneclaw Totems
+        /// WoWUnit -> ObjectManager: Check if any Stoneclaw Totem Threats
+        /// ObjectManager -> WoWUnit: Return first Stoneclaw Totem Threat
+        /// \enduml
+        /// </remarks>
         public WoWUnit FindThreat()
         {
             var player = ObjectManager.Player;
@@ -101,7 +118,7 @@ namespace BloogBot.AI
             var botFriend = ObjectManager.Units.Where(u => u.Name == botFriendName).FirstOrDefault();
             var potentialThreats = ObjectManager.Units
                 .Where(u =>
-                    (botFriend != null && u.Name != botFriendName && u.TargetGuid == botFriend.Guid 
+                    (botFriend != null && u.Name != botFriendName && u.TargetGuid == botFriend.Guid
                     && u.Guid != botFriend.Guid) || // Required to help npcbots
                     u.TargetGuid == player.Guid ||
                     u.TargetGuid == ObjectManager.Pet?.Guid &&
@@ -137,6 +154,38 @@ namespace BloogBot.AI
         /// Finds the closest target for the player.
         /// </summary>
         // this is broken up into multiple sub-expressions to improve readability and debuggability
+        /// <remarks>
+        /// \startuml
+        /// ObjectManager -> WoWUnit: Player
+        /// ObjectManager -> WoWUnit: FindThreat()
+        /// alt threat is not null
+        ///   WoWUnit --> ObjectManager: return threat
+        /// else threat is null
+        ///   ObjectManager -> WoWUnit: MapId
+        ///   ObjectManager -> BotSettings: TargetingExcludedNames
+        ///   ObjectManager -> ObjectManager: Units
+        ///   ObjectManager -> WoWUnit: Health
+        ///   ObjectManager -> WoWUnit: IsPet
+        ///   ObjectManager -> Probe: BlacklistedMobIds
+        ///   ObjectManager -> WoWUnit: CreatureRank
+        ///   ObjectManager -> BotSettings: TargetingIncludedNames
+        ///   ObjectManager -> BotSettings: TargetingExcludedNames
+        ///   ObjectManager -> BotSettings: UnitReactions
+        ///   ObjectManager -> WoWUnit: UnitReaction
+        ///   ObjectManager -> BotSettings: CreatureTypes
+        ///   ObjectManager -> WoWUnit: CreatureType
+        ///   ObjectManager -> WoWUnit: Level
+        ///   ObjectManager -> BotSettings: LevelRangeMax
+        ///   ObjectManager -> BotSettings: LevelRangeMin
+        ///   ObjectManager -> WoWUnit: FactionId
+        ///   ObjectManager -> WoWUnit: UnitFlags
+        ///   ObjectManager -> WoWUnit: targetingCriteria()
+        ///   ObjectManager -> WoWUnit: OrderBy DistanceTo Player
+        ///   ObjectManager -> WoWUnit: CanAttackTarget()
+        ///   WoWUnit --> ObjectManager: return potentialTargets
+        /// end
+        /// \enduml
+        /// </remarks>
         public WoWUnit FindClosestTarget()
         {
             var player = ObjectManager.Player;
@@ -192,6 +241,17 @@ namespace BloogBot.AI
         /// </summary>
         /// <param name="targetGuid">The unique identifier of the target.</param>
         /// <returns>True if the player can attack the target; otherwise, false.</returns>
+        /// <remarks>
+        /// \startuml
+        /// ObjectManager -> Player: Get Player
+        /// Player -> BlackListedTargets: Check if targetGuid is in BlackListedTargets
+        /// alt targetGuid is in BlackListedTargets
+        ///   BlackListedTargets --> CanAttackTarget: return false
+        /// else targetGuid is not in BlackListedTargets
+        ///   BlackListedTargets --> CanAttackTarget: return true
+        /// end
+        /// \enduml
+        /// </remarks>
         private bool CanAttackTarget(ulong targetGuid)
         {
             var player = ObjectManager.Player;
@@ -213,6 +273,14 @@ namespace BloogBot.AI
         /// <summary>
         /// Retrieves a hotspot by its ID.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "GetHotspotById Function" as A
+        /// database "Hotspots" as B
+        /// A -> B : Request Hotspot with id
+        /// B --> A : Return Hotspot
+        /// \enduml
+        /// </remarks>
         private Hotspot GetHotspotById(int id)
         {
             return Hotspots.FirstOrDefault(h => h != null && h.Id == id);
@@ -222,6 +290,20 @@ namespace BloogBot.AI
         /// Retrieves the current hotspot based on the logic of the current map.
         /// </summary>
         //public Hotspot GetCurrentHotspot() => BotSettings.GrindingHotspot;
+        /// <remarks>
+        /// \startuml
+        /// ObjectManager -> GetCurrentHotspot: MapId
+        /// GetCurrentHotspot -> GetHotspotById: player.IsAlly ? 2 : 1
+        /// GetCurrentHotspot -> GetHotspotById: player.IsAlly ? 4 : 3
+        /// GetCurrentHotspot -> GetHotspotById: player.IsAlly ? 6 : 5
+        /// GetCurrentHotspot -> GetHotspotById: player.IsAlly ? 8 : 7
+        /// GetCurrentHotspot -> GetHotspotById: 9
+        /// GetCurrentHotspot -> GetHotspotById: 10
+        /// GetCurrentHotspot -> GetHotspotById: 11
+        /// GetCurrentHotspot -> GetHotspotById: 12
+        /// GetCurrentHotspot -> BotSettings: GrindingHotspot
+        /// \enduml
+        /// </remarks>
         public Hotspot GetCurrentHotspot()
         {
             var player = ObjectManager.Player;
@@ -252,6 +334,30 @@ namespace BloogBot.AI
         /// <summary>
         /// Checks for a travel path and creates travel and move to position states if a path exists.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// CheckForTravelPath -> BotSettings: Get GrindingHotspot
+        /// BotSettings --> CheckForTravelPath: Return currentHotspot
+        /// CheckForTravelPath -> currentHotspot: Get TravelPath
+        /// currentHotspot --> CheckForTravelPath: Return travelPath
+        /// CheckForTravelPath -> travelPath: Get Waypoints
+        /// travelPath --> CheckForTravelPath: Return waypoints
+        /// CheckForTravelPath -> ObjectManager: Get Player Position
+        /// ObjectManager --> CheckForTravelPath: Return player position
+        /// CheckForTravelPath -> waypoints: OrderBy DistanceTo player position
+        /// waypoints --> CheckForTravelPath: Return closestTravelPathWaypoint
+        /// CheckForTravelPath -> waypoints: Get Last waypoint
+        /// waypoints --> CheckForTravelPath: Return destination
+        /// CheckForTravelPath -> closestTravelPathWaypoint: DistanceTo player position
+        /// closestTravelPathWaypoint --> CheckForTravelPath: Return distance
+        /// CheckForTravelPath -> destination: DistanceTo player position
+        /// destination --> CheckForTravelPath: Return distance
+        /// CheckForTravelPath -> botStates: Push TravelState
+        /// CheckForTravelPath -> botStates: Push MoveToPositionState
+        /// CheckForTravelPath -> CheckForTravelPath: CreateRestState
+        /// CheckForTravelPath --> botStates: Push RestState
+        /// \enduml
+        /// </remarks>
         public void CheckForTravelPath(Stack<IBotState> botStates, bool reverse, bool needsToRest = true)
         {
             var currentHotspot = BotSettings.GrindingHotspot;
@@ -298,6 +404,23 @@ namespace BloogBot.AI
         /// Updates the player trackers by removing old players and tracking new players.
         /// Checks if the bot is catching heat and triggers warnings or stops the bot accordingly.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// ObjectManager -> UpdatePlayerTrackers: Get Player
+        /// ObjectManager -> UpdatePlayerTrackers: Get Other Players
+        /// UpdatePlayerTrackers -> PlayerTrackers: Remove Old Players
+        /// UpdatePlayerTrackers -> PlayerTrackers: Start Tracking New Players
+        /// UpdatePlayerTrackers -> PlayerTrackers: Check Targeting Status
+        /// UpdatePlayerTrackers -> PlayerTrackers: Check Proximity Status
+        /// UpdatePlayerTrackers -> DiscordClientWrapper: Send Target Warning Message
+        /// UpdatePlayerTrackers -> DiscordClientWrapper: Send Proximity Warning Message
+        /// UpdatePlayerTrackers -> Console: Beep
+        /// UpdatePlayerTrackers -> DiscordClientWrapper: Send Target Stop Message
+        /// UpdatePlayerTrackers -> DiscordClientWrapper: Send Proximity Stop Message
+        /// UpdatePlayerTrackers -> Console: Beep
+        /// UpdatePlayerTrackers -> Console: Beep (if warning)
+        /// \enduml
+        /// </remarks>
         public bool UpdatePlayerTrackers()
         {
             var stopBot = false;

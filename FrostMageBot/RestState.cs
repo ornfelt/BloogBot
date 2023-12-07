@@ -66,6 +66,27 @@ namespace FrostMageBot
         /// <summary>
         /// Updates the player's actions based on various conditions.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// Update -> Player: IsChanneling
+        /// alt InCombat
+        ///     Update -> Player: Stand
+        ///     Update -> BotStates: Pop
+        /// else HealthOk and ManaOk
+        ///     Update -> Player: Stand
+        ///     Update -> BotStates: Pop
+        ///     Update -> BotStates: Push(new BuffSelfState)
+        /// else Player's ManaPercent < 20 and IsSpellReady(Evocation)
+        ///     Update -> Player: LuaCall("CastSpellByName('Evocation')")
+        ///     Update -> Thread: Sleep(200)
+        /// else FoodItem != null and !IsEating and HealthPercent < 80
+        ///     Update -> FoodItem: Use
+        /// else DrinkItem != null and !IsDrinking
+        ///     Update -> DrinkItem: Use
+        /// end
+        /// \enduml
+        /// </remarks>
         public void Update()
         {
             if (player.IsChanneling)

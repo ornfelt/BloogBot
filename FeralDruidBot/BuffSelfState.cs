@@ -46,6 +46,20 @@ namespace FeralDruidBot
         /// <summary>
         /// Updates the player's buffs by casting Mark of the Wild and Thorns if necessary.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// Update -> player: HasBuff(MarkOfTheWild)
+        /// Update -> player: KnowsSpell(MarkOfTheWild)
+        /// Update -> player: HasBuff(Thorns)
+        /// Update -> player: KnowsSpell(Thorns)
+        /// alt player has MarkOfTheWild buff or doesn't know MarkOfTheWild spell, and player has Thorns buff or doesn't know Thorns spell
+        ///     Update -> botStates: Pop()
+        /// else
+        ///     Update -> TryCastSpell: MarkOfTheWild
+        ///     Update -> TryCastSpell: Thorns
+        /// end
+        /// \enduml
+        /// </remarks>
         public void Update()
         {
             if ((player.HasBuff(MarkOfTheWild) || !player.KnowsSpell(MarkOfTheWild)) && (player.HasBuff(Thorns) || !player.KnowsSpell(Thorns)))
@@ -61,6 +75,22 @@ namespace FeralDruidBot
         /// <summary>
         /// Tries to cast a spell by the given name if the player does not have the specified buff, knows the spell, and the spell is ready.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "TryCastSpell Function" as TCS
+        /// participant "Player" as P
+        /// TCS -> P: HasBuff(name)
+        /// alt not HasBuff
+        ///     TCS -> P: KnowsSpell(name)
+        ///     alt KnowsSpell
+        ///         TCS -> P: IsSpellReady(name)
+        ///         alt IsSpellReady
+        ///             TCS -> P: LuaCall("CastSpellByName(name,1)")
+        ///         end alt
+        ///     end alt
+        /// end alt
+        /// \enduml
+        /// </remarks>
         void TryCastSpell(string name)
         {
             if (!player.HasBuff(name) && player.KnowsSpell(name) && player.IsSpellReady(name))

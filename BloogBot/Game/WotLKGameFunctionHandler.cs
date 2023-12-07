@@ -31,6 +31,13 @@ namespace BloogBot.Game
         /// <summary>
         /// Buys a specified quantity of an item from a vendor.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "BuyVendorItem" as B
+        /// participant "BuyVendorItemFunction" as F
+        /// B -> F: vendorGuid, itemId, quantity, 1
+        /// \enduml
+        /// </remarks>
         public void BuyVendorItem(ulong vendorGuid, int itemId, int quantity)
         {
             BuyVendorItemFunction(vendorGuid, itemId, quantity, 1);
@@ -39,6 +46,15 @@ namespace BloogBot.Game
         /// <summary>
         /// Casts a spell at the specified position.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "Function" as F
+        /// participant "Position" as P
+        /// 
+        /// F -> P: CastAtPosition(spellName, position)
+        /// note right: Not Implemented Exception
+        /// \enduml
+        /// </remarks>
         public void CastAtPosition(string spellName, Position position)
         {
             throw new NotImplementedException();
@@ -59,6 +75,15 @@ namespace BloogBot.Game
         /// <summary>
         /// Casts a spell by its ID on a target with the specified GUID.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "Function Caller" as FC
+        /// participant "CastSpellById Function" as CSBF
+        /// FC -> CSBF: CastSpellById(spellId, targetGuid)
+        /// CSBF -> CSBF: CastSpellByIdFunction(spellId, 0, targetGuid, 0, 0, 0, 0)
+        /// CSBF --> FC: return
+        /// \enduml
+        /// </remarks>
         public int CastSpellById(int spellId, ulong targetGuid)
         {
             return CastSpellByIdFunction(spellId, 0, targetGuid, 0, 0, 0, 0);
@@ -67,6 +92,13 @@ namespace BloogBot.Game
         /// <summary>
         /// Dismounts the unit.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// actor User
+        /// User -> Dismount: unitPtr
+        /// Dismount -> LuaCall: "Dismount()"
+        /// \enduml
+        /// </remarks>
         public int Dismount(IntPtr unitPtr)
         {
             LuaCall("Dismount()");
@@ -89,6 +121,12 @@ namespace BloogBot.Game
         /// <summary>
         /// Enumerates the visible objects using the specified callback and filter.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// :Program: -> EnumerateVisibleObjects: Call with callback and filter
+        /// EnumerateVisibleObjects -> EnumerateVisibleObjectsFunction: Pass callback and filter
+        /// \enduml
+        /// </remarks>
         [HandleProcessCorruptedStateExceptions]
         public void EnumerateVisibleObjects(IntPtr callback, int filter)
         {
@@ -111,6 +149,14 @@ namespace BloogBot.Game
         /// <summary>
         /// Retrieves the rank of a creature based on its unit pointer.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// actor User
+        /// User -> GetCreatureRank : unitPtr
+        /// GetCreatureRank -> GetCreatureRankFunction : unitPtr
+        /// GetCreatureRankFunction --> GetCreatureRank : return rank
+        /// \enduml
+        /// </remarks>
         public int GetCreatureRank(IntPtr unitPtr)
         {
             return GetCreatureRankFunction(unitPtr);
@@ -131,6 +177,14 @@ namespace BloogBot.Game
         /// <summary>
         /// Gets the creature type of the specified unit.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// actor Client
+        /// participant "GetCreatureTypeFunction" as A
+        /// Client -> A: unitPtr
+        /// A --> Client: CreatureType
+        /// \enduml
+        /// </remarks>
         public CreatureType GetCreatureType(IntPtr unitPtr)
         {
             return (CreatureType)GetCreatureTypeFunction(unitPtr);
@@ -157,6 +211,14 @@ namespace BloogBot.Game
         /// <summary>
         /// Retrieves the cache entry for a specific item.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "GetItemCacheEntryFunction" as G
+        /// participant "GetItemCacheEntry" as GCE
+        /// GCE -> G: GetItemCacheEntryFunction((IntPtr)MemoryAddresses.ItemCacheEntryBasePtr, itemId, ref guid, 0, 0, 0)
+        /// G --> GCE: return
+        /// \enduml
+        /// </remarks>
         public IntPtr GetItemCacheEntry(int itemId, ulong guid)
         {
             return GetItemCacheEntryFunction((IntPtr)MemoryAddresses.ItemCacheEntryBasePtr, itemId, ref guid, 0, 0, 0);
@@ -177,6 +239,14 @@ namespace BloogBot.Game
         /// <summary>
         /// Retrieves a pointer to an object based on the specified GUID.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "GetObjectPtrFunction" as A
+        /// participant "GetObjectPtr" as B
+        /// B -> A: guid, 0xFFFFFFFF, string.Empty, 0
+        /// A --> B: return IntPtr
+        /// \enduml
+        /// </remarks>
         [HandleProcessCorruptedStateExceptions]
         public IntPtr GetObjectPtr(ulong guid)
         {
@@ -186,6 +256,18 @@ namespace BloogBot.Game
         /// <summary>
         /// Retrieves the player's GUID.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "Caller" as C
+        /// participant "GetPlayerGuid Function" as F
+        /// participant "MemoryManager" as M
+        /// 
+        /// C -> F: Call GetPlayerGuid()
+        /// F -> M: ReadUlong((IntPtr)0x00CA1238)
+        /// M --> F: Return ulong
+        /// F --> C: Return ulong
+        /// \enduml
+        /// </remarks>
         public ulong GetPlayerGuid()
         {
             return MemoryManager.ReadUlong((IntPtr)0x00CA1238);
@@ -194,6 +276,61 @@ namespace BloogBot.Game
         /// <summary>
         /// Retrieves a Spell object from the spell database based on the specified index.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "GetSpellDBEntry Function" as Function
+        /// participant "WowDb" as WowDb
+        /// participant "MemoryManager" as MemoryManager
+        /// participant "Spell" as Spell
+        /// 
+        /// Function -> WowDb: GetLocalizedRow(index)
+        /// activate WowDb
+        /// WowDb --> Function: Return spellPtr
+        /// deactivate WowDb
+        /// 
+        /// Function -> MemoryManager: ReadInt(costAddr)
+        /// activate MemoryManager
+        /// MemoryManager --> Function: Return cost
+        /// deactivate MemoryManager
+        /// 
+        /// Function -> MemoryManager: ReadIntPtr(spellNamePtrAddr)
+        /// activate MemoryManager
+        /// MemoryManager --> Function: Return spellNamePtr
+        /// deactivate MemoryManager
+        /// 
+        /// Function -> MemoryManager: ReadString(spellNamePtr)
+        /// activate MemoryManager
+        /// MemoryManager --> Function: Return name
+        /// deactivate MemoryManager
+        /// 
+        /// Function -> MemoryManager: ReadIntPtr(spellDescriptionPtrAddr)
+        /// activate MemoryManager
+        /// MemoryManager --> Function: Return spellDescriptionPtr
+        /// deactivate MemoryManager
+        /// 
+        /// Function -> MemoryManager: ReadString(spellDescriptionPtr)
+        /// activate MemoryManager
+        /// MemoryManager --> Function: Return description
+        /// deactivate MemoryManager
+        /// 
+        /// Function -> MemoryManager: ReadIntPtr(spellTooltipPtrAddr)
+        /// activate MemoryManager
+        /// MemoryManager --> Function: Return spellTooltipPtr
+        /// deactivate MemoryManager
+        /// 
+        /// Function -> MemoryManager: ReadString(spellTooltipPtr)
+        /// activate MemoryManager
+        /// MemoryManager --> Function: Return tooltip
+        /// deactivate MemoryManager
+        /// 
+        /// Function -> Function: Marshal.FreeHGlobal(spellPtr)
+        /// 
+        /// Function -> Spell: new Spell(index, cost, name, description, tooltip)
+        /// activate Spell
+        /// Spell --> Function: Return Spell object
+        /// deactivate Spell
+        /// \enduml
+        /// </remarks>
         public Spell GetSpellDBEntry(int index)
         {
             var spellPtr = WowDb.Tables[ClientDb.Spell].GetLocalizedRow(index);
@@ -233,6 +370,13 @@ namespace BloogBot.Game
         /// <summary>
         /// Retrieves the text associated with the specified variable name.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// :User: -> GetText: varName
+        /// GetText -> GetTextFunction: varName
+        /// GetTextFunction --> GetText: IntPtr
+        /// \enduml
+        /// </remarks>
         public IntPtr GetText(string varName)
         {
             return GetTextFunction(varName);
@@ -253,6 +397,14 @@ namespace BloogBot.Game
         /// <summary>
         /// Gets the reaction between two units.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// actor "unitPtr1" as a
+        /// actor "unitPtr2" as b
+        /// a -> b: GetUnitReactionFunction(unitPtr1, unitPtr2)
+        /// b --> a: return UnitReaction
+        /// \enduml
+        /// </remarks>
         public UnitReaction GetUnitReaction(IntPtr unitPtr1, IntPtr unitPtr2)
         {
             return (UnitReaction)GetUnitReactionFunction(unitPtr1, unitPtr2);
@@ -273,6 +425,18 @@ namespace BloogBot.Game
         /// <summary>
         /// Calculates the intersection point between two positions.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// Position -> XYZ: start
+        /// Position -> XYZ: end
+        /// XYZ -> XYZ: new XYZ()
+        /// Position -> float: DistanceTo(end)
+        /// Position -> XYZ: new XYZ(start.X, start.Y, start.Z + 5.0f)
+        /// Position -> XYZ: new XYZ(end.X, end.Y, end.Z + 5.0f)
+        /// XYZ -> IntersectFunction: ref startXYZ, ref endXYZ, ref intersection, ref distance, 0x00100171, IntPtr.Zero
+        /// IntersectFunction -> XYZ: intersection
+        /// \enduml
+        /// </remarks>
         public XYZ Intersect(Position start, Position end)
         {
             var intersection = new XYZ();
@@ -300,6 +464,17 @@ namespace BloogBot.Game
         /// <summary>
         /// Checks if a spell with the specified ID is currently on cooldown.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// User -> IsSpellOnCooldown: spellId
+        /// IsSpellOnCooldown -> GetSpellCooldownFunction: spellId, false, duration, start, isReady, unk0
+        /// GetSpellCooldownFunction --> IsSpellOnCooldown: duration, start, isReady, unk0
+        /// IsSpellOnCooldown -> PerformanceCounter: 
+        /// PerformanceCounter --> IsSpellOnCooldown: counter
+        /// IsSpellOnCooldown -> IsSpellOnCooldown: Calculate cooldown
+        /// IsSpellOnCooldown --> User: cooldown > 0
+        /// \enduml
+        /// </remarks>
         public bool IsSpellOnCooldown(int spellId)
         {
             var duration = 0;
@@ -317,6 +492,13 @@ namespace BloogBot.Game
         /// <summary>
         /// Calls the Lua function "JumpOrAscendStart()" to make the character jump or start ascending.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "Jump Method" as Jump
+        /// participant "LuaCall Method" as LuaCall
+        /// Jump -> LuaCall: "JumpOrAscendStart()"
+        /// \enduml
+        /// </remarks>
         public void Jump()
         {
             LuaCall("JumpOrAscendStart()");
@@ -337,6 +519,12 @@ namespace BloogBot.Game
         /// <summary>
         /// Loots the specified slot.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// User -> LootSlot: slot
+        /// LootSlot -> LootSlotFunction: slot
+        /// \enduml
+        /// </remarks>
         public void LootSlot(int slot)
         {
             LootSlotFunction(slot);
@@ -357,6 +545,13 @@ namespace BloogBot.Game
         /// <summary>
         /// Calls a Lua function with the specified code.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "LuaCall Function" as A
+        /// participant "LuaCallFunction Method" as B
+        /// A -> B: LuaCallFunction(code, code, 0)
+        /// \enduml
+        /// </remarks>
         public void LuaCall(string code)
         {
             LuaCallFunction(code, code, 0);
@@ -365,6 +560,12 @@ namespace BloogBot.Game
         /// <summary>
         /// Releases a corpse with the specified pointer.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// Application -> ReleaseCorpse: ptr
+        /// ReleaseCorpse -> LuaCall: "RepopMe()"
+        /// \enduml
+        /// </remarks>
         public void ReleaseCorpse(IntPtr ptr)
         {
             LuaCall("RepopMe()");
@@ -373,6 +574,12 @@ namespace BloogBot.Game
         /// <summary>
         /// Retrieves the player's corpse.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// actor User
+        /// User -> RetrieveCorpse: LuaCall("RetrieveCorpse()")
+        /// \enduml
+        /// </remarks>
         public void RetrieveCorpse()
         {
             LuaCall("RetrieveCorpse()");
@@ -393,6 +600,14 @@ namespace BloogBot.Game
         /// <summary>
         /// Sets the target using the specified GUID.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "Caller" as C
+        /// participant "SetTarget" as ST
+        /// C -> ST: SetTarget(guid)
+        /// ST -> ST: SetTargetFunction(guid)
+        /// \enduml
+        /// </remarks>
         public void SetTarget(ulong guid)
         {
             SetTargetFunction(guid);
@@ -413,6 +628,13 @@ namespace BloogBot.Game
         /// <summary>
         /// Sells an item by its GUID.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "SellItemByGuid()" as A
+        /// participant "SellItemByGuidFunction()" as B
+        /// A -> B: SellItemByGuidFunction(vendorGuid, itemGuid, 0)
+        /// \enduml
+        /// </remarks>
         public void SellItemByGuid(uint itemCount, ulong vendorGuid, ulong itemGuid)
         {
             SellItemByGuidFunction(vendorGuid, itemGuid, 0);
@@ -438,6 +660,12 @@ namespace BloogBot.Game
         /// <summary>
         /// Sends a movement update to the specified player.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// :Game: -> SendMovementUpdate: playerPtr, opcode
+        /// SendMovementUpdate -> SendMovementUpdateFunction: playerPtr, 0x00BE1E2C, opcode, 0, 0
+        /// \enduml
+        /// </remarks>
         public void SendMovementUpdate(IntPtr playerPtr, int opcode)
         {
             SendMovementUpdateFunction(playerPtr, (IntPtr)0x00BE1E2C, opcode, 0, 0);
@@ -458,6 +686,16 @@ namespace BloogBot.Game
         /// <summary>
         /// Sets the control bit of a device.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "SetControlBit Function" as A
+        /// participant "MemoryManager" as B
+        /// participant "SetControlBitDevicePtr" as C
+        /// A -> B: ReadIntPtr((IntPtr)MemoryAddresses.SetControlBitDevicePtr)
+        /// B --> A: Return ptr
+        /// A -> A: SetControlBitFunction(ptr, bit, state, tickCount)
+        /// \enduml
+        /// </remarks>
         public void SetControlBit(int bit, int state, int tickCount)
         {
             var ptr = MemoryManager.ReadIntPtr((IntPtr)MemoryAddresses.SetControlBitDevicePtr);
@@ -491,6 +729,23 @@ namespace BloogBot.Game
         /// <summary>
         /// Sets the facing direction of the player.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "SetFacing" as SF
+        /// participant "PerformanceCounter" as PC
+        /// participant "SetFacingFunction" as SFF
+        /// 
+        /// SF -> PC: Get performance counter
+        /// activate PC
+        /// PC --> SF: Return performance counter
+        /// deactivate PC
+        /// 
+        /// SF -> SFF: Call with playerSetFacingPtr, performanceCounter, facing
+        /// activate SFF
+        /// SFF --> SF: Execute function
+        /// deactivate SFF
+        /// \enduml
+        /// </remarks>
         public void SetFacing(IntPtr playerSetFacingPtr, float facing)
         {
             var performanceCounter = PerformanceCounter();
@@ -512,6 +767,13 @@ namespace BloogBot.Game
         /// <summary>
         /// Uses the specified item.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// actor User
+        /// User -> UseItem : itemPtr
+        /// UseItem -> UseItemFunction : itemPtr, unused1, 0
+        /// \enduml
+        /// </remarks>
         public void UseItem(IntPtr itemPtr)
         {
             ulong unused1 = 0;
@@ -533,6 +795,18 @@ namespace BloogBot.Game
         /// <summary>
         /// Retrieves a pointer to the row at the specified index in the table.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "Caller" as C
+        /// participant "GetRow" as G
+        /// participant "GetRowFunction" as F
+        /// 
+        /// C -> G: GetRow(tablePtr, index)
+        /// G -> F: GetRowFunction(tablePtr, index)
+        /// F --> G: return rowPtr
+        /// G --> C: return rowPtr
+        /// \enduml
+        /// </remarks>
         public IntPtr GetRow(IntPtr tablePtr, int index)
         {
             return GetRowFunction(tablePtr, index);
@@ -553,6 +827,15 @@ namespace BloogBot.Game
         /// <summary>
         /// Retrieves a localized row from a table at the specified index.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// actor User
+        /// User -> GetLocalizedRow: tablePtr, index, rowPtr
+        /// GetLocalizedRow -> GetLocalizedRowFunction: tablePtr, index, rowPtr
+        /// GetLocalizedRowFunction --> GetLocalizedRow: IntPtr
+        /// GetLocalizedRow --> User: IntPtr
+        /// \enduml
+        /// </remarks>
         public IntPtr GetLocalizedRow(IntPtr tablePtr, int index, IntPtr rowPtr)
         {
             return GetLocalizedRowFunction(tablePtr, index, rowPtr);
@@ -573,6 +856,18 @@ namespace BloogBot.Game
         /// <summary>
         /// Gets the count of auras for a given unit.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// actor "Caller" as C
+        /// participant "GetAuraCount" as G
+        /// participant "GetAuraCountFunction" as F
+        ///
+        /// C -> G: unitPtr
+        /// G -> F: unitPtr
+        /// F --> G: return aura count
+        /// G --> C: return aura count
+        /// \enduml
+        /// </remarks>
         public int GetAuraCount(IntPtr unitPtr)
         {
             return GetAuraCountFunction(unitPtr);
@@ -593,6 +888,17 @@ namespace BloogBot.Game
         /// <summary>
         /// Retrieves the pointer to the aura at the specified index for the given unit.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "unitPtr" as A
+        /// participant "GetAuraPointer" as B
+        /// participant "GetAuraFunction" as C
+        /// A -> B: Calls GetAuraPointer
+        /// B -> C: Calls GetAuraFunction
+        /// C --> B: Returns aura pointer
+        /// B --> A: Returns aura pointer
+        /// \enduml
+        /// </remarks>
         public IntPtr GetAuraPointer(IntPtr unitPtr, int index)
         {
             return GetAuraFunction(unitPtr, index);

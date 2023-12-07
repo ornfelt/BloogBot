@@ -43,6 +43,30 @@ namespace RetributionPaladinBot
         /// <summary>
         /// Updates the player's actions based on their current state.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// Update -> Player: IsCasting
+        /// alt player is casting
+        ///   Update -> Update: return
+        /// else player is not casting
+        ///   Update -> Player: HealthPercent, Mana, GetManaCost(HolyLight)
+        ///   alt HealthPercent > 70 or Mana < GetManaCost(HolyLight)
+        ///     Update -> BotStates: Pop
+        ///     Update -> Update: return
+        ///   else HealthPercent <= 70 and Mana >= GetManaCost(HolyLight)
+        ///     Update -> Player: Mana, GetManaCost(DivineProtection), IsSpellReady(DivineProtection)
+        ///     alt Mana > GetManaCost(DivineProtection) and IsSpellReady(DivineProtection)
+        ///       Update -> Player: LuaCall("CastSpellByName('DivineProtection')")
+        ///     end
+        ///     Update -> Player: Mana, GetManaCost(HolyLight), IsSpellReady(HolyLight)
+        ///     alt Mana > GetManaCost(HolyLight) and IsSpellReady(HolyLight)
+        ///       Update -> Player: LuaCall("CastSpellByName('HolyLight',1)")
+        ///     end
+        ///   end
+        /// end
+        /// \enduml
+        /// </remarks>
         public void Update()
         {
             if (player.IsCasting) return;

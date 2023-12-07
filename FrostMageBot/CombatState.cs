@@ -150,6 +150,33 @@ namespace FrostMageBot
         /// <summary>
         /// Updates the character's actions based on certain conditions.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// Update -> Environment: TickCount
+        /// Update -> Player: Turn180()
+        /// Update -> Player: StartMovement(ControlBits.Front)
+        /// Update -> Player: Jump()
+        /// Update -> Player: StopMovement(ControlBits.Front)
+        /// Update -> Player: Face(target.Position)
+        /// Update -> Update: TryCastSpell(FrostNova)
+        /// Update -> Base: Update()
+        /// Update -> Update: TryCastSpell(Evocation)
+        /// Update -> Inventory: GetEquippedItem(EquipSlot.Ranged)
+        /// Update -> Player: LuaCall(WandLuaScript)
+        /// Update -> Update: TryCastSpell(SummonWaterElemental)
+        /// Update -> Update: TryCastSpell(ColdSnap)
+        /// Update -> Update: TryCastSpell(IcyVeins)
+        /// Update -> Update: TryCastSpell(FireWard)
+        /// Update -> Update: TryCastSpell(FrostWard)
+        /// Update -> Update: TryCastSpell(Counterspell)
+        /// Update -> Update: TryCastSpell(IceBarrier)
+        /// Update -> Update: TryCastSpell(FrostNova)
+        /// Update -> Update: TryCastSpell(ConeOfCold)
+        /// Update -> Update: TryCastSpell(FireBlast)
+        /// Update -> Update: TryCastSpell(nuke)
+        /// \enduml
+        /// </remarks>
         public new void Update()
         {
             if (frostNovaBackpedaling && !frostNovaStartedMoving && Environment.TickCount - frostNovaBackpedalStartTime > 200)

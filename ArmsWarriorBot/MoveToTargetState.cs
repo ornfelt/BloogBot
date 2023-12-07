@@ -54,6 +54,32 @@ namespace ArmsWarriorBot
         /// <summary>
         /// Updates the behavior of the bot.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// Update -> Target: Check TappedByOther or FindClosestTarget
+        /// Target --> Update: Return status
+        /// Update -> Player: StopAllMovement
+        /// Update -> BotStates: Pop state
+        /// Update -> Player: Check IsInCombat
+        /// Player --> Update: Return status
+        /// Update -> Player: StopAllMovement
+        /// Update -> BotStates: Pop state
+        /// Update -> BotStates: Push new CombatState
+        /// Update -> StuckHelper: CheckIfStuck
+        /// Update -> Player: Calculate DistanceTo target
+        /// Player --> Update: Return distance
+        /// Update -> Player: Check IsCasting, IsSpellReady and InLosWith
+        /// Player --> Update: Return status
+        /// Update -> Player: LuaCall or CastSpell
+        /// Update -> Player: StopAllMovement
+        /// Update -> BotStates: Pop state
+        /// Update -> BotStates: Push new CombatState
+        /// Update -> Navigation: GetNextWaypoint
+        /// Navigation --> Update: Return nextWaypoint
+        /// Update -> Player: MoveToward nextWaypoint
+        /// \enduml
+        /// </remarks>
         public void Update()
         {
             if (target.TappedByOther || container.FindClosestTarget()?.Guid != target.Guid)

@@ -36,6 +36,12 @@ namespace BloogBot
         /// <summary>
         /// Initializes the callback action.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        ///  :Initialize()|
+        ///  :Set callback to parCallback|
+        /// \enduml
+        /// </remarks>
         static public void Initialize(Action parCallback)
         {
             callback = parCallback;
@@ -54,6 +60,22 @@ namespace BloogBot
         /// <summary>
         /// Records the movement of a WoWPlayer and adds waypoints to a list if the player has moved more than 1 unit.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// activate "Record"
+        /// "Record" -> "WoWPlayer": Get Position
+        /// "Record" -> "Record": Check Distance
+        /// alt Distance > 1
+        ///     "Record" -> "Record": Add Position
+        ///     "Record" -> "Action<string>": log("Adding waypoint")
+        /// else Distance <= 1
+        ///     "Record" -> "Action<string>": log("Player hasn't moved. Holding...")
+        /// end
+        /// "Record" -> "Record": callback()
+        /// "Record" -> "Record": Delay(1000)
+        /// deactivate "Record"
+        /// \enduml
+        /// </remarks>
         static public async void Record(WoWPlayer player, Action<string> log)
         {
             Recording = true;
@@ -84,6 +106,15 @@ namespace BloogBot
         /// <summary>
         /// Saves the current positions and returns an array of Position objects.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// :User: -> :System: : Save()
+        /// deactivate :User:
+        /// :System: -> :System: : Recording = false
+        /// :System: -> :System: : return positions.ToArray()
+        /// activate :User:
+        /// \enduml
+        /// </remarks>
         static public Position[] Save()
         {
             Recording = false;

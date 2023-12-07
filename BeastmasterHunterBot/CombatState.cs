@@ -127,6 +127,23 @@ namespace BeastMasterHunterBot
         /// <summary>
         /// Updates the player's actions based on their current state and target.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// Update -> Console: WriteLine("foo")
+        /// Update -> Inventory: GetEquippedItem(EquipSlot.Ranged)
+        /// Inventory --> Update: gun
+        /// Update -> player: Position.DistanceTo(target.Position)
+        /// player --> Update: distance
+        /// Update -> player: LuaCall(AutoAttackLuaScript)
+        /// Update -> player: LuaCall(GunLuaScript)
+        /// Update -> target: HasDebuff(SerpentSting)
+        /// target --> Update: hasDebuff
+        /// Update -> player: TryCastSpell(SerpentSting, 0, 34)
+        /// Update -> player: TryCastSpell(ArcaneShot, 0, 34)
+        /// Update -> player: TryCastSpell(RaptorStrike, 0, 5)
+        /// \enduml
+        /// </remarks>
         public new void Update()
         {
             if (base.Update())

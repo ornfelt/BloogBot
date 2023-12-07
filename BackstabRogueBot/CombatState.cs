@@ -141,6 +141,34 @@ namespace BackstabRogueBot
         /// <summary>
         /// Updates the character's status and performs necessary actions.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// Update -> Environment: Check TickCount
+        /// Update -> Inventory: GetEquippedItem(MainHand)
+        /// Update -> Inventory: GetEquippedItem(OffHand)
+        /// Update -> Inventory: GetItem(4, 1)
+        /// Update -> MainHand: Check ItemSubclass
+        /// Update -> MainHand: Check ItemSubclass
+        /// Update -> SwapSlotWeap: Check ItemSubclass
+        /// Update -> SwapSlotWeap: Check ItemSubclass
+        /// Update -> player: LuaCall(UseContainerItem)
+        /// Update -> Logger: LogVerbose(MainHand.Info.Name + "Swapped Into Mainhand!")
+        /// Update -> target: Check HealthPercent
+        /// Update -> player: Check ComboPoints
+        /// Update -> TryUseAbility: Eviscerate
+        /// Update -> TryUseAbility: SliceAndDice
+        /// Update -> TryUseAbility: SinisterStrike
+        /// Update -> TryUseAbility: GhostlyStrike
+        /// Update -> TryUseAbilityById: BloodFury
+        /// Update -> TryUseAbility: Evasion
+        /// Update -> TryUseAbility: BladeFlurry
+        /// Update -> TryUseAbility: Riposte
+        /// Update -> TryUseAbility: Kick
+        /// Update -> TryUseAbility: KidneyShot
+        /// Update -> TryUseAbility: Gouge
+        /// \enduml
+        /// </remarks>
         public new void Update()
         {
             if (Environment.TickCount - riposteStartTime > 5000 && readyToRiposte)
@@ -257,6 +285,13 @@ namespace BackstabRogueBot
         /// <summary>
         /// Callback function for when a parry occurs.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// object -> OnParryCallback : EventArgs e
+        /// OnParryCallback -> OnParryCallback : readyToRiposte = true
+        /// OnParryCallback -> OnParryCallback : riposteStartTime = Environment.TickCount
+        /// \enduml
+        /// </remarks>
         void OnParryCallback(object sender, EventArgs e)
         {
             readyToRiposte = true;
@@ -268,6 +303,14 @@ namespace BackstabRogueBot
         /// </summary>
         /// <param name="target">The target to check.</param>
         /// <returns>True if the target's mana is greater than 0 and it is either casting or channeling a spell; otherwise, false.</returns>
+        /// <remarks>
+        /// \startuml
+        /// participant "WoWUnit" as A
+        /// participant "ReadyToInterrupt" as B
+        /// A -> B: Check Mana and Casting Status
+        /// B --> A: Return Result
+        /// \enduml
+        /// </remarks>
         bool ReadyToInterrupt(WoWUnit target) => target.Mana > 0 && (target.IsCasting || target.IsChanneling);
 
         /// <summary>

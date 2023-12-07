@@ -40,6 +40,12 @@ namespace BeastmasterHunterBot
         /// <summary>
         /// Updates the object.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "Update Method" as U
+        /// U -> U: TODO
+        /// \enduml
+        /// </remarks>
         public void Update()
         {
             // TODO

@@ -42,6 +42,30 @@ namespace BloogBot.AI.SharedStates
         /// <summary>
         /// Updates the game state.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// Update -> Wait: For("StartReleaseCorpseStateDelay", 1000)
+        /// Wait --> Update: Response
+        /// alt Response is True
+        ///     Update -> ObjectManager.Player: InGhostForm
+        ///     Update -> ObjectManager.Player: Health
+        ///     alt Player is not in GhostForm and Health <= 0
+        ///         Update -> ObjectManager.Player: ReleaseCorpse()
+        ///     else Player is not in GhostForm and Health > 0
+        ///         Update -> botStates: Pop()
+        ///         Update --> Update: return
+        ///     else
+        ///         Update -> ObjectManager: MapId
+        ///         Update -> Wait: For("LeaveReleaseCorpseStateDelay", (mapId == 30 || mapId == 489 || mapId == 529 || mapId == 559) ? 30000 : 2000)
+        ///         alt Response is True
+        ///             Update -> botStates: Pop()
+        ///             Update --> Update: return
+        ///         end
+        ///     end
+        /// end
+        /// \enduml
+        /// </remarks>
         public void Update()
         {
             if (Wait.For("StartReleaseCorpseStateDelay", 1000))

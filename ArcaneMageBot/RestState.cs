@@ -63,6 +63,30 @@ namespace ArcaneMageBot
         /// <summary>
         /// Updates the player's actions based on various conditions.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// Update -> InCombat: Check if in combat
+        /// InCombat -> Update: Return
+        /// Update -> HealthOk: Check if health is ok
+        /// HealthOk -> Update: Return
+        /// Update -> ManaOk: Check if mana is ok
+        /// ManaOk -> Update: Return
+        /// Update -> player: Stand
+        /// player -> botStates: Pop
+        /// botStates -> botStates: Push new BuffSelfState
+        /// Update -> player: Check if channeling
+        /// player -> Update: Return
+        /// Update -> player: Check mana percent and spell readiness
+        /// player -> Update: Return
+        /// Update -> player: LuaCall to cast spell
+        /// player -> Update: Return
+        /// Update -> player: Check level, food item, eating status, and health percent
+        /// player -> foodItem: Use
+        /// Update -> player: Check level, drink item, drinking status, and mana percent
+        /// player -> drinkItem: Use
+        /// \enduml
+        /// </remarks>
         public void Update()
         {
             if (InCombat)

@@ -135,6 +135,41 @@ namespace BloogBot.Game.Objects
         /// <summary>
         /// Retrieves the position of the object.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// ClientHelper -> MemoryManager: ClientVersion
+        /// MemoryManager --> ClientHelper: Return ClientVersion
+        /// ClientHelper -> GetPosition: Check ClientVersion
+        /// GetPosition -> MemoryManager: ReadFloat
+        /// MemoryManager --> GetPosition: Return float values
+        /// GetPosition -> Position: Create new Position
+        /// Position --> GetPosition: Return Position
+        /// GetPosition -> MemoryManager: ReadInt
+        /// MemoryManager --> GetPosition: Return int value
+        /// GetPosition -> MemoryManager: ReadFloat
+        /// MemoryManager --> GetPosition: Return float values
+        /// GetPosition -> Position: Create new Position
+        /// Position --> GetPosition: Return Position
+        /// GetPosition -> MemoryManager: ReadInt
+        /// MemoryManager --> GetPosition: Return int value
+        /// GetPosition -> MemoryManager: ReadFloat
+        /// MemoryManager --> GetPosition: Return float values
+        /// GetPosition -> Position: Create new Position
+        /// Position --> GetPosition: Return Position
+        /// GetPosition -> MemoryManager: ReadFloat
+        /// MemoryManager --> GetPosition: Return float values
+        /// GetPosition -> Position: Create new Position
+        /// Position --> GetPosition: Return Position
+        /// GetPosition -> XYZ: Create new XYZ
+        /// GetPosition -> getPositionFunction: Call getPositionFunction
+        /// getPositionFunction --> GetPosition: Return Position
+        /// GetPosition -> Position: Create new Position
+        /// Position --> GetPosition: Return Position
+        /// GetPosition -> Position: Create new Position
+        /// Position --> GetPosition: Return Position
+        /// \enduml
+        /// </remarks>
         [HandleProcessCorruptedStateExceptions]
         Position GetPosition()
         {
@@ -217,6 +252,14 @@ namespace BloogBot.Game.Objects
         /// <summary>
         /// Retrieves the facing angle of the WoWObject.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// ClientHelper -> GetFacing: ClientVersion
+        /// GetFacing -> MemoryManager: ReadFloat
+        /// GetFacing -> GetFacing: getFacingFunction
+        /// GetFacing -> GetFacing: AccessViolationException
+        /// \enduml
+        /// </remarks>
         [HandleProcessCorruptedStateExceptions]
         float GetFacing()
         {
@@ -253,6 +296,39 @@ namespace BloogBot.Game.Objects
         /// <summary>
         /// Retrieves the name of the WoWObject.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// ClientHelper -> GetName: ClientVersion
+        /// GetName -> MemoryManager: ReadIntPtr
+        /// MemoryManager --> GetName: namePtr
+        /// GetName -> MemoryManager: ReadUlong
+        /// MemoryManager --> GetName: nextGuid
+        /// GetName -> MemoryManager: ReadIntPtr
+        /// MemoryManager --> GetName: namePtr
+        /// GetName -> MemoryManager: ReadString
+        /// MemoryManager --> GetName: return
+        /// GetName -> MemoryManager: ReadInt
+        /// MemoryManager --> GetName: ptr1
+        /// GetName -> MemoryManager: ReadInt
+        /// MemoryManager --> GetName: ptr2
+        /// GetName -> MemoryManager: ReadString
+        /// MemoryManager --> GetName: return
+        /// GetName -> MemoryManager: ReadIntPtr
+        /// MemoryManager --> GetName: ptr1
+        /// GetName -> MemoryManager: ReadIntPtr
+        /// MemoryManager --> GetName: ptr2
+        /// GetName -> MemoryManager: ReadString
+        /// MemoryManager --> GetName: return
+        /// GetName -> getNameFunction: Pointer
+        /// getNameFunction --> GetName: ptr
+        /// GetName -> MemoryManager: ReadString
+        /// MemoryManager --> GetName: return
+        /// GetName -> MemoryManager: ReadString
+        /// MemoryManager --> GetName: return
+        /// GetName --> ClientHelper: ""
+        /// GetName --> ClientHelper: ""
+        /// \enduml
+        /// </remarks>
         [HandleProcessCorruptedStateExceptions]
         string GetName()
         {
@@ -310,6 +386,16 @@ namespace BloogBot.Game.Objects
         /// <summary>
         /// Interacts with an object based on the client version.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// Interact -> ClientHelper: Check ClientVersion
+        /// alt ClientVersion.Vanilla
+        ///   Interact -> rightClickObjectFunction: Call with Pointer, 0
+        /// else
+        ///   Interact -> interactFunction: Call with Pointer
+        /// end
+        /// \enduml
+        /// </remarks>
         public void Interact()
         {
             if (ClientHelper.ClientVersion == ClientVersion.Vanilla)

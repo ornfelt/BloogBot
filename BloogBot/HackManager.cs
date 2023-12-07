@@ -21,6 +21,12 @@ namespace BloogBot
         /// <summary>
         /// Adds a hack to the list of hacks and enables it.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// AddHack -> Hacks: Add(hack)
+        /// AddHack -> : EnableHack(hack)
+        /// \enduml
+        /// </remarks>
         static internal void AddHack(Hack hack)
         {
             Hacks.Add(hack);
@@ -30,11 +36,25 @@ namespace BloogBot
         /// <summary>
         /// Enables a hack by writing new bytes to the specified address in memory.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "Hack" as H
+        /// participant "MemoryManager" as M
+        /// H -> M: WriteBytes(hack.Address, hack.NewBytes)
+        /// \enduml
+        /// </remarks>
         static internal void EnableHack(Hack hack) => MemoryManager.WriteBytes(hack.Address, hack.NewBytes);
 
         /// <summary>
         /// Disables a hack by writing the original bytes to the hack's address in memory.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "DisableHack(Hack hack)" as A
+        /// participant "MemoryManager" as B
+        /// A -> B: WriteBytes(hack.Address, hack.OriginalBytes)
+        /// \enduml
+        /// </remarks>
         static internal void DisableHack(Hack hack) => MemoryManager.WriteBytes(hack.Address, hack.OriginalBytes);
     }
 }

@@ -26,6 +26,32 @@ namespace BloogBot.Game
         /// <summary>
         /// Evaluates an event and performs corresponding actions based on the event name.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// ThreadSynchronizer -> EvaluateEvent : RunOnMainThread
+        /// EvaluateEvent -> EvaluateEvent : switch(eventName)
+        /// alt eventName "LOOT_OPENED"
+        ///     EvaluateEvent -> OpenLootFrame : call
+        /// else eventName "GOSSIP_SHOW"
+        ///     EvaluateEvent -> OpenDialogFrame : call
+        /// else eventName "MERCHANT_SHOW"
+        ///     EvaluateEvent -> OpenMerchantFrame : call
+        /// else eventName "UNIT_COMBAT"
+        ///     EvaluateEvent -> OnBlockParryDodge : Invoke
+        ///     EvaluateEvent -> OnParry : Invoke
+        /// else eventName "UI_ERROR_MESSAGE"
+        ///     EvaluateEvent -> OnErrorMessage : Invoke
+        /// else eventName "CHAT_MSG_COMBAT_SELF_HITS" or "CHAT_MSG_COMBAT_SELF_MISSES"
+        ///     EvaluateEvent -> OnSlamReady : Invoke
+        /// else eventName "CHAT_MSG_SPELL_SELF_DAMAGE"
+        ///     EvaluateEvent -> OnSlamReady : Invoke
+        /// else eventName "CHAT_MSG_SAY" or "CHAT_MSG_WHISPER"
+        ///     EvaluateEvent -> OnChatMessage : Invoke
+        /// else eventName "UNIT_LEVEL"
+        ///     EvaluateEvent -> OnLevelUp : Invoke
+        /// end
+        /// \enduml
+        /// </remarks>
         static void EvaluateEvent(string eventName, object[] args)
         {
             ThreadSynchronizer.RunOnMainThread(() =>
@@ -122,6 +148,11 @@ namespace BloogBot.Game
         /// <summary>
         /// Clears the OnErrorMessage event handler.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// ClearOnErrorMessage -> OnErrorMessage: null
+        /// \enduml
+        /// </remarks>
         static public void ClearOnErrorMessage()
         {
             OnErrorMessage = null;
@@ -130,6 +161,16 @@ namespace BloogBot.Game
         /// <summary>
         /// Opens the loot frame and invokes the OnLootOpened event.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "OpenLootFrame()" as OLF
+        /// participant "LootFrame" as LF
+        /// participant "OnLootOpened" as OLO
+        /// 
+        /// OLF -> LF: new LootFrame()
+        /// OLF -> OLO: Invoke(null, new OnLootFrameOpenArgs(lootFrame))
+        /// \enduml
+        /// </remarks>
         static void OpenLootFrame()
         {
             var lootFrame = new LootFrame();
@@ -139,6 +180,14 @@ namespace BloogBot.Game
         /// <summary>
         /// Opens a dialog frame and invokes the OnDialogOpened event with the specified arguments.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// activate "OpenDialogFrame()"
+        /// "OpenDialogFrame()" -> "DialogFrame": new DialogFrame()
+        /// "OpenDialogFrame()" -> "OnDialogOpened": Invoke(null, new OnDialogFrameOpenArgs(dialogFrame))
+        /// deactivate "OpenDialogFrame()"
+        /// \enduml
+        /// </remarks>
         static void OpenDialogFrame()
         {
             var dialogFrame = new DialogFrame();
@@ -148,6 +197,14 @@ namespace BloogBot.Game
         /// <summary>
         /// Opens the merchant frame and invokes the OnMerchantFrameOpened event.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// activate "OpenMerchantFrame"
+        /// "OpenMerchantFrame" -> "MerchantFrame": new MerchantFrame()
+        /// "OpenMerchantFrame" -> "OnMerchantFrameOpened": Invoke(null, new OnMerchantFrameOpenArgs(merchantFrame))
+        /// deactivate "OpenMerchantFrame"
+        /// \enduml
+        /// </remarks>
         static void OpenMerchantFrame()
         {
             var merchantFrame = new MerchantFrame();

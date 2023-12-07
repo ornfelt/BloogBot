@@ -57,19 +57,50 @@ namespace FrostMageBot
         /// <summary>
         /// Gets the dependency container for the bot.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "BotSettings" as A
+        /// participant "Probe" as B
+        /// participant "Hotspot" as C
+        /// participant "DependencyContainer" as D
+        /// A -> D: botSettings
+        /// B -> D: probe
+        /// C -> D: hotspots
+        /// \enduml
+        /// </remarks>
         public IDependencyContainer GetDependencyContainer(BotSettings botSettings, Probe probe, IEnumerable<Hotspot> hotspots) =>
-                    new DependencyContainer(
-                        AdditionalTargetingCriteria,
-                        CreateRestState,
-                        CreateMoveToTargetState,
-                        CreatePowerlevelCombatState,
-                        botSettings,
-                        probe,
-                        hotspots);
+                            new DependencyContainer(
+                                AdditionalTargetingCriteria,
+                                CreateRestState,
+                                CreateMoveToTargetState,
+                                CreatePowerlevelCombatState,
+                                botSettings,
+                                probe,
+                                hotspots);
 
         /// <summary>
         /// This method tests the functionality of the IDependencyContainer by retrieving the target object from the ObjectManager and printing its pointer value if it exists.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// Test -> ObjectManager: Get Units
+        /// ObjectManager --> Test: Units
+        /// Test -> ObjectManager: Get Player
+        /// ObjectManager --> Test: Player
+        /// Test -> Player: Get TargetGuid
+        /// Player --> Test: TargetGuid
+        /// Test -> ObjectManager: Get Units
+        /// ObjectManager --> Test: Units
+        /// Test -> ObjectManager: Find FirstOrDefault
+        /// ObjectManager --> Test: Unit
+        /// Test -> Unit: Get Guid
+        /// Unit --> Test: Guid
+        /// Test -> Unit: Compare Guid with TargetGuid
+        /// Unit --> Test: Comparison Result
+        /// Test -> Console: Write Line
+        /// Console --> Test: None
+        /// \enduml
+        /// </remarks>
         public void Test(IDependencyContainer container)
         {
             var target = ObjectManager.Units.FirstOrDefault(u => u.Guid == ObjectManager.Player.TargetGuid);

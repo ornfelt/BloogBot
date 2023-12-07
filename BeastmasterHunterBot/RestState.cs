@@ -81,6 +81,30 @@ namespace BeastMasterHunterBot
         /// <summary>
         /// Updates the state of the player and performs necessary actions based on certain conditions.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// Update -> Pet: Check on pet
+        /// Update -> Player: Check player health
+        /// Update -> ObjectManager: Check player combat status
+        /// Update -> ObjectManager: Check if any units target player
+        /// Update -> Wait: Remove all
+        /// Update -> Player: Stand
+        /// Update -> BotStates: Pop state
+        /// Update -> Inventory: Get food count
+        /// Update -> Inventory: Get drink count
+        /// Update -> Container: Check if running errands
+        /// Update -> Container: Get current hotspot
+        /// Update -> BotStates: Push TravelState
+        /// Update -> BotStates: Push MoveToPositionState
+        /// Update -> BotStates: Push BuyItemsState
+        /// Update -> BotStates: Push SellItemsState
+        /// Update -> BotStates: Push MoveToPositionState
+        /// Update -> Container: Check for travel path
+        /// Update -> Container: Set running errands
+        /// Update -> FoodItem: Use food item
+        /// \enduml
+        /// </remarks>
         public void Update()
         {
             // Check on your pet

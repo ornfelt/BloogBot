@@ -107,6 +107,31 @@ namespace BalanceDruidBot
         /// <summary>
         /// Updates the behavior of the player character.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// Update -> Environment: TickCount
+        /// Update -> player: StopAllMovement
+        /// Update -> Navigation: GetNextWaypoint
+        /// Update -> player: MoveToward
+        /// Update -> botStates: Push(new HealSelfState)
+        /// Update -> botStates: Pop
+        /// Update -> botStates: Push(new RestState)
+        /// Update -> player: SetTarget
+        /// Update -> player: Face
+        /// Update -> player: LuaCall
+        /// Update -> Navigation: GetNextWaypoint
+        /// Update -> player: MoveToward
+        /// Update -> player: StopAllMovement
+        /// Update -> Update: TryCastSpell(Regrowth)
+        /// Update -> player: SetTarget
+        /// Update -> Update: TryCastSpell(MarkOfTheWild)
+        /// Update -> player: SetTarget
+        /// Update -> Update: TryCastSpell(Thorns)
+        /// Update -> Update: TryCastSpell(Moonfire)
+        /// Update -> Update: TryCastSpell(Wrath)
+        /// \enduml
+        /// </remarks>
         public void Update()
         {
             // handle no los with target
@@ -182,6 +207,30 @@ namespace BalanceDruidBot
         /// <summary>
         /// Tries to cast a spell with the given name within a specified range, under certain conditions, and with optional callback and self-casting options.
         /// </summary>
+        /// <summary>
+        /// Tries to cast a spell with the given parameters.
+        /// </summary>
+        /// <param name="name">The name of the spell to cast.</param>
+        /// <param name="minRange">The minimum range for the spell.</param>
+        /// <param name="maxRange">The maximum range for the spell.</param>
+        /// <param name="condition">The condition that must be met to cast the spell.</param>
+        /// <param name="callback">The callback action to execute after casting the spell.</param>
+        /// <param name="castOnSelf">Flag indicating whether the spell should be cast on self.</param>
+        /// <remarks>
+        /// \startuml
+        /// TryCastSpell -> player: Get player position
+        /// player -> target: Get target position
+        /// player -> player: Check if spell is ready
+        /// player -> player: Check if player has enough mana
+        /// player -> player: Check if distance to target is within range
+        /// player -> player: Check if condition is true
+        /// player -> player: Check if player is not stunned
+        /// player -> player: Check if player is not casting
+        /// player -> player: Check if player is not channeling
+        /// player -> player: Cast spell by name
+        /// player -> callback: Invoke callback function
+        /// \enduml
+        /// </remarks>
         void TryCastSpell(string name, int minRange, int maxRange, bool condition = true, Action callback = null, bool castOnSelf = false)
         {
             var distanceToTarget = player.Position.DistanceTo(target.Position);
@@ -197,6 +246,18 @@ namespace BalanceDruidBot
         /// <summary>
         /// Event handler for error messages.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// object "sender" as Sender
+        /// object "OnUiMessageArgs e" as Args
+        /// object "OnErrorMessageCallback" as Callback
+        /// Sender -> Callback : OnErrorMessageCallback
+        /// Callback -> Args : e.Message
+        /// note right of Callback : if e.Message == LosErrorMessage
+        /// Callback -> Callback : noLos = true
+        /// Callback -> Callback : noLosStartTime = Environment.TickCount
+        /// \enduml
+        /// </remarks>
         void OnErrorMessageCallback(object sender, OnUiMessageArgs e)
         {
             if (e.Message == LosErrorMessage)

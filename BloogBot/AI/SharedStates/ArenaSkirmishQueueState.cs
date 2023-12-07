@@ -53,6 +53,22 @@ namespace BloogBot.AI.SharedStates
         /// <summary>
         /// Updates the current state of the arena queue process.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// ObjectManager -> Update: Player
+        /// Update -> Player: StopAllMovement()
+        /// Update -> Player: LuaCall('.go creature')
+        /// Update -> Player: ShouldWaitForTeleportDelay = true
+        /// Update -> ObjectManager: Units
+        /// Update -> Player: SetTarget(arenaNpc.Guid)
+        /// Update -> ArenaNpc: Interact()
+        /// Update -> Player: LuaCall('JoinBattlefield')
+        /// Update -> Player: LuaCall('AcceptBattlefieldPort')
+        /// Update -> Player: HasJoinedBg = true
+        /// Update -> BotStates: Pop()
+        /// \enduml
+        /// </remarks>
         public void Update()
         {
             player = ObjectManager.Player;
@@ -106,6 +122,12 @@ namespace BloogBot.AI.SharedStates
         /// <summary>
         /// Determines if the player is an ally.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// LocalPlayer -> IsAlly : IsAlly()
+        /// IsAlly --> LocalPlayer : return IsAlly
+        /// \enduml
+        /// </remarks>
         private bool IsAlly(LocalPlayer player)
         {
             //Console.WriteLine($"Player faction: {player.FactionId}");

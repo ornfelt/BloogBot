@@ -60,6 +60,32 @@ namespace BloogBot.AI.SharedStates
         /// <summary>
         /// Updates the current state of the player's PVP queue.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// ObjectManager -> Player: Get Player
+        /// Player -> QueueStates: Check Initial State
+        /// QueueStates --> Player: StopAllMovement
+        /// Player -> QueueStates: Change State to PVPFrameOpened
+        /// QueueStates -> Player: Check PVPFrameOpened State
+        /// QueueStates --> Player: LuaCall PVPParentFrameTab2:Click
+        /// Player -> QueueStates: Change State to PVPTabOpened
+        /// QueueStates -> Player: Check PVPTabOpened State
+        /// QueueStates --> Player: LuaCall for i=1,GetNumBattlegroundTypes
+        /// Player -> QueueStates: Change State to BgChosen
+        /// QueueStates -> Player: Check BgChosen State
+        /// QueueStates --> Player: LuaCall TogglePVPFrame
+        /// Player -> QueueStates: Change State to PVPFrameToggled
+        /// QueueStates -> Player: Check PVPFrameToggled State
+        /// QueueStates --> Player: LuaCall TogglePVPFrame
+        /// Player -> QueueStates: Change State to PVPFrameToggledAgain
+        /// QueueStates -> Player: Check PVPFrameToggledAgain State
+        /// QueueStates --> Player: LuaCall JoinBattlefield(0,0)
+        /// Player -> QueueStates: Change State to Queued
+        /// QueueStates -> Player: Check Queued State
+        /// QueueStates --> Player: LuaCall AcceptBattlefieldPort(1,1)
+        /// Player -> BotStates: Pop
+        /// \enduml
+        /// </remarks>
         public void Update()
         {
             if (CheckCombat())
@@ -134,6 +160,19 @@ namespace BloogBot.AI.SharedStates
         /// <summary>
         /// Checks if the player is in combat. If the player is in combat, it pops the current bot state and pushes a new GrindState onto the bot state stack. Returns true if the player is in combat, otherwise returns false.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// CheckCombat -> player: IsInCombat
+        /// alt IsInCombat is true
+        ///     CheckCombat -> player: LuaCall("TogglePVPFrame")
+        ///     CheckCombat -> botStates: Pop
+        ///     CheckCombat -> botStates: Push(new GrindState)
+        ///     CheckCombat --> : return true
+        /// else IsInCombat is false
+        ///     CheckCombat --> : return false
+        /// end
+        /// \enduml
+        /// </remarks>
         private bool CheckCombat()
         {
             if (player.IsInCombat)
@@ -150,6 +189,24 @@ namespace BloogBot.AI.SharedStates
         /// <summary>
         /// Checks if the current time is within the specified occurrence and length based on the start time.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "CheckCTA Method" as CTA
+        /// participant "DateTime" as DT
+        /// participant "TimeSpan" as TS
+        /// CTA -> DT: ParseExact(startTime, "yyyy-MM-dd HH:mm:ss", null)
+        /// activate DT
+        /// DT --> CTA: Return startTimeDate
+        /// deactivate DT
+        /// CTA -> CTA: Calculate difference (DateTime.Now - startTimeDate)
+        /// CTA -> TS: TotalSeconds
+        /// activate TS
+        /// TS --> CTA: Return differenceInSeconds
+        /// deactivate TS
+        /// CTA -> CTA: Check if (differenceInSeconds % (occurence * MINUTES)) < (length * MINUTES)
+        /// CTA --> CTA: Return result
+        /// \enduml
+        /// </remarks>
         private bool CheckCTA(string startTime, long occurence, long length)
         {
             // Convert the startTime string to a DateTime object
@@ -166,6 +223,17 @@ namespace BloogBot.AI.SharedStates
         /// <summary>
         /// Generates a random background queue index based on the player's level and certain conditions.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// activate RandBgQueueIndex
+        /// RandBgQueueIndex -> SetCTA: SetCTA()
+        /// RandBgQueueIndex -> player: Get Level
+        /// RandBgQueueIndex -> RandBgQueueIndex: Calculate bg
+        /// RandBgQueueIndex -> RandBgQueueIndex: Calculate bgQueueIndex
+        /// RandBgQueueIndex -> Console: WriteLine
+        /// deactivate RandBgQueueIndex
+        /// \enduml
+        /// </remarks>
         private int RandBgQueueIndex()
         {
             SetCTA();
@@ -200,6 +268,17 @@ namespace BloogBot.AI.SharedStates
         /// <summary>
         /// Sets the current Call to Arms for various game events.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// SetCTA -> CheckCTA: "2010-05-07 18:00:00", occurence, length
+        /// SetCTA -> CheckCTA: "2010-04-02 18:00:00", occurence, length
+        /// SetCTA -> CheckCTA: "2010-04-23 18:00:00", occurence, length
+        /// SetCTA -> CheckCTA: "2010-04-30 18:00:00", occurence, length
+        /// SetCTA -> CheckCTA: "2010-04-09 18:00:00", occurence, length
+        /// SetCTA -> CheckCTA: "2010-04-16 18:00:00", occurence, length
+        /// SetCTA --> Console: abCTA, avCTA, otherCTA
+        /// \enduml
+        /// </remarks>
         void SetCTA()
         {
             // Calculate current call to arms

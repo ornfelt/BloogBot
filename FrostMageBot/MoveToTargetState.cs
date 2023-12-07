@@ -89,6 +89,30 @@ namespace FrostMageBot
         /// The method then pops the current state from the stack and pushes a new CombatState onto the stack. 
         /// If the player is not within range of the target or does not have line of sight, the method calculates the next waypoint and moves the player towards it.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// Update -> Player: IsCasting
+        /// Update -> Target: TappedByOther
+        /// Update -> Container: FindClosestTarget
+        /// Update -> Player: StopAllMovement
+        /// Update -> BotStates: Pop
+        /// Update -> StuckHelper: CheckIfStuck
+        /// Update -> Player: Position.DistanceTo
+        /// Update -> Player: InLosWith
+        /// Update -> Player: IsMoving
+        /// Update -> Player: StopAllMovement
+        /// Update -> Wait: For
+        /// Update -> Player: StopAllMovement
+        /// Update -> Wait: Remove
+        /// Update -> Player: IsInCombat
+        /// Update -> Player: LuaCall
+        /// Update -> BotStates: Pop
+        /// Update -> BotStates: Push
+        /// Update -> Navigation: GetNextWaypoint
+        /// Update -> Player: MoveToward
+        /// \enduml
+        /// </remarks>
         public void Update()
         {
             if (player.IsCasting)

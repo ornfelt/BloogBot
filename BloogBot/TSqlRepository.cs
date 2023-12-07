@@ -27,6 +27,23 @@ namespace BloogBot
         /// <summary>
         /// Initializes the object with the provided connection string and runs the TSqlSchema.SQL script to check if tables exist before creating them.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "Initialize Method" as Initialize
+        /// participant "NewConnection Method" as NewConnection
+        /// participant "Database" as DB
+        /// participant "NewCommand Method" as NewCommand
+        /// 
+        /// Initialize -> NewConnection: Create new connection
+        /// NewConnection --> Initialize: Return connection
+        /// Initialize -> NewCommand: Create new command with script
+        /// NewCommand --> Initialize: Return command
+        /// Initialize -> DB: Open connection
+        /// Initialize -> DB: Execute command
+        /// DB --> Initialize: Command executed
+        /// Initialize -> DB: Close connection
+        /// \enduml
+        /// </remarks>
         public override void Initialize(string connectionString)
         {
             this.connectionString = connectionString;
@@ -49,6 +66,18 @@ namespace BloogBot
         /// <summary>
         /// Creates a new SqlConnection object using the specified connection string.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "Caller" as C
+        /// participant "NewConnection Method" as M
+        /// C -> M: Call NewConnection()
+        /// activate M
+        /// M -> "SqlConnection" : new(connectionString)
+        /// "SqlConnection" --> M : Return new connection
+        /// deactivate M
+        /// M --> C : Return new connection
+        /// \enduml
+        /// </remarks>
         public override dynamic NewConnection()
         {
             return new SqlConnection(connectionString);
@@ -57,6 +86,17 @@ namespace BloogBot
         /// <summary>
         /// Creates a new instance of the SqlCommand class with the specified SQL statement and database connection.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "Caller" as C
+        /// participant "NewCommand Method" as N
+        /// participant "SqlCommand" as S
+        /// C -> N: NewCommand(sql, db)
+        /// N -> S: new SqlCommand(sql, db)
+        /// S --> N: Return SqlCommand
+        /// N --> C: Return SqlCommand
+        /// \enduml
+        /// </remarks>
         public override dynamic NewCommand(string sql, dynamic db)
         {
             return new SqlCommand(sql, db);
@@ -65,6 +105,11 @@ namespace BloogBot
         /// <summary>
         /// Adds a blacklisted mob with the specified GUID to the database.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// AddBlacklistedMob -> RunSqlQuery: RunSqlQuery(sql)
+        /// \enduml
+        /// </remarks>
         public void AddBlacklistedMob(ulong guid)
         {
             string sql = $"INSERT INTO BlacklistedMobs VALUES ('{guid}');";
@@ -87,6 +132,14 @@ namespace BloogBot
         /// <param name="safeForGrinding">A flag indicating if the hotspot is safe for grinding.</param>
         /// <param name="waypoints">The array of positions representing the waypoints.</param>
         /// <returns>The newly created hotspot.</returns>
+        /// <remarks>
+        /// \startuml
+        /// AddHotspot -> "INSERT INTO Hotspots": insertSql
+        /// AddHotspot -> "SELECT TOP 1 * FROM Hotspots": selectSql
+        /// "SELECT TOP 1 * FROM Hotspots" --> AddHotspot: id
+        /// AddHotspot -> Hotspot: new Hotspot(id, zone, description, faction, minLevel, waypoints, innkeeper, repairVendor, ammoVendor, travelPath, safeForGrinding)
+        /// \enduml
+        /// </remarks>
         public Hotspot AddHotspot(string description, string zone = "", string faction = "", string waypointsJson = "", Npc innkeeper = null, Npc repairVendor = null, Npc ammoVendor = null, int minLevel = 0, TravelPath travelPath = null, bool safeForGrinding = false, Position[] waypoints = null)
         {
             string insertSql = $"INSERT INTO Hotspots VALUES ('{zone}', '{description}', '{faction}', '{waypointsJson}', {innkeeper?.Id.ToString() ?? "NULL"}, {repairVendor?.Id.ToString() ?? "NULL"}, {ammoVendor?.Id.ToString() ?? "NULL"}, {minLevel}, {travelPath?.Id.ToString() ?? "NULL"}, {Convert.ToInt32(safeForGrinding)});";
@@ -115,6 +168,22 @@ namespace BloogBot
         /// <summary>
         /// Adds a new NPC to the database with the specified attributes and returns the created NPC object.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// AddNpc -> RunSqlQuery: insertSql
+        /// AddNpc -> NewConnection: db
+        /// db -> AddNpc: Open
+        /// AddNpc -> NewCommand: selectSql, db
+        /// NewCommand -> AddNpc: command
+        /// command -> ExecuteReader: reader
+        /// reader -> AddNpc: Read
+        /// AddNpc -> Npc: new Npc
+        /// Npc -> AddNpc: npc
+        /// reader -> AddNpc: Close
+        /// db -> AddNpc: Close
+        /// AddNpc --> : return npc
+        /// \enduml
+        /// </remarks>
         public Npc AddNpc(string name, bool isInnkeeper, bool sellsAmmo, bool repairs, bool quest, bool horde, bool alliance, float positionX, float positionY, float positionZ, string zone)
         {
             string insertSql = $"INSERT INTO Npcs VALUES ('{name}', {Convert.ToInt32(isInnkeeper)}, {Convert.ToInt32(sellsAmmo)}, {Convert.ToInt32(repairs)}, {Convert.ToInt32(quest)}, {Convert.ToInt32(horde)}, {Convert.ToInt32(alliance)}, {positionX}, {positionY}, {positionZ}, '{zone}');";
@@ -151,6 +220,17 @@ namespace BloogBot
         /// <summary>
         /// Adds a report signature for a player with the specified name and command ID.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// AddReportSignature -> NewConnection : Create new connection
+        /// NewConnection --> AddReportSignature : Return new connection
+        /// AddReportSignature -> NewConnection : Open connection
+        /// AddReportSignature -> NewCommand : Create new command
+        /// NewCommand --> AddReportSignature : Return new command
+        /// AddReportSignature -> command : ExecuteNonQuery
+        /// AddReportSignature -> NewConnection : Close connection
+        /// \enduml
+        /// </remarks>
         public void AddReportSignature(string playerName, int commandId)
         {
             string sql = $"INSERT INTO ReportSignatures VALUES ('{playerName}', {commandId})";
@@ -167,6 +247,25 @@ namespace BloogBot
         /// <summary>
         /// Adds a new travel path to the database with the specified name and waypoints.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// AddTravelPath -> RunSqlQuery: insertSql
+        /// AddTravelPath -> JsonConvert: DeserializeObject<Position[]>(waypointsJson)
+        /// AddTravelPath -> NewConnection: db
+        /// db -> AddTravelPath: Open
+        /// AddTravelPath -> NewCommand: selectSql, db
+        /// NewCommand -> AddTravelPath: command
+        /// command -> AddTravelPath: ExecuteReader
+        /// ExecuteReader -> AddTravelPath: reader
+        /// reader -> AddTravelPath: Read
+        /// AddTravelPath -> Convert: ToInt32(reader["Id"])
+        /// Convert -> AddTravelPath: id
+        /// AddTravelPath -> TravelPath: new TravelPath(id, name, waypoints)
+        /// TravelPath -> AddTravelPath: travelPath
+        /// reader -> AddTravelPath: Close
+        /// db -> AddTravelPath: Close
+        /// \enduml
+        /// </remarks>
         public TravelPath AddTravelPath(string name, string waypointsJson)
         {
 
@@ -200,6 +299,12 @@ namespace BloogBot
         /// <summary>
         /// Checks if a blacklisted mob with the specified GUID exists.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// BlacklistedMobExists -> RowExistsSql: sql
+        /// RowExistsSql --> BlacklistedMobExists: bool
+        /// \enduml
+        /// </remarks>
         public bool BlacklistedMobExists(ulong guid)
         {
             string sql = $"SELECT TOP 1 Id FROM BlacklistedMobs WHERE Guid = '{guid}';";
@@ -209,6 +314,18 @@ namespace BloogBot
         /// <summary>
         /// Deletes a command from the database based on the provided ID.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// DeleteCommand -> Database: NewConnection()
+        /// Database --> DeleteCommand: db
+        /// DeleteCommand -> Database: Open()
+        /// DeleteCommand -> Database: NewCommand(sql, db)
+        /// Database --> DeleteCommand: command
+        /// DeleteCommand -> Database: ExecuteNonQuery()
+        /// DeleteCommand -> Database: Close()
+        /// \enduml
+        /// </remarks>
         public void DeleteCommand(int id)
         {
             string sql = $"DELETE FROM Commands WHERE Id = {id}";
@@ -228,6 +345,17 @@ namespace BloogBot
         /// <summary>
         /// Deletes all commands for a specific player from the database.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// DeleteCommandsForPlayer -> NewConnection : Create new connection
+        /// NewConnection --> DeleteCommandsForPlayer : Return db connection
+        /// DeleteCommandsForPlayer -> db : Open connection
+        /// DeleteCommandsForPlayer -> NewCommand : Create new command with sql and db
+        /// NewCommand --> DeleteCommandsForPlayer : Return command
+        /// DeleteCommandsForPlayer -> command : ExecuteNonQuery
+        /// DeleteCommandsForPlayer -> db : Close connection
+        /// \enduml
+        /// </remarks>
         public void DeleteCommandsForPlayer(string player)
         {
             string sql = $"DELETE FROM Commands WHERE Player = '{player}'";
@@ -247,6 +375,21 @@ namespace BloogBot
         /// <summary>
         /// Retrieves a list of command models for a specific player.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// GetCommandsForPlayer -> NewConnection : Create new database connection
+        /// NewConnection --> GetCommandsForPlayer : Return database connection
+        /// GetCommandsForPlayer -> NewConnection : Open database connection
+        /// GetCommandsForPlayer -> NewCommand : Create new command with SQL and database connection
+        /// NewCommand --> GetCommandsForPlayer : Return command
+        /// GetCommandsForPlayer -> Command : Execute reader
+        /// Command --> GetCommandsForPlayer : Return reader
+        /// GetCommandsForPlayer -> CommandModel : Create new command model and add to list
+        /// GetCommandsForPlayer -> Reader : Close reader
+        /// GetCommandsForPlayer -> NewConnection : Close database connection
+        /// GetCommandsForPlayer --> : Return list of command models
+        /// \enduml
+        /// </remarks>
         public IList<CommandModel> GetCommandsForPlayer(string playerName)
         {
             string sql = $"SELECT * FROM Commands WHERE Player = '{playerName}'";
@@ -278,6 +421,21 @@ namespace BloogBot
         /// Retrieves the latest report signatures by executing a SQL query to retrieve the latest command ID for the "!report" command, 
         /// and then retrieves the corresponding report signatures from the ReportSignatures table using the retrieved command ID.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "GetLatestReportSignatures()" as A
+        /// database "Database" as B
+        /// A -> B: Execute SQL to get latest command Id
+        /// B --> A: Return command Id
+        /// A -> A: Check if command Id is not -1
+        /// alt command Id is not -1
+        ///     A -> B: Execute SQL to get report signatures
+        ///     B --> A: Return report signatures
+        ///     A -> A: Add report signatures to list
+        /// end
+        /// A -> A: Return ReportSummary
+        /// \enduml
+        /// </remarks>
         public ReportSummary GetLatestReportSignatures()
         {
             string sql = $"SELECT TOP 1 Id FROM Commands WHERE Command = '!report' ORDER BY Id DESC";
@@ -324,6 +482,28 @@ namespace BloogBot
         /// <summary>
         /// Retrieves a list of blacklisted mob IDs from the database.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// ListBlacklistedMobs -> Database: NewConnection()
+        /// Database --> ListBlacklistedMobs: db
+        /// ListBlacklistedMobs -> db: Open()
+        /// ListBlacklistedMobs -> Database: NewCommand(sql, db)
+        /// Database --> ListBlacklistedMobs: command
+        /// ListBlacklistedMobs -> command: ExecuteReader()
+        /// command --> ListBlacklistedMobs: reader
+        /// ListBlacklistedMobs -> reader: Read()
+        /// activate ListBlacklistedMobs
+        /// loop until reader has no more rows
+        ///     ListBlacklistedMobs -> reader: Get Guid
+        ///     reader --> ListBlacklistedMobs: Guid
+        ///     ListBlacklistedMobs -> mobIds: Add(Guid)
+        /// end
+        /// deactivate ListBlacklistedMobs
+        /// ListBlacklistedMobs -> reader: Close()
+        /// ListBlacklistedMobs -> db: Close()
+        /// ListBlacklistedMobs --> ListBlacklistedMobs: return mobIds
+        /// \enduml
+        /// </remarks>
         public List<ulong> ListBlacklistedMobs()
         {
             List<ulong> mobIds = new List<ulong>();
@@ -348,6 +528,25 @@ namespace BloogBot
         /// <summary>
         /// Retrieves a list of hotspots from the database.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// ListHotspots -> Database: SQL Query
+        /// Database --> ListHotspots: Return Query Result
+        /// ListHotspots -> JsonConvert: DeserializeObject<Position[]>
+        /// JsonConvert --> ListHotspots: Return Deserialized Object
+        /// ListHotspots -> ParseNpcFromQueryResult: Parse Innkeeper
+        /// ParseNpcFromQueryResult --> ListHotspots: Return Innkeeper
+        /// ListHotspots -> ParseNpcFromQueryResult: Parse RepairVendor
+        /// ParseNpcFromQueryResult --> ListHotspots: Return RepairVendor
+        /// ListHotspots -> ParseNpcFromQueryResult: Parse AmmoVendor
+        /// ParseNpcFromQueryResult --> ListHotspots: Return AmmoVendor
+        /// ListHotspots -> ParseTravelPathFromQueryResult: Parse TravelPath
+        /// ParseTravelPathFromQueryResult --> ListHotspots: Return TravelPath
+        /// ListHotspots -> Hotspot: Create new Hotspot
+        /// Hotspot --> ListHotspots: Return new Hotspot
+        /// ListHotspots -> Database: Close Connection
+        /// \enduml
+        /// </remarks>
         public List<Hotspot> ListHotspots()
         {
             string sql = @"
@@ -422,6 +621,28 @@ namespace BloogBot
         /// <summary>
         /// Retrieves a list of all NPCs from the database.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// ListNPCs -> Database: NewConnection
+        /// Database --> ListNPCs: db
+        /// ListNPCs -> db: Open
+        /// ListNPCs -> Database: NewCommand(sql, db)
+        /// Database --> ListNPCs: command
+        /// ListNPCs -> command: ExecuteReader
+        /// command --> ListNPCs: reader
+        /// activate ListNPCs
+        /// loop while reader.Read()
+        ///     ListNPCs -> reader: Read
+        ///     ListNPCs -> Npc: new Npc
+        ///     Npc --> ListNPCs: npc
+        ///     ListNPCs -> npcs: Add(npc)
+        /// end
+        /// deactivate ListNPCs
+        /// ListNPCs -> reader: Close
+        /// ListNPCs -> db: Close
+        /// ListNPCs --> ListNPCs: return npcs
+        /// \enduml
+        /// </remarks>
         public List<Npc> ListNPCs()
         {
             List<Npc> npcs = new List<Npc>();
@@ -461,6 +682,25 @@ namespace BloogBot
         /// <summary>
         /// Retrieves a list of all travel paths from the database.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// ListTravelPaths -> NewConnection: Create new database connection
+        /// NewConnection -> Open: Open the database connection
+        /// Open -> NewCommand: Create new SQL command
+        /// NewCommand -> ExecuteReader: Execute the SQL command
+        /// loop
+        ///     ExecuteReader -> Read: Read the next row from the result set
+        ///     Read -> Convert: Convert the values from the row
+        ///     Convert -> DeserializeObject: Deserialize the waypoints JSON
+        ///     DeserializeObject -> CreateTravelPath: Create a new TravelPath object
+        ///     CreateTravelPath -> AddToList: Add the TravelPath to the list
+        /// end
+        /// Read --> ExecuteReader: Continue reading until all rows are processed
+        /// ExecuteReader --> Close: Close the reader
+        /// Close --> NewConnection: Close the database connection
+        /// NewConnection --> ListTravelPaths: Return the list of TravelPaths
+        /// \enduml
+        /// </remarks>
         public List<TravelPath> ListTravelPaths()
         {
             string sql = $"SELECT * FROM TravelPaths ORDER BY Name";
@@ -492,6 +732,12 @@ namespace BloogBot
         /// <summary>
         /// Checks if an NPC with the specified name exists in the database.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// NpcExists -> RowExistsSql: sql
+        /// RowExistsSql --> NpcExists: bool
+        /// \enduml
+        /// </remarks>
         public bool NpcExists(string name)
         {
             string sql = $"SELECT TOP 1 Id FROM Npcs WHERE Name = '{name}';";
@@ -501,6 +747,11 @@ namespace BloogBot
         /// <summary>
         /// Removes a blacklisted mob with the specified GUID from the database.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// RemoveBlacklistedMob -> RunSqlQuery: sql
+        /// \enduml
+        /// </remarks>
         public void RemoveBlacklistedMob(ulong guid)
         {
             string sql = $"DELETE FROM BlacklistedMobs WHERE Guid = '{guid}';";
@@ -510,6 +761,14 @@ namespace BloogBot
         /// <summary>
         /// Checks if a travel path with the specified name exists in the database.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// User -> TravelPathExists: name
+        /// TravelPathExists -> RowExistsSql: sql
+        /// RowExistsSql --> TravelPathExists: bool
+        /// TravelPathExists --> User: bool
+        /// \enduml
+        /// </remarks>
         public bool TravelPathExists(string name)
         {
             string sql = $"SELECT TOP 1 Id FROM TravelPaths WHERE Name = '{name}'";

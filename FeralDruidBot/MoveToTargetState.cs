@@ -68,6 +68,31 @@ namespace FeralDruidBot
         /// Gets the next waypoint using the Navigation class based on the current map, player position, and target position,
         /// and moves the player toward the next waypoint.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// Update -> target: Check TappedByOther or Aggressors
+        /// target --> Update: Return status
+        /// Update -> player: StopAllMovement
+        /// Update -> Wait: RemoveAll
+        /// Update -> botStates: Pop
+        /// Update -> stuckHelper: CheckIfStuck
+        /// Update -> player: Check Position, IsCasting, IsSpellReady, InLosWith
+        /// player --> Update: Return status
+        /// Update -> player: StopAllMovement
+        /// Update -> Wait: For "PullWithWrathDelay"
+        /// Wait --> Update: Return status
+        /// Update -> player: LuaCall, Check IsCasting, CurrentShapeshiftForm, IsInCombat
+        /// player --> Update: Return status
+        /// Update -> player: StopAllMovement
+        /// Update -> Wait: RemoveAll
+        /// Update -> botStates: Pop
+        /// Update -> botStates: Push new CombatState
+        /// Update -> Navigation: GetNextWaypoint
+        /// Navigation --> Update: Return nextWaypoint
+        /// Update -> player: MoveToward nextWaypoint
+        /// \enduml
+        /// </remarks>
         public void Update()
         {
             if (target.TappedByOther || (ObjectManager.Aggressors.Count() > 0 && !ObjectManager.Aggressors.Any(a => a.Guid == target.Guid)))

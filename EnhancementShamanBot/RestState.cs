@@ -63,6 +63,34 @@ namespace EnhancementShamanBot
         /// <summary>
         /// Updates the player's actions based on their current state.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// Update -> player: IsCasting
+        /// Update -> player: InCombat
+        /// Update -> player: HealthOk
+        /// Update -> player: ManaOk
+        /// Update -> Wait: RemoveAll
+        /// Update -> player: Stand
+        /// Update -> botStates: Pop
+        /// Update -> Inventory: GetItemCount(drinkItem.ItemId)
+        /// Update -> container: RunningErrands
+        /// Update -> container: GetCurrentHotspot
+        /// Update -> botStates: Push(new TravelState)
+        /// Update -> botStates: Push(new MoveToPositionState)
+        /// Update -> botStates: Push(new BuyItemsState)
+        /// Update -> botStates: Push(new SellItemsState)
+        /// Update -> botStates: Push(new MoveToPositionState)
+        /// Update -> container: CheckForTravelPath
+        /// Update -> player: IsDrinking
+        /// Update -> Wait: For("HealSelfDelay", 3500, true)
+        /// Update -> player: Stand
+        /// Update -> player: HealthPercent
+        /// Update -> player: LuaCall
+        /// Update -> player: Level
+        /// Update -> drinkItem: Use
+        /// \enduml
+        /// </remarks>
         public void Update()
         {
             if (player.IsCasting) return;

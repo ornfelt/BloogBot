@@ -54,6 +54,26 @@ namespace BloogBot.AI.SharedStates
         /// If the player is stuck, stops all movement and pops the current bot state.
         /// If the player has reached the destination or is stuck for too long, stops all movement and pops the current bot state.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// Update -> Player: IsCasting
+        /// alt Player is casting
+        ///     Update -> Update: return
+        /// else Player is not casting
+        ///     Update -> StuckHelper: CheckIfStuck
+        ///     Update -> Container: FindClosestTarget
+        ///     alt Closest target found and within range or Player close to destination or Player stuck count > 10
+        ///         Update -> Player: StopAllMovement
+        ///         Update -> BotStates: Pop
+        ///         Update -> Update: return
+        ///     else Continue movement
+        ///         Update -> Navigation: GetNextWaypoint
+        ///         Update -> Player: MoveToward(nextWaypoint)
+        ///     end
+        /// end
+        /// \enduml
+        /// </remarks>
         public void Update()
         {
             if (player.IsCasting)

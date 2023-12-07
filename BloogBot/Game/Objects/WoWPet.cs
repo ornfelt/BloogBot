@@ -43,6 +43,26 @@ namespace BloogBot.Game.Objects
         /// <summary>
         /// Refreshes the list of spells for the pet.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// activate "RefreshSpells"
+        /// "RefreshSpells" -> "petSpells": Clear()
+        /// loop 1024 times
+        ///     "RefreshSpells" -> "MemoryManager": ReadInt((IntPtr)(MemoryAddresses.WoWPet_SpellsBase + 4 * i))
+        ///     "MemoryManager" --> "RefreshSpells": currentSpellId
+        ///     "RefreshSpells" -> "Functions": GetSpellDBEntry(currentSpellId)
+        ///     "Functions" --> "RefreshSpells": spell
+        ///     "RefreshSpells" -> "petSpells": ContainsKey(spell.Name)
+        ///     "petSpells" --> "RefreshSpells": bool
+        ///     alt petSpells contains spell.Name
+        ///         "RefreshSpells" -> "petSpells": Update spell.Name with new currentSpellId
+        ///     else
+        ///         "RefreshSpells" -> "petSpells": Add spell.Name with currentSpellId
+        ///     end
+        /// end
+        /// deactivate "RefreshSpells"
+        /// \enduml
+        /// </remarks>
         public void RefreshSpells()
         {
             petSpells.Clear();

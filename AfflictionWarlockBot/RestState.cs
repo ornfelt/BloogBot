@@ -79,6 +79,42 @@ namespace AfflictionWarlockBot
         /// <summary>
         /// Updates the current state of the bot.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// ObjectManager -> Update : Pet
+        /// Update -> Pet : HealthPercent < 60
+        /// Pet -> Update : CanUse(ConsumeShadows)
+        /// Pet -> Update : !IsCasting
+        /// Pet -> Update : !IsChanneling
+        /// Update -> Pet : Cast(ConsumeShadows)
+        /// Update -> Player : InCombat || (HealthOk && ManaOk)
+        /// Player -> Update : !IsCasting
+        /// Player -> Update : !IsChanneling
+        /// Update -> Player : Stand()
+        /// Update -> Pet : InCombat || PetHealthOk
+        /// Pet -> Update : FollowPlayer()
+        /// Update -> BotStates : Pop()
+        /// Update -> Inventory : GetItemCount(foodItem.ItemId)
+        /// Update -> Inventory : GetItemCount(drinkItem.ItemId)
+        /// Update -> Container : RunningErrands
+        /// Update -> Container : GetCurrentHotspot()
+        /// Update -> BotStates : Push(new TravelState())
+        /// Update -> BotStates : Push(new MoveToPositionState())
+        /// Update -> BotStates : Push(new BuyItemsState())
+        /// Update -> BotStates : Push(new SellItemsState())
+        /// Update -> BotStates : Push(new MoveToPositionState())
+        /// Update -> Container : CheckForTravelPath()
+        /// Update -> Container : RunningErrands = true
+        /// Update -> BotStates : Push(new SummonVoidwalkerState())
+        /// Player -> Update : !IsChanneling
+        /// Player -> Update : !IsCasting
+        /// Player -> Update : KnowsSpell(HealthFunnel)
+        /// Player -> Update : HealthPercent > 30
+        /// Update -> Player : LuaCall("CastSpellByName('HealthFunnel')")
+        /// Update -> FoodItem : Use()
+        /// Update -> DrinkItem : Use()
+        /// \enduml
+        /// </remarks>
         public void Update()
         {
             pet = ObjectManager.Pet;

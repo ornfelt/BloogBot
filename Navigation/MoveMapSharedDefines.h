@@ -40,9 +40,9 @@
    */
 #define SIZE_OF_GRIDS 533.33333f
 
-/**
-* @brief Header structure for MMAP tiles.
-*/
+   /**
+   * @brief Header structure for MMAP tiles.
+   */
 struct MmapTileHeader
 {
 	unsigned int mmapMagic;     ///< Magic number for MMAP file format.

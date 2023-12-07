@@ -80,6 +80,11 @@ namespace BloogBot.Game.Frames
         /// <summary>
         /// Calls the LootSlot function from the Functions class with the specified LootSlot parameter.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// Functions -> "this" : LootSlot(LootSlot)
+        /// \enduml
+        /// </remarks>
         public void Loot() => Functions.LootSlot(LootSlot);
     }
 }

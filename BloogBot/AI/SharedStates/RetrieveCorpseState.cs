@@ -70,6 +70,28 @@ namespace BloogBot.AI.SharedStates
         /// If the bot is not initialized, waits for 5 seconds after releasing the corpse and then calculates the best resurrection location based on threats and player level. 
         /// Once initialized, waits for a delay and then retrieves the player's corpse if still in ghost form. If not, pops the current state.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// Update -> Player: Reset WpStuckCount
+        /// Update -> BotStates: Pop
+        /// Update -> Player: Check InGhostForm
+        /// Update -> Player: Get CorpsePosition
+        /// Update -> ObjectManager: Get Units
+        /// Update -> Units: Filter by Health, TappedByOther, IsPet, UnitReaction, Level
+        /// Update -> Player: Get CorpsePosition
+        /// Update -> Position: Create new Position
+        /// Update -> Console: Write "Reslocations: " + resLocs.Length
+        /// Update -> Navigation: CalculatePath
+        /// Update -> Position: Get DistanceTo
+        /// Update -> Position: Update resLocation
+        /// Update -> BotStates: Push new MoveToPositionState
+        /// Update -> Wait: For "StartRetrieveCorpseStateDelay"
+        /// Update -> Player: RetrieveCorpse
+        /// Update -> Wait: For "LeaveRetrieveCorpseStateDelay"
+        /// Update -> BotStates: Pop
+        /// \enduml
+        /// </remarks>
         public void Update()
         {
             player.WpStuckCount = 0; // Reset WpStuckCount

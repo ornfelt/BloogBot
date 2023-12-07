@@ -53,6 +53,12 @@ namespace BloogBot.Game
         /// <summary>
         /// Returns a string representation of the Spell object.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// Example_Object_A -> Example_Object_B: Requesting ToString()
+        /// Example_Object_B --> Example_Object_A: Returning formatted string
+        /// \enduml
+        /// </remarks>
         public override string ToString()
         {
             var sb = new StringBuilder();

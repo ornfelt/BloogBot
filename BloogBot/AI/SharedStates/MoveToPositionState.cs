@@ -61,6 +61,53 @@ namespace BloogBot.AI.SharedStates
         /// <summary>
         /// Updates the behavior of the bot.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// Update -> Container: FindThreat
+        /// Container --> Update: threat
+        /// alt threat is not null
+        ///     Update -> Player: StopAllMovement
+        ///     Update -> Container: CreateMoveToTargetState(botStates, container, threat)
+        ///     Container --> Update: MoveToTargetState
+        ///     Update -> BotStates: Push(MoveToTargetState)
+        /// else threat is null
+        ///     Update -> StuckHelper: CheckIfStuck
+        ///     StuckHelper --> Update: stuckStatus
+        ///     alt stuckStatus is true
+        ///         Update -> Update: Increment stuckCount
+        ///     end
+        ///     alt use2DPop is true
+        ///         Update -> Player: DistanceTo2D(destination)
+        ///         Player --> Update: distance
+        ///         alt distance < 5 or stuckCount > 15
+        ///             Update -> Player: StopAllMovement
+        ///             Update -> BotStates: Pop
+        ///         else distance >= 5 and stuckCount <= 15
+        ///             alt player.InGhostForm and stuckCount > 3
+        ///                 Update -> Player: StopAllMovement
+        ///                 Update -> BotStates: Pop
+        ///             end
+        ///         end
+        ///     else use2DPop is false
+        ///         Update -> Player: DistanceTo(destination)
+        ///         Player --> Update: distance
+        ///         alt distance < 5 or stuckCount > 15
+        ///             Update -> Player: StopAllMovement
+        ///             Update -> BotStates: Pop
+        ///         else distance >= 5 and stuckCount <= 15
+        ///             alt player.InGhostForm and stuckCount > 3
+        ///                 Update -> Player: StopAllMovement
+        ///                 Update -> BotStates: Pop
+        ///             end
+        ///         end
+        ///     end
+        ///     Update -> Navigation: GetNextWaypoint(ObjectManager.MapId, player.Position, destination, false)
+        ///     Navigation --> Update: nextWaypoint
+        ///     Update -> Player: MoveToward(nextWaypoint)
+        /// end
+        /// \enduml
+        /// </remarks>
         public void Update()
         {
             var threat = container.FindThreat();

@@ -46,21 +46,51 @@ namespace BloogBot.AI
         /// <summary>
         /// Finds the closest target for the WoWUnit.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// :WoWUnit: -> :FindClosestTarget: 
+        /// \enduml
+        /// </remarks>
         WoWUnit FindClosestTarget();
 
         /// <summary>
         /// Finds the threat for the WoWUnit.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// :WoWUnit: -> :FindThreat: 
+        /// \enduml
+        /// </remarks>
         WoWUnit FindThreat();
 
         /// <summary>
         /// Gets the current hotspot.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        ///  participant "Hotspot" as H
+        ///  participant "GetCurrentHotspot" as G
+        ///  G -> H: GetCurrentHotspot()
+        /// \enduml
+        /// </remarks>
         Hotspot GetCurrentHotspot();
 
         /// <summary>
         /// Checks for a travel path based on the given bot states, with the option to reverse the path and the ability to specify if the bot needs to rest.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "Function" as F
+        /// participant "Stack<IBotState>" as S
+        /// participant "bool" as B1
+        /// participant "bool" as B2
+        /// participant "bool" as B3
+        /// F -> S: botStates
+        /// F -> B1: reverse
+        /// F -> B2: needsToRest
+        /// note right: CheckForTravelPath function is called with botStates, reverse and needsToRest parameters.
+        /// \enduml
+        /// </remarks>
         void CheckForTravelPath(Stack<IBotState> botStates, bool reverse, bool needsToRest = true);
 
         /// <summary>
@@ -71,6 +101,12 @@ namespace BloogBot.AI
         /// <summary>
         /// Updates the player trackers.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// :Game: -> :Player: : UpdatePlayerTrackers()
+        /// :Player: --> :Game: : bool
+        /// \enduml
+        /// </remarks>
         bool UpdatePlayerTrackers();
 
         /// <summary>

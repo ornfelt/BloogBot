@@ -31,6 +31,39 @@ namespace BloogBot
         /// <param name="parMs">The number of milliseconds to compare against the elapsed time since the item was added.</param>
         /// <param name="trueOnNonExist">Optional. Specifies whether to return true if the item doesn't exist in the dictionary. Default is false.</param>
         /// <returns>True if the item exists and the elapsed time is greater than or equal to the specified milliseconds; otherwise, false.</returns>
+        /// <remarks>
+        /// \startuml
+        /// participant "For Method" as For
+        /// participant "Item Dictionary" as Items
+        /// participant "Item" as Item
+        /// 
+        /// For -> Items: TryGetValue(parName)
+        /// activate Items
+        /// Items --> For: Return tmpItem
+        /// deactivate Items
+        /// 
+        /// alt tmpItem does not exist
+        ///     For -> Item: new Item()
+        ///     activate Item
+        ///     Item --> For: Return new Item
+        ///     deactivate Item
+        ///     For -> Items: TryAdd(parName, tmpItem)
+        ///     activate Items
+        ///     Items --> For: Return trueOnNonExist
+        ///     deactivate Items
+        /// else tmpItem exists
+        ///     For -> For: Calculate elapsed
+        ///     alt elapsed is true
+        ///         For -> Items: TryRemove(parName, tmpItem)
+        ///         activate Items
+        ///         Items --> For: Return elapsed
+        ///         deactivate Items
+        ///     else elapsed is false
+        ///         For --> For: Return elapsed
+        ///     end
+        /// end
+        /// \enduml
+        /// </remarks>
         public static bool For(string parName, int parMs, bool trueOnNonExist = false)
         {
             lock (_lock)
@@ -53,6 +86,18 @@ namespace BloogBot
         /// <summary>
         /// Removes an item from the collection based on the specified name.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "Caller" as C
+        /// participant "Remove Method" as R
+        /// participant "Items Dictionary" as D
+        /// C -> R: Remove(parName)
+        /// activate R
+        /// R -> D: TryRemove(parName)
+        /// D --> R: tmp
+        /// deactivate R
+        /// \enduml
+        /// </remarks>
         public static void Remove(string parName)
         {
             lock (_lock)
@@ -64,6 +109,14 @@ namespace BloogBot
         /// <summary>
         /// Removes all items from the collection.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "RemoveAll Function" as R
+        /// participant "Items List" as I
+        /// 
+        /// R -> I: Clear()
+        /// \enduml
+        /// </remarks>
         public static void RemoveAll()
         {
             lock (_lock)

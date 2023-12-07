@@ -24,6 +24,30 @@ namespace Bootstrapper
         /// <summary>
         /// Executes the BloogBot application by creating a new process and loading the necessary DLL files.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// Main -> Path : GetDirectoryName(Assembly.GetExecutingAssembly().Location)
+        /// Main -> Path : Combine(currentFolder, "bootstrapperSettings.json")
+        /// Main -> JsonConvert : DeserializeObject<BootstrapperSettings>(File.ReadAllText(bootstrapperSettingsFilePath))
+        /// Main -> CreateProcess : CreateProcess(bootstrapperSettings.PathToWoW, null, IntPtr.Zero, IntPtr.Zero, false, ProcessCreationFlag.CREATE_DEFAULT_ERROR_MODE, IntPtr.Zero, null, ref startupInfo, out PROCESS_INFORMATION processInfo)
+        /// Main -> Thread : Sleep(1000)
+        /// Main -> Process : GetProcessById((int)processInfo.dwProcessId).Handle
+        /// Main -> Path : Combine(currentFolder, "Loader.dll")
+        /// Main -> VirtualAllocEx : VirtualAllocEx(processHandle, (IntPtr)0, loaderPath.Length, MemoryAllocationType.MEM_COMMIT, MemoryProtectionType.PAGE_EXECUTE_READWRITE)
+        /// Main -> Thread : Sleep(500)
+        /// Main -> Marshal : GetLastWin32Error()
+        /// Main -> WriteProcessMemory : WriteProcessMemory(processHandle, loaderPathPtr, bytes, bytes.Length, ref bytesWritten)
+        /// Main -> Thread : Sleep(1000)
+        /// Main -> Marshal : GetLastWin32Error()
+        /// Main -> GetProcAddress : GetProcAddress(GetModuleHandle("kernel32.dll"), "LoadLibraryW")
+        /// Main -> Thread : Sleep(1000)
+        /// Main -> Marshal : GetLastWin32Error()
+        /// Main -> CreateRemoteThread : CreateRemoteThread(processHandle, (IntPtr)null, (IntPtr)0, loaderDllPointer, loaderPathPtr, 0, (IntPtr)null)
+        /// Main -> Thread : Sleep(1000)
+        /// Main -> Marshal : GetLastWin32Error()
+        /// Main -> VirtualFreeEx : VirtualFreeEx(processHandle, loaderPathPtr, 0, MemoryFreeType.MEM_RELEASE)
+        /// \enduml
+        /// </remarks>
         static void Main()
         {
             var currentFolder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);

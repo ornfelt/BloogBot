@@ -121,6 +121,12 @@ namespace BloogBot.UI
         /// <summary>
         /// Starts the UI and logs a message indicating that the bot has started.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// UiStart -> Start : call Start
+        /// UiStart -> Log : "Bot started!"
+        /// \enduml
+        /// </remarks>
         void UiStart()
         {
             Start();
@@ -130,6 +136,31 @@ namespace BloogBot.UI
         /// <summary>
         /// Starts the execution of the bot.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// Start -> ObjectManager: KillswitchTriggered = false
+        /// Start -> CurrentBot: GetDependencyContainer(botSettings, probe, Hotspots)
+        /// activate CurrentBot
+        /// CurrentBot --> Start: return container
+        /// deactivate CurrentBot
+        /// Start -> CurrentBot: Start(container, stopCallback)
+        /// activate CurrentBot
+        /// Start -> Start: OnPropertyChanged(nameof(StartCommandEnabled))
+        /// Start -> Start: OnPropertyChanged(nameof(StopCommandEnabled))
+        /// Start -> Start: OnPropertyChanged(nameof(StartPowerlevelCommandEnabled))
+        /// Start -> Start: OnPropertyChanged(nameof(StartTravelPathCommandEnabled))
+        /// Start -> Start: OnPropertyChanged(nameof(StopTravelPathCommandEnabled))
+        /// Start -> Start: OnPropertyChanged(nameof(ReloadBotsCommandEnabled))
+        /// Start -> Start: OnPropertyChanged(nameof(CurrentBotEnabled))
+        /// Start -> Start: OnPropertyChanged(nameof(GrindingHotspotEnabled))
+        /// Start -> Start: OnPropertyChanged(nameof(CurrentTravelPathEnabled))
+        /// deactivate CurrentBot
+        /// alt Exception
+        ///   Start -> Logger: Log(e)
+        ///   Start -> Start: Log(COMMAND_ERROR)
+        /// end alt
+        /// \enduml
+        /// </remarks>
         void Start()
         {
             try
@@ -185,6 +216,12 @@ namespace BloogBot.UI
         /// <summary>
         /// Stops the UI and logs a message indicating that the bot has stopped.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// UiStop -> Stop : Call Stop
+        /// UiStop -> Log : "Bot stopped!"
+        /// \enduml
+        /// </remarks>
         void UiStop()
         {
             Stop();
@@ -194,6 +231,23 @@ namespace BloogBot.UI
         /// <summary>
         /// Stops the current bot and updates the enabled properties for various commands and settings.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// Stop -> CurrentBot: GetDependencyContainer(botSettings, probe, Hotspots)
+        /// Stop -> currentBot: Stop()
+        /// Stop -> OnPropertyChanged: StartCommandEnabled
+        /// Stop -> OnPropertyChanged: StopCommandEnabled
+        /// Stop -> OnPropertyChanged: StartPowerlevelCommandEnabled
+        /// Stop -> OnPropertyChanged: StartTravelPathCommandEnabled
+        /// Stop -> OnPropertyChanged: StopTravelPathCommandEnabled
+        /// Stop -> OnPropertyChanged: ReloadBotsCommandEnabled
+        /// Stop -> OnPropertyChanged: CurrentBotEnabled
+        /// Stop -> OnPropertyChanged: GrindingHotspotEnabled
+        /// Stop -> OnPropertyChanged: CurrentTravelPathEnabled
+        /// Stop -> Logger: Log(e)
+        /// \enduml
+        /// </remarks>
         void Stop()
         {
             try
@@ -239,6 +293,43 @@ namespace BloogBot.UI
         /// Logs "Bot successfully loaded!" if the bots are successfully reloaded. 
         /// Catches any exceptions that occur, logs them using the Logger.Log() method, and logs the COMMAND_ERROR message.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "ReloadBots()" as A
+        /// participant "botLoader" as B
+        /// participant "Bots" as C
+        /// participant "CurrentBot" as D
+        /// participant "Logger" as E
+        /// 
+        /// A -> B: ReloadBots()
+        /// activate B
+        /// B --> A: Return Bots
+        /// deactivate B
+        /// 
+        /// A -> C: Create ObservableCollection
+        /// activate C
+        /// C --> A: Return ObservableCollection
+        /// deactivate C
+        /// 
+        /// A -> D: Assign CurrentBot
+        /// activate D
+        /// D --> A: Return CurrentBot
+        /// deactivate D
+        /// 
+        /// A -> A: OnPropertyChanged("Bots")
+        /// A -> A: OnPropertyChanged("StartCommandEnabled")
+        /// A -> A: OnPropertyChanged("StopCommandEnabled")
+        /// A -> A: OnPropertyChanged("StartPowerlevelCommandEnabled")
+        /// A -> A: OnPropertyChanged("ReloadBotsCommandEnabled")
+        /// 
+        /// A -> A: Log("Bot successfully loaded!")
+        /// 
+        /// alt Exception Occurs
+        ///   A -> E: Log(e)
+        ///   A -> A: Log(COMMAND_ERROR)
+        /// end
+        /// \enduml
+        /// </remarks>
         void ReloadBots()
         {
             try
@@ -275,6 +366,31 @@ namespace BloogBot.UI
         /// <summary>
         /// Blacklists the current target. If the target is already blacklisted, it will be removed from the blacklist. If the target is not blacklisted, it will be added to the blacklist.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// BlacklistCurrentTarget -> ObjectManager: Get CurrentTarget
+        /// ObjectManager --> BlacklistCurrentTarget: target
+        /// if target is not null then
+        ///     BlacklistCurrentTarget -> Repository: Check if BlacklistedMobExists(target.Guid)
+        ///     Repository --> BlacklistCurrentTarget: exists
+        ///     if exists then
+        ///         BlacklistCurrentTarget -> Log: Log "Target already blacklisted. Removing from blacklist."
+        ///         BlacklistCurrentTarget -> Repository: RemoveBlacklistedMob(target.Guid)
+        ///         Repository --> BlacklistCurrentTarget: removed
+        ///         BlacklistCurrentTarget -> probe: Remove target.Guid from BlacklistedMobIds
+        ///     else
+        ///         BlacklistCurrentTarget -> Repository: AddBlacklistedMob(target.Guid)
+        ///         Repository --> BlacklistCurrentTarget: added
+        ///         BlacklistCurrentTarget -> probe: Add target.Guid to BlacklistedMobIds
+        ///         BlacklistCurrentTarget -> Log: Log "Successfully blacklisted mob: target.Guid"
+        ///     endif
+        /// else
+        ///     BlacklistCurrentTarget -> Log: Log "Blacklist failed. No target selected."
+        /// endif
+        /// BlacklistCurrentTarget -> Logger: Log exception e
+        /// BlacklistCurrentTarget -> Log: Log COMMAND_ERROR
+        /// \enduml
+        /// </remarks>
         void BlacklistCurrentTarget()
         {
             try
@@ -320,6 +436,12 @@ namespace BloogBot.UI
         /// <summary>
         /// This method is used to test the functionality of the current bot.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// CurrentBot -> Test: GetDependencyContainer(botSettings, probe, Hotspots)
+        /// Test -> currentBot: Test(container)
+        /// \enduml
+        /// </remarks>
         void Test()
         {
             var container = CurrentBot.GetDependencyContainer(botSettings, probe, Hotspots);
@@ -342,6 +464,21 @@ namespace BloogBot.UI
         /// <summary>
         /// Starts the powerlevel process.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// StartPowerlevel -> CurrentBot: GetDependencyContainer(botSettings, probe, Hotspots)
+        /// StartPowerlevel -> CurrentBot: StartPowerlevel(container, stopCallback)
+        /// StartPowerlevel -> StartPowerlevel: OnPropertyChanged(nameof(StartCommandEnabled))
+        /// StartPowerlevel -> StartPowerlevel: OnPropertyChanged(nameof(StopCommandEnabled))
+        /// StartPowerlevel -> StartPowerlevel: OnPropertyChanged(nameof(StartPowerlevelCommandEnabled))
+        /// StartPowerlevel -> StartPowerlevel: OnPropertyChanged(nameof(StartTravelPathCommandEnabled))
+        /// StartPowerlevel -> StartPowerlevel: OnPropertyChanged(nameof(StopTravelPathCommandEnabled))
+        /// StartPowerlevel -> StartPowerlevel: OnPropertyChanged(nameof(ReloadBotsCommandEnabled))
+        /// StartPowerlevel -> StartPowerlevel: OnPropertyChanged(nameof(CurrentBotEnabled))
+        /// StartPowerlevel -> StartPowerlevel: OnPropertyChanged(nameof(GrindingHotspotEnabled))
+        /// StartPowerlevel -> StartPowerlevel: OnPropertyChanged(nameof(CurrentTravelPathEnabled))
+        /// \enduml
+        /// </remarks>
         void StartPowerlevel()
         {
             var container = CurrentBot.GetDependencyContainer(botSettings, probe, Hotspots);
@@ -387,6 +524,18 @@ namespace BloogBot.UI
         /// <summary>
         /// Saves the current settings to a JSON file.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// SaveSettings -> botSettings: Set CurrentTravelPathId, GrindingHotspotId, CurrentBotName
+        /// SaveSettings -> Assembly: GetExecutingAssembly().Location
+        /// SaveSettings -> Path: Combine(currentFolder, "botSettings.json")
+        /// SaveSettings -> JsonConvert: SerializeObject(botSettings, Formatting.Indented)
+        /// SaveSettings -> File: WriteAllText(botSettingsFilePath, json)
+        /// SaveSettings -> Log: "Settings successfully saved!"
+        /// SaveSettings -> Logger: Log(e)
+        /// SaveSettings -> Log: COMMAND_ERROR
+        /// \enduml
+        /// </remarks>
         void SaveSettings()
         {
             try
@@ -424,6 +573,36 @@ namespace BloogBot.UI
         /// <summary>
         /// Starts recording the travel path.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "StartRecordingTravelPath()" as SRT
+        /// participant "ThreadSynchronizer" as TS
+        /// participant "Functions" as F
+        /// participant "TravelPathGenerator" as TPG
+        /// participant "ObjectManager" as OM
+        /// participant "Logger" as L
+        ///
+        /// SRT -> TS : RunOnMainThread()
+        /// TS -> F : GetPlayerGuid()
+        /// F -> TS : return Guid
+        /// TS -> SRT : return isLoggedIn
+        /// 
+        /// alt isLoggedIn is true
+        ///     SRT -> TPG : Record(Player, Log)
+        ///     SRT -> SRT : OnPropertyChanged(StartRecordingTravelPathCommandEnabled)
+        ///     SRT -> SRT : OnPropertyChanged(SaveTravelPathCommandEnabled)
+        ///     SRT -> SRT : OnPropertyChanged(CancelTravelPathCommandEnabled)
+        ///     SRT -> SRT : Log("Recording new travel path...")
+        /// else isLoggedIn is false
+        ///     SRT -> SRT : Log("Recording failed. Not logged in.")
+        /// end
+        /// 
+        /// alt Exception occurs
+        ///     SRT -> L : Log(e)
+        ///     SRT -> SRT : Log(COMMAND_ERROR)
+        /// end
+        /// \enduml
+        /// </remarks>
         void StartRecordingTravelPath()
         {
             try
@@ -465,6 +644,17 @@ namespace BloogBot.UI
         /// <summary>
         /// Cancels the current travel path generation.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// CancelTravelPath -> TravelPathGenerator: Cancel()
+        /// CancelTravelPath -> CancelTravelPath: OnPropertyChanged(nameof(StartRecordingTravelPathCommandEnabled))
+        /// CancelTravelPath -> CancelTravelPath: OnPropertyChanged(nameof(SaveTravelPathCommandEnabled))
+        /// CancelTravelPath -> CancelTravelPath: OnPropertyChanged(nameof(CancelTravelPathCommandEnabled))
+        /// CancelTravelPath -> CancelTravelPath: Log("Canceling new travel path...")
+        /// CancelTravelPath -> Logger: Log(e)
+        /// CancelTravelPath -> CancelTravelPath: Log(COMMAND_ERROR)
+        /// \enduml
+        /// </remarks>
         void CancelTravelPath()
         {
             try
@@ -503,6 +693,23 @@ namespace BloogBot.UI
         /// Logs a message indicating the successful saving of the new travel path. 
         /// If an exception occurs, logs the exception and logs an error message.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// SaveTravelPath -> TravelPathGenerator: Save()
+        /// TravelPathGenerator --> SaveTravelPath: waypoints
+        /// SaveTravelPath -> Repository: AddTravelPath(newTravelPathName, waypoints)
+        /// Repository --> SaveTravelPath: travelPath
+        /// SaveTravelPath -> TravelPaths: Add(travelPath)
+        /// SaveTravelPath -> TravelPaths: OrderBy(p => p?.Name)
+        /// SaveTravelPath -> SaveTravelPath: OnPropertyChanged(nameof(StartRecordingTravelPathCommandEnabled))
+        /// SaveTravelPath -> SaveTravelPath: OnPropertyChanged(nameof(SaveTravelPathCommandEnabled))
+        /// SaveTravelPath -> SaveTravelPath: OnPropertyChanged(nameof(CancelTravelPathCommandEnabled))
+        /// SaveTravelPath -> SaveTravelPath: OnPropertyChanged(nameof(TravelPaths))
+        /// SaveTravelPath -> SaveTravelPath: Log("New travel path successfully saved!")
+        /// SaveTravelPath -> Logger: Log(e)
+        /// SaveTravelPath -> SaveTravelPath: Log(COMMAND_ERROR)
+        /// \enduml
+        /// </remarks>
         void SaveTravelPath()
         {
             try
@@ -544,6 +751,23 @@ namespace BloogBot.UI
         /// <summary>
         /// Starts the travel path.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// StartTravelPath -> CurrentBot: GetDependencyContainer(botSettings, probe, Hotspots)
+        /// StartTravelPath -> CurrentBot: Travel(container, reverseTravelPath, callback)
+        /// StartTravelPath -> StartTravelPath: OnPropertyChanged(nameof(StartCommandEnabled))
+        /// StartTravelPath -> StartTravelPath: OnPropertyChanged(nameof(StopCommandEnabled))
+        /// StartTravelPath -> StartTravelPath: OnPropertyChanged(nameof(StartPowerlevelCommandEnabled))
+        /// StartTravelPath -> StartTravelPath: OnPropertyChanged(nameof(StartTravelPathCommandEnabled))
+        /// StartTravelPath -> StartTravelPath: OnPropertyChanged(nameof(StopTravelPathCommandEnabled))
+        /// StartTravelPath -> StartTravelPath: OnPropertyChanged(nameof(ReloadBotsCommandEnabled))
+        /// StartTravelPath -> StartTravelPath: OnPropertyChanged(nameof(CurrentBotEnabled))
+        /// StartTravelPath -> StartTravelPath: OnPropertyChanged(nameof(GrindingHotspotEnabled))
+        /// StartTravelPath -> StartTravelPath: OnPropertyChanged(nameof(CurrentTravelPathEnabled))
+        /// StartTravelPath -> Logger: Log(e)
+        /// StartTravelPath -> StartTravelPath: Log(COMMAND_ERROR)
+        /// \enduml
+        /// </remarks>
         void StartTravelPath()
         {
             try
@@ -599,6 +823,25 @@ namespace BloogBot.UI
         /// <summary>
         /// Stops the current travel path.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// StopTravelPath -> CurrentBot: GetDependencyContainer(botSettings, probe, Hotspots)
+        /// StopTravelPath -> currentBot: Stop()
+        /// StopTravelPath -> StopTravelPath: OnPropertyChanged(nameof(StartCommandEnabled))
+        /// StopTravelPath -> StopTravelPath: OnPropertyChanged(nameof(StopCommandEnabled))
+        /// StopTravelPath -> StopTravelPath: OnPropertyChanged(nameof(StartPowerlevelCommandEnabled))
+        /// StopTravelPath -> StopTravelPath: OnPropertyChanged(nameof(StartTravelPathCommandEnabled))
+        /// StopTravelPath -> StopTravelPath: OnPropertyChanged(nameof(StopTravelPathCommandEnabled))
+        /// StopTravelPath -> StopTravelPath: OnPropertyChanged(nameof(ReloadBotsCommandEnabled))
+        /// StopTravelPath -> StopTravelPath: OnPropertyChanged(nameof(CurrentBotEnabled))
+        /// StopTravelPath -> StopTravelPath: OnPropertyChanged(nameof(GrindingHotspotEnabled))
+        /// StopTravelPath -> StopTravelPath: OnPropertyChanged(nameof(CurrentTravelPathEnabled))
+        /// StopTravelPath -> StopTravelPath: Log("TravelPath stopped!")
+        /// StopTravelPath -> Logger: Log(e)
+        /// StopTravelPath -> StopTravelPath: Log(COMMAND_ERROR)
+        /// \enduml
+        /// </remarks>
         void StopTravelPath()
         {
             try
@@ -641,6 +884,16 @@ namespace BloogBot.UI
         /// <summary>
         /// Clears the console output and updates the property for console output.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// ClearLog -> ConsoleOutput: Clear()
+        /// ClearLog -> ClearLog: OnPropertyChanged(nameof(ConsoleOutput))
+        /// alt Exception
+        ///   ClearLog -> Logger: Log(e)
+        ///   ClearLog -> ClearLog: Log(COMMAND_ERROR)
+        /// end alt
+        /// \enduml
+        /// </remarks>
         void ClearLog()
         {
             try
@@ -670,6 +923,28 @@ namespace BloogBot.UI
         /// <summary>
         /// Adds an NPC to the repository if the target is not null and the NPC does not already exist.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// AddNpc -> ObjectManager: CurrentTarget
+        /// ObjectManager --> AddNpc: target
+        /// AddNpc -> Repository: NpcExists(target.Name)
+        /// Repository --> AddNpc: NpcExistsResult
+        /// alt NpcExistsResult is true
+        ///     AddNpc -> AddNpc: Log("NPC already exists!")
+        /// else NpcExistsResult is false
+        ///     AddNpc -> Repository: AddNpc(target.Name, npcIsInnkeeper, npcSellsAmmo, npcRepairs, false, npcHorde, npcAlliance, target.Position.X, target.Position.Y, target.Position.Z, ObjectManager.ZoneText)
+        ///     Repository --> AddNpc: npc
+        ///     AddNpc -> Npcs: Add(npc)
+        ///     AddNpc -> Npcs: OrderBy(n => n?.Horde).ThenBy(n => n?.Name)
+        ///     AddNpc -> AddNpc: OnPropertyChanged(nameof(Npcs))
+        ///     AddNpc -> AddNpc: Log("NPC saved successfully!")
+        /// else target is null
+        ///     AddNpc -> AddNpc: Log("NPC not saved. No target selected.")
+        /// end
+        /// AddNpc -> Logger: Log(e)
+        /// AddNpc -> AddNpc: Log(COMMAND_ERROR)
+        /// \enduml
+        /// </remarks>
         void AddNpc()
         {
             try
@@ -729,6 +1004,26 @@ namespace BloogBot.UI
         /// <summary>
         /// Starts recording a new hotspot.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// StartRecordingHotspot -> ThreadSynchronizer: RunOnMainThread
+        /// ThreadSynchronizer --> StartRecordingHotspot: isLoggedIn
+        /// alt isLoggedIn is true
+        ///     StartRecordingHotspot -> HotspotGenerator: Record
+        ///     StartRecordingHotspot -> StartRecordingHotspot: OnPropertyChanged(StartRecordingHotspotCommandEnabled)
+        ///     StartRecordingHotspot -> StartRecordingHotspot: OnPropertyChanged(AddHotspotWaypointCommandEnabled)
+        ///     StartRecordingHotspot -> StartRecordingHotspot: OnPropertyChanged(SaveHotspotCommandEnabled)
+        ///     StartRecordingHotspot -> StartRecordingHotspot: OnPropertyChanged(CancelHotspotCommandEnabled)
+        ///     StartRecordingHotspot -> StartRecordingHotspot: Log("Recording new hotspot...")
+        /// else isLoggedIn is false
+        ///     StartRecordingHotspot -> StartRecordingHotspot: Log("Recording failed. Not logged in.")
+        /// end
+        /// alt Exception occurs
+        ///     StartRecordingHotspot -> Logger: Log(e)
+        ///     StartRecordingHotspot -> StartRecordingHotspot: Log(COMMAND_ERROR)
+        /// end
+        /// \enduml
+        /// </remarks>
         void StartRecordingHotspot()
         {
             try
@@ -771,6 +1066,21 @@ namespace BloogBot.UI
         /// <summary>
         /// Adds a hotspot waypoint to the player's current position.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// AddHotspotWaypoint -> ThreadSynchronizer: RunOnMainThread
+        /// ThreadSynchronizer --> AddHotspotWaypoint: isLoggedIn
+        /// alt isLoggedIn is true
+        ///     AddHotspotWaypoint -> HotspotGenerator: AddWaypoint
+        ///     AddHotspotWaypoint -> AddHotspotWaypoint: OnPropertyChanged
+        ///     AddHotspotWaypoint -> AddHotspotWaypoint: Log("Waypoint successfully added!")
+        /// else isLoggedIn is false
+        ///     AddHotspotWaypoint -> AddHotspotWaypoint: Log("Failed to add waypoint. Not logged in.")
+        /// end
+        /// AddHotspotWaypoint -> Logger: Log(e)
+        /// AddHotspotWaypoint -> AddHotspotWaypoint: Log(COMMAND_ERROR)
+        /// \enduml
+        /// </remarks>
         void AddHotspotWaypoint()
         {
             try
@@ -810,6 +1120,22 @@ namespace BloogBot.UI
         /// <summary>
         /// Saves the current hotspot with the specified description, faction, waypoints, innkeeper, repair vendor, ammo vendor, minimum level, travel path, and safe for grinding flag.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// SaveHotspot -> HotspotGenerator: Save()
+        /// SaveHotspot -> Repository: AddHotspot()
+        /// SaveHotspot -> Hotspots: Add(hotspot)
+        /// SaveHotspot -> Hotspots: OrderBy()
+        /// SaveHotspot -> OnPropertyChanged: StartRecordingHotspotCommandEnabled
+        /// SaveHotspot -> OnPropertyChanged: AddHotspotWaypointCommandEnabled
+        /// SaveHotspot -> OnPropertyChanged: SaveHotspotCommandEnabled
+        /// SaveHotspot -> OnPropertyChanged: CancelHotspotCommandEnabled
+        /// SaveHotspot -> OnPropertyChanged: Hotspots
+        /// SaveHotspot -> Log: "New hotspot successfully saved!"
+        /// SaveHotspot -> Logger: Log(e)
+        /// SaveHotspot -> Log: COMMAND_ERROR
+        /// \enduml
+        /// </remarks>
         void SaveHotspot()
         {
             try
@@ -877,6 +1203,18 @@ namespace BloogBot.UI
         /// <summary>
         /// Cancels the hotspot generation process.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// CancelHotspot -> HotspotGenerator: Cancel()
+        /// CancelHotspot -> CancelHotspot: OnPropertyChanged("StartRecordingHotspotCommandEnabled")
+        /// CancelHotspot -> CancelHotspot: OnPropertyChanged("AddHotspotWaypointCommandEnabled")
+        /// CancelHotspot -> CancelHotspot: OnPropertyChanged("SaveHotspotCommandEnabled")
+        /// CancelHotspot -> CancelHotspot: OnPropertyChanged("CancelHotspotCommandEnabled")
+        /// CancelHotspot -> CancelHotspot: Log("Canceling new travel path...")
+        /// CancelHotspot -> Logger: Log(e)
+        /// CancelHotspot -> CancelHotspot: Log(COMMAND_ERROR)
+        /// \enduml
+        /// </remarks>
         void CancelHotspot()
         {
             try
@@ -1947,6 +2285,15 @@ namespace BloogBot.UI
         /// <summary>
         /// Initializes the travel paths by retrieving them from the repository and setting the current travel path to null.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// InitializeTravelPaths -> ObservableCollection : Create new ObservableCollection with ListTravelPaths
+        /// ObservableCollection -> InitializeTravelPaths : Return ObservableCollection
+        /// InitializeTravelPaths -> ObservableCollection : Insert null at index 0
+        /// InitializeTravelPaths -> OnPropertyChanged : Call with parameter "CurrentTravelPath"
+        /// InitializeTravelPaths -> OnPropertyChanged : Call with parameter "TravelPaths"
+        /// \enduml
+        /// </remarks>
         void InitializeTravelPaths()
         {
             TravelPaths = new ObservableCollection<TravelPath>(Repository.ListTravelPaths());
@@ -1961,6 +2308,20 @@ namespace BloogBot.UI
         /// The GrindingHotspot is set to the first hotspot in the Hotspots collection that matches the specified GrindingHotspotId. 
         /// Finally, the OnPropertyChanged event is raised for the Hotspots property.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// InitializeHotspots -> Repository: ListHotspots()
+        /// Repository --> InitializeHotspots: hotspots
+        /// InitializeHotspots -> hotspots: OrderBy(h => h.MinLevel)
+        /// InitializeHotspots -> hotspots: ThenBy(h => h.Zone)
+        /// InitializeHotspots -> hotspots: ThenBy(h => h.Description)
+        /// InitializeHotspots -> Hotspots: new ObservableCollection<Hotspot>(hotspots)
+        /// InitializeHotspots -> Hotspots: Insert(0, null)
+        /// InitializeHotspots -> Hotspots: FirstOrDefault(h => h?.Id == botSettings.GrindingHotspotId)
+        /// InitializeHotspots -> OnPropertyChanged: nameof(Hotspots)
+        /// \enduml
+        /// </remarks>
         void InitializeHotspots()
         {
             var hotspots = Repository.ListHotspots()
@@ -1979,6 +2340,20 @@ namespace BloogBot.UI
         /// The NPCs are then stored in an ObservableCollection and null is inserted at the beginning of the collection. 
         /// Finally, the OnPropertyChanged event is raised for the Npcs property.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// Repository -> InitializeNpcs: ListNpcs()
+        /// InitializeNpcs -> InitializeNpcs: OrderBy(Horde)
+        /// InitializeNpcs -> InitializeNpcs: ThenBy(IsInnkeeper)
+        /// InitializeNpcs -> InitializeNpcs: ThenBy(Repairs)
+        /// InitializeNpcs -> InitializeNpcs: ThenBy(SellsAmmo)
+        /// InitializeNpcs -> InitializeNpcs: ThenBy(Name)
+        /// InitializeNpcs -> Npcs: new ObservableCollection<Npc>(npcs)
+        /// InitializeNpcs -> Npcs: Insert(0, null)
+        /// InitializeNpcs -> InitializeNpcs: OnPropertyChanged(nameof(Npcs))
+        /// \enduml
+        /// </remarks>
         void InitializeNpcs()
         {
             var npcs = Repository.ListNpcs()
@@ -1996,6 +2371,13 @@ namespace BloogBot.UI
         /// <summary>
         /// Initializes the object manager by calling the Initialize method of the ObjectManager class, starting the enumeration, and initializing the command handler asynchronously.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// ObjectManager -> ObjectManager: Initialize(probe)
+        /// ObjectManager -> ObjectManager: StartEnumeration()
+        /// ObjectManager -> Task: Run(InitializeCommandHandler)
+        /// \enduml
+        /// </remarks>
         public void InitializeObjectManager()
         {
             ObjectManager.Initialize(probe);
@@ -2007,6 +2389,20 @@ namespace BloogBot.UI
         /// Updates the properties of the current object that have the specified attribute.
         /// </summary>
         /// <param name="type">The type of attribute to search for.</param>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// UpdatePropertiesWithAttribute -> GetType : Get properties of current type
+        /// GetType --> UpdatePropertiesWithAttribute : Return properties
+        /// loop for each property
+        ///     UpdatePropertiesWithAttribute -> Attribute : Check if attribute is defined
+        ///     Attribute --> UpdatePropertiesWithAttribute : Return attribute status
+        ///     alt if attribute is defined
+        ///         UpdatePropertiesWithAttribute -> OnPropertyChanged : Invoke with property name
+        ///     end
+        /// end
+        /// \enduml
+        /// </remarks>
         void UpdatePropertiesWithAttribute(Type type)
         {
             foreach (var propertyInfo in GetType().GetProperties())
@@ -2021,6 +2417,20 @@ namespace BloogBot.UI
         /// Sends a message to the Discord client if the player is not null and the current zone is not in the list of city names.
         /// The message content depends on the chat channel.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// object "sender" as Sender
+        /// object "OnChatMessageArgs e" as Args
+        /// object "ObjectManager.Player" as Player
+        /// object "DiscordClientWrapper" as Discord
+        ///
+        /// Sender -> Args : Chat Message
+        /// Args -> Player : Check Player and Zone
+        /// note right of Player: If player is not null and not in city
+        /// Args -> Discord : Send Message
+        /// note right of Discord: If channel is 'Say' or 'Whisper'
+        /// \enduml
+        /// </remarks>
         void OnChatMessageCallback(object sender, OnChatMessageArgs e)
         {
             var player = ObjectManager.Player;
@@ -2036,6 +2446,26 @@ namespace BloogBot.UI
         /// <summary>
         /// Initializes the command handler.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// InitializeCommandHandler -> WoWEventHandler: OnChatMessage += OnChatMessageCallback
+        /// InitializeCommandHandler -> ObjectManager: Get Player
+        /// ObjectManager --> InitializeCommandHandler: Return Player
+        /// InitializeCommandHandler -> Repository: DeleteCommandsForPlayer(player.Name)
+        /// InitializeCommandHandler -> InitializeCommandHandler: SignLatestReport(player, false)
+        /// InitializeCommandHandler -> InitializeCommandHandler: readyForCommands = true
+        /// InitializeCommandHandler -> InitializeCommandHandler: await Task.Delay(2000)
+        /// InitializeCommandHandler -> Repository: GetCommandsForPlayer(ObjectManager.Player.Name)
+        /// Repository --> InitializeCommandHandler: Return Commands
+        /// InitializeCommandHandler -> InitializeCommandHandler: Process Commands
+        /// InitializeCommandHandler -> ThreadSynchronizer: RunOnMainThread
+        /// ThreadSynchronizer --> InitializeCommandHandler: Execute LuaCall
+        /// InitializeCommandHandler -> Repository: DeleteCommand(command.Id)
+        /// InitializeCommandHandler -> InitializeCommandHandler: SignLatestReport(player, true)
+        /// InitializeCommandHandler -> Logger: Log(e)
+        /// InitializeCommandHandler -> InitializeCommandHandler: await Task.Delay(250)
+        /// \enduml
+        /// </remarks>
         async Task InitializeCommandHandler()
         {
             WoWEventHandler.OnChatMessage += OnChatMessageCallback;
@@ -2163,6 +2593,19 @@ namespace BloogBot.UI
         /// </summary>
         /// <param name="player">The player to sign the report for.</param>
         /// <param name="reportIn">A flag indicating whether the player is reporting in.</param>
+        /// <remarks>
+        /// \startuml
+        /// LocalPlayer -> SignLatestReport: Call
+        /// SignLatestReport -> Repository: GetLatestReportSignatures
+        /// Repository --> SignLatestReport: Return summary
+        /// SignLatestReport -> CurrentBot: Running
+        /// CurrentBot --> SignLatestReport: Return status
+        /// SignLatestReport -> DiscordClientWrapper: SendMessage
+        /// DiscordClientWrapper --> SignLatestReport: Acknowledge
+        /// SignLatestReport -> Repository: AddReportSignature
+        /// Repository --> SignLatestReport: Acknowledge
+        /// \enduml
+        /// </remarks>
         void SignLatestReport(LocalPlayer player, bool reportIn)
         {
             var summary = Repository.GetLatestReportSignatures();

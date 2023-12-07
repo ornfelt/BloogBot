@@ -25,12 +25,27 @@ namespace BloogBot
         /// <summary>
         /// Loads the specified dynamic-link library (DLL) into the address space of the calling process.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "User" as U
+        /// participant "LoadLibrary Function" as L
+        /// U -> L: LoadLibrary("lpFileName")
+        /// \enduml
+        /// </remarks>
         [DllImport("kernel32.dll")]
         static extern IntPtr LoadLibrary(string lpFileName);
 
         /// <summary>
         /// Retrieves the address of an exported function or variable from the specified dynamic-link library (DLL).
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "Caller" as C
+        /// participant "GetProcAddress" as G
+        /// C -> G: GetProcAddress(hModule, procName)
+        /// G --> C: Returns IntPtr
+        /// \enduml
+        /// </remarks>
         [DllImport("kernel32.dll")]
         static extern IntPtr GetProcAddress(IntPtr hModule, string procName);
 
@@ -80,6 +95,23 @@ namespace BloogBot
         /// <summary>
         /// Calculates the distance between two positions on a map using a specified path.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "DistanceViaPath Function" as D
+        /// participant "CalculatePath Function" as C
+        /// participant "DistanceTo Function" as DT
+        /// D -> C: CalculatePath(mapId, start, end, false)
+        /// activate C
+        /// C --> D: Returns path
+        /// deactivate C
+        /// loop i from 0 to path.Length - 1
+        ///     D -> DT: path[i].DistanceTo(path[i + 1])
+        ///     activate DT
+        ///     DT --> D: Returns distance
+        ///     deactivate DT
+        /// end
+        /// \enduml
+        /// </remarks>
         static public float DistanceViaPath(uint mapId, Position start, Position end)
         {
             var distance = 0f;
@@ -92,6 +124,25 @@ namespace BloogBot
         /// <summary>
         /// Calculates a path between two positions on a map.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "CalculatePath()" as A
+        /// participant "calculatePath()" as B
+        /// participant "Position[]" as C
+        /// A -> B: calculatePath(mapId, start.ToXYZ(), end.ToXYZ(), straightPath, out int length)
+        /// activate B
+        /// B --> A: Returns path array
+        /// deactivate B
+        /// A -> C: Create new Position array
+        /// activate C
+        /// loop i in length
+        ///     A -> C: Assign new Position(ret[i]) to list[i]
+        /// end
+        /// A -> A: freePathArr(ret)
+        /// A --> A: Returns list
+        /// deactivate C
+        /// \enduml
+        /// </remarks>
         static public Position[] CalculatePath(uint mapId, Position start, Position end, bool straightPath)
         {
             var ret = calculatePath(mapId, start.ToXYZ(), end.ToXYZ(), straightPath, out int length);
@@ -107,6 +158,17 @@ namespace BloogBot
         /// <summary>
         /// Retrieves the next waypoint position based on the given map ID, start position, end position, and straight path flag.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// GetNextWaypoint -> CalculatePath: mapId, start, end, straightPath
+        /// CalculatePath --> GetNextWaypoint: path
+        /// alt path.Length <= 1
+        ///   GetNextWaypoint --> GetNextWaypoint: return end
+        /// else
+        ///   GetNextWaypoint --> GetNextWaypoint: return path[1]
+        /// end
+        /// \enduml
+        /// </remarks>
         static public Position GetNextWaypoint(uint mapId, Position start, Position end, bool straightPath)
         {
             var path = CalculatePath(mapId, start, end, straightPath);
@@ -124,6 +186,21 @@ namespace BloogBot
         /// Calculates whether point p2 is leftOf, on, or rightOf the line formed by points p0 and p1.
         /// </summary>
         // if p0 and p1 make a line, this method calculates whether point p2 is leftOf, on, or rightOf that line
+        /// <remarks>
+        /// \startuml
+        /// activate "IsLeft"
+        /// "IsLeft" -> "IsLeft": Calculate result
+        /// "IsLeft" -> "IsLeft": Check if result < 0
+        /// alt result < 0
+        ///   "IsLeft" --> "IsLeft": Return RightOfLine
+        /// else result > 0
+        ///   "IsLeft" --> "IsLeft": Return LeftOfLine
+        /// else
+        ///   "IsLeft" --> "IsLeft": Return OnLine
+        /// end
+        /// deactivate "IsLeft"
+        /// \enduml
+        /// </remarks>
         static PointComparisonResult IsLeft(Position p0, Position p1, Position p2)
         {
             var result = (p1.X - p0.Y) * (p2.Y - p0.Y) - (p2.X - p0.X) * (p1.Y - p0.Y);
@@ -139,6 +216,22 @@ namespace BloogBot
         /// <summary>
         /// Determines whether a given point is inside a polygon.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "IsPositionInsidePolygon()" as A
+        /// participant "Position" as B
+        /// A -> B: Get point.Y
+        /// A -> B: Get polygon[i].Y
+        /// A -> B: Get polygon[i + 1].Y
+        /// A -> A: Compare Y values
+        /// A -> B: Get point.X
+        /// A -> B: Get polygon[i].X
+        /// A -> B: Get polygon[i + 1].X
+        /// A -> A: Calculate vt
+        /// A -> A: Compare X values and increment cn if true
+        /// A -> A: Check if cn equals 1
+        /// \enduml
+        /// </remarks>
         static public bool IsPositionInsidePolygon(Position point, Position[] polygon)
         {
             var cn = 0;

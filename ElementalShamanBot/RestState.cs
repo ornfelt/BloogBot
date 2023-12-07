@@ -63,6 +63,38 @@ namespace ElementalShamanBot
         /// <summary>
         /// Updates the player's actions based on their current state.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// Update -> Player: IsCasting
+        /// Update -> Player: InCombat
+        /// Update -> Player: HealthOk
+        /// Update -> Player: ManaOk
+        /// Update -> Wait: RemoveAll
+        /// Update -> Player: Stand
+        /// Update -> BotStates: Pop
+        /// Update -> Inventory: GetItemCount
+        /// Update -> Container: RunningErrands
+        /// Update -> Container: GetCurrentHotspot
+        /// Update -> BotStates: Push(new TravelState)
+        /// Update -> BotStates: Push(new MoveToPositionState)
+        /// Update -> BotStates: Push(new BuyItemsState)
+        /// Update -> BotStates: Push(new SellItemsState)
+        /// Update -> BotStates: Push(new MoveToPositionState)
+        /// Update -> Container: CheckForTravelPath
+        /// Update -> Player: IsDrinking
+        /// Update -> Wait: For("HealSelfDelay", 3500, true)
+        /// Update -> Player: Stand
+        /// Update -> Player: HealthPercent
+        /// Update -> Player: LuaCall
+        /// Update -> Player: Level
+        /// Update -> Player: LuaCall
+        /// Update -> Player: Level
+        /// Update -> Player: LuaCall
+        /// Update -> Player: ManaPercent
+        /// Update -> DrinkItem: Use
+        /// \enduml
+        /// </remarks>
         public void Update()
         {
             if (player.IsCasting) return;

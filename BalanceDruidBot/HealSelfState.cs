@@ -64,6 +64,25 @@ namespace BalanceDruidBot
         /// <summary>
         /// Updates the player's actions based on their current state and conditions.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// Update -> player: IsCasting
+        /// player --> Update: return
+        /// Update -> player: HealthPercent
+        /// Update -> player: Mana
+        /// Update -> player: GetManaCost(HealingTouch)
+        /// Update -> player: GetManaCost(Rejuvenation)
+        /// player --> Update: return
+        /// Update -> player: IsSpellReady(WarStomp)
+        /// Update -> player: Position.DistanceTo(target.Position)
+        /// player --> Update: LuaCall("CastSpellByName('WarStomp')")
+        /// Update -> TryCastSpell: MoonkinForm, player.HasBuff(MoonkinForm)
+        /// Update -> TryCastSpell: Barkskin
+        /// Update -> TryCastSpell: Rejuvenation, !player.HasBuff(Rejuvenation)
+        /// Update -> TryCastSpell: HealingTouch
+        /// \enduml
+        /// </remarks>
         public void Update()
         {
             if (player.IsCasting) return;
@@ -90,6 +109,17 @@ namespace BalanceDruidBot
         /// <summary>
         /// Tries to cast a spell by name if the spell is ready and the condition is true.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "TryCastSpell Method" as T
+        /// participant "Player" as P
+        /// 
+        /// T -> P: IsSpellReady(name)
+        /// alt condition is true
+        ///     T -> P: LuaCall("CastSpellByName(name,1)")
+        /// end
+        /// \enduml
+        /// </remarks>
         void TryCastSpell(string name, bool condition = true)
         {
             if (player.IsSpellReady(name) && condition)

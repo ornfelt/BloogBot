@@ -118,6 +118,41 @@ namespace FeralDruidBot
         /// <summary>
         /// Updates the player's actions based on their health, mana, and target status.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// Update -> Player: Check HealthPercent and Mana
+        /// Update -> Player: Check CurrentShapeshiftForm
+        /// Update -> Player: CastSpell
+        /// Update -> BotStates: Push HealSelfState
+        /// Update -> Target: Check TappedByOther
+        /// Update -> Player: StopAllMovement
+        /// Update -> BotStates: Pop
+        /// Update -> Target: Check Health
+        /// Update -> Player: StopAllMovement
+        /// Update -> BotStates: Pop
+        /// Update -> BotStates: Push LootState
+        /// Update -> Player: SetTarget
+        /// Update -> Player: Check IsFacing
+        /// Update -> Player: Face
+        /// Update -> Player: LuaCall
+        /// Update -> Player: Check Level
+        /// Update -> Player: Check ManaPercent
+        /// Update -> Player: MoveToward
+        /// Update -> Player: StopAllMovement
+        /// Update -> Player: TryCastSpell
+        /// Update -> Player: Check Position
+        /// Update -> Player: MoveToward
+        /// Update -> Player: StopAllMovement
+        /// Update -> Player: TryCastSpell
+        /// Update -> Player: TryUseBearAbility
+        /// Update -> Player: Check Position
+        /// Update -> Player: MoveToward
+        /// Update -> Player: StopAllMovement
+        /// Update -> Player: TryCastSpell
+        /// Update -> Player: TryUseCatAbility
+        /// \enduml
+        /// </remarks>
         public void Update()
         {
             if (player.HealthPercent < 30 && player.Mana >= player.GetManaCost(HealingTouch))
@@ -232,6 +267,22 @@ namespace FeralDruidBot
         /// <summary>
         /// Tries to use a bear ability with the specified name.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// TryUseBearAbility -> player: IsSpellReady(name)
+        /// player --> TryUseBearAbility: bool
+        /// TryUseBearAbility -> player: Rage
+        /// player --> TryUseBearAbility: int
+        /// TryUseBearAbility -> player: IsStunned
+        /// player --> TryUseBearAbility: bool
+        /// TryUseBearAbility -> player: CurrentShapeshiftForm
+        /// player --> TryUseBearAbility: BearForm
+        /// TryUseBearAbility -> condition: bool
+        /// condition --> TryUseBearAbility: bool
+        /// TryUseBearAbility --> player: LuaCall($"CastSpellByName(\"{name}\")")
+        /// player --> callback: Invoke()
+        /// \enduml
+        /// </remarks>
         void TryUseBearAbility(string name, int requiredRage = 0, bool condition = true, Action callback = null)
         {
             if (player.IsSpellReady(name) && player.Rage >= requiredRage && !player.IsStunned && player.CurrentShapeshiftForm == BearForm && condition)
@@ -244,6 +295,19 @@ namespace FeralDruidBot
         /// <summary>
         /// Tries to use a cat ability with the specified name.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// Player -> TryUseCatAbility: TryUseCatAbility(name, requiredEnergy, requiresComboPoints, condition, callback)
+        /// TryUseCatAbility -> Player: IsSpellReady(name)
+        /// TryUseCatAbility -> Player: Energy >= requiredEnergy
+        /// TryUseCatAbility -> Player: ComboPoints > 0 (if requiresComboPoints)
+        /// TryUseCatAbility -> Player: IsStunned
+        /// TryUseCatAbility -> Player: CurrentShapeshiftForm == CatForm
+        /// TryUseCatAbility -> Player: condition
+        /// TryUseCatAbility -> Player: LuaCall($"CastSpellByName(\"{name}\")")
+        /// TryUseCatAbility -> callback: Invoke()
+        /// \enduml
+        /// </remarks>
         void TryUseCatAbility(string name, int requiredEnergy = 0, bool requiresComboPoints = false, bool condition = true, Action callback = null)
         {
             if (player.IsSpellReady(name) && player.Energy >= requiredEnergy && (!requiresComboPoints || player.ComboPoints > 0) && !player.IsStunned && player.CurrentShapeshiftForm == CatForm && condition)
@@ -256,6 +320,17 @@ namespace FeralDruidBot
         /// <summary>
         /// Casts a spell by name if the spell is ready and the player is not currently casting.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "player" as P
+        /// participant "CastSpell" as C
+        /// 
+        /// P -> C: IsSpellReady(name)
+        /// alt spell is ready and player is not casting
+        ///     P -> C: LuaCall("CastSpellByName(name)")
+        /// end
+        /// \enduml
+        /// </remarks>
         void CastSpell(string name)
         {
             if (player.IsSpellReady(name) && !player.IsCasting)
@@ -265,6 +340,44 @@ namespace FeralDruidBot
         /// <summary>
         /// Tries to cast a spell with the given name within a specified range, under certain conditions, and with an optional callback.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "TryCastSpell Method" as TCS
+        /// participant "Player" as P
+        /// 
+        /// TCS -> P: IsSpellReady(name)
+        /// activate P
+        /// P --> TCS: Spell Ready Status
+        /// deactivate P
+        /// 
+        /// TCS -> P: GetManaCost(name)
+        /// activate P
+        /// P --> TCS: Mana Cost
+        /// deactivate P
+        /// 
+        /// TCS -> P: IsStunned
+        /// activate P
+        /// P --> TCS: Stunned Status
+        /// deactivate P
+        /// 
+        /// TCS -> P: IsCasting
+        /// activate P
+        /// P --> TCS: Casting Status
+        /// deactivate P
+        /// 
+        /// TCS -> P: IsChanneling
+        /// activate P
+        /// P --> TCS: Channeling Status
+        /// deactivate P
+        /// 
+        /// TCS -> P: LuaCall(CastSpellByName(name))
+        /// activate P
+        /// P --> TCS: Spell Cast
+        /// deactivate P
+        /// 
+        /// TCS -> TCS: callback?.Invoke()
+        /// \enduml
+        /// </remarks>
         void TryCastSpell(string name, int minRange, int maxRange, bool condition = true, Action callback = null)
         {
             var distanceToTarget = player.Position.DistanceTo(target.Position);

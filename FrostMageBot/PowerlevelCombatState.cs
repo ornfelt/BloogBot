@@ -172,6 +172,73 @@ namespace FrostMageBot
         /// <summary>
         /// Updates the combat rotation for the player character.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// Update -> player: IsChanneling
+        /// alt player is channeling
+        ///     Update -> Update: return
+        /// else player is not channeling
+        ///     Update -> Environment: TickCount
+        ///     Update -> backpedalStartTime: compare
+        ///     alt backpedalStartTime > 1500
+        ///         Update -> player: StopMovement(ControlBits.Back)
+        ///         Update -> backpedaling: set false
+        ///     end
+        ///     alt backpedaling is true
+        ///         Update -> Update: return
+        ///     else backpedaling is false
+        ///         Update -> Environment: TickCount
+        ///         Update -> noLosStartTime: compare
+        ///         alt noLosStartTime > 1000
+        ///             Update -> player: StopAllMovement
+        ///             Update -> noLos: set false
+        ///         end
+        ///         alt noLos is true
+        ///             Update -> Navigation: GetNextWaypoint
+        ///             Update -> player: MoveToward(nextWaypoint)
+        ///             Update -> Update: return
+        ///         else noLos is false
+        ///             Update -> target: TappedByOther
+        ///             alt target is tapped by other
+        ///                 Update -> botStates: Pop
+        ///                 Update -> Update: return
+        ///             else target is not tapped by other
+        ///                 Update -> ObjectManager: Units.FirstOrDefault
+        ///                 alt target.Health == 0 or checkTarget == null
+        ///                     Update -> Wait: For(waitKey, 1500)
+        ///                     alt wait is true
+        ///                         Update -> botStates: Pop
+        ///                         alt player is not swimming
+        ///                             Update -> botStates: Push(new RestState)
+        ///                         end
+        ///                         Update -> Wait: Remove(waitKey)
+        ///                     end
+        ///                     Update -> Update: return
+        ///                 else target.Health != 0 and checkTarget != null
+        ///                     Update -> player: TargetGuid
+        ///                     alt player.TargetGuid != target.Guid
+        ///                         Update -> player: SetTarget(target.Guid)
+        ///                     end
+        ///                     Update -> player: IsFacing(target.Position)
+        ///                     alt player is not facing target
+        ///                         Update -> player: Face(target.Position)
+        ///                     end
+        ///                     Update -> player: Position.DistanceTo(target.Position)
+        ///                     alt distance > range and player is not casting
+        ///                         Update -> Navigation: GetNextWaypoint
+        ///                         Update -> player: MoveToward(nextWaypoint)
+        ///                     else distance <= range or player is casting
+        ///                         Update -> player: StopAllMovement
+        ///                     end
+        ///                     Update -> Update: TryCastSpell
+        ///                 end
+        ///             end
+        ///         end
+        ///     end
+        /// end
+        /// \enduml
+        /// </remarks>
         public void Update()
         {
             if (player.IsChanneling)
@@ -271,6 +338,37 @@ namespace FrostMageBot
         /// <summary>
         /// Tries to cast a spell with the given name within a specified range, under certain conditions, and with an optional callback.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "TryCastSpell Function" as TCS
+        /// participant "Player" as P
+        /// TCS -> P: IsSpellReady(name)
+        /// activate P
+        /// P --> TCS: Spell Ready Status
+        /// deactivate P
+        /// TCS -> P: GetManaCost(name)
+        /// activate P
+        /// P --> TCS: Mana Cost
+        /// deactivate P
+        /// TCS -> P: IsStunned
+        /// activate P
+        /// P --> TCS: Stunned Status
+        /// deactivate P
+        /// TCS -> P: IsCasting
+        /// activate P
+        /// P --> TCS: Casting Status
+        /// deactivate P
+        /// TCS -> P: IsChanneling
+        /// activate P
+        /// P --> TCS: Channeling Status
+        /// deactivate P
+        /// TCS -> P: LuaCall(CastSpellByName)
+        /// activate P
+        /// P --> TCS: Spell Casted
+        /// deactivate P
+        /// TCS -> TCS: callback?.Invoke()
+        /// \enduml
+        /// </remarks>
         void TryCastSpell(string name, int minRange, int maxRange, bool condition = true, Action callback = null)
         {
             var distanceToTarget = player.Position.DistanceTo(target.Position);
@@ -285,6 +383,16 @@ namespace FrostMageBot
         /// <summary>
         /// Event handler for error messages.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// object -> OnErrorMessageCallback : sender, OnUiMessageArgs e
+        /// OnErrorMessageCallback -> OnErrorMessageCallback : Check if e.Message == LosErrorMessage
+        /// alt e.Message == LosErrorMessage
+        /// OnErrorMessageCallback -> OnErrorMessageCallback : Set noLos = true
+        /// OnErrorMessageCallback -> OnErrorMessageCallback : Set noLosStartTime = Environment.TickCount
+        /// end
+        /// \enduml
+        /// </remarks>
         void OnErrorMessageCallback(object sender, OnUiMessageArgs e)
         {
             if (e.Message == LosErrorMessage)

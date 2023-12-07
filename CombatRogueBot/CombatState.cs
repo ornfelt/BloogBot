@@ -80,6 +80,21 @@ namespace CombatRogueBot
         /// <summary>
         /// Updates the character's abilities and performs actions based on certain conditions.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// Update -> Update : base.Update()
+        /// Update -> TryUseAbility : AdrenalineRush
+        /// Update -> TryUseAbilityById : BloodFury
+        /// Update -> TryUseAbility : Evasion
+        /// Update -> TryUseAbility : BladeFlurry
+        /// Update -> TryUseAbility : SliceAndDice
+        /// Update -> TryUseAbility : Riposte
+        /// Update -> TryUseAbility : Kick
+        /// Update -> TryUseAbility : Gouge
+        /// Update -> TryUseAbility : Eviscerate
+        /// Update -> TryUseAbility : SinisterStrike
+        /// \enduml
+        /// </remarks>
         public new void Update()
         {
             if (base.Update())

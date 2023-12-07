@@ -71,6 +71,34 @@ namespace CombatRogueBot
         /// <summary>
         /// Updates the behavior of the bot based on the current target and player's position.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// Update -> target: TappedByOther
+        /// Update -> container: FindClosestTarget
+        /// Update -> player: StopAllMovement
+        /// Update -> botStates: Pop
+        /// Update -> player: IsImmobilized
+        /// Update -> stuckHelper: CheckIfStuck
+        /// Update -> player: Position.DistanceTo
+        /// Update -> player: HasBuff(Stealth)
+        /// Update -> player: KnowsSpell(Garrote)
+        /// Update -> player: IsInCombat
+        /// Update -> player: LuaCall(CastSpellByName)
+        /// Update -> player: KnowsSpell(Distract)
+        /// Update -> player: IsSpellReady(Distract)
+        /// Update -> target: CreatureType
+        /// Update -> player: CastSpellAtPosition
+        /// Update -> player: IsSpellReady(Garrote)
+        /// Update -> player: IsBehind
+        /// Update -> player: IsSpellReady(CheapShot)
+        /// Update -> player: StopAllMovement
+        /// Update -> botStates: Pop
+        /// Update -> botStates: Push(new CombatState)
+        /// Update -> Navigation: GetNextWaypoint
+        /// Update -> player: MoveToward
+        /// \enduml
+        /// </remarks>
         public void Update()
         {
             if (target.TappedByOther || container.FindClosestTarget()?.Guid != target.Guid)

@@ -34,7 +34,18 @@ namespace BloogBot.Game.Objects
         /// Retrieves the GUID of the item at the specified slot index.
         /// </summary>
         // slot index starts at 0
+        /// <remarks>
+        /// \startuml
+        /// participant "Caller" as C
+        /// participant "GetItemGuid Method" as M
+        /// participant "MemoryManager" as MM
+        /// C -> M: GetItemGuid(slot)
+        /// M -> MM: ReadUlong(GetDescriptorPtr() + (MemoryAddresses.WoWItem_ContainerFirstItemOffset + (slot * 8)))
+        /// MM --> M: Return ulong
+        /// M --> C: Return ulong
+        /// \enduml
+        /// </remarks>
         public ulong GetItemGuid(int slot) =>
-            MemoryManager.ReadUlong(GetDescriptorPtr() + (MemoryAddresses.WoWItem_ContainerFirstItemOffset + (slot * 8)));
+                    MemoryManager.ReadUlong(GetDescriptorPtr() + (MemoryAddresses.WoWItem_ContainerFirstItemOffset + (slot * 8)));
     }
 }

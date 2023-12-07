@@ -64,6 +64,29 @@ namespace BloogBot.AI.SharedStates
         /// <summary>
         /// Updates the movement of the player.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// Update -> Player: Get WpStuckCount
+        /// Update -> Player: Check InGhostForm
+        /// Update -> Container: GetCurrentHotspot
+        /// Update -> Player: Get CurrWpId
+        /// Update -> Player: Get Position
+        /// Update -> Player: Check IsInCombat
+        /// Update -> Update: StopMovement
+        /// Update -> BotStates: Pop
+        /// Update -> Update: Check state
+        /// Update -> Update: Calculate moveTime
+        /// Update -> Update: Check stopwatch
+        /// Update -> Update: Change state to Stuck
+        /// Update -> Update: Generate random number
+        /// Update -> Update: Change state to Moving
+        /// Update -> Update: Restart stopwatch
+        /// Update -> Update: StopMovement
+        /// Update -> Player: StartMovement
+        /// Update -> Player: Jump
+        /// \enduml
+        /// </remarks>
         public void Update()
         {
             var wpStuckCount = player.WpStuckCount + 1;
@@ -121,6 +144,14 @@ namespace BloogBot.AI.SharedStates
         /// <summary>
         /// Stops the movement of the player in all directions.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// StopMovement -> Player: StopMovement(ControlBits.Front)
+        /// StopMovement -> Player: StopMovement(ControlBits.Back)
+        /// StopMovement -> Player: StopMovement(ControlBits.StrafeLeft)
+        /// StopMovement -> Player: StopMovement(ControlBits.StrafeRight)
+        /// \enduml
+        /// </remarks>
         void StopMovement()
         {
             player.StopMovement(ControlBits.Front);

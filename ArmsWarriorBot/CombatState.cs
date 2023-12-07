@@ -117,6 +117,36 @@ namespace ArmsWarriorBot
         /// <summary>
         /// Updates the character's abilities and actions during combat.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// ObjectManager -> Update: Get Aggressors
+        /// Update -> TryUseAbility: Bloodrage
+        /// Update -> TryUseAbilityById: BloodFury
+        /// Update -> TryUseAbility: Overpower
+        /// Update -> TryUseAbility: Execute
+        /// 
+        /// alt aggressors.Count() == 1
+        ///     Update -> TryUseAbility: Hamstring
+        ///     Update -> TryUseAbility: BattleShout
+        ///     Update -> TryUseAbility: Rend
+        ///     Update -> TryUseAbility: SunderArmor
+        ///     Update -> TryUseAbility: MortalStrike
+        ///     Update -> TryUseAbility: HeroicStrike
+        /// else aggressors.Count() >= 2
+        ///     Update -> TryUseAbility: IntimidatingShout
+        ///     Update -> TryUseAbility: Retaliation
+        ///     Update -> TryUseAbility: DemoralizingShout
+        ///     Update -> TryUseAbility: ThunderClap
+        ///     Update -> TryUseAbility: SweepingStrikes
+        ///     alt thunderClapCondition && demoShoutCondition && sweepingStrikesCondition
+        ///         Update -> TryUseAbility: Rend
+        ///         Update -> TryUseAbility: MortalStrike
+        ///         Update -> TryUseAbility: HeroicStrike
+        ///     end
+        /// end
+        /// \enduml
+        /// </remarks>
         public new void Update()
         {
             if (base.Update())

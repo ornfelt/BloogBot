@@ -22,6 +22,15 @@ namespace BloogBot
         /// <summary>
         /// Loads the application in a new thread with the specified arguments.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// App -> Load: Call Load with args
+        /// Load -> Thread: Create new Thread with App.Main
+        /// Load -> Thread: Set ApartmentState to STA
+        /// Load -> Thread: Start Thread
+        /// Load --> App: Return 1
+        /// \enduml
+        /// </remarks>
         static int Load(string args)
         {
             thread = new Thread(App.Main);

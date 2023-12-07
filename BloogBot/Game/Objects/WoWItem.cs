@@ -50,6 +50,11 @@ namespace BloogBot.Game.Objects
         /// <summary>
         /// Uses the item pointed to by the pointer.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// User -> Functions: UseItem(Pointer)
+        /// \enduml
+        /// </remarks>
         public void Use() => Functions.UseItem(Pointer);
 
         /// <summary>

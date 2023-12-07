@@ -11,6 +11,11 @@ namespace BloogBot.AI
         /// <summary>
         /// Updates the data.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// :User: -> Update: Call Update method
+        /// \enduml
+        /// </remarks>
         void Update();
     }
 }

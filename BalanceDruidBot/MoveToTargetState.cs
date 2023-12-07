@@ -85,6 +85,53 @@ namespace BalanceDruidBot
         /// <summary>
         /// Updates the current state of the bot. If the target is tapped by another player or if there are aggressors targeting the target, the bot will remove all waiting actions and pop the current state. If the player is casting a spell, the method will return. If the player knows the MoonkinForm spell but does not have the MoonkinForm buff, the method will cast the MoonkinForm spell. If the player is within range of the target and not casting a spell, and the pulling spell is ready and the player has line of sight with the target, the method will stop all movement, wait for a delay, and then cast the pulling spell. If the player is casting a spell or in combat after casting the pulling spell, the method will stop all movement, remove all waiting actions, pop the current state, and push a new CombatState. Finally, the method will calculate the next waypoint and move the player towards it.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// Update -> target: Check TappedByOther
+        /// Update -> ObjectManager: Check Aggressors
+        /// alt target.TappedByOther is true or Aggressors exist
+        ///     Update -> Wait: RemoveAll
+        ///     Update -> botStates: Pop
+        ///     Update -> return
+        /// else target.TappedByOther is false and Aggressors do not exist
+        ///     Update -> stuckHelper: CheckIfStuck
+        ///     alt player.IsCasting is true
+        ///         Update -> return
+        ///     else player.IsCasting is false
+        ///         Update -> player: Check KnowsSpell(MoonkinForm) and HasBuff(MoonkinForm)
+        ///         alt player knows MoonkinForm and does not have MoonkinForm buff
+        ///             Update -> player: LuaCall(CastSpellByName(MoonkinForm))
+        ///         end
+        ///         Update -> player: Check Position.DistanceTo(target.Position), IsCasting, IsSpellReady(pullingSpell), InLosWith(target.Position)
+        ///         alt player is in range, not casting, spell is ready, and in line of sight with target
+        ///             Update -> player: Check IsMoving
+        ///             alt player is moving
+        ///                 Update -> player: StopAllMovement
+        ///             end
+        ///             Update -> Wait: For("BalanceDruidPullDelay", 100)
+        ///             alt Wait is true
+        ///                 Update -> player: Check IsInCombat
+        ///                 alt player is not in combat
+        ///                     Update -> player: LuaCall(CastSpellByName(pullingSpell))
+        ///                 end
+        ///                 Update -> player: Check IsCasting or IsInCombat
+        ///                 alt player is casting or in combat
+        ///                     Update -> player: StopAllMovement
+        ///                     Update -> Wait: RemoveAll
+        ///                     Update -> botStates: Pop
+        ///                     Update -> botStates: Push(new CombatState(botStates, container, target))
+        ///                 end
+        ///             end
+        ///             Update -> return
+        ///         else player is not in range, is casting, spell is not ready, or not in line of sight with target
+        ///             Update -> Navigation: GetNextWaypoint(ObjectManager.MapId, player.Position, target.Position, false)
+        ///             Update -> player: MoveToward(nextWaypoint)
+        ///         end
+        ///     end
+        /// end
+        /// \enduml
+        /// </remarks>
         public void Update()
         {
             if (target.TappedByOther || (ObjectManager.Aggressors.Count() > 0 && !ObjectManager.Aggressors.Any(a => a.Guid == target.Guid)))

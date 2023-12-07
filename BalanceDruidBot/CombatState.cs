@@ -118,6 +118,26 @@ namespace BalanceDruidBot
         /// <summary>
         /// Updates the state of the character.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// Update -> castingEntanglingRoots: Check if castingEntanglingRoots is true
+        /// castingEntanglingRoots -> secondaryTarget: Check if secondaryTarget has EntanglingRoots debuff
+        /// castingEntanglingRoots -> player: Start backpedaling
+        /// castingEntanglingRoots -> player: Set target
+        /// castingEntanglingRoots -> castingEntanglingRoots: Set to false
+        /// Update -> backpedaling: Check if backpedaling time is over 1500ms
+        /// backpedaling -> player: Stop backpedaling
+        /// backpedaling -> backpedaling: Set to false
+        /// Update -> player: Check if player's health is below 30% and has enough mana for healing
+        /// player -> botStates: Push new HealSelfState
+        /// Update -> base: Call base Update method
+        /// Update -> ObjectManager: Check if there are 2 aggressors and secondaryTarget is null
+        /// ObjectManager -> secondaryTarget: Set secondaryTarget
+        /// Update -> secondaryTarget: Check if secondaryTarget has no EntanglingRoots debuff
+        /// secondaryTarget -> player: Set target and try to cast EntanglingRoots
+        /// Update -> player: Try to cast various spells based on conditions
+        /// \enduml
+        /// </remarks>
         public new void Update()
         {
             if (castingEntanglingRoots)

@@ -92,6 +92,34 @@ namespace ArcaneMageBot
         /// <summary>
         /// Updates the character's actions and abilities.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "Update()" as U
+        /// participant "Environment" as E
+        /// participant "Player" as P
+        /// participant "Inventory" as I
+        /// participant "Target" as T
+        /// participant "ObjectManager" as O
+        /// 
+        /// U -> E: TickCount
+        /// U -> P: StopMovement(ControlBits.Back)
+        /// U -> P: ManaPercent
+        /// U -> P: IsCasting
+        /// U -> P: IsChanneling
+        /// U -> I: GetEquippedItem(EquipSlot.Ranged)
+        /// U -> P: LuaCall(WandLuaScript)
+        /// U -> T: HealthPercent
+        /// U -> T: Mana
+        /// U -> T: IsCasting
+        /// U -> P: HasBuff(ManaShield)
+        /// U -> P: HealthPercent
+        /// U -> P: HasBuff(Clearcasting)
+        /// U -> O: Units
+        /// U -> P: Level
+        /// U -> P: HasBuff(PresenceOfMind)
+        /// U -> P: Level
+        /// \enduml
+        /// </remarks>
         public new void Update()
         {
             if (frostNovaBackpedaling && Environment.TickCount - frostNovaBackpedalStartTime > 1500)

@@ -48,6 +48,19 @@ namespace ProtectionPaladinBot
         /// <summary>
         /// Updates the player's actions based on their current state and conditions.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// Update -> Player: IsCasting
+        /// Player --> Update: return
+        /// Update -> Player: HealthPercent > 70 || Mana < GetManaCost(HolyLight)
+        /// Player --> Update: Pop botStates and return
+        /// Update -> Player: Mana > GetManaCost(DivineProtection) && IsSpellReady(DivineProtection)
+        /// Player --> Update: LuaCall(CastSpellByName(DivineProtection))
+        /// Update -> Player: Mana > GetManaCost(HolyLight) && IsSpellReady(HolyLight)
+        /// Player --> Update: LuaCall(CastSpellByName(HolyLight,1)) or CastSpell(HolyLight, Guid)
+        /// \enduml
+        /// </remarks>
         public void Update()
         {
             if (player.IsCasting) return;

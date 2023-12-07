@@ -117,6 +117,57 @@ namespace BloogBot.Game.Objects
         /// <summary>
         /// Faces the specified position.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// autonumber
+        /// Client -> Face: Position pos
+        /// alt Facing < 0
+        ///     Face -> Face: SetFacing((float)(Math.PI * 2) + Facing)
+        /// else alt turning && pos != turningToward
+        ///     Face -> Face: ResetFacingState()
+        /// else alt !turning && IsFacing(pos)
+        ///     Face -> Face: return
+        /// else alt !turning
+        ///     Face -> Face: GetFacingForPosition(pos)
+        ///     alt requiredFacing > Facing
+        ///         alt requiredFacing - Facing > Math.PI
+        ///             Face -> Face: amountToTurn = -((float)(Math.PI * 2) - requiredFacing + Facing)
+        ///         else
+        ///             Face -> Face: amountToTurn = requiredFacing - Facing
+        ///         end
+        ///     else
+        ///         alt Facing - requiredFacing > Math.PI
+        ///             Face -> Face: amountToTurn = (float)(Math.PI * 2) - Facing + requiredFacing
+        ///         else
+        ///             Face -> Face: amountToTurn = requiredFacing - Facing
+        ///         end
+        ///     end
+        ///     alt Math.Abs(amountToTurn) < 0.05
+        ///         Face -> Face: SetFacing(requiredFacing)
+        ///         Face -> Face: ResetFacingState()
+        ///     else
+        ///         Face -> Face: turning = true
+        ///         Face -> Face: turningToward = pos
+        ///         Face -> Face: totalTurns = random.Next(2, 5)
+        ///         Face -> Face: amountPerTurn = amountToTurn / totalTurns
+        ///     end
+        /// else alt turning
+        ///     alt turnCount < totalTurns - 1
+        ///         Face -> Face: newFacing = Facing + amountPerTurn
+        ///         alt newFacing < 0
+        ///             Face -> Face: newFacing = twoPi + amountPerTurn + Facing
+        ///         else newFacing > Math.PI * 2
+        ///             Face -> Face: newFacing = amountPerTurn - (twoPi - Facing)
+        ///         end
+        ///         Face -> Face: SetFacing(newFacing)
+        ///         Face -> Face: turnCount++
+        ///     else
+        ///         Face -> Face: SetFacing(GetFacingForPosition(pos))
+        ///         Face -> Face: ResetFacingState()
+        ///     end
+        /// end
+        /// \enduml
+        /// </remarks>
         public void Face(Position pos)
         {
             // sometimes the client gets in a weird state and CurrentFacing is negative. correct that here.
@@ -209,6 +260,17 @@ namespace BloogBot.Game.Objects
         /// <summary>
         /// Sets the facing direction of the player.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// ClientHelper -> SetFacing : ClientVersion
+        /// alt ClientVersion == WotLK
+        ///     SetFacing -> Functions : SetFacing(Pointer, facing)
+        /// else
+        ///     SetFacing -> Functions : SetFacing(IntPtr.Add(Pointer, MemoryAddresses.LocalPlayer_SetFacingOffset), facing)
+        ///     SetFacing -> Functions : SendMovementUpdate(Pointer, SET_FACING_OPCODE)
+        /// end
+        /// \enduml
+        /// </remarks>
         public void SetFacing(float facing)
         {
             if (ClientHelper.ClientVersion == ClientVersion.WotLK)
@@ -225,6 +287,14 @@ namespace BloogBot.Game.Objects
         /// <summary>
         /// Moves the object towards the specified position.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// :MoveToward: -> :Face: : pos
+        /// :Face: --> :MoveToward: : return
+        /// :MoveToward: -> :StartMovement: : ControlBits.Front
+        /// :StartMovement: --> :MoveToward: : return
+        /// \enduml
+        /// </remarks>
         public void MoveToward(Position pos)
         {
             Face(pos);
@@ -234,6 +304,17 @@ namespace BloogBot.Game.Objects
         /// <summary>
         /// Resets the facing state by setting all relevant variables to their initial values and stopping any strafing movement.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// ResetFacingState -> ResetFacingState: turning = false
+        /// ResetFacingState -> ResetFacingState: totalTurns = 0
+        /// ResetFacingState -> ResetFacingState: turnCount = 0
+        /// ResetFacingState -> ResetFacingState: amountPerTurn = 0
+        /// ResetFacingState -> ResetFacingState: turningToward = null
+        /// ResetFacingState -> ControlBits: StopMovement(StrafeLeft)
+        /// ResetFacingState -> ControlBits: StopMovement(StrafeRight)
+        /// \enduml
+        /// </remarks>
         void ResetFacingState()
         {
             turning = false;
@@ -248,6 +329,19 @@ namespace BloogBot.Game.Objects
         /// <summary>
         /// Turns the object 180 degrees.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "Turn180 Method" as T
+        /// participant "Math.PI" as M
+        /// participant "SetFacing Method" as S
+        /// T -> M: Add Math.PI to Facing
+        /// T -> T: Check if newFacing > (Math.PI * 2)
+        /// alt newFacing > (Math.PI * 2)
+        ///   T -> M: Subtract Math.PI * 2 from newFacing
+        /// end
+        /// T -> S: Call SetFacing with newFacing
+        /// \enduml
+        /// </remarks>
         public void Turn180()
         {
             var newFacing = Facing + Math.PI;
@@ -261,6 +355,12 @@ namespace BloogBot.Game.Objects
         /// The client will NOT send a packet to the server if a key is already pressed, so you're safe to spam this.
         /// </summary>
         // the client will NOT send a packet to the server if a key is already pressed, so you're safe to spam this
+        /// <remarks>
+        /// \startuml
+        /// PersonA -> PersonB: Hello PersonB, how are you?
+        /// PersonB --> PersonA: I am good!
+        /// \enduml
+        /// </remarks>
         public void StartMovement(ControlBits bits)
         {
             if (bits == ControlBits.Nothing)
@@ -274,6 +374,15 @@ namespace BloogBot.Game.Objects
         /// <summary>
         /// Stops all movement in the specified directions.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "StopAllMovement Method" as SAM
+        /// participant "ControlBits" as CB
+        /// participant "StopMovement Method" as SM
+        /// SAM -> CB: Get all ControlBits
+        /// SAM -> SM: Call with all ControlBits
+        /// \enduml
+        /// </remarks>
         public void StopAllMovement()
         {
             var bits = ControlBits.Front | ControlBits.Back | ControlBits.Left | ControlBits.Right | ControlBits.StrafeLeft | ControlBits.StrafeRight;
@@ -284,6 +393,11 @@ namespace BloogBot.Game.Objects
         /// <summary>
         /// Stops the movement based on the specified control bits.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// Example_Object_A -> Example_Object_B: StopMovement(bits)
+        /// \enduml
+        /// </remarks>
         public void StopMovement(ControlBits bits)
         {
             if (bits == ControlBits.Nothing)
@@ -296,6 +410,15 @@ namespace BloogBot.Game.Objects
         /// <summary>
         /// Performs a jump action. If the client version is Vanilla, it stops the movement and then starts the jump movement. Otherwise, it calls the Jump function from the Functions class.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// ClientHelper -> Jump : ClientVersion == Vanilla
+        /// Jump -> Jump : StopMovement(ControlBits.Jump)
+        /// Jump -> Jump : StartMovement(ControlBits.Jump)
+        /// ClientHelper -> Jump : ClientVersion != Vanilla
+        /// Jump -> Functions : Jump()
+        /// \enduml
+        /// </remarks>
         public void Jump()
         {
             if (ClientHelper.ClientVersion == ClientVersion.Vanilla)
@@ -468,6 +591,25 @@ namespace BloogBot.Game.Objects
         /// <summary>
         /// Refreshes the list of player spells.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// activate "RefreshSpells()"
+        /// "RefreshSpells()" -> "PlayerSpells": Clear()
+        /// loop 1024 times
+        ///     "RefreshSpells()" -> "MemoryManager": ReadInt()
+        ///     "RefreshSpells()" -> "ClientHelper": ClientVersion
+        ///     "RefreshSpells()" -> "MemoryManager": ReadIntPtr()
+        ///     "RefreshSpells()" -> "MemoryManager": ReadIntPtr()
+        ///     "RefreshSpells()" -> "MemoryManager": ReadString()
+        ///     "RefreshSpells()" -> "PlayerSpells": ContainsKey()
+        ///     "RefreshSpells()" -> "PlayerSpells": Add()
+        ///     "RefreshSpells()" -> "Functions": GetSpellDBEntry()
+        ///     "RefreshSpells()" -> "PlayerSpells": ContainsKey()
+        ///     "RefreshSpells()" -> "PlayerSpells": Add()
+        /// end
+        /// deactivate "RefreshSpells()"
+        /// \enduml
+        /// </remarks>
         public void RefreshSpells()
         {
             PlayerSpells.Clear();
@@ -511,6 +653,25 @@ namespace BloogBot.Game.Objects
         /// <summary>
         /// Gets the spell ID for a given spell name and rank.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "GetSpellId Method" as GetSpellId
+        /// participant "PlayerSpells Dictionary" as PlayerSpells
+        /// 
+        /// GetSpellId -> PlayerSpells: Get spell ranks for spellName
+        /// PlayerSpells --> GetSpellId: Return spell ranks
+        /// 
+        /// alt rank is less than 1 or greater than maxRank
+        ///     GetSpellId -> PlayerSpells: Get spellId for maxRank - 1
+        ///     PlayerSpells --> GetSpellId: Return spellId
+        /// else
+        ///     GetSpellId -> PlayerSpells: Get spellId for rank - 1
+        ///     PlayerSpells --> GetSpellId: Return spellId
+        /// end
+        /// 
+        /// GetSpellId --> GetSpellId: Return spellId
+        /// \enduml
+        /// </remarks>
         public int GetSpellId(string spellName, int rank = -1)
         {
             int spellId;
@@ -527,6 +688,24 @@ namespace BloogBot.Game.Objects
         /// <summary>
         /// Checks if a spell is ready to be cast.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "IsSpellReady Function" as A
+        /// participant "PlayerSpells Dictionary" as B
+        /// participant "GetSpellId Function" as C
+        /// participant "Functions" as D
+        /// 
+        /// A -> B: Check if spellName exists
+        /// alt spellName does not exist in PlayerSpells
+        ///     B --> A: Return false
+        /// else spellName exists in PlayerSpells
+        ///     A -> C: Get spellId for spellName and rank
+        ///     C --> A: Return spellId
+        ///     A -> D: Check if spellId is on cooldown
+        ///     D --> A: Return not on cooldown
+        /// end
+        /// \enduml
+        /// </remarks>
         public bool IsSpellReady(string spellName, int rank = -1)
         {
             if (!PlayerSpells.ContainsKey(spellName))
@@ -540,6 +719,27 @@ namespace BloogBot.Game.Objects
         /// <summary>
         /// Retrieves the mana cost of a spell based on its name and rank.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// ClientHelper -> GetManaCost: ClientVersion
+        /// GetManaCost -> GetSpellId: spellName, rank
+        /// GetSpellId --> GetManaCost: parId
+        /// GetManaCost -> MemoryManager: ReadUint
+        /// MemoryManager --> GetManaCost: uint
+        /// GetManaCost -> MemoryManager: ReadIntPtr
+        /// MemoryManager --> GetManaCost: entryPtr
+        /// GetManaCost -> MemoryManager: ReadInt
+        /// MemoryManager --> GetManaCost: int
+        /// alt ClientVersion not Vanilla
+        /// GetManaCost -> GetSpellId: spellName, rank
+        /// GetSpellId --> GetManaCost: spellId
+        /// GetManaCost -> Functions: GetSpellDBEntry
+        /// Functions --> GetManaCost: SpellDBEntry
+        /// GetManaCost -> SpellDBEntry: Cost
+        /// SpellDBEntry --> GetManaCost: int
+        /// end
+        /// \enduml
+        /// </remarks>
         public int GetManaCost(string spellName, int rank = -1)
         {
             if (ClientHelper.ClientVersion == ClientVersion.Vanilla)
@@ -582,6 +782,18 @@ namespace BloogBot.Game.Objects
         /// <summary>
         /// Casts a spell by its name on a target with the specified GUID.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "CastSpell Method" as CS
+        /// participant "GetSpellId Method" as GS
+        /// participant "Functions" as F
+        /// CS -> GS: GetSpellId(spellName)
+        /// activate GS
+        /// GS --> CS: return spellId
+        /// deactivate GS
+        /// CS -> F: CastSpellById(spellId, targetGuid)
+        /// \enduml
+        /// </remarks>
         public void CastSpell(string spellName, ulong targetGuid)
         {
             var spellId = GetSpellId(spellName);
@@ -591,6 +803,16 @@ namespace BloogBot.Game.Objects
         /// <summary>
         /// Determines if the current position is in line of sight with the specified position.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "Position" as P
+        /// participant "Functions" as F
+        /// participant "InLosWith" as I
+        /// P -> F: Intersect(Position, position)
+        /// F --> I: return i
+        /// I -> I: Check if i.X, i.Y, i.Z are all 0
+        /// \enduml
+        /// </remarks>
         public bool InLosWith(Position position)
         {
             var i = Functions.Intersect(Position, position);
@@ -615,6 +837,13 @@ namespace BloogBot.Game.Objects
         /// <summary>
         /// Casts a spell at a specified position.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "CastSpellAtPosition Function" as CSAP
+        /// participant "Functions" as F
+        /// CSAP -> F: CastAtPosition(spellName, position)
+        /// \enduml
+        /// </remarks>
         public void CastSpellAtPosition(string spellName, Position position)
         {
             return;
@@ -624,6 +853,17 @@ namespace BloogBot.Game.Objects
         /// <summary>
         /// Checks if a spell with the specified name is set to auto-repeat.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "IsAutoRepeating Function" as A
+        /// participant "LuaCallWithResults Function" as B
+        /// participant "Console" as C
+        /// 
+        /// A -> B: Executes Lua script
+        /// B --> A: Returns result
+        /// A -> C: Writes result to console
+        /// \enduml
+        /// </remarks>
         public bool IsAutoRepeating(string name)
         {
             string luaString = $@"
@@ -653,6 +893,17 @@ namespace BloogBot.Game.Objects
         /// <summary>
         /// Formats a Lua string with the provided arguments.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "Caller" as C
+        /// participant "FormatLua Function" as F
+        /// C -> F: Call(FormatLua)
+        /// activate F
+        /// F -> F: Format(str, names)
+        /// F --> C: Return(formatted string)
+        /// deactivate F
+        /// \enduml
+        /// </remarks>
         private static string FormatLua(string str, params object[] names)
         {
             return string.Format(str, names.Select(s => s.ToString().Replace("'", "\\'").Replace("\"", "\\\"")).ToArray());
@@ -732,6 +983,14 @@ namespace BloogBot.Game.Objects
         /// <summary>
         /// Checks if the specified ID has been visited.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "Function Caller" as FC
+        /// participant "HasVisitedWp Function" as HVF
+        /// FC -> HVF: HasVisitedWp(id)
+        /// HVF --> FC: return m_VisitedWps.Contains(id)
+        /// \enduml
+        /// </remarks>
         public bool HasVisitedWp(int id)
         {
             return m_VisitedWps.Contains(id);
@@ -744,8 +1003,8 @@ namespace BloogBot.Game.Objects
         /// <summary>
         /// Gets or sets the blacklisted waypoints.
         /// </summary>
-        private static HashSet<int> m_BlackListedWps = new HashSet<int> { 
-            35, 118, 168, 300, 320, 359, 627, 628, 629, 795, 796, 804, 805, 
+        private static HashSet<int> m_BlackListedWps = new HashSet<int> {
+            35, 118, 168, 300, 320, 359, 627, 628, 629, 795, 796, 804, 805,
             806, 807, 808, 809, 857, 993, 1093, 1094, 1100, 1180, 1359, 1364,
             1369, 1426, 1438, 1444, 1445, 1456, 1462, 1463, 1464, 1465, 1466,
             1566, 1614, 2388, 2571, 2584, 5050, 5067, 5068, 5069, 5070 };
@@ -927,6 +1186,23 @@ namespace BloogBot.Game.Objects
         /// <summary>
         /// Retrieves a list of all spells within a specified level range.
         /// </summary>
+        /// <remarks>
+        /// \startuml
+        /// participant "Caller" as C
+        /// participant "GetAllSpellsInLevelRange" as G
+        /// participant "m_LevelSpellsDict" as D
+        /// C -> G: GetAllSpellsInLevelRange(min, max)
+        /// activate G
+        /// G -> D: Where(kv => (kv.Key >= min && kv.Key <= max))
+        /// activate D
+        /// D --> G: Return filtered dictionary
+        /// deactivate D
+        /// G -> G: SelectMany(kv => kv.Value)
+        /// G -> G: ToList()
+        /// G --> C: Return List<int>
+        /// deactivate G
+        /// \enduml
+        /// </remarks>
         public static List<int> GetAllSpellsInLevelRange(int min, int max)
         {
             return m_LevelSpellsDict

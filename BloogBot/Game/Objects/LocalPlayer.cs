@@ -357,8 +357,14 @@ namespace BloogBot.Game.Objects
         // the client will NOT send a packet to the server if a key is already pressed, so you're safe to spam this
         /// <remarks>
         /// \startuml
-        /// PersonA -> PersonB: Hello PersonB, how are you?
-        /// PersonB --> PersonA: I am good!
+        /// ControlBits -> StartMovement: StartMovement(ControlBits bits)
+        /// StartMovement -> ControlBits: bits == ControlBits.Nothing
+        /// alt bits == ControlBits.Nothing
+        /// StartMovement --> ControlBits: return
+        /// else bits != ControlBits.Nothing
+        /// StartMovement -> Logger: LogVerbose($"StartMovement: {bits}")
+        /// StartMovement -> Functions: SetControlBit((int)bits, 1, Environment.TickCount)
+        /// end
         /// \enduml
         /// </remarks>
         public void StartMovement(ControlBits bits)

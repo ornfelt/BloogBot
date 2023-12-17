@@ -471,8 +471,24 @@ namespace BloogBot.Game.Objects
         /// </summary>
         /// <remarks>
         /// \startuml
-        /// Example_Object_A -> Example_Object_B: Hello Example_Object_B, how are you?
-        /// Example_Object_B --> Example_Object_A: I am good!
+        /// GetDebuffs -> LuaTarget: target
+        /// GetDebuffs -> ClientHelper: ClientVersion == ClientVersion.Vanilla
+        /// alt ClientVersion.Vanilla
+        ///     GetDebuffs -> LuaCallWithResults: "{0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10} = UnitDebuff('" + target.ToString().ToLower() + "', " + i + ")"
+        ///     LuaCallWithResults --> GetDebuffs: result
+        ///     GetDebuffs -> Enum: TryParse(debuffTypeString, out EffectType type)
+        ///     Enum --> GetDebuffs: success, type
+        ///     GetDebuffs -> SpellEffect: new SpellEffect(icon, Convert.ToInt32(stackCount), type)
+        ///     SpellEffect --> GetDebuffs: SpellEffect
+        /// else Not ClientVersion.Vanilla
+        ///     GetDebuffs -> LuaCallWithResults: "{0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10} = UnitDebuff('" + target.ToString().ToLower() + "', " + i + ")"
+        ///     LuaCallWithResults --> GetDebuffs: result
+        ///     GetDebuffs -> Enum: TryParse(debuffTypeString, out EffectType type)
+        ///     Enum --> GetDebuffs: success, type
+        ///     GetDebuffs -> SpellEffect: new SpellEffect(icon, Convert.ToInt32(stackCount), type)
+        ///     SpellEffect --> GetDebuffs: SpellEffect
+        /// end
+        /// GetDebuffs --> : return debuffs
         /// \enduml
         /// </remarks>
         public IEnumerable<SpellEffect> GetDebuffs(LuaTarget target)

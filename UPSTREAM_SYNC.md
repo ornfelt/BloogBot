@@ -3,14 +3,14 @@
 Upstream: <https://github.com/DrewKestell/BloogBot> branch `main`, cloned at
 `$USERPROFILE/Downloads/BloogBot`, wired into this repo as the `upstream-local` remote.
 Fork point: `1d0057c` - Merge branch 'main' of github.com:DrewKestell/BloogBot into main
-High-water mark: `a3733da` (every commit up to and including this one is decided)
+High-water mark: `1260c1b` (every commit up to and including this one is decided)
 Upstream history is **not linear** at the start of this range: `a5e450a` and `569d3cb` both branch
 directly off the fork point and rejoin at the merge `f22af34`. So while those two were the
 high-water mark, `rev-list <mark>..upstream-local/main` over-counted by one (it still listed the
 parallel sibling). From `f22af34` on the history is linear - no further merge commits in the
 range - and the count is exact again.
 Upstream HEAD when last checked: `a9be5e8` `BeastmasterHunterBot: LOS checks, pet management, rest state rewrite` (2026-09-20)
-Remaining after the high-water mark: `53`
+Remaining after the high-water mark: `52`
 Local customizations: guarded by `USE_CUSTOM_CHANGES`, defined in `BloogBot/BloogBot.csproj`,
 `FrostMageBot/FrostMageBot.csproj` and `Loader/Loader.vcxproj`. `ArmsWarriorBot` and
 `ShadowPriestBot` had their toggles removed after `569d3cb` left them with no guards.
@@ -39,6 +39,7 @@ landed; only the mirror waits.
 | 6 | `5c8fd85` | FrostMageBot/CombatState: add some unstucking logic | applied | - | Clean cherry-pick, no conflicts. Adds an `unstucking` mode to `FrostMageBot/CombatState.cs`: if the target is still at >=99% health 30 s after the combat state started, the bot pushes a `StuckState` and then walks toward the target via `Navigation.GetNextWaypoint` until it lands a hit, bailing out to `CreateMoveToTargetState` if `container.FindThreat()` turns up an aggressor. Needs new `botStates`/`container` fields, a `combatStateStartTime`, and two `using` lines (`BloogBot`, plus an unused `System.Security` - upstream's, taken as-is). The fork had never touched this file; its copy was byte-identical to upstream's parent. mirror n/a: no guarded file touched. Note the new code *calls into* three guarded subsystems - `FindThreat()` (fork rewrite in the `#if` branch, identical signature in both), `StuckState` (`WpStuckCount`-scaled distance and move time when the symbol is on) and `Navigation.GetNextWaypoint` (fork suppresses its 'Problem building path' log). So the unstuck path behaves differently between the two configurations by design - that is the guards working, not a mirror candidate. |
 | 7 | `ade1551` | RepairEquipmentState: walk to NPC before interacting | applied | - | Clean cherry-pick, no conflicts. Four lines in `BloogBot/AI/SharedStates/RepairEquipmentState.cs`: once the repair NPC has been resolved and `state` set to `Interacting`, the state now pushes a `MoveToPositionState` at the NPC's position and returns, so the bot walks to the NPC before the `Interacting` branch runs on a later tick. The fork had never touched this file; its copy was byte-identical to upstream's parent. mirror n/a: no guarded file touched. As with `5c8fd85`, the new code calls into a guarded subsystem - `MoveToPositionState` pops at distance <5 with a stuck cap of 15 when the symbol is on, versus upstream's <3 and 20, and the `#if` branch adds a ghost-form early pop. So the walk-to-NPC step ends slightly further out and gives up sooner in the on-configuration. That is the guard working as intended, not a defect to mirror. |
 | 8 | `a3733da` | MoveToPositionState: allow setting a deadline | applied | - | Clean cherry-pick, no conflicts, despite this being the first commit to touch a guarded file since `569d3cb`. Adds an optional `deadline` constructor parameter (`int`, default `-1`) to `BloogBot/AI/SharedStates/MoveToPositionState.cs`, stored in a new readonly field, plus a `using System;`. When `deadline > 0` and `Environment.TickCount` has passed it, the state stops movement and pops. Every edit landed in shared, unguarded code: the field, the constructor and the new check all sit outside the file's two `#if` regions, which wrap only the distance/stuck pop conditions inside the `use2DPop` if/else. The new check is placed after both of those, so it reads the same in either configuration. mirror n/a: a new opt-in feature, not a correction - and it is unguarded, so the `#if` branch already has it verbatim. No caller passes a deadline yet (all 43 construction sites in the tree use the default), so nothing changes at runtime today; a later upstream commit presumably starts using it. |
+| 9 | `1260c1b` | RetrieveCorpseState: add some unstucking logic | applied | - | Clean cherry-pick, no conflicts. The one file touched carries 3 guard regions but every upstream hunk fell in the shared code between them. The res-location search now paths from `player.Position` instead of `player.CorpsePosition` and checks the end point's distance to the corpse (the two were swapped before), remembers tried grid indices in a new `attemptedResLocIndices` set, pushes `MoveToPositionState` with a 60 s `deadline` (the parameter `a3733da` added), and re-initialises when that state pops with the player still more than `resDistance` from the corpse; a new `resurrecting` flag stops that re-check once the corpse position resets to (0,0) after the res. Also drops the stale commented-out `Thread.Sleep(5000)`. The preprocessed off-view of the file is byte-identical to upstream `1260c1b`. mirror n/a: none of the three `#if` regions (25 vs 30 constant, ghost-form early pop plus `WpStuckCount` reset, res-location log) duplicates the code upstream fixed, so both configurations take the fix through the shared text. The fork's `MoveToPositionState` `#if` pop (ghost form and `stuckCount > 3`) fires before upstream's 60 s deadline and returns to the same retry loop, so the two do not fight. Both builds green: 0 errors, 12 warnings each, no CS1587/CS1570. |
 
 ## Guarded files
 
@@ -111,8 +112,4 @@ Deliberately not guarded, per the skill's do-not-guard list:
 
 ## Open questions
 
-None. The next run starts at `1260c1b` ('RetrieveCorpseState: add some unstucking logic'). That one
-touches `BloogBot/AI/SharedStates/RetrieveCorpseState.cs`, which carries 3 guard regions (`resDistance`
-25 vs 30, the ghost-form bail-out and `WpStuckCount` reset, the res-location log), and it is one of the
-four 'check for stuckness' commits the skill flags as a likely ask because the fork has its own
-`StuckHelper`/`StuckState` customizations. Expect a real conflict and a step 6 mirror decision.
+None. The next run starts at `fc7c7fd` ('Fix crash').

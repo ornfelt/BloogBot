@@ -53,6 +53,27 @@ namespace BloogBot.AI
             stopCallback?.Invoke();
         }
 
+        public void Login(IDependencyContainer container, Action stopCallback)
+        {
+            this.stopCallback = stopCallback;
+
+            try
+            {
+                running = true;
+
+                ThreadSynchronizer.RunOnMainThread(() =>
+                {
+                    botStates.Push(new LoginState(botStates, container));
+                });
+
+                StartInternal(container);
+            }
+            catch (Exception e)
+            {
+                Logger.Log(e);
+            }
+        }
+
         public void Start(IDependencyContainer container, Action stopCallback)
         {
             this.stopCallback = stopCallback;
@@ -86,7 +107,7 @@ namespace BloogBot.AI
                 Logger.Log(e);
             }
         }
-        
+
 #if USE_CUSTOM_CHANGES
         private void ResetValues(IDependencyContainer container, bool resetLevel)
         {
@@ -179,7 +200,7 @@ namespace BloogBot.AI
             }
         }
 
-        public void StartPowerlevel(IDependencyContainer container,Action stopCallback)
+        public void StartPowerlevel(IDependencyContainer container, Action stopCallback)
         {
             this.stopCallback = stopCallback;
 
@@ -352,6 +373,19 @@ namespace BloogBot.AI
 
                     ThreadSynchronizer.RunOnMainThread(() =>
                     {
+                        // If we are disconnected, try logging in.
+                        if (LoginState.ShouldLogin() &&
+                            (botStates.Count == 0 || !(botStates.Peek() is LoginState)))
+                        {
+                            // We need to clear all states because some references are no longer
+                            // valid.
+                            botStates.Clear();
+                            botStates.Push(new GrindState(botStates, container));
+
+                            // Go to login state.
+                            botStates.Push(new LoginState(botStates, container));
+                        }
+
 #if USE_CUSTOM_CHANGES
                         var player = ObjectManager.Player;
                         // Short delay
@@ -417,6 +451,14 @@ namespace BloogBot.AI
                         if (botStates.Count() == 0)
                         {
                             Stop();
+                            return;
+                        }
+
+                        // If we are logging in, just call update here and skip everything else
+                        // because most stuff will fail due to invalid references.
+                        if (botStates.Peek() is LoginState)
+                        {
+                            botStates.Peek().Update();
                             return;
                         }
 
@@ -732,7 +774,7 @@ namespace BloogBot.AI
                             Console.WriteLine("Bot states empty...");
 #endif
                     });
-                    
+
 #if USE_CUSTOM_CHANGES
                     await Task.Delay(100);
 #else

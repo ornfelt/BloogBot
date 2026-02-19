@@ -551,6 +551,12 @@ namespace BloogBot.AI
 
                         if (botStates.Count > 0 && (botStates.Peek()?.GetType() == typeof(GrindState) || botStates.Peek()?.GetType() == typeof(PowerlevelState)))
                         {
+                            if (retrievingCorpse)
+                            {
+                                // We just resurrected. Let's rest.
+                                botStates.Push(container.CreateRestState(botStates, container));
+                            }
+
                             container.RunningErrands = false;
                             retrievingCorpse = false;
                         }
@@ -638,7 +644,6 @@ namespace BloogBot.AI
                             player.WpStuckCount = 0;
 #endif
 
-                            botStates.Push(container.CreateRestState(botStates, container));
 #if USE_CUSTOM_CHANGES
                             if (playerInBg)
                             {

@@ -24,6 +24,8 @@ namespace BloogBot.AI.SharedStates
         bool noLos;
         int noLosStartTime;
 
+        int combatStateStartTime;
+
 #if USE_CUSTOM_CHANGES
         private int loopTimer;
         private int lastTargetHealth;
@@ -40,6 +42,8 @@ namespace BloogBot.AI.SharedStates
             this.botStates = botStates;
             this.container = container;
             this.desiredRange = desiredRange;
+
+            combatStateStartTime = Environment.TickCount;
 
             WoWEventHandler.OnErrorMessage += OnErrorMessageCallback;
 
@@ -128,6 +132,15 @@ namespace BloogBot.AI.SharedStates
                 return true;
             }
 
+            // If we haven't dealt any damage to the target for 30 seconds, we're probably stuck.
+            if (Environment.TickCount - combatStateStartTime > 30 * 1000 && target.HealthPercent >= 99)
+            {
+                // Add the target to the in-memory blacklist and stop fighting it.
+                container.Probe.BlacklistedMobIds.Add(target.Guid);
+                botStates.Pop();
+                return true;
+            }
+
             // see if somebody else stole the mob we were targeting
 #if USE_CUSTOM_CHANGES
             if (target.TappedByOther || player.Health <= 0 || target.Name == player.BotFriend)
@@ -160,7 +173,8 @@ namespace BloogBot.AI.SharedStates
                 {
                     // We also need to do the same check against the threat we found.
                     var checkThreat = ObjectManager.Units.FirstOrDefault(u => u.Guid == threat.Guid);
-                    if (threat.Health == 0 || threat.TappedByOther || checkThreat == null) {
+                    if (threat.Health == 0 || threat.TappedByOther || checkThreat == null)
+                    {
                         return true;
                     }
 

@@ -19,6 +19,7 @@ namespace BloogBot.AI.SharedStates
         readonly int desiredRange;
         readonly LocalPlayer player;
         readonly WoWUnit target;
+        readonly bool loot;
 
         bool backpedaling;
         int backpedalStartTime;
@@ -34,7 +35,12 @@ namespace BloogBot.AI.SharedStates
         static readonly Random random = new Random();
 #endif
 
-        public CombatStateBase(Stack<IBotState> botStates, IDependencyContainer container, WoWUnit target, int desiredRange)
+        public CombatStateBase(
+            Stack<IBotState> botStates,
+            IDependencyContainer container,
+            WoWUnit target,
+            int desiredRange,
+            bool loot = true)
         {
             player = ObjectManager.Player;
             this.target = target;
@@ -43,6 +49,7 @@ namespace BloogBot.AI.SharedStates
             this.botStates = botStates;
             this.container = container;
             this.desiredRange = desiredRange;
+            this.loot = loot;
 
             combatStateStartTime = Environment.TickCount;
 
@@ -170,7 +177,10 @@ namespace BloogBot.AI.SharedStates
                 if (Wait.For("PopCombatState", 1500))
                 {
                     CleanUp();
-                    botStates.Push(new LootState(botStates, container, target));
+                    if (loot)
+                    {
+                        botStates.Push(new LootState(botStates, container, target));
+                    }
                 }
 
                 var threat = container.FindThreat();
@@ -184,7 +194,7 @@ namespace BloogBot.AI.SharedStates
                         return true;
                     }
 
-                    botStates.Push(container.CreateMoveToTargetState(botStates, container, threat));
+                    botStates.Push(container.CreateCombatState(botStates, container, threat, loot));
                 }
 
                 return true;

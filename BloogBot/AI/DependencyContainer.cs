@@ -25,6 +25,7 @@ namespace BloogBot.AI
             Func<Stack<IBotState>, IDependencyContainer, IBotState> createRestState,
             Func<Stack<IBotState>, IDependencyContainer, WoWUnit, IBotState> createMoveToTargetState,
             Func<Stack<IBotState>, IDependencyContainer, WoWUnit, WoWPlayer, IBotState> createPowerlevelCombatState,
+            Func<Stack<IBotState>, IDependencyContainer, WoWUnit, bool, IBotState> createCombatState,
             BotSettings botSettings,
             Probe probe,
             IEnumerable<Hotspot> hotspots)
@@ -34,6 +35,7 @@ namespace BloogBot.AI
             CreateRestState = createRestState;
             CreateMoveToTargetState = createMoveToTargetState;
             CreatePowerlevelCombatState = createPowerlevelCombatState;
+            CreateCombatState = createCombatState;
             BotSettings = botSettings;
             Probe = probe;
             Hotspots = hotspots;
@@ -44,6 +46,8 @@ namespace BloogBot.AI
         public Func<Stack<IBotState>, IDependencyContainer, WoWUnit, IBotState> CreateMoveToTargetState { get; }
 
         public Func<Stack<IBotState>, IDependencyContainer, WoWUnit, WoWPlayer, IBotState> CreatePowerlevelCombatState { get; }
+
+        public Func<Stack<IBotState>, IDependencyContainer, WoWUnit, bool, IBotState> CreateCombatState { get; }
 
         public BotSettings BotSettings { get; }
 
@@ -302,6 +306,8 @@ namespace BloogBot.AI
 #else
         public Hotspot GetCurrentHotspot() => BotSettings.GrindingHotspot;
 #endif
+
+        public GatherRoute GetCurrentGatherRoute() => BotSettings.CurrentGatherRoute;
 
         public void CheckForTravelPath(Stack<IBotState> botStates, bool reverse, bool needsToRest = true)
         {

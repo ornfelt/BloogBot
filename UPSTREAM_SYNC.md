@@ -3,9 +3,9 @@
 Upstream: <https://github.com/DrewKestell/BloogBot> branch `main`, cloned at
 `$USERPROFILE/Downloads/BloogBot`, wired into this repo as the `upstream-local` remote.
 Fork point: `1d0057c` - Merge branch 'main' of github.com:DrewKestell/BloogBot into main
-High-water mark: `a5e450a` (every commit up to and including this one is decided)
+High-water mark: `569d3cb` (every commit up to and including this one is decided)
 Upstream HEAD when last checked: `a9be5e8` `BeastmasterHunterBot: LOS checks, pet management, rest state rewrite` (2026-09-20)
-Remaining after the high-water mark: `60`
+Remaining after the high-water mark: `59`
 Local customizations: guarded by `USE_CUSTOM_CHANGES`, defined in `BloogBot/BloogBot.csproj`,
 `ArmsWarriorBot/ArmsWarriorBot.csproj`, `FrostMageBot/FrostMageBot.csproj`,
 `ShadowPriestBot/ShadowPriestBot.csproj` and `Loader/Loader.vcxproj`
@@ -26,6 +26,7 @@ landed; only the mirror waits.
 | --- | --- | --- | --- | --- | --- |
 | - | `1d0057c` | (fork point - Phase 0 setup) | applied | - | XML doc comments stripped, all customizations guarded, toggles wired, both builds green. No upstream commit landed. |
 | 1 | `a5e450a` | More information when building path | adapted | `BloogBot/Navigation.cs` | Upstream expanded the 'Problem building path' log with the mapId and an mmaps hint. Took it into the `#else` branch verbatim; the `#if` branch suppresses that log entirely and was left alone. mirror n/a: the customization removes the log, so a better message has no subject in the `#if` branch - a diagnostic improvement, not a correction. |
+| 2 | `569d3cb` | Perf fixes | adapted | `ArmsWarriorBot/CombatState.cs`, `BloogBot/AI/Bot.cs`, `BloogBot/AI/DependencyContainer.cs`, `BloogBot/Game/ObjectManager.cs`, `FrostMageBot/ConjureItemsState.cs`, `FrostMageBot/RestState.cs`, `ShadowPriestBot/CombatState.cs` (all 7) | Upstream's text went into the `#else` branch in every file; no `#if` branch was touched. Verified by preprocessing the off-configuration of all 7 files and diffing against upstream `569d3cb` - identical apart from the known unguarded dead `using` lines. `ObjectManager.IsGrouped` was deleted by upstream and its four surviving references all sat in `#else` branches that the same commit rewrote, so the off-build still resolves. `Bot.cs`: the 25 -> 50 delay hit the guarded call site in `Start` (`#if` keeps 100); the unguarded one in `StartPowerlevel` is 25 upstream and here. `DependencyContainer.cs`: upstream's rewritten `FindThreat`/`FindClosestTarget` replaced the old single-expression forms in `#else`. mirror n/a (all 7): upstream converged on changes the `#if` branch already had - `.ToList()`, wand slot 12, the wand condition, mana<=70, the party-aware rest/drink drops, party members out of `Aggressors`, and the straight-line target ordering - except `Bot.cs`, where 50 is a tuning value against the fork's deliberate 100. Left 8 guards whose `#if` and `#else` are now identical - see Open questions. |
 
 ## Guarded files
 
@@ -89,4 +90,18 @@ Deliberately not guarded, per the skill's do-not-guard list:
 
 ## Open questions
 
-None. The next run starts at `569d3cb` ('Perf fixes').
+- **`569d3cb` - collapse the 8 guards that upstream made redundant?** The commit has landed and both
+  builds are green; this is a cleanup decision, not a blocker. Upstream independently adopted eight
+  changes the fork had already made, so those guards now hold **identical text in both branches**
+  (verified mechanically, 8 of 76 guard regions):
+  `ArmsWarriorBot/CombatState.cs:53` (`.ToList()`), `BloogBot/Game/ObjectManager.cs:195` (party members
+  out of `Aggressors`), `FrostMageBot/ConjureItemsState.cs:61` (`ManaPercent <= 70`),
+  `FrostMageBot/RestState.cs:49,78,89` (`InCombat`, the drink condition, `ManaOk`),
+  `ShadowPriestBot/CombatState.cs:13,61` (wand action slot 12, the wand condition).
+  Options: **(a)** drop those 8 guards and keep the single shared line - this empties
+  `ArmsWarriorBot` and `ShadowPriestBot` of guards entirely, so their csproj toggles could go too;
+  **(b)** leave them in place as inert markers of where the fork and upstream once differed.
+  Recommendation: **(a)** - a guard with identical branches is not a behavioural divergence and the
+  skill says only real divergence gets guarded. It is a separate, reviewable cleanup commit, so it
+  should not ride along with an upstream cherry-pick.
+  Answer with `skip`-style instruction in a later run, or just say which option.

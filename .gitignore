@@ -285,3 +285,6 @@ botSettings.json
 
 # Doxygen
 **/generated-docs/
+
+bloogbot_downloaded_vs_prefork.diff
+bloogbot_current_vs_prefork.diff

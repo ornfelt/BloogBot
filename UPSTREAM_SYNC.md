@@ -15,6 +15,13 @@ Statuses: `applied` (cherry-picked clean), `adapted` (landed, conflicts resolved
 `partial` (part landed, part dropped - the notes say which), `skipped` (deliberately not landed),
 `asked` (waiting on an answer from the user, cherry-pick left in progress or aborted).
 
+Every commit that touched a guarded file also carries a mirror verdict in `Notes`, one of
+`mirror pending` (asked, unanswered - blocks the next commit), `mirrored`, `mirror declined: <reason>`
+or `mirror n/a: <reason>`. It answers: did upstream fix a bug that the `#if USE_CUSTOM_CHANGES`
+branch has too? A cherry-pick only ever patches the `#else` half, so without this the fix lands in
+the configuration nobody runs. A commit with a pending mirror keeps its real status - the commit
+landed; only the mirror waits.
+
 | # | Commit | Subject | Status | Conflicts | Notes |
 | --- | --- | --- | --- | --- | --- |
 | - | `1d0057c` | (fork point - Phase 0 setup) | applied | - | XML doc comments stripped, all customizations guarded, toggles wired, both builds green. No upstream commit landed. |

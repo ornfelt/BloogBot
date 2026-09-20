@@ -9,8 +9,12 @@ namespace BloogBot.AI.SharedStates
 {
     public class RetrieveCorpseState : IBotState
     {
+#if USE_CUSTOM_CHANGES
         const int resDistance = 25;
         static readonly Random random = new Random();
+#else
+        const int resDistance = 30;
+#endif
 
         // res distance is around 36 units, so we build up a grid of 38 units 
         // in every direction, adding 1 to account for the center.
@@ -31,12 +35,14 @@ namespace BloogBot.AI.SharedStates
 
         public void Update()
         {
+#if USE_CUSTOM_CHANGES
             player.WpStuckCount = 0; // Reset WpStuckCount
             if (!player.InGhostForm)
             {
                 botStates.Pop();
                 return;
             }
+#endif
             if (!initialized)
             {
                 // corpse position is wrong immediately after releasing, so we wait for 5s.
@@ -68,9 +74,12 @@ namespace BloogBot.AI.SharedStates
                         }
                     }
 
+#if USE_CUSTOM_CHANGES
                     // Reslocations are > 300 so the threat search takes a long time to execute
                     Console.WriteLine("Reslocations: " + resLocs.Length);
+#endif
                     var maxDistance = 0f;
+
                     foreach (var resLoc in resLocs)
                     {
                         var path = Navigation.CalculatePath(ObjectManager.MapId, player.CorpsePosition, resLoc, false);

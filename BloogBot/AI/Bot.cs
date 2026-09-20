@@ -1,7 +1,9 @@
 ﻿using BloogBot.AI.SharedStates;
 using BloogBot.Game;
 using BloogBot.Game.Enums;
+#if USE_CUSTOM_CHANGES
 using BloogBot.Game.Objects;
+#endif
 using BloogBot.UI;
 using System;
 using System.Collections.Generic;
@@ -10,8 +12,10 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+#if USE_CUSTOM_CHANGES
 using System.Net;
 using System.Net.Mail;
+#endif
 
 namespace BloogBot.AI
 {
@@ -19,7 +23,9 @@ namespace BloogBot.AI
     {
         readonly Stack<IBotState> botStates = new Stack<IBotState>();
         readonly Stopwatch stopwatch = new Stopwatch();
+#if USE_CUSTOM_CHANGES
         static readonly Random random = new Random();
+#endif
 
         bool running;
         bool retrievingCorpse;
@@ -57,7 +63,19 @@ namespace BloogBot.AI
 
                 ThreadSynchronizer.RunOnMainThread(() =>
                 {
+#if USE_CUSTOM_CHANGES
                     ResetValues(container, true);
+#else
+                    currentLevel = ObjectManager.Player.Level;
+
+                    botStates.Push(new GrindState(botStates, container));
+
+                    currentState = botStates.Peek().GetType();
+                    currentStateStartTime = Environment.TickCount;
+                    currentPosition = ObjectManager.Player.Position;
+                    currentPositionStartTime = Environment.TickCount;
+                    teleportCheckPosition = ObjectManager.Player.Position;
+#endif
                 });
 
                 container.CheckForTravelPath(botStates, false);
@@ -68,7 +86,8 @@ namespace BloogBot.AI
                 Logger.Log(e);
             }
         }
-
+        
+#if USE_CUSTOM_CHANGES
         private void ResetValues(IDependencyContainer container, bool resetLevel)
         {
             var player = ObjectManager.Player;
@@ -103,6 +122,7 @@ namespace BloogBot.AI
             player.HasOverLeveled = false;
             player.LastKnownMapId = ObjectManager.MapId;
         }
+#endif
 
         public void Travel(IDependencyContainer container, bool reverseTravelPath, Action callback)
         {
@@ -149,7 +169,9 @@ namespace BloogBot.AI
                 });
 
                 StartInternal(container);
+#if USE_CUSTOM_CHANGES
                 Console.ReadLine();
+#endif
             }
             catch (Exception e)
             {
@@ -157,7 +179,7 @@ namespace BloogBot.AI
             }
         }
 
-        public void StartPowerlevel(IDependencyContainer container, Action stopCallback)
+        public void StartPowerlevel(IDependencyContainer container,Action stopCallback)
         {
             this.stopCallback = stopCallback;
 
@@ -330,6 +352,7 @@ namespace BloogBot.AI
 
                     ThreadSynchronizer.RunOnMainThread(() =>
                     {
+#if USE_CUSTOM_CHANGES
                         var player = ObjectManager.Player;
                         // Short delay
                         if (player.ShouldWaitForShortDelay && Wait.For("ShortDelay", 600))
@@ -389,6 +412,7 @@ namespace BloogBot.AI
                             ResetValues(container, false);
                             player.LastKnownMapId = mapId;
                         }
+#endif
 
                         if (botStates.Count() == 0)
                         {
@@ -396,13 +420,18 @@ namespace BloogBot.AI
                             return;
                         }
 
+#if USE_CUSTOM_CHANGES
                         if (!player.IsInCombat && player.HasItemsToEquip)
                         {
                             if (player.LevelItemsDict.TryGetValue(player.Level, out List<int> itemIds))
                                 player.LuaCall(string.Join(" ", itemIds.Select(id => $"EquipItemByName({id}); StaticPopup1Button1:Click();")));
                             player.HasItemsToEquip = false;
                         }
+#else
+                        var player = ObjectManager.Player;
+#endif
 
+#if USE_CUSTOM_CHANGES
                         if (!playerInBg && !player.IsInCombat && player.Level > currentLevel)
                         {
                             currentLevel = player.Level;
@@ -442,6 +471,13 @@ namespace BloogBot.AI
                                 }
                             }
                         }
+#else
+                        if (player.Level > currentLevel)
+                        {
+                            currentLevel = player.Level;
+                            DiscordClientWrapper.SendMessage($"Ding! {player.Name} is now level {player.Level}!");
+                        }
+#endif
 
                         player.AntiAfk();
 
@@ -477,6 +513,7 @@ namespace BloogBot.AI
                             retrievingCorpse = false;
                         }
 
+#if USE_CUSTOM_CHANGES
                         var HasBeenForcedToTeleport = false;
                         // if the player has been stuck in combat for more than 3 minutes
                         if (Environment.TickCount - currentStateStartTime > 180000 && currentState.IsSubclassOf(typeof(CombatStateBase)))
@@ -493,17 +530,24 @@ namespace BloogBot.AI
                             botStates.Push(new GrindState(botStates, container));
                             HasBeenForcedToTeleport = true;
                         }
+#endif
 
                         // if the player has been stuck in the same state for more than 5 minutes
+#if USE_CUSTOM_CHANGES
                         if ((Environment.TickCount - currentStateStartTime > 300000 && currentState != typeof(TravelState) && container.BotSettings.UseStuckInStateKillswitch) || player.WpStuckCount > 200)
                         {
                             HandleBotStuck(container, player, true);
-                            //var msg = $"Hey, it's {player.Name}, and I need help! I've been stuck in the {currentState.Name} for over 5 minutes. I'm stopping for now.";
-                            //LogToFile(msg);
-                            //DiscordClientWrapper.SendMessage(msg);
-                            //Stop();
-                            //return;
                         }
+#else
+                        if (Environment.TickCount - currentStateStartTime > 300000 && currentState != typeof(TravelState) && container.BotSettings.UseStuckInStateKillswitch)
+                        {
+                            var msg = $"Hey, it's {player.Name}, and I need help! I've been stuck in the {currentState.Name} for over 5 minutes. I'm stopping for now.";
+                            LogToFile(msg);
+                            DiscordClientWrapper.SendMessage(msg);
+                            Stop();
+                            return;
+                        }
+#endif
                         if (botStates.Peek().GetType() != currentState)
                         {
                             currentState = botStates.Peek().GetType();
@@ -511,16 +555,21 @@ namespace BloogBot.AI
                         }
 
                         // if the player has been stuck in the same position for more than 5 minutes
-                        //if (Environment.TickCount - currentPositionStartTime >  420000 && container.BotSettings.UseStuckInPositionKillswitch)
+#if USE_CUSTOM_CHANGES
                         if (!HasBeenForcedToTeleport && Environment.TickCount - currentPositionStartTime > 300000 && container.BotSettings.UseStuckInPositionKillswitch)
                         {
                             HandleBotStuck(container, player, false);
-                            //var msg = $"Hey, it's {player.Name}, and I need help! I've been stuck in the same position for over 5 minutes. I'm stopping for now.";
-                            //LogToFile(msg);
-                            //DiscordClientWrapper.SendMessage(msg);
-                            //Stop();
-                            //return;
                         }
+#else
+                        if (Environment.TickCount - currentPositionStartTime > 300000 && container.BotSettings.UseStuckInPositionKillswitch)
+                        {
+                            var msg = $"Hey, it's {player.Name}, and I need help! I've been stuck in the same position for over 5 minutes. I'm stopping for now.";
+                            LogToFile(msg);
+                            DiscordClientWrapper.SendMessage(msg);
+                            Stop();
+                            return;
+                        }
+#endif
 
                         if (player.Position.DistanceTo(currentPosition) > 10)
                         {
@@ -531,19 +580,24 @@ namespace BloogBot.AI
                         // if the player dies
                         if ((player.Health <= 0 || player.InGhostForm) && !retrievingCorpse)
                         {
+#if USE_CUSTOM_CHANGES
                             player.DeathsAtWp++;
                             Console.WriteLine($"Player died. DeathsAtWp: {player.DeathsAtWp}");
                             player.ForcedWpPath = new List<int>();
+#endif
                             PopStackToBaseState();
 
                             retrievingCorpse = true;
                             container.RunningErrands = true;
 
                             container.DisableTeleportChecker = true;
+#if USE_CUSTOM_CHANGES
                             player.CurrWpId = 0;
                             player.WpStuckCount = 0;
+#endif
 
                             botStates.Push(container.CreateRestState(botStates, container));
+#if USE_CUSTOM_CHANGES
                             if (playerInBg)
                             {
                                 if (ObjectManager.MapId != 559)
@@ -555,8 +609,14 @@ namespace BloogBot.AI
                                 botStates.Push(new MoveToCorpseState(botStates, container));
                                 botStates.Push(new ReleaseCorpseState(botStates, container));
                             }
+#else
+                            botStates.Push(new RetrieveCorpseState(botStates, container));
+                            botStates.Push(new MoveToCorpseState(botStates, container));
+                            botStates.Push(new ReleaseCorpseState(botStates, container));
+#endif
                         }
 
+#if USE_CUSTOM_CHANGES
                         if (!playerInBg)
                         {
                             var currentHotspot = container.GetCurrentHotspot();
@@ -614,17 +674,70 @@ namespace BloogBot.AI
                             //    container.CheckForTravelPath(botStates, true);
                             //}
                         }
+#else
+                        var currentHotspot = container.GetCurrentHotspot();
+
+                        // if equipment needs to be repaired
+                        int mainhandDurability = Inventory.GetEquippedItem(EquipSlot.MainHand)?.DurabilityPercentage ?? 100;
+                        int offhandDurability = Inventory.GetEquippedItem(EquipSlot.Ranged)?.DurabilityPercentage ?? 100;
+
+                        // offhand throwns don't have durability, but instead register `-2147483648`.
+                        // This is a workaround to prevent that from causing us to get caught in a loop.
+                        // We default to a durability value of 100 for items that are null because 100 will register them as not needing repaired.
+                        if ((mainhandDurability <= 20 && mainhandDurability > -1 || (offhandDurability <= 20 && offhandDurability > -1)) && currentHotspot.RepairVendor != null && !container.RunningErrands)
+                        {
+                            ShapeshiftToHumanForm(container);
+                            PopStackToBaseState();
+
+                            container.RunningErrands = true;
+
+                            if (currentHotspot.TravelPath != null)
+                            {
+                                botStates.Push(new TravelState(botStates, container, currentHotspot.TravelPath.Waypoints, 0));
+                                botStates.Push(new MoveToPositionState(botStates, container, currentHotspot.TravelPath.Waypoints[0]));
+                            }
+
+                            botStates.Push(new RepairEquipmentState(botStates, container, currentHotspot.RepairVendor.Name));
+                            botStates.Push(new MoveToPositionState(botStates, container, currentHotspot.RepairVendor.Position));
+                            container.CheckForTravelPath(botStates, true);
+                        }
+
+                        // if inventory is full
+                        if (Inventory.CountFreeSlots(false) == 0 && currentHotspot.Innkeeper != null && !container.RunningErrands)
+                        {
+                            ShapeshiftToHumanForm(container);
+                            PopStackToBaseState();
+
+                            container.RunningErrands = true;
+
+                            if (currentHotspot.TravelPath != null)
+                            {
+                                botStates.Push(new TravelState(botStates, container, currentHotspot.TravelPath.Waypoints, 0));
+                                botStates.Push(new MoveToPositionState(botStates, container, currentHotspot.TravelPath.Waypoints[0]));
+                            }
+                            
+                            botStates.Push(new SellItemsState(botStates, container, currentHotspot.Innkeeper.Name));
+                            botStates.Push(new MoveToPositionState(botStates, container, currentHotspot.Innkeeper.Position));
+                            container.CheckForTravelPath(botStates, true);
+                        }
+#endif
 
                         if (botStates.Count > 0)
                         {
                             container.Probe.CurrentState = botStates.Peek()?.GetType().Name;
                             botStates.Peek()?.Update();
                         }
+#if USE_CUSTOM_CHANGES
                         else
                             Console.WriteLine("Bot states empty...");
+#endif
                     });
-
+                    
+#if USE_CUSTOM_CHANGES
                     await Task.Delay(100);
+#else
+                    await Task.Delay(25);
+#endif
 
                     container.Probe.UpdateLatency = $"{stopwatch.ElapsedMilliseconds}ms";
                 }
@@ -633,9 +746,12 @@ namespace BloogBot.AI
                     Logger.Log(e + "\n");
                 }
             }
+#if USE_CUSTOM_CHANGES
             Console.WriteLine("End of loop");
+#endif
         }
 
+#if USE_CUSTOM_CHANGES
         private void HandleLevelUp(LocalPlayer player, bool isSecondTry)
         {
             var playerLevel = player.Level;
@@ -727,13 +843,15 @@ namespace BloogBot.AI
             else
                 return false;
         }
+#endif
 
-        private void LogToFile(string text)
+        void LogToFile(string text)
         {
             var dir = Path.GetDirectoryName(Assembly.GetAssembly(typeof(MainViewModel)).CodeBase);
             var path = new UriBuilder(dir).Path;
             var file = Path.Combine(path, "StuckLog.txt");
 
+#if USE_CUSTOM_CHANGES
             if (File.Exists(file))
             {
                 using (var sw = File.AppendText(file))
@@ -741,8 +859,15 @@ namespace BloogBot.AI
                     sw.WriteLine(text);
                 }
             }
+#else
+            using (var sw = File.AppendText(file))
+            {
+                sw.WriteLine(text);
+            }
+#endif
         }
 
+#if USE_CUSTOM_CHANGES
         private void LogToFile(string fileName, string text)
         {
             var dir = Path.GetDirectoryName(Assembly.GetAssembly(typeof(MainViewModel)).CodeBase);
@@ -764,6 +889,7 @@ namespace BloogBot.AI
                 }
             }
         }
+#endif
 
         void ShapeshiftToHumanForm(IDependencyContainer container)
         {

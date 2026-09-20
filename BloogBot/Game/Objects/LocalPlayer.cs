@@ -476,6 +476,7 @@ namespace BloogBot.Game.Objects
             return string.Format(str, names.Select(s => s.ToString().Replace("'", "\\'").Replace("\"", "\\\"")).ToArray());
         }
 
+#if USE_CUSTOM_CHANGES
         // Keep track of current zone
         private static string m_CurrZone;
         public string CurrZone { get { return m_CurrZone; } set { m_CurrZone = value; } }
@@ -536,18 +537,9 @@ namespace BloogBot.Game.Objects
         private static bool m_ShouldTeleportToLastWp;
         public bool ShouldTeleportToLastWp { get { return m_ShouldTeleportToLastWp; } set { m_ShouldTeleportToLastWp = value; } }
 
-        /// <summary>
-        /// Gets or sets a value indicating whether the player is of faction Alliance or not.
-        /// </summary>
         private static bool m_IsAlly;
-        /// <summary>
-        /// Gets or sets a value indicating whether the player is of faction Alliance or not.
-        /// </summary>
         public bool IsAlly { get { return m_IsAlly; } set { m_IsAlly = value; } }
 
-        /// <summary>
-        /// The last known map ID.
-        /// </summary>
         private static uint m_LastKnownMapId;
         public uint LastKnownMapId { get { return m_LastKnownMapId; } set { m_LastKnownMapId = value; } }
 
@@ -713,13 +705,8 @@ namespace BloogBot.Game.Objects
             {78, new List<int> { 37038, 37113 }} // Wand, Wrist
         };
 
-        /// <summary>
-        /// The name of the bot's npcbot friend.
-        /// </summary>
         private static string m_BotFriend; // Lazarus (horde) or Zalduun (ally)
-        /// <summary>
-        /// The name of the bot's npcbot friend.
-        /// </summary>
         public string BotFriend { get { return m_BotFriend; } set { m_BotFriend = value; } }
+#endif
     }
 }

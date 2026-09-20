@@ -30,6 +30,14 @@
     <LangVersion>7.3</LangVersion>
     <ErrorReport>prompt</ErrorReport>
   </PropertyGroup>
+  <PropertyGroup>
+    <!-- Local customizations on top of upstream BloogBot. Set to false to build
+         the tree as upstream wrote it. Override per build with -p:UseCustomChanges=false -->
+    <UseCustomChanges Condition="'$(UseCustomChanges)'==''">true</UseCustomChanges>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(UseCustomChanges)'=='true'">
+    <DefineConstants>$(DefineConstants);USE_CUSTOM_CHANGES</DefineConstants>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />

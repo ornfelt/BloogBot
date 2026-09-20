@@ -28,11 +28,19 @@ namespace FrostMageBot
 
         public void Update()
         {
+#if USE_CUSTOM_CHANGES
             foodItem = Inventory.GetAllItems()
                 .FirstOrDefault(i => player.FoodNames.Contains(i.Info.Name) || i.Info.Name == container.BotSettings.Food);
 
             drinkItem = Inventory.GetAllItems()
                 .FirstOrDefault(i => player.DrinkNames.Contains(i.Info.Name) || i.Info.Name == container.BotSettings.Drink);
+#else
+            foodItem = Inventory.GetAllItems()
+                .FirstOrDefault(i => i.Info.Name == container.BotSettings.Food);
+
+            drinkItem = Inventory.GetAllItems()
+                .FirstOrDefault(i => i.Info.Name == container.BotSettings.Drink);
+#endif
 
             if (player.IsCasting)
                 return;
@@ -50,8 +58,13 @@ namespace FrostMageBot
             {
                 botStates.Pop();
 
+#if USE_CUSTOM_CHANGES
                 if (player.ManaPercent <= 70)
                     botStates.Push(new RestState(botStates, container));
+#else
+                if (player.ManaPercent <= 70 && !ObjectManager.IsGrouped)
+                    botStates.Push(new RestState(botStates, container));
+#endif
 
                 return;
             }

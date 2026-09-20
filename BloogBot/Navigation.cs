@@ -1,5 +1,5 @@
-﻿using BloogBot.AI;
-using BloogBot.Game;
+﻿using BloogBot.Game;
+using BloogBot.AI;
 using System;
 using System.IO;
 using System.Reflection;
@@ -9,7 +9,9 @@ namespace BloogBot
 {
     public unsafe class Navigation
     {
+#if USE_CUSTOM_CHANGES
         private static Random rand = new Random();
+#endif
         [DllImport("kernel32.dll")]
         static extern IntPtr LoadLibrary(string lpFileName);
 
@@ -70,8 +72,13 @@ namespace BloogBot
             var path = CalculatePath(mapId, start, end, straightPath);
             if (path.Length <= 1)
             {
+#if USE_CUSTOM_CHANGES
+                // Logging suppressed: this fires constantly while swimming or falling.
                 //if (!ObjectManager.Player.IsSwimming && !ObjectManager.Player.IsFalling && rand.Next(100) == 1)
                 //    Logger.Log($"Problem building path for mapId \"{mapId}\". Returning destination as next waypoint...");
+#else
+                Logger.Log("Problem building path. Returning destination as next waypoint...");
+#endif
                 return end;
             }
 

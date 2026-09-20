@@ -169,6 +169,7 @@ namespace BloogBot
         // depends on which version of the WoW client we're running.
         static internal void Initialize()
         {
+#if USE_CUSTOM_CHANGES
             bool useWarden = false;
             if (useWarden)
             {
@@ -228,6 +229,63 @@ namespace BloogBot
                 MemoryManager.InjectAssembly("WardenLoadHook", (uint)MemoryAddresses.WardenLoadHook, "JMP " + wardenLoadDetour);
                 InitializeModuleScanHook();
             }
+#else
+            string[] instructions = null;
+            if (ClientHelper.ClientVersion == ClientVersion.Vanilla)
+            {
+                disableWardenVanillaDelegate = DisableWardenVanilla;
+                var addrToDetour = Marshal.GetFunctionPointerForDelegate(disableWardenVanillaDelegate);
+
+                instructions = new[]
+                {
+                    "MOV[0xCE8978], EAX",
+                    "PUSHFD",
+                    "PUSHAD",
+                    "PUSH EAX",
+                    $"CALL {(uint)addrToDetour}",
+                    "POPAD",
+                    "POPFD",
+                    "JMP 0x006CA233"
+                };
+            }
+            else if (ClientHelper.ClientVersion == ClientVersion.TBC)
+            {
+                disableWardenTBCDelegate = DisableWardenTBC;
+                var addrToDetour = Marshal.GetFunctionPointerForDelegate(disableWardenTBCDelegate);
+
+                instructions = new[]
+                {
+                    "PUSHFD",
+                    "PUSHAD",
+                    $"CALL {(uint)addrToDetour}",
+                    "POPAD",
+                    "POPFD",
+                    "MOV ECX, 0x00E118EC",
+                    "JMP 0x006D0C01"
+                };
+            }
+            else if (ClientHelper.ClientVersion == ClientVersion.WotLK)
+            {
+                disableWardenWotLKDelegate = DisableWardenWotLK;
+                var addrToDetour = Marshal.GetFunctionPointerForDelegate(disableWardenWotLKDelegate);
+
+                instructions = new[]
+                {
+                    "PUSHFD",
+                    "PUSHAD",
+                    $"CALL {(uint)addrToDetour}",
+                    "POPAD",
+                    "POPFD",
+                    "MOV EAX, [EDI]",
+                    "MOV ECX, [EAX+8]",
+                    "JMP 0x008724C5"
+                };
+            }
+
+            var wardenLoadDetour = MemoryManager.InjectAssembly("WardenLoadDetour", instructions);
+            MemoryManager.InjectAssembly("WardenLoadHook", (uint)MemoryAddresses.WardenLoadHook, "JMP " + wardenLoadDetour);
+            InitializeModuleScanHook();
+#endif
         }
 
         static void DisableWardenVanilla(IntPtr _)

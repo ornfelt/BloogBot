@@ -26,11 +26,19 @@ namespace FrostMageBot
             this.container = container;
             player = ObjectManager.Player;
 
+#if USE_CUSTOM_CHANGES
             foodItem = Inventory.GetAllItems()
                 .FirstOrDefault(i => player.FoodNames.Contains(i.Info.Name) || i.Info.Name == container.BotSettings.Food);
 
             drinkItem = Inventory.GetAllItems()
                 .FirstOrDefault(i => player.DrinkNames.Contains(i.Info.Name) || i.Info.Name == container.BotSettings.Drink);
+#else
+            foodItem = Inventory.GetAllItems()
+                .FirstOrDefault(i => i.Info.Name == container.BotSettings.Food);
+
+            drinkItem = Inventory.GetAllItems()
+                .FirstOrDefault(i => i.Info.Name == container.BotSettings.Drink);
+#endif
         }
 
         public void Update()
@@ -38,7 +46,11 @@ namespace FrostMageBot
             if (player.IsChanneling)
                 return;
 
+#if USE_CUSTOM_CHANGES
             if (InCombat)
+#else
+            if (InCombat || ObjectManager.GetPartyMembers().Any(p => p.IsInCombat))
+#endif
             {
                 player.Stand();
                 botStates.Pop();
@@ -63,13 +75,25 @@ namespace FrostMageBot
             if (foodItem != null && !player.IsEating && player.HealthPercent < 80)
                 foodItem.Use();
 
+#if USE_CUSTOM_CHANGES
             if (drinkItem != null && !player.IsDrinking)
                 drinkItem.Use();
+#else
+            var drinkItemExists = drinkItem != null;
+            var soloCondition = !ObjectManager.IsGrouped && player.ManaPercent < 70;
+            var groupedCondition = ObjectManager.IsGrouped && (player.ManaPercent < 30 || (ObjectManager.GetPartyMembers().Any(p => p.IsDrinking) && player.ManaPercent < 70));
+            if (drinkItem != null && !player.IsDrinking && (soloCondition || groupedCondition))
+                drinkItem.Use();
+#endif
         }
 
         bool HealthOk => foodItem == null || player.HealthPercent >= 90 || (player.HealthPercent >= 80 && !player.IsEating);
 
+#if USE_CUSTOM_CHANGES
         bool ManaOk => drinkItem == null || player.ManaPercent >= 90 || (player.ManaPercent >= 80 && !player.IsDrinking);
+#else
+        bool ManaOk => drinkItem == null || player.ManaPercent >= 90 || (player.ManaPercent >= 80 && !player.IsDrinking) || (ObjectManager.GetPartyMembers().Any(p => p.IsDrinking) && player.ManaPercent >= 90) || (!ObjectManager.GetPartyMembers().Any(p => p.IsDrinking) && player.ManaPercent >= 30 && ObjectManager.IsGrouped);
+#endif
 
         bool InCombat => ObjectManager.Player.IsInCombat || ObjectManager.Units.Any(u => u.TargetGuid == ObjectManager.Player.Guid);
     }

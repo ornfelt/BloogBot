@@ -41,6 +41,7 @@ namespace BloogBot.AI.SharedStates
 
             if (use2DPop)
             {
+#if USE_CUSTOM_CHANGES
                 if (player.Position.DistanceTo2D(destination) < 5 || stuckCount > 15)
                 {
                     player.StopAllMovement();
@@ -49,6 +50,10 @@ namespace BloogBot.AI.SharedStates
                 }
                 else if (player.InGhostForm && stuckCount > 3)
                 {
+#else
+                if (player.Position.DistanceTo2D(destination) < 3 || stuckCount > 20)
+                {
+#endif
                     player.StopAllMovement();
                     botStates.Pop();
                     return;
@@ -56,6 +61,7 @@ namespace BloogBot.AI.SharedStates
             }
             else
             {
+#if USE_CUSTOM_CHANGES
                 if (player.Position.DistanceTo(destination) < 5 || stuckCount > 15)
                 {
                     player.StopAllMovement();
@@ -64,6 +70,10 @@ namespace BloogBot.AI.SharedStates
                 }
                 else if (player.InGhostForm && stuckCount > 3)
                 {
+#else
+                if (player.Position.DistanceTo(destination) < 3 || stuckCount > 20)
+                {
+#endif
                     player.StopAllMovement();
                     botStates.Pop();
                     return;

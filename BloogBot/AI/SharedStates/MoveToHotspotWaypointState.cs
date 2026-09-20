@@ -24,14 +24,20 @@ namespace BloogBot.AI.SharedStates
 
         public void Update()
         {
+#if USE_CUSTOM_CHANGES
             if (player.IsCasting)
                 return;
+#endif
             stuckHelper.CheckIfStuck();
-
+            
+#if USE_CUSTOM_CHANGES
             if ((container.FindClosestTarget() != null && 
                 Math.Abs(container.FindClosestTarget().Position.Z - player.Position.Z) < 16.0F) 
                 || player.Position.DistanceTo(destination) < 3
                 || player.WpStuckCount > 10)
+#else
+            if (container.FindClosestTarget() != null || player.Position.DistanceTo(destination) < 3)
+#endif
             {
                 player.StopAllMovement();
                 botStates.Pop();

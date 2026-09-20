@@ -30,6 +30,7 @@ namespace BloogBot.AI.SharedStates
 
         public void Update()
         {
+#if USE_CUSTOM_CHANGES
             var wpStuckCount = player.WpStuckCount+1;
             var posDistance = wpStuckCount < 5 || (player.InGhostForm && wpStuckCount > 10) ? 3 : random.Next(wpStuckCount, (wpStuckCount*20));
             var currWp = container.GetCurrentHotspot().Waypoints.Where(x => x.ID == player.CurrWpId).FirstOrDefault();
@@ -37,6 +38,9 @@ namespace BloogBot.AI.SharedStates
 
             if (player.Position.DistanceTo(startingPosition) > posDistance || player.IsInCombat 
                 || wpDistance < 3)
+#else
+            if (player.Position.DistanceTo(startingPosition) > 3)
+#endif
             {
                 StopMovement();
                 botStates.Pop();
@@ -45,8 +49,12 @@ namespace BloogBot.AI.SharedStates
 
             if (state == State.Moving)
             {
+#if USE_CUSTOM_CHANGES
                 var moveTime = (100 * posDistance) / 3;
                 if (stopwatch.ElapsedMilliseconds > moveTime)
+#else
+                if (stopwatch.ElapsedMilliseconds > 150)
+#endif
                     state = State.Stuck;
                 return;
             }

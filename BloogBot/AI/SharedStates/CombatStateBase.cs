@@ -24,10 +24,12 @@ namespace BloogBot.AI.SharedStates
         bool noLos;
         int noLosStartTime;
 
+#if USE_CUSTOM_CHANGES
         private int loopTimer;
         private int lastTargetHealth;
 
         static readonly Random random = new Random();
+#endif
 
         public CombatStateBase(Stack<IBotState> botStates, IDependencyContainer container, WoWUnit target, int desiredRange)
         {
@@ -41,11 +43,14 @@ namespace BloogBot.AI.SharedStates
 
             WoWEventHandler.OnErrorMessage += OnErrorMessageCallback;
 
+#if USE_CUSTOM_CHANGES
             loopTimer = 0;
+#endif
         }
 
         public bool Update()
         {
+#if USE_CUSTOM_CHANGES
             if (player.DeathsAtWp > 2 && player.CurrWpId != 0)
             {
                 // Select new waypoint based on links
@@ -62,6 +67,7 @@ namespace BloogBot.AI.SharedStates
                 player.LuaCall($"SendChatMessage('.npcb wp go {linkWp.ID}')");
                 player.DeathsAtWp = 0;
             }
+#endif
 
             // melee classes occasionally end up in a weird state where they are too close to hit the mob,
             // so we backpedal a bit to correct the position
@@ -81,6 +87,7 @@ namespace BloogBot.AI.SharedStates
                 noLos = false;
             }
 
+#if USE_CUSTOM_CHANGES
             if (loopTimer == 0)
                 lastTargetHealth = target.Health;
             loopTimer++;
@@ -112,6 +119,7 @@ namespace BloogBot.AI.SharedStates
                     return true;
                 }
             }
+#endif
 
             if (noLos)
             {
@@ -121,7 +129,11 @@ namespace BloogBot.AI.SharedStates
             }
 
             // see if somebody else stole the mob we were targeting
+#if USE_CUSTOM_CHANGES
             if (target.TappedByOther || player.Health <= 0 || target.Name == player.BotFriend)
+#else
+            if (target.TappedByOther)
+#endif
             {
                 CleanUp();
                 return true;

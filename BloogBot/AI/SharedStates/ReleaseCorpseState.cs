@@ -10,7 +10,9 @@ namespace BloogBot.AI.SharedStates
     {
         readonly Stack<IBotState> botStates;
         readonly IDependencyContainer container;
+#if USE_CUSTOM_CHANGES
         static readonly Random random = new Random();
+#endif
 
         public ReleaseCorpseState(Stack<IBotState> botStates, IDependencyContainer container)
         {
@@ -22,6 +24,7 @@ namespace BloogBot.AI.SharedStates
         {
             if (Wait.For("StartReleaseCorpseStateDelay", 1000))
             {
+#if USE_CUSTOM_CHANGES
                 if (!ObjectManager.Player.InGhostForm && ObjectManager.Player.Health <= 0)
                     ObjectManager.Player.ReleaseCorpse();
                 else if (!ObjectManager.Player.InGhostForm && ObjectManager.Player.Health > 0)
@@ -33,6 +36,13 @@ namespace BloogBot.AI.SharedStates
                 {
                     var mapId = ObjectManager.MapId;
                     if (Wait.For("LeaveReleaseCorpseStateDelay", (mapId == 30 || mapId == 489 || mapId == 529 || mapId == 559) ? 30000 : 2000))
+#else
+                if (!ObjectManager.Player.InGhostForm)
+                    ObjectManager.Player.ReleaseCorpse();
+                else
+                {
+                    if (Wait.For("LeaveReleaseCorpseStateDelay", 2000))
+#endif
                     {
                         botStates.Pop();
                         return;

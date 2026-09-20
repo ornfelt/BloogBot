@@ -1,4 +1,5 @@
-﻿using BloogBot.Game;
+﻿#if USE_CUSTOM_CHANGES
+using BloogBot.Game;
 using BloogBot.Game.Enums;
 using BloogBot.Game.Frames;
 using BloogBot.Game.Objects;
@@ -192,3 +193,4 @@ namespace BloogBot.AI.SharedStates
         Queued
     }
 }
+#endif

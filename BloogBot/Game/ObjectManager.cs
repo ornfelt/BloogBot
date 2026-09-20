@@ -194,8 +194,14 @@ namespace BloogBot.Game
             Units
                 .Where(u => u.Health > 0)
                 .Where(u => 
+#if USE_CUSTOM_CHANGES
                     u.TargetGuid == Player?.Guid ||
                     u.TargetGuid == Pet?.Guid)
+#else
+                    u.TargetGuid == Player?.Guid ||
+                    u.TargetGuid == Pet?.Guid ||
+                    GetPartyMembers().Any(p => u.TargetGuid == p.Guid))
+#endif
                 .Where(u =>
                     u.UnitReaction == UnitReaction.Hostile ||
                     u.UnitReaction == UnitReaction.Unfriendly ||

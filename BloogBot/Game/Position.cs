@@ -1,12 +1,16 @@
 ﻿using Newtonsoft.Json;
 using System;
+#if USE_CUSTOM_CHANGES
 using System.Collections.Generic;
+#endif
 
 namespace BloogBot.Game
 {
     public class Position
     {
-        //[JsonConstructor]
+#if !USE_CUSTOM_CHANGES
+        [JsonConstructor]
+#endif
         public Position(float x, float y, float z)
         {
             X = x;
@@ -14,6 +18,7 @@ namespace BloogBot.Game
             Z = z;
         }
 
+#if USE_CUSTOM_CHANGES
         [JsonConstructor]
         public Position(float x, float y, float z, int id, string zone, int minlevel, int maxlevel, string links)
         {
@@ -26,6 +31,7 @@ namespace BloogBot.Game
             MaxLevel = maxlevel;
             Links = links;
         }
+#endif
 
         public Position(XYZ xyz)
         {
@@ -40,11 +46,13 @@ namespace BloogBot.Game
 
         public float Z { get; }
 
+#if USE_CUSTOM_CHANGES
         public int ID { get; }
         public string Zone { get; }
         public int MinLevel { get; }
         public int MaxLevel { get; }
         public string Links { get; }
+#endif
 
         public float DistanceTo(Position position)
         {
@@ -81,8 +89,9 @@ namespace BloogBot.Game
             new Position(a.X * n, a.Y * n, a.Z * n);
 
         public XYZ ToXYZ() => new XYZ(X, Y, Z);
-
+        
         public override string ToString() => $"X: {Math.Round(X, 2)}, Y: {Math.Round(Y, 2)}, Z: {Math.Round(Z, 2)}";
+#if USE_CUSTOM_CHANGES
         public string ToStringFull() => $"ID: {ID}, Zone: {GetZoneName(Int32.Parse(Zone))} ({Zone}), MinLevel: {MinLevel}, MaxLevel: {MaxLevel}, X: {Math.Round(X, 2)}, Y: {Math.Round(Y, 2)}, Z: {Math.Round(Z, 2)}, Links: {Links}";
 
         private static readonly Dictionary<int, string> ZoneIdNameDict = new Dictionary<int, string>
@@ -119,5 +128,6 @@ namespace BloogBot.Game
         {
             return GetZoneName(Int32.Parse(Zone));
         }
+#endif
     }
 }

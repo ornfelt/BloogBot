@@ -181,8 +181,10 @@ namespace BloogBot
             try
             {
                 var buffer = ReadBytes(address, size);
+#if USE_CUSTOM_CHANGES
                 if (buffer == null)
                     return default;
+#endif
                 if (buffer.Length == 0)
                     return default;
 

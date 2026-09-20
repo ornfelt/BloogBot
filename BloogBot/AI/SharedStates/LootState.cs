@@ -90,8 +90,11 @@ namespace BloogBot.AI.SharedStates
                 currentState = LootStates.LootFrameReady;
             }
 
-            //if (currentState == LootStates.LootFrameReady && Wait.For("LootDelay", 150))
+#if USE_CUSTOM_CHANGES
             if (currentState == LootStates.LootFrameReady && Wait.For("LootDelay", 150) && lootIndex < lootFrame.LootItems.Count)
+#else
+            if (currentState == LootStates.LootFrameReady && Wait.For("LootDelay", 150))
+#endif
             {
                 var itemToLoot = lootFrame.LootItems.ElementAt(lootIndex);
                 var itemQuality = ItemQuality.Common;
@@ -108,6 +111,7 @@ namespace BloogBot.AI.SharedStates
                 if (itemQuality == ItemQuality.Rare || itemQuality == ItemQuality.Epic)
                     DiscordClientWrapper.SendItemNotification(player.Name, itemQuality, itemToLoot.ItemId);
 
+#if USE_CUSTOM_CHANGES
                 if (itemToLoot != null && itemToLoot.IsCoins
                     || ((string.IsNullOrWhiteSpace(container.BotSettings.LootExcludedNames) || !container.BotSettings.LootExcludedNames.Split('|').Any(en => itemToLoot.Info.Name.Contains(en)))
                     && (poorQualityCondition || commonQualityCondition || uncommonQualityCondition || other)))
@@ -117,6 +121,14 @@ namespace BloogBot.AI.SharedStates
                     else
                         Console.WriteLine($"Skip looting item with quality: {itemQuality}");
                 }
+#else
+                if (itemToLoot.IsCoins
+                    || ((string.IsNullOrWhiteSpace(container.BotSettings.LootExcludedNames) || !container.BotSettings.LootExcludedNames.Split('|').Any(en => itemToLoot.Info.Name.Contains(en)))
+                    && (poorQualityCondition || commonQualityCondition || uncommonQualityCondition || other)))
+                {
+                    itemToLoot.Loot();
+                }
+#endif
 
                 lootIndex++;
             }

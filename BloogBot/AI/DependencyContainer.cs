@@ -51,6 +51,7 @@ namespace BloogBot.AI
 
         public IEnumerable<Hotspot> Hotspots { get; }
 
+#if USE_CUSTOM_CHANGES
         // this is broken up into multiple sub-expressions to improve readability and debuggability
         public WoWUnit FindThreat()
         {
@@ -91,6 +92,17 @@ namespace BloogBot.AI
             return null;
         }
 
+#else
+        public WoWUnit FindThreat() =>
+            ObjectManager
+                .Units
+                .FirstOrDefault(u =>
+                    ((ObjectManager.GetPartyMembers().Any(p => u.TargetGuid == p.Guid) || u.TargetGuid == ObjectManager.Player.Guid || u.TargetGuid == ObjectManager.Pet?.Guid) && !Probe.BlacklistedMobIds.Contains(u.Guid)) ||
+                    (u.CreatureType == CreatureType.Totem && u.Position.DistanceTo(ObjectManager.Player.Position) <= 20 && u.UnitReaction == UnitReaction.Hostile) ||
+                    u.Position.DistanceTo(ObjectManager.Player.Position) < 10 && Convert.ToBoolean(ObjectManager.Units.FirstOrDefault(ou => ou.Guid == u.TargetGuid)?.Name?.Contains("Stoneclaw Totem")) && u.IsInCombat
+                );
+#endif
+#if USE_CUSTOM_CHANGES
         // this is broken up into multiple sub-expressions to improve readability and debuggability
         public WoWUnit FindClosestTarget()
         {
@@ -165,7 +177,35 @@ namespace BloogBot.AI
             return Hotspots.FirstOrDefault(h => h != null && h.Id == id);
         }
 
-        //public Hotspot GetCurrentHotspot() => BotSettings.GrindingHotspot;
+#else
+        public WoWUnit FindClosestTarget()
+        {
+            return FindThreat() ??
+                ObjectManager
+                    .Units?
+                    .Where(u => u != null && u.Name != null && u.Position != null)
+                    .Where(u => u.Health > 0)
+                    .Where(u => !u.TappedByOther)
+                    .Where(u => !u.IsPet)
+                    .Where(u => !Probe?.BlacklistedMobIds?.Contains(u.Guid) ?? true)
+                    .Where(u => u.CreatureRank == CreatureRank.Normal || BotSettings.TargetingIncludedNames.Any(n => u.Name != null && u.Name.Contains(n)))
+                    .Where(u => string.IsNullOrWhiteSpace(BotSettings.TargetingIncludedNames) || BotSettings.TargetingIncludedNames.Split('|').Any(m => u.Name != null && u.Name.Contains(m)))
+                    .Where(u => string.IsNullOrWhiteSpace(BotSettings.TargetingExcludedNames) || !BotSettings.TargetingExcludedNames.Split('|').Any(m => u.Name != null && u.Name.Contains(m)))
+                    .Where(u => BotSettings.CreatureTypes.Count == 0 || u.CreatureType == CreatureType.Mechanical || (u.CreatureType == CreatureType.Totem && u.Position.DistanceTo(ObjectManager.Player?.Position) <= 20) || BotSettings.CreatureTypes.Contains(u.CreatureType.ToString()) || oozeNames.Contains(u.Name))
+                    .Where(u => BotSettings.UnitReactions.Count == 0 || BotSettings.UnitReactions.Contains(u.UnitReaction.ToString()))
+                    .Where(u => u.Level <= ObjectManager.Player?.Level + BotSettings.LevelRangeMax && u.Level >= ObjectManager.Player?.Level - BotSettings.LevelRangeMin)
+                    .Where(u => Navigation.CalculatePath(ObjectManager.MapId, ObjectManager.Player?.Position, u.Position, false).Count() > 0)
+                    // TODO: FactionId
+                    // 71: Undercity, 85: Orgrimmar, 474: Gadgetzan
+                    .Where(u => u.FactionId != 71 && u.FactionId != 85 && u.FactionId != 474 && u.FactionId != 475 && u.FactionId != 1475)
+                    .Where(u => u.UnitFlags != UnitFlags.UNIT_FLAG_NON_ATTACKABLE)
+                    .Where(u => targetingCriteria(u))            
+                    .OrderBy(u => Navigation.DistanceViaPath(ObjectManager.MapId, ObjectManager.Player?.Position, u.Position))
+                    .FirstOrDefault();
+        }
+
+#endif
+#if USE_CUSTOM_CHANGES
         public Hotspot GetCurrentHotspot()
         {
             var player = ObjectManager.Player;
@@ -192,6 +232,9 @@ namespace BloogBot.AI
                     return BotSettings.GrindingHotspot; // Default
             }
         }
+#else
+        public Hotspot GetCurrentHotspot() => BotSettings.GrindingHotspot;
+#endif
 
         public void CheckForTravelPath(Stack<IBotState> botStates, bool reverse, bool needsToRest = true)
         {

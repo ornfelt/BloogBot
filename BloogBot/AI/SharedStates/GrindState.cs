@@ -2,10 +2,12 @@
 using BloogBot.Game.Objects;
 using System;
 using System.Collections.Generic;
+#if USE_CUSTOM_CHANGES
 using System.Linq;
 using System.IO;
 using System.Reflection;
 using BloogBot.UI;
+#endif
 
 namespace BloogBot.AI.SharedStates
 {
@@ -15,9 +17,13 @@ namespace BloogBot.AI.SharedStates
 
         readonly Stack<IBotState> botStates;
         readonly IDependencyContainer container;
+#if USE_CUSTOM_CHANGES
         LocalPlayer player;
         bool isInBg;
         int playerLevel;
+#else
+        readonly LocalPlayer player;
+#endif
 
         public GrindState(Stack<IBotState> botStates, IDependencyContainer container)
         {
@@ -30,17 +36,29 @@ namespace BloogBot.AI.SharedStates
         {
             var enemyTarget = container.FindClosestTarget();
 
+#if USE_CUSTOM_CHANGES
             if (enemyTarget != null && Math.Abs(enemyTarget.Position.Z - player.Position.Z) < 16.0F)
+#else
+            if (enemyTarget != null)
+#endif
             {
                 player.SetTarget(enemyTarget.Guid);
                 botStates.Push(container.CreateMoveToTargetState(botStates, container, enemyTarget));
             }
             else
             {
+#if USE_CUSTOM_CHANGES
                 HandleWpSelection();
+#else
+                var hotspot = container.GetCurrentHotspot();
+                var waypointCount = hotspot.Waypoints.Length;
+                var waypoint = hotspot.Waypoints[random.Next(0, waypointCount)];
+                botStates.Push(new MoveToHotspotWaypointState(botStates, container, waypoint));
+#endif
             }
         }
 
+#if USE_CUSTOM_CHANGES
         private void HandleWpSelection()
         {
             // Initialize variables
@@ -297,9 +315,6 @@ namespace BloogBot.AI.SharedStates
             }
         }
 
-        /// <summary>
-        /// Determines if the given hotspot ID is a battleground hotspot.
-        /// </summary>
         private bool IsHotspotBg(int hotspotId)
         {
             return (hotspotId > 8 && hotspotId < 13);
@@ -399,5 +414,6 @@ namespace BloogBot.AI.SharedStates
                 }
             }
         }
+#endif
     }
 }

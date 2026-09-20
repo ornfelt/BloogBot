@@ -1,4 +1,5 @@
-﻿using BloogBot.Game;
+﻿#if USE_CUSTOM_CHANGES
+using BloogBot.Game;
 using BloogBot.Game.Objects;
 using System;
 using System.Collections.Generic;
@@ -73,9 +74,6 @@ namespace BloogBot.AI.SharedStates
             }
         }
 
-        /// <summary>
-        /// Determines if the player is an ally.
-        /// </summary>
         private bool IsAlly(LocalPlayer player)
         {
             //Console.WriteLine($"Player faction: {player.FactionId}");
@@ -93,3 +91,4 @@ namespace BloogBot.AI.SharedStates
         ArenaJoined,
     }
 }
+#endif

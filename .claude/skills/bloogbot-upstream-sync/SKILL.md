@@ -777,3 +777,76 @@ Four stopping conditions:
 - **Nothing left** - the high-water mark is `upstream-local/main`. Say the fork is caught up and
   suggest `git -C "$UP" fetch` (in the Downloads clone, by the user) as the next step rather than
   inventing work. An empty run that says "nothing left" is a correct run.
+
+## The 'N commits behind' banner
+
+Expect GitHub to report the fork as **N commits behind** `DrewKestell/BloogBot`, where N is the
+number of upstream commits landed so far - eventually all 61 sitting after the fork point. This is
+normal and is **not** a sign that anything is missing.
+
+Cherry-pick copies a commit's content but creates a new commit: different parent, different
+committer, therefore a different SHA. Upstream's commits never become ancestors of the fork, and
+GitHub's comparison counts ancestry, not content. The counter climbs by one per commit landed and
+never falls on its own, even when the fork's content is a strict superset of upstream's.
+
+Confirm it is cosmetic rather than assuming it:
+
+```bash
+git -C "$FORK" rev-list --left-right --count upstream-local/main...main   # left = behind, right = ahead
+git -C "$FORK" diff --stat upstream-local/main main                       # must be insertions only
+```
+
+The second command is the real check. If it shows **only the expected files and zero deletions**,
+the fork is upstream verbatim plus the guards and the banner is meaningless.
+
+Note that this fork carries far more local divergence than a handful of guards - a rewritten grind
+loop, battleground and arena queue states, wander-node navigation, corpse-retrieval changes and the
+waypoint blacklists. The insertions-only property therefore holds **only if every customization was
+guarded with upstream's original preserved in an `#else`**, which is exactly what Phase 0 is for. If
+the diff shows deletions, the fork is *not* a superset: find out which customization dropped
+upstream code instead of guarding it, fix that, and do not paper over it with a merge.
+
+### Clearing it
+
+Only when the sync is **caught up** - the high-water mark equals `upstream-local/main`. Never
+mid-sync, and with 61 commits to work through that means not for a long while: merging early would
+make unprocessed upstream commits ancestors and pull all their content in at once, which defeats
+one-commit-at-a-time and makes the ledger's high-water mark a lie. Ask the user first; this
+rewrites nothing but it does change a branch they publish.
+
+```bash
+git -C "$FORK" rev-parse main^{tree}                    # note this hash
+git -C "$FORK" merge --no-commit --no-ff upstream-local/main
+git -C "$FORK" status --short | grep -E '^(UU|AA|DU|UD|AU|UA)'
+```
+
+Read every conflict before resolving. Each one should be a `#if USE_CUSTOM_CHANGES` block against
+an **empty** upstream side - upstream contributing nothing, so keeping ours discards nothing. A
+conflict in a file that carries no guard means a cherry-pick did not land what it should have:
+stop and investigate instead of resolving it.
+
+```bash
+git -C "$FORK" checkout --ours <the guarded files>
+git -C "$FORK" add <the guarded files>
+git -C "$FORK" write-tree                               # MUST equal the hash noted above
+```
+
+That tree-hash equality is the proof the merge changed no content - not one byte gained or lost.
+Do **not** shortcut this with `git merge -s ours`: that strategy *asserts* the fork already
+contains upstream instead of *proving* it, and silently discards the other side if the assertion
+is ever wrong. On a fork with this much local divergence that assertion is much less safe than it
+looks.
+
+Commit the merge with a message saying why the histories were rejoined and that the tree is
+unchanged. Then stop - **the no-push rule still applies**. Tell the user to run
+`git push origin main` themselves; it is a fast-forward and needs no force. Record the merge in
+`UPSTREAM_SYNC.md`.
+
+Afterwards the merge base moves from the fork point to upstream HEAD, so the next run's `rev-list`
+range works from there unchanged. Keep cherry-picking one commit at a time - do not switch to a
+merge-based flow, which would give up the small, bisectable conflicts that make this skill work.
+Just re-merge whenever the counter has climbed again and the fork is caught up.
+
+The sibling `ameisenbotx-upstream-sync` skill hit this first and has the same section; that fork
+was rejoined at upstream `e23d5844` on 2026-09-20, going from 6-behind/17-ahead to 0-behind/18-ahead
+with a byte-identical tree.

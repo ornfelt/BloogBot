@@ -10,13 +10,8 @@ namespace ShadowPriestBot
 {
     class CombatState : CombatStateBase, IBotState
     {
-#if USE_CUSTOM_CHANGES
         const string WandLuaScript = "if IsAutoRepeatAction(12) == nil then CastSpellByName('Shoot') end";
         const string TurnOffWandLuaScript = "if IsAutoRepeatAction(12) ~= nil then CastSpellByName('Shoot') end";
-#else
-        const string WandLuaScript = "if IsAutoRepeatAction(12) == nil then CastSpellByName('Shoot') end";
-        const string TurnOffWandLuaScript = "if IsAutoRepeatAction(12) ~= nil then CastSpellByName('Shoot') end";
-#endif
 
         const string AbolishDisease = "Abolish Disease";
         const string CureDisease = "Cure Disease";
@@ -58,11 +53,7 @@ namespace ShadowPriestBot
                 return;
 
             var hasWand = Inventory.GetEquippedItem(EquipSlot.Ranged) != null;
-#if USE_CUSTOM_CHANGES
             var useWand = hasWand && !player.IsCasting && !player.IsChanneling && (player.ManaPercent <= 10 || target.CreatureType == CreatureType.Totem || target.HealthPercent <= 10);
-#else
-            var useWand = hasWand && !player.IsCasting && !player.IsChanneling && (player.ManaPercent <= 10 || target.CreatureType == CreatureType.Totem || target.HealthPercent <= 10);
-#endif
             if (useWand)
                 player.LuaCall(WandLuaScript);
             else

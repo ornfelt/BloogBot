@@ -58,13 +58,8 @@ namespace FrostMageBot
             {
                 botStates.Pop();
 
-#if USE_CUSTOM_CHANGES
                 if (player.ManaPercent <= 70)
                     botStates.Push(new RestState(botStates, container));
-#else
-                if (player.ManaPercent <= 70)
-                    botStates.Push(new RestState(botStates, container));
-#endif
 
                 return;
             }

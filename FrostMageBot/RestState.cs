@@ -46,11 +46,7 @@ namespace FrostMageBot
             if (player.IsChanneling)
                 return;
 
-#if USE_CUSTOM_CHANGES
             if (InCombat)
-#else
-            if (InCombat)
-#endif
             {
                 player.Stand();
                 botStates.Pop();
@@ -75,22 +71,13 @@ namespace FrostMageBot
             if (foodItem != null && !player.IsEating && player.HealthPercent < 80)
                 foodItem.Use();
 
-#if USE_CUSTOM_CHANGES
             if (drinkItem != null && !player.IsDrinking)
                 drinkItem.Use();
-#else
-            if (drinkItem != null && !player.IsDrinking)
-                drinkItem.Use();
-#endif
         }
 
         bool HealthOk => foodItem == null || player.HealthPercent >= 90 || (player.HealthPercent >= 80 && !player.IsEating);
 
-#if USE_CUSTOM_CHANGES
         bool ManaOk => drinkItem == null || player.ManaPercent >= 90 || (player.ManaPercent >= 80 && !player.IsDrinking);
-#else
-        bool ManaOk => drinkItem == null || player.ManaPercent >= 90 || (player.ManaPercent >= 80 && !player.IsDrinking);
-#endif
 
         bool InCombat => ObjectManager.Player.IsInCombat || ObjectManager.Units.Any(u => u.TargetGuid == ObjectManager.Player.Guid);
     }

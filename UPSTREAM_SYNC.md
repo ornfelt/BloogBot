@@ -3,14 +3,14 @@
 Upstream: <https://github.com/DrewKestell/BloogBot> branch `main`, cloned at
 `$USERPROFILE/Downloads/BloogBot`, wired into this repo as the `upstream-local` remote.
 Fork point: `1d0057c` - Merge branch 'main' of github.com:DrewKestell/BloogBot into main
-High-water mark: `f22af34` (every commit up to and including this one is decided)
+High-water mark: `452b3fb` (every commit up to and including this one is decided)
 Upstream history is **not linear** at the start of this range: `a5e450a` and `569d3cb` both branch
 directly off the fork point and rejoin at the merge `f22af34`. So while those two were the
 high-water mark, `rev-list <mark>..upstream-local/main` over-counted by one (it still listed the
 parallel sibling). From `f22af34` on the history is linear - no further merge commits in the
 range - and the count is exact again.
 Upstream HEAD when last checked: `a9be5e8` `BeastmasterHunterBot: LOS checks, pet management, rest state rewrite` (2026-09-20)
-Remaining after the high-water mark: `58`
+Remaining after the high-water mark: `57`
 Local customizations: guarded by `USE_CUSTOM_CHANGES`, defined in `BloogBot/BloogBot.csproj`,
 `FrostMageBot/FrostMageBot.csproj` and `Loader/Loader.vcxproj`. `ArmsWarriorBot` and
 `ShadowPriestBot` had their toggles removed after `569d3cb` left them with no guards.
@@ -34,6 +34,7 @@ landed; only the mirror waits.
 | 2 | `569d3cb` | Perf fixes | adapted | `ArmsWarriorBot/CombatState.cs`, `BloogBot/AI/Bot.cs`, `BloogBot/AI/DependencyContainer.cs`, `BloogBot/Game/ObjectManager.cs`, `FrostMageBot/ConjureItemsState.cs`, `FrostMageBot/RestState.cs`, `ShadowPriestBot/CombatState.cs` (all 7) | Upstream's text went into the `#else` branch in every file; no `#if` branch was touched. Verified by preprocessing the off-configuration of all 7 files and diffing against upstream `569d3cb` - identical apart from the known unguarded dead `using` lines. `ObjectManager.IsGrouped` was deleted by upstream and its four surviving references all sat in `#else` branches that the same commit rewrote, so the off-build still resolves. `Bot.cs`: the 25 -> 50 delay hit the guarded call site in `Start` (`#if` keeps 100); the unguarded one in `StartPowerlevel` is 25 upstream and here. `DependencyContainer.cs`: upstream's rewritten `FindThreat`/`FindClosestTarget` replaced the old single-expression forms in `#else`. mirror n/a (all 7): upstream converged on changes the `#if` branch already had - `.ToList()`, wand slot 12, the wand condition, mana<=70, the party-aware rest/drink drops, party members out of `Aggressors`, and the straight-line target ordering - except `Bot.cs`, where 50 is a tuning value against the fork's deliberate 100. Left 8 guards whose `#if` and `#else` were identical; dropped in the follow-up commit below. |
 | - | (cleanup) | Drop the 8 guards upstream `569d3cb` made redundant | applied | - | Not an upstream commit. The 8 guard regions whose two branches had become identical were collapsed to the shared line: `ArmsWarriorBot/CombatState.cs`, `BloogBot/Game/ObjectManager.cs`, `FrostMageBot/ConjureItemsState.cs`, `FrostMageBot/RestState.cs` (3), `ShadowPriestBot/CombatState.cs` (2). Verified behaviour-neutral: the preprocessed on- and off-views of all five files are byte-identical to before. `ArmsWarriorBot` and `ShadowPriestBot` were left with no guards, so their csproj toggles were removed. Guard regions 76 -> 68. Both full rebuilds green. |
 | 3 | `f22af34` | Merge branch 'main' of github.com:DrewKestell/BloogBot into main | applied | `BloogBot/Navigation.cs` | Empty - contributed nothing. The one merge commit in the range, picked with `-m 1`. Its first-parent diff is exactly `a5e450a`'s Navigation.cs change and its second-parent diff is exactly `569d3cb`, so the merge resolved nothing of its own; both sides were already landed. It conflicted rather than reporting itself empty only because the fork's guard structure means the merge base does not line up - the incoming text was character-identical to what the `#else` branch already held. Resolved to ours (zero net change, confirmed with `git diff HEAD`) and finished with `git cherry-pick --skip`. No commit created, tree untouched. mirror n/a: no content to mirror. |
+| 4 | `452b3fb` | Separate npc types in select list to make the ui less busy | applied | - | Clean cherry-pick, no conflicts. Splits the single `Npcs` collection in `BloogBot/UI/MainViewModel.cs` into `RepairNpcs`/`InkeeperNpcs`/`AmmoNpcs` and repoints the three `MainWindow.xaml` combo boxes at them. Touched no guarded file and neither file has ever diverged from the fork point, so nothing to reconcile. mirror n/a: no guarded file touched. |
 
 ## Guarded files
 
@@ -97,5 +98,4 @@ Deliberately not guarded, per the skill's do-not-guard list:
 
 ## Open questions
 
-None. The next run starts at `452b3fb` ('Separate npc types in select list to make the ui less
-busy'). From here upstream's history is linear.
+None. The next run starts at `fe3533f` ('Reload NPCs').

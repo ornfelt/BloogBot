@@ -3,14 +3,14 @@
 Upstream: <https://github.com/DrewKestell/BloogBot> branch `main`, cloned at
 `$USERPROFILE/Downloads/BloogBot`, wired into this repo as the `upstream-local` remote.
 Fork point: `1d0057c` - Merge branch 'main' of github.com:DrewKestell/BloogBot into main
-High-water mark: `fe3533f` (every commit up to and including this one is decided)
+High-water mark: `5c8fd85` (every commit up to and including this one is decided)
 Upstream history is **not linear** at the start of this range: `a5e450a` and `569d3cb` both branch
 directly off the fork point and rejoin at the merge `f22af34`. So while those two were the
 high-water mark, `rev-list <mark>..upstream-local/main` over-counted by one (it still listed the
 parallel sibling). From `f22af34` on the history is linear - no further merge commits in the
 range - and the count is exact again.
 Upstream HEAD when last checked: `a9be5e8` `BeastmasterHunterBot: LOS checks, pet management, rest state rewrite` (2026-09-20)
-Remaining after the high-water mark: `56`
+Remaining after the high-water mark: `55`
 Local customizations: guarded by `USE_CUSTOM_CHANGES`, defined in `BloogBot/BloogBot.csproj`,
 `FrostMageBot/FrostMageBot.csproj` and `Loader/Loader.vcxproj`. `ArmsWarriorBot` and
 `ShadowPriestBot` had their toggles removed after `569d3cb` left them with no guards.
@@ -36,6 +36,7 @@ landed; only the mirror waits.
 | 3 | `f22af34` | Merge branch 'main' of github.com:DrewKestell/BloogBot into main | applied | `BloogBot/Navigation.cs` | Empty - contributed nothing. The one merge commit in the range, picked with `-m 1`. Its first-parent diff is exactly `a5e450a`'s Navigation.cs change and its second-parent diff is exactly `569d3cb`, so the merge resolved nothing of its own; both sides were already landed. It conflicted rather than reporting itself empty only because the fork's guard structure means the merge base does not line up - the incoming text was character-identical to what the `#else` branch already held. Resolved to ours (zero net change, confirmed with `git diff HEAD`) and finished with `git cherry-pick --skip`. No commit created, tree untouched. mirror n/a: no content to mirror. |
 | 4 | `452b3fb` | Separate npc types in select list to make the ui less busy | applied | - | Clean cherry-pick, no conflicts. Splits the single `Npcs` collection in `BloogBot/UI/MainViewModel.cs` into `RepairNpcs`/`InkeeperNpcs`/`AmmoNpcs` and repoints the three `MainWindow.xaml` combo boxes at them. Touched no guarded file and neither file has ever diverged from the fork point, so nothing to reconcile. mirror n/a: no guarded file touched. |
 | 5 | `fe3533f` | Reload NPCs | applied | - | Clean cherry-pick, no conflicts. Follow-up to `452b3fb`: `SaveNpc` in `BloogBot/UI/MainViewModel.cs` no longer appends the new NPC to whichever of `RepairNpcs`/`InkeeperNpcs`/`AmmoNpcs` matched its flags - it calls `InitializeNpcs()` and rebuilds all three collections from the database instead, so the combo boxes show the NPC exactly as stored. Also adds two `using` lines, one of which (`System.Windows.Documents`) is unused - upstream's, taken as-is. The fork's copy of the file was byte-identical to upstream's parent, so nothing to reconcile. mirror n/a: no guarded file touched. |
+| 6 | `5c8fd85` | FrostMageBot/CombatState: add some unstucking logic | applied | - | Clean cherry-pick, no conflicts. Adds an `unstucking` mode to `FrostMageBot/CombatState.cs`: if the target is still at >=99% health 30 s after the combat state started, the bot pushes a `StuckState` and then walks toward the target via `Navigation.GetNextWaypoint` until it lands a hit, bailing out to `CreateMoveToTargetState` if `container.FindThreat()` turns up an aggressor. Needs new `botStates`/`container` fields, a `combatStateStartTime`, and two `using` lines (`BloogBot`, plus an unused `System.Security` - upstream's, taken as-is). The fork had never touched this file; its copy was byte-identical to upstream's parent. mirror n/a: no guarded file touched. Note the new code *calls into* three guarded subsystems - `FindThreat()` (fork rewrite in the `#if` branch, identical signature in both), `StuckState` (`WpStuckCount`-scaled distance and move time when the symbol is on) and `Navigation.GetNextWaypoint` (fork suppresses its 'Problem building path' log). So the unstuck path behaves differently between the two configurations by design - that is the guards working, not a mirror candidate. |
 
 ## Guarded files
 
@@ -108,4 +109,4 @@ Deliberately not guarded, per the skill's do-not-guard list:
 
 ## Open questions
 
-None. The next run starts at `5c8fd85` ('FrostMageBot/CombatState: add some unstucking logic').
+None. The next run starts at `ade1551` ('RepairEquipmentState: walk to NPC before interacting').

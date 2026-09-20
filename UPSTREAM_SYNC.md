@@ -3,9 +3,9 @@
 Upstream: <https://github.com/DrewKestell/BloogBot> branch `main`, cloned at
 `$USERPROFILE/Downloads/BloogBot`, wired into this repo as the `upstream-local` remote.
 Fork point: `1d0057c` - Merge branch 'main' of github.com:DrewKestell/BloogBot into main
-High-water mark: `1d0057c` (every commit up to and including this one is decided)
+High-water mark: `a5e450a` (every commit up to and including this one is decided)
 Upstream HEAD when last checked: `a9be5e8` `BeastmasterHunterBot: LOS checks, pet management, rest state rewrite` (2026-09-20)
-Remaining after the high-water mark: `61`
+Remaining after the high-water mark: `60`
 Local customizations: guarded by `USE_CUSTOM_CHANGES`, defined in `BloogBot/BloogBot.csproj`,
 `ArmsWarriorBot/ArmsWarriorBot.csproj`, `FrostMageBot/FrostMageBot.csproj`,
 `ShadowPriestBot/ShadowPriestBot.csproj` and `Loader/Loader.vcxproj`
@@ -25,6 +25,7 @@ landed; only the mirror waits.
 | # | Commit | Subject | Status | Conflicts | Notes |
 | --- | --- | --- | --- | --- | --- |
 | - | `1d0057c` | (fork point - Phase 0 setup) | applied | - | XML doc comments stripped, all customizations guarded, toggles wired, both builds green. No upstream commit landed. |
+| 1 | `a5e450a` | More information when building path | adapted | `BloogBot/Navigation.cs` | Upstream expanded the 'Problem building path' log with the mapId and an mmaps hint. Took it into the `#else` branch verbatim; the `#if` branch suppresses that log entirely and was left alone. mirror n/a: the customization removes the log, so a better message has no subject in the `#if` branch - a diagnostic improvement, not a correction. |
 
 ## Guarded files
 
@@ -88,4 +89,4 @@ Deliberately not guarded, per the skill's do-not-guard list:
 
 ## Open questions
 
-None. Setup landed no upstream commits; the next run starts at `a5e450a`.
+None. The next run starts at `569d3cb` ('Perf fixes').

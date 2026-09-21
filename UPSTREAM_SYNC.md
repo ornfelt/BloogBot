@@ -3,14 +3,14 @@
 Upstream: <https://github.com/DrewKestell/BloogBot> branch `main`, cloned at
 `$USERPROFILE/Downloads/BloogBot`, wired into this repo as the `upstream-local` remote.
 Fork point: `1d0057c` - Merge branch 'main' of github.com:DrewKestell/BloogBot into main
-High-water mark: `797496d` (every commit up to and including this one is decided)
+High-water mark: `3164fde` (every commit up to and including this one is decided)
 Upstream history is **not linear** at the start of this range: `a5e450a` and `569d3cb` both branch
 directly off the fork point and rejoin at the merge `f22af34`. So while those two were the
 high-water mark, `rev-list <mark>..upstream-local/main` over-counted by one (it still listed the
 parallel sibling). From `f22af34` on the history is linear - no further merge commits in the
 range - and the count is exact again.
 Upstream HEAD when last checked: `a9be5e8` `BeastmasterHunterBot: LOS checks, pet management, rest state rewrite` (2026-09-21)
-Remaining after the high-water mark: `37`
+Remaining after the high-water mark: `36`
 Local customizations: guarded by `USE_CUSTOM_CHANGES`, defined in `BloogBot/BloogBot.csproj`,
 `FrostMageBot/FrostMageBot.csproj` and `Loader/Loader.vcxproj`. `ArmsWarriorBot` and
 `ShadowPriestBot` had their toggles removed after `569d3cb` left them with no guards.
@@ -100,6 +100,7 @@ carried guards until the `569d3cb` cleanup collapsed them - upstream had converg
 version, leaving both branches identical. They are now plain upstream code, and the two bot projects
 no longer define the symbol.
 | 24 | `797496d` | MemoryManager: don't try catch in `ReadBytes` | applied | - | Clean cherry-pick, no conflicts. `BloogBot/MemoryManager.cs` only, +6/-18. Upstream strips the `catch (NullReferenceException)` / `catch (AccessViolationException)` pair out of `ReadBytes`, so a bad address now throws out to the caller instead of silently returning `default` (null). Upstream's reasoning: swallowing the fault turned a read error into an unexpected null that blew up somewhere else - `ReadString` in the same class dereferenced `buffer.Length` right after. The commit also drops the now-unused `using BloogBot.Game;` (the fork's `Logger` is in `BloogBot`, so nothing breaks) and trims ~700 trailing spaces off a `return start;` line. mirror n/a (`MemoryManager.cs`): the file's single guard (`ReadString`, lines 183-186) is the fork's own `if (buffer == null) return default;` - it is a defence against exactly the defect upstream just fixed, not a copy of it. After this commit `ReadBytes` can only return null when `address == IntPtr.Zero`, and `ReadString` already early-returns on that above, so the guarded check is now unreachable in both configurations. Harmless and left alone; it is not a bug to mirror. Behaviour note for both configurations: callers of `ReadBytes` other than `ReadString` no longer get a null on a bad address, they get an `AccessViolationException` - the intended change, but it is the sort of thing that surfaces as a new crash rather than a silent misread. Both builds green: 0 errors, 12 warnings each. |
+| 25 | `3164fde` | FrostMageBot/BuffSelfState: use molten armor | applied | - | Clean cherry-pick, no conflicts. `FrostMageBot/BuffSelfState.cs` only, +14/-3. Adds the `Molten Armor` constant, accepts it in the already-buffed early-exit alongside Frost/Ice/Mage Armor, and puts it at the top of the armor-selection chain (Molten -> Mage -> Ice -> Frost), so a WotLK-level mage self-buffs the spell power armor instead of stopping at Mage Armor. The rest of the diff is brace-style and one trailing-whitespace trim. mirror n/a: no guarded file touched. `BuffSelfState.cs` carries no `#if` at all - the fork's only divergence in it is a stray `using System;` at line 6, which this pick left in place and which nothing in the file uses. The fork's guarded FrostMage files are `ConjureItemsState.cs` and `RestState.cs`, neither of which this commit goes near. Both builds green: 0 errors, 12 warnings each. |
 
 ## Unguarded customizations
 
@@ -131,6 +132,6 @@ Deliberately not guarded, per the skill's do-not-guard list:
 
 ## Open questions
 
-None. The next run starts at `3164fde` ('FrostMageBot/BuffSelfState: use molten armor').
-`FrostMageBot/BuffSelfState.cs` carries **no** guards - the fork's guarded FrostMage files are
-`ConjureItemsState.cs` and `RestState.cs` - so expect a clean pick and `mirror n/a`.
+None. The next run starts at `1fdd6ee` ('Update README.md'), a one-line upstream edit to
+`README.md`. `README.md` is an **unguarded** customization - the fork added 30 lines to it - so this
+is a hand-merge if it conflicts, not a guard question, and `mirror n/a` either way.

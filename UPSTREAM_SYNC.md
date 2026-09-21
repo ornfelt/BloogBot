@@ -3,14 +3,14 @@
 Upstream: <https://github.com/DrewKestell/BloogBot> branch `main`, cloned at
 `$USERPROFILE/Downloads/BloogBot`, wired into this repo as the `upstream-local` remote.
 Fork point: `1d0057c` - Merge branch 'main' of github.com:DrewKestell/BloogBot into main
-High-water mark: `a2d0e48` (every commit up to and including this one is decided)
+High-water mark: `4f74bd7` (every commit up to and including this one is decided)
 Upstream history is **not linear** at the start of this range: `a5e450a` and `569d3cb` both branch
 directly off the fork point and rejoin at the merge `f22af34`. So while those two were the
 high-water mark, `rev-list <mark>..upstream-local/main` over-counted by one (it still listed the
 parallel sibling). From `f22af34` on the history is linear - no further merge commits in the
 range - and the count is exact again.
 Upstream HEAD when last checked: `a9be5e8` `BeastmasterHunterBot: LOS checks, pet management, rest state rewrite` (2026-09-21)
-Remaining after the high-water mark: `31`
+Remaining after the high-water mark: `30`
 Local customizations: guarded by `USE_CUSTOM_CHANGES`, defined in `BloogBot/BloogBot.csproj`,
 `FrostMageBot/FrostMageBot.csproj` and `Loader/Loader.vcxproj`. `ArmsWarriorBot` and
 `ShadowPriestBot` had their toggles removed after `569d3cb` left them with no guards.
@@ -106,6 +106,7 @@ no longer define the symbol.
 | 28 | `556e8c8` | FrostMageBot/CombatState: optimize rotation | applied | - | Clean cherry-pick, no conflicts. `FrostMageBot/CombatState.cs` only, +14/-1. Four new spell-name constants (`Deep Freeze`, `Fingers of Frost`, `Ice Lance`, `Shattered Barrier`); two new `TryCastSpell` lines in the rotation, both gated on `IsTargetFrozen || player.HasBuff(FingersOfFrostBuff)` and placed above the existing `ConeOfCold`/`FireBlast` lines so the frost-proc finishers take priority; and `IsTargetFrozen` widened to also count `Deep Freeze` and `Shattered Barrier` buffs on the target, reformatted onto one clause per line. The fork's copy of the file was byte-identical to upstream's parent and is now byte-identical to `556e8c8`. mirror n/a: no guarded file touched. `FrostMageBot/CombatState.cs` carries no `#if` at all - the fork's guarded FrostMage files are `ConjureItemsState.cs` and `RestState.cs`. Both builds green: 0 errors, 12 warnings each. |
 | 29 | `feaf991` | FeralDruidBot: overhaul combat logic | applied | - | Clean cherry-pick, no conflicts. Three files, +41/-60, all three byte-identical to upstream `feaf991` afterwards. `CombatState.cs`: the class now derives from `CombatStateBase` (`: base(botStates, container, target, 30)`, `public new void Update()` delegating to `base.Update()`), which deletes ~50 lines of duplicated tapped-by-other / target-dead / face-target / auto-attack handling and the local `TryCastSpell(name, minRange, maxRange, ...)` overload; also `Wrath`'s min range 10 -> 0 and `CatForm`'s max range 50 -> `int.MaxValue`. `BuffSelfState.cs`: `TryCastSpell` gains a `castOnSelf` parameter that uses `CastSpellByName("x",1)` on Vanilla and `player.CastSpell(name, player.Guid)` elsewhere; the non-self path drops the trailing `,1`. `MoveToTargetState.cs`: early-return while casting, the abandon-target test becomes `container.FindClosestTarget()?.Guid != target.Guid`, the pull delay 100 -> 250 ms, and the transition into `CombatState` now happens unconditionally after the pull rather than only when casting/shapeshifted/in-combat. mirror n/a: no guarded file touched. **But note the reach change** - `FeralDruidBot` now runs through two guarded subjects it previously bypassed: `CombatStateBase.cs` (5 guard blocks) and `DependencyContainer.FindClosestTarget()` (fork version at `:145`, upstream's at `:226`). Nothing to mirror - both guards already exist and both configurations pick their own half correctly - but the fork's threat / npcbot-friend handling and its target-selection policy now govern the Feral Druid too, where before they did not. Both builds green: 0 errors, 12 warnings each. |
 | 30 | `a2d0e48` | FeralDruidBot: more combat overhaul | applied | - | Clean cherry-pick, no conflicts. Four files, +91/-96, all four byte-identical to upstream `a2d0e48` afterwards (`FeralDruidBot.csproj` still differs by the known v4.6.1 -> v4.8 retarget, which upstream's `608ab7f` makes identically later). Continues `feaf991`: upstream's own note says 'no major rotation change other than adding a few skills, just making it reuse the base classes other classes use'. `CombatState.cs`: `desiredRange` becomes level-dependent (`Level <= 12 ? 30 : 4`) and the hand-rolled melee-approach blocks in both the bear and cat branches are deleted in favour of `CombatStateBase`'s movement; five new cat spells (`Feral Charge - Cat`, `Faerie Fire (Feral)`, `Ferocious Bite`, `Mangle (Cat)`, `Berserk`) with a combo-point finisher chain (Rip then Ferocious Bite at 5 points) and Mangle-or-Claw selected by `KnowsSpell`; `targetLastPosition`/`TargetMovingTowardPlayer` and the local `CastSpell` helper deleted. `HealSelfState.cs`: drops the shapeshift-cancel dance, adds `Survival Instincts`, and `CastSpell` branches on `ClientHelper.ClientVersion`. `MoveToTargetState.cs`: pull range 27 -> 25, and the pull is Wrath below level 13 / Feral Charge at 20+. `RestState.cs`: the shapeshift-cancel blocks and the `CurrentShapeshiftForm == HumanForm` gating on the self-heals and the drink all go; `CastSpell`/`TryCastSpell` branch on client version. mirror n/a: no guarded file touched - all four files are pure `FeralDruidBot`, which the fork never customized. Checked one dependency the new code introduces: `player.ComboPoints` lives at `LocalPlayer.cs:289`, outside that file's single guard block (`:479-710`), so it is shared code and resolves in both configurations. Both builds green: 0 errors, 12 warnings each - no new `FeralDruidBot` warnings despite the deleted fields. |
+| 31 | `4f74bd7` | CombatStateBase: check for stuckness | adapted | `BloogBot/AI/SharedStates/CombatStateBase.cs` | Asked on the first pass, answered **option 1** (keep upstream's check unguarded), then resolved and landed. One conflict, purely mechanical: upstream's new `int combatStateStartTime;` landed on the same lines as the fork's `#if` field block (`loopTimer`, `lastTargetHealth`, `random`). Kept both, with upstream's field in the shared area exactly where upstream put it - the preprocessed off-view of the file is byte-identical to upstream `4f74bd7`. The other two hunks placed themselves: `combatStateStartTime = Environment.TickCount;` in the constructor (`:48`), and a brace-style reformat in the threat block (`:176`). Upstream's new check now sits **unguarded** at `:140-147`: after 30 s of combat with `target.HealthPercent >= 99`, add the target's Guid to `container.Probe.BlacklistedMobIds` and pop the state. It therefore runs in both configurations, directly below the fork's own `#if` jitter-and-repath block (`:98-129`). The two are complementary rather than redundant - the fork's fixes **position** (jitter/re-path, any health, never gives up), upstream's abandons the **target** (>= 99% only). The fork's block still gets its full 30 s first, because it only early-returns inside its own 150-200 counter window; upstream's then provides the exit path the fork's loop never had. The blacklist add is in-memory only (no `Repository.AddBlacklistedMob` call, unlike the UI button), so a false positive - a low-level character whose DPS leaves the mob at 99% after 30 s - costs one mob until restart. Both `FindClosestTarget` branches already consult that list. No guard added, moved or removed; count stays 5 in this file. mirror n/a: upstream's change landed in **shared** code, not in an `#else` branch, so the `#if` configuration already has it - there is no half left behind to mirror. The third hunk is a brace reformat, cosmetic. Both builds green: 0 errors, 12 warnings each. Note: since `feaf991`, `FeralDruidBot` routes through `CombatStateBase`, so this applies to that bot too. |
 
 ## Unguarded customizations
 
@@ -137,14 +138,16 @@ Deliberately not guarded, per the skill's do-not-guard list:
 
 ## Open questions
 
-None. The next run starts at `4f74bd7` ('CombatStateBase: check for stuckness'), +15/-1 in
-`BloogBot/AI/SharedStates/CombatStateBase.cs`. **This is the first guarded file in a while** - it
-carries 5 guard blocks (the fork's threat and npcbot-friend handling) - so a conflict is likely and
-the step 6 mirror question is live. It is also one of the four 'check for stuckness' commits the
-skill flags as a likely **ask**, because the fork has its own `StuckHelper` and `StuckState`
-customizations: read whether upstream's new stuckness check would double-fire with them.
-Note too that since `feaf991`, `FeralDruidBot` runs through `CombatStateBase`, so whatever lands here
-now reaches that bot as well.
+None. `4f74bd7`'s stuckness question was answered (option 1 - upstream's check stays unguarded and
+runs in both configurations) and the commit is landed.
+
+The next run starts at `8b35954` ('CombatStateBase: add a setting to permanently blacklist
+problematic targets'), the **same guarded file** and closely related to what just landed: upstream
+is about to add a *persistent* blacklist setting on top of the in-memory one `4f74bd7` just started
+using. Read it asking whether it changes the `Probe.BlacklistedMobIds.Add` call at `:143` from
+session-only to permanent, because that would turn the false-positive cost from 'one mob until
+restart' into 'one mob forever' - and the fork's own target/waypoint blacklisting is in play too, so
+the skill flags it as a likely **ask**.
 
 Standing observation, not a question: upstream's `ItemCacheInfo.Name` (`6422591`) now returns `null`
 where it used to throw, and `LootState.cs:116/126` calls `itemToLoot.Info.Name.Contains(en)` in

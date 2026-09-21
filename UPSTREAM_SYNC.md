@@ -3,14 +3,14 @@
 Upstream: <https://github.com/DrewKestell/BloogBot> branch `main`, cloned at
 `$USERPROFILE/Downloads/BloogBot`, wired into this repo as the `upstream-local` remote.
 Fork point: `1d0057c` - Merge branch 'main' of github.com:DrewKestell/BloogBot into main
-High-water mark: `b1c3479` (every commit up to and including this one is decided)
+High-water mark: `6e1b77e` (every commit up to and including this one is decided)
 Upstream history is **not linear** at the start of this range: `a5e450a` and `569d3cb` both branch
 directly off the fork point and rejoin at the merge `f22af34`. So while those two were the
 high-water mark, `rev-list <mark>..upstream-local/main` over-counted by one (it still listed the
 parallel sibling). From `f22af34` on the history is linear - no further merge commits in the
 range - and the count is exact again.
 Upstream HEAD when last checked: `a9be5e8` `BeastmasterHunterBot: LOS checks, pet management, rest state rewrite` (2026-09-22)
-Remaining after the high-water mark: `10`
+Remaining after the high-water mark: `9`
 Local customizations: guarded by `USE_CUSTOM_CHANGES`, defined in `BloogBot/BloogBot.csproj`,
 `FrostMageBot/FrostMageBot.csproj` and `Loader/Loader.vcxproj`. `ArmsWarriorBot` and
 `ShadowPriestBot` had their toggles removed after `569d3cb` left them with no guards.
@@ -60,6 +60,7 @@ landed; only the mirror waits.
 | 50 | `ee5a367` | Bot: stop pushing other states when dead | adapted | `BloogBot/AI/Bot.cs` | One conflict, three lines. Upstream adds an early `return;` after the three corpse-state pushes in `StartInternal`'s death block, with the comment 'Stop checking anything else. We can't do anything while dead.' The fork guards that whole push site: the `#if` branch branches on `playerInBg` (BG pushes only `ReleaseCorpseState`, and nothing at all on map 559 / Nagrand Arena), the `#else` branch holds upstream's three unconditional pushes. Git conflicted on the `#endif` that follows the `#else` pushes. Resolved by putting upstream's blank line, comment and `return;` inside the `#else` branch, immediately before the `#endif`; the `#if` branch was left untouched by the pick itself. mirrored - see the next row. |
 | - | (mirror) | Mirror `ee5a367` fix into the USE_CUSTOM_CHANGES branch | applied | - | Not an upstream commit. Upstream's comment and `return;` were transplanted verbatim to the end of the `#if` branch of the same death block (`BloogBot/AI/Bot.cs`, now lines 677-678), after the `playerInBg` if/else. The `#if` branch carried the identical defect: having pushed the corpse states it fell through to the fork's `if (!playerInBg)` repair block and then to the tick's `botStates.Peek().Update()`. The practical effect is small in both branches - the death block also sets `container.RunningErrands = true`, and every repair/sell check below it is gated on `!container.RunningErrands`, so the only live difference is that the freshly pushed state is no longer `Update()`d in the same tick it was pushed (one 100 ms tick in the fork, 50 ms upstream). Judged clear-cut and mirrored without asking: the shape is identical in both branches, the change is a single statement copied verbatim, and nothing the fork chose on purpose changes. Both builds green after the mirror. |
 | 51 | `b1c3479` | EnhancementShamenBot: improve rotation | applied | - | Clean cherry-pick, no conflicts. Four files, +52/-9. `BloogBot/Game/Objects/LocalPlayer.cs` is the only guarded file touched and the hunk is a pure addition of two new properties next to the existing `MainhandIsEnchanted` - `OffhandIsEnchanted` (reads the 4th return of the `GetWeaponEnchantInfo()` Lua call) and `OffhandHasWeapon` - landing at lines 416/418, far above the file's single guard region (485-716, the fork's wander-node / waypoint / zone tracking block). The other three files, `EnhancementShamanBot/{CombatState,HealSelfState,RestState}.cs`, carry no guards and the fork has never touched them. mirror n/a: the commit corrects nothing the fork copied - it adds two new shared properties and rewrites a bot rotation the fork does not customize. |
+| 52 | `6e1b77e` | FeralDruidBot/HealSelfState: use barskin | applied | - | Clean cherry-pick, no conflicts. One file, +6/-0, and it touches **no guarded file at all** - the guarded-file intersection for this commit is empty, so step 6 had nothing to weigh. `FeralDruidBot/HealSelfState.cs` gains a `Barkskin` constant and a three-line block that casts it right after the existing `CastSpell(SurvivalInstincts)`, gated on `!player.HasBuff(SurvivalInstincts)` so the two damage-reduction cooldowns are not burned on the same emergency. The fork has never modified `FeralDruidBot`. mirror n/a: no guarded file touched. |
 ## Guarded files
 
 23 files carry `USE_CUSTOM_CHANGES`, 72 guard regions total. Re-derive from the tree - it is the
@@ -176,10 +177,12 @@ skill's description of a 'checked-in packages/ directory' does not match this tr
 `NU1902` / `NU1903` vulnerability warnings for upstream's pinned `MessagePack 2.5.198` and
 `Nerdbank.MessagePack 1.0.2` - upstream's choice, not the fork's, and not build-blocking.
 
-The next run starts at `6e1b77e` ('FeralDruidBot/HealSelfState: use barskin'), a six-line addition to
-`FeralDruidBot/HealSelfState.cs` - a file with no guards that the fork has never modified. After it
-comes `e371754` ('MoveToCorpseState: res from graveyard if corpse is unreachable'), which is on the
-skill's likely-ask list: the fork rewrote `MoveToCorpseState` (+113/-24).
+The next run starts at `e371754` ('MoveToCorpseState: res from graveyard if corpse is unreachable'),
+which is on the skill's likely-ask list and is the biggest collision risk left in the range: the fork
+rewrote `MoveToCorpseState` (+113/-24) and also carries guards in `RetrieveCorpseState`. Upstream's
+commit is +111/-2 over four files - it adds a new `ResurrectFromGraveyardState.cs` (76 lines), edits
+both corpse states, and adds one `<Compile Include=...>` line to `BloogBot/BloogBot.csproj`, a csproj
+that carries the toggle. Expect conflicts and read it carefully before picking.
 
 Standing observation, new with `24f4359` and worth a decision at some point: `SkinningState.cs`
 lines 78-100 are a verbatim copy of `LootState`'s loot-item loop **as upstream wrote it**. The fork

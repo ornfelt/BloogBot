@@ -134,8 +134,13 @@ namespace BloogBot.AI
         {
             var player = ObjectManager.Player;
             var threat = FindThreat();
-            if (threat != null)
-                return threat;
+
+            // Make sure this threat is not a dead summoned unit.
+            var checkThreat = ObjectManager.Units.FirstOrDefault(u => u.Guid == threat?.Guid);
+            if (threat != null && checkThreat != null && checkThreat.Health != 0 && !checkThreat.TappedByOther)
+            {
+                return checkThreat;
+            }
 
             var mapId = ObjectManager.MapId;
             if (!BotSettings.TargetingExcludedNames.Contains(player.BotFriend))

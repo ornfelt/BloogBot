@@ -65,6 +65,9 @@ namespace BloogBot.AI
                 {
                     botStates.Push(new LoginState(botStates, container, onLoginComplete: () =>
                     {
+#if USE_CUSTOM_CHANGES
+                        ResetValues(container, true);
+#else
                         currentLevel = ObjectManager.Player.Level;
 
                         botStates.Push(new GrindState(botStates, container));
@@ -74,6 +77,7 @@ namespace BloogBot.AI
                         currentPosition = ObjectManager.Player.Position;
                         currentPositionStartTime = Environment.TickCount;
                         teleportCheckPosition = ObjectManager.Player.Position;
+#endif
 
                         container.CheckForTravelPath(botStates, false);
                     }));

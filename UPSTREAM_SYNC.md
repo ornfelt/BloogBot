@@ -3,14 +3,14 @@
 Upstream: <https://github.com/DrewKestell/BloogBot> branch `main`, cloned at
 `$USERPROFILE/Downloads/BloogBot`, wired into this repo as the `upstream-local` remote.
 Fork point: `1d0057c` - Merge branch 'main' of github.com:DrewKestell/BloogBot into main
-High-water mark: `b353f7d` (every commit up to and including this one is decided)
+High-water mark: `ee5a367` (every commit up to and including this one is decided)
 Upstream history is **not linear** at the start of this range: `a5e450a` and `569d3cb` both branch
 directly off the fork point and rejoin at the merge `f22af34`. So while those two were the
 high-water mark, `rev-list <mark>..upstream-local/main` over-counted by one (it still listed the
 parallel sibling). From `f22af34` on the history is linear - no further merge commits in the
 range - and the count is exact again.
-Upstream HEAD when last checked: `a9be5e8` `BeastmasterHunterBot: LOS checks, pet management, rest state rewrite` (2026-09-21)
-Remaining after the high-water mark: `12`
+Upstream HEAD when last checked: `a9be5e8` `BeastmasterHunterBot: LOS checks, pet management, rest state rewrite` (2026-09-22)
+Remaining after the high-water mark: `11`
 Local customizations: guarded by `USE_CUSTOM_CHANGES`, defined in `BloogBot/BloogBot.csproj`,
 `FrostMageBot/FrostMageBot.csproj` and `Loader/Loader.vcxproj`. `ArmsWarriorBot` and
 `ShadowPriestBot` had their toggles removed after `569d3cb` left them with no guards.
@@ -57,6 +57,8 @@ landed; only the mirror waits.
 | 22 | `34a278b` | Bot: improve selling and repairing | applied | - | Clean cherry-pick despite landing in the middle of `Bot.cs`'s largest guard. Two hunks, both placed at `Bot.cs:744` and `:772`, inside the `#else` branch of the big repair/inventory region (724-791) - exactly where a cherry-pick belongs. Upstream (a) pushes a `SellItemsState` alongside `RepairEquipmentState` so a repair trip also sells, and (b) widens the inventory-full condition from `currentHotspot.Innkeeper != null` to innkeeper-or-repair-vendor-or-ammo-vendor, then picks the first non-null of the three as the vendor, since all of them buy. Preprocessed off-view of `Bot.cs` is identical to upstream `34a278b`. No guard added, moved or removed; no csproj touched. mirror n/a (`Bot.cs`): neither half applies to the `#if` branch. (a) is an optimisation ('might as well sell items', 'save a trip'), not a correction, and the fork's repair block deliberately does not sell. (b) has no subject at all in the `#if` branch - the fork's inventory-full block is **commented out** (`Bot.cs:706-720`), so the on-configuration never sells anywhere: not on a full bag, not on a repair trip. That is a standing fork choice, not something this commit broke; say so if it should be revisited. Both builds green: 0 errors, 12 warnings each. |
 | 23 | `69844a4` | MerchantFrame: use lua to buy items in WotLK | applied | - | Clean cherry-pick, no conflicts. `BloogBot/Game/Frames/MerchantFrame.cs` only, +18/-2: `BuyItemByName` branches on `ClientHelper.ClientVersion`. On WotLK it now runs a Lua loop over `GetMerchantNumItems()`, matches `GetMerchantItemInfo(i)` against the item name with `find`, and calls `BuyMerchantItem(i, quantity)`; every other client keeps the old `items.Single(...)` plus `Functions.BuyVendorItem(...)`. Upstream's note says the native `CGPlayer_C__XBuyItem` detour does not work on 3.3.5a, probably because it is a member function being called without the right `this`. The file carries no guards and the fork's copy was byte-identical to upstream's parent; it is now byte-identical to upstream `69844a4`. mirror n/a: no guarded file touched. Both builds green: 0 errors, 12 warnings each. |
 
+| 50 | `ee5a367` | Bot: stop pushing other states when dead | adapted | `BloogBot/AI/Bot.cs` | One conflict, three lines. Upstream adds an early `return;` after the three corpse-state pushes in `StartInternal`'s death block, with the comment 'Stop checking anything else. We can't do anything while dead.' The fork guards that whole push site: the `#if` branch branches on `playerInBg` (BG pushes only `ReleaseCorpseState`, and nothing at all on map 559 / Nagrand Arena), the `#else` branch holds upstream's three unconditional pushes. Git conflicted on the `#endif` that follows the `#else` pushes. Resolved by putting upstream's blank line, comment and `return;` inside the `#else` branch, immediately before the `#endif`; the `#if` branch was left untouched by the pick itself. mirrored - see the next row. |
+| - | (mirror) | Mirror `ee5a367` fix into the USE_CUSTOM_CHANGES branch | applied | - | Not an upstream commit. Upstream's comment and `return;` were transplanted verbatim to the end of the `#if` branch of the same death block (`BloogBot/AI/Bot.cs`, now lines 677-678), after the `playerInBg` if/else. The `#if` branch carried the identical defect: having pushed the corpse states it fell through to the fork's `if (!playerInBg)` repair block and then to the tick's `botStates.Peek().Update()`. The practical effect is small in both branches - the death block also sets `container.RunningErrands = true`, and every repair/sell check below it is gated on `!container.RunningErrands`, so the only live difference is that the freshly pushed state is no longer `Update()`d in the same tick it was pushed (one 100 ms tick in the fork, 50 ms upstream). Judged clear-cut and mirrored without asking: the shape is identical in both branches, the change is a single statement copied verbatim, and nothing the fork chose on purpose changes. Both builds green after the mirror. |
 ## Guarded files
 
 23 files carry `USE_CUSTOM_CHANGES`, 72 guard regions total. Re-derive from the tree - it is the
@@ -173,9 +175,9 @@ skill's description of a 'checked-in packages/ directory' does not match this tr
 `NU1902` / `NU1903` vulnerability warnings for upstream's pinned `MessagePack 2.5.198` and
 `Nerdbank.MessagePack 1.0.2` - upstream's choice, not the fork's, and not build-blocking.
 
-The next run starts at `b353f7d` ('MoveToTargetState: factor out common logic into
-a base class'), which is on the skill's likely-ask list - it restructures a file family the fork
-touches.
+The next run starts at `b1c3479` ('EnhancementShamenBot: improve rotation'), which touches
+`BloogBot/Game/Objects/LocalPlayer.cs` - a guarded file - plus three `EnhancementShamanBot` files that
+carry no guards and that the fork has never modified.
 
 Standing observation, new with `24f4359` and worth a decision at some point: `SkinningState.cs`
 lines 78-100 are a verbatim copy of `LootState`'s loot-item loop **as upstream wrote it**. The fork

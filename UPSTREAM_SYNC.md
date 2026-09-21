@@ -3,14 +3,14 @@
 Upstream: <https://github.com/DrewKestell/BloogBot> branch `main`, cloned at
 `$USERPROFILE/Downloads/BloogBot`, wired into this repo as the `upstream-local` remote.
 Fork point: `1d0057c` - Merge branch 'main' of github.com:DrewKestell/BloogBot into main
-High-water mark: `8b35954` (every commit up to and including this one is decided)
+High-water mark: `24f4359` (every commit up to and including this one is decided)
 Upstream history is **not linear** at the start of this range: `a5e450a` and `569d3cb` both branch
 directly off the fork point and rejoin at the merge `f22af34`. So while those two were the
 high-water mark, `rev-list <mark>..upstream-local/main` over-counted by one (it still listed the
 parallel sibling). From `f22af34` on the history is linear - no further merge commits in the
 range - and the count is exact again.
 Upstream HEAD when last checked: `a9be5e8` `BeastmasterHunterBot: LOS checks, pet management, rest state rewrite` (2026-09-21)
-Remaining after the high-water mark: `29`
+Remaining after the high-water mark: `28`
 Local customizations: guarded by `USE_CUSTOM_CHANGES`, defined in `BloogBot/BloogBot.csproj`,
 `FrostMageBot/FrostMageBot.csproj` and `Loader/Loader.vcxproj`. `ArmsWarriorBot` and
 `ShadowPriestBot` had their toggles removed after `569d3cb` left them with no guards.
@@ -108,6 +108,7 @@ no longer define the symbol.
 | 30 | `a2d0e48` | FeralDruidBot: more combat overhaul | applied | - | Clean cherry-pick, no conflicts. Four files, +91/-96, all four byte-identical to upstream `a2d0e48` afterwards (`FeralDruidBot.csproj` still differs by the known v4.6.1 -> v4.8 retarget, which upstream's `608ab7f` makes identically later). Continues `feaf991`: upstream's own note says 'no major rotation change other than adding a few skills, just making it reuse the base classes other classes use'. `CombatState.cs`: `desiredRange` becomes level-dependent (`Level <= 12 ? 30 : 4`) and the hand-rolled melee-approach blocks in both the bear and cat branches are deleted in favour of `CombatStateBase`'s movement; five new cat spells (`Feral Charge - Cat`, `Faerie Fire (Feral)`, `Ferocious Bite`, `Mangle (Cat)`, `Berserk`) with a combo-point finisher chain (Rip then Ferocious Bite at 5 points) and Mangle-or-Claw selected by `KnowsSpell`; `targetLastPosition`/`TargetMovingTowardPlayer` and the local `CastSpell` helper deleted. `HealSelfState.cs`: drops the shapeshift-cancel dance, adds `Survival Instincts`, and `CastSpell` branches on `ClientHelper.ClientVersion`. `MoveToTargetState.cs`: pull range 27 -> 25, and the pull is Wrath below level 13 / Feral Charge at 20+. `RestState.cs`: the shapeshift-cancel blocks and the `CurrentShapeshiftForm == HumanForm` gating on the self-heals and the drink all go; `CastSpell`/`TryCastSpell` branch on client version. mirror n/a: no guarded file touched - all four files are pure `FeralDruidBot`, which the fork never customized. Checked one dependency the new code introduces: `player.ComboPoints` lives at `LocalPlayer.cs:289`, outside that file's single guard block (`:479-710`), so it is shared code and resolves in both configurations. Both builds green: 0 errors, 12 warnings each - no new `FeralDruidBot` warnings despite the deleted fields. |
 | 31 | `4f74bd7` | CombatStateBase: check for stuckness | adapted | `BloogBot/AI/SharedStates/CombatStateBase.cs` | Asked on the first pass, answered **option 1** (keep upstream's check unguarded), then resolved and landed. One conflict, purely mechanical: upstream's new `int combatStateStartTime;` landed on the same lines as the fork's `#if` field block (`loopTimer`, `lastTargetHealth`, `random`). Kept both, with upstream's field in the shared area exactly where upstream put it - the preprocessed off-view of the file is byte-identical to upstream `4f74bd7`. The other two hunks placed themselves: `combatStateStartTime = Environment.TickCount;` in the constructor (`:48`), and a brace-style reformat in the threat block (`:176`). Upstream's new check now sits **unguarded** at `:140-147`: after 30 s of combat with `target.HealthPercent >= 99`, add the target's Guid to `container.Probe.BlacklistedMobIds` and pop the state. It therefore runs in both configurations, directly below the fork's own `#if` jitter-and-repath block (`:98-129`). The two are complementary rather than redundant - the fork's fixes **position** (jitter/re-path, any health, never gives up), upstream's abandons the **target** (>= 99% only). The fork's block still gets its full 30 s first, because it only early-returns inside its own 150-200 counter window; upstream's then provides the exit path the fork's loop never had. The blacklist add is in-memory only (no `Repository.AddBlacklistedMob` call, unlike the UI button), so a false positive - a low-level character whose DPS leaves the mob at 99% after 30 s - costs one mob until restart. Both `FindClosestTarget` branches already consult that list. No guard added, moved or removed; count stays 5 in this file. mirror n/a: upstream's change landed in **shared** code, not in an `#else` branch, so the `#if` configuration already has it - there is no half left behind to mirror. The third hunk is a brace reformat, cosmetic. Both builds green: 0 errors, 12 warnings each. Note: since `feaf991`, `FeralDruidBot` routes through `CombatStateBase`, so this applies to that bot too. |
 | 32 | `8b35954` | CombatStateBase: add a setting to permanently blacklist problematic targets | applied | - | Clean cherry-pick, no conflicts. Two files, +9/-1. `BotSettings.cs`: new `public bool PermanentlyBlacklistUnreachableTargets { get; set; }`, inserted after `UseVerboseLogging` - the fork's only divergence in that file is the `Username`/`Password` pair a few lines below (from upstream `5b4f37c`) plus two trailing-whitespace fixes, none of which is guarded, so the property placed itself exactly where upstream put it. `CombatStateBase.cs`: `using BloogBot.Properties;` added at the top, and the stuckness block `4f74bd7` introduced now also calls `Repository.AddBlacklistedMob(target.Guid)` when the new setting is on; its comment loses the word 'in-memory'. Both builds green: 0 errors, 12 warnings each. mirror n/a: the commit's only code hunk lands in the **unguarded** stuckness block at `:136-149` - the same shared code `4f74bd7` put there under answer option 1 - so both configurations get the new behaviour already; there is no `#else` half holding a fix the `#if` half is missing. It is also a feature with an opt-in setting rather than a defect correction, so nothing about the fork's chosen behaviour changes. Guard count in this file stays 5. Two follow-ups worth knowing, neither a defect: the new `using BloogBot.Properties;` is unused (`Repository` resolves from the enclosing `BloogBot` namespace) and is upstream's, left verbatim; and the setting is absent from `BloogBot/botSettings.json`, an unguarded fork-customized file, so it deserializes to `false` and the blacklist stays session-only until the user adds `"PermanentlyBlacklistUnreachableTargets": true`. |
+| 33 | `24f4359` | AI: auto skin after looting | applied | - | Clean cherry-pick, no conflicts. Three files, +136/-13. New **unguarded** `BloogBot/AI/SharedStates/SkinningState.cs` (+133), byte-identical to upstream `24f4359`; `BloogBot/BloogBot.csproj` gains one unconditional `<Compile Include='AI\SharedStates\SkinningState.cs' />` in the alphabetical run between `SellItemsState` and `StuckState` - nowhere near the two `UseCustomChanges` PropertyGroups, which are untouched. `LootState.cs`: the exit block at `:63-74` no longer pushes `EquipBagsState` and the swimming-to-nearest-waypoint `MoveToPositionState`; it pushes `new SkinningState(botStates, container, target)` instead, and that whole block **moved verbatim into `SkinningState.Exit()`**, so nothing was dropped - it now runs when skinning finishes or bails. Plus one trailing-whitespace fix at `:54`. Both landed in shared unguarded code; after the pick `LootState.cs` is upstream `24f4359` verbatim plus the fork's two `#if` blocks, insertions only, guard count unchanged at 2. Ran standalone - the one-commit-at-a-time exception for the gathering set did not apply; `5e949d4` ('AI: implement auto gathering'), `0f254be` and `1e39908` are still 21, 22 and 23 commits ahead and unrelated to this one. Both builds green: 0 errors, 12 warnings each. mirror n/a: upstream's two hunks are both in **shared** code - no `#else` half was patched, so the `#if` configuration already has them - and the commit is a new feature, not a defect correction, so there is nothing for the fork's chosen behaviour to inherit. **But see the standing observation below**: `SkinningState`'s loot loop is a verbatim copy of `LootState`'s *upstream* loop, so the fork's epics-and-coins-only filter (the `#if` branch at `LootState.cs:103-112`) does not govern skinning loot. |
 
 ## Unguarded customizations
 
@@ -139,26 +140,35 @@ Deliberately not guarded, per the skill's do-not-guard list:
 
 ## Open questions
 
-None. `8b35954`'s question - flagged by the skill as a likely ask because the fork has its own
-target/waypoint blacklisting - resolved itself on reading: upstream **adds** a persistent write
-*alongside* the in-memory `Probe.BlacklistedMobIds.Add`, gated on a new setting that defaults to
-`false`, rather than converting the session-only add into a permanent one. So nothing changes for
-the fork unless the user opts in, and the fork's own blacklists are untouched. Landed as `applied`.
+None. `24f4359` raised no blocking question: upstream's hunks landed in shared code and the commit
+is a feature, which step 6 classifies as 'not a fix at all - leave the `#if` branch alone'.
 
-The next run starts at `24f4359` ('AI: auto skin after looting'), one of the four gathering commits
-the skill calls out: new states wired through `Bot.cs` and `DependencyContainer.cs`, both heavily
-guarded (`Bot.cs` +367/-70, `DependencyContainer.cs` +137/-31). Expect conflicts there, and check
-whether it needs a sibling commit to compile - the gathering set is one of the two named exceptions
-to one-commit-at-a-time.
+The next run starts at `506ada2` ('ReleaseCorpseState: leave state if we are already alive'),
+`ReleaseCorpseState.cs` only, +6/-3 - a guarded file (2 guard blocks) and, unlike `24f4359`, this
+one reads as a **correction** rather than a feature, so the step 6 mirror check is the real work of
+that run, not the cherry-pick.
 
-Standing observation, not a question, carried forward: upstream's `ItemCacheInfo.Name` (`6422591`)
-now returns `null` where it used to throw, and `LootState.cs:116/126` calls
-`itemToLoot.Info.Name.Contains(en)` in **both** branches. If a name ever does come back null the
-loot filter will NRE - upstream's own exposure, identical in the on- and off-configurations, so
-there is nothing fork-specific to fix.
+Standing observation, new with `24f4359` and worth a decision at some point: `SkinningState.cs`
+lines 78-100 are a verbatim copy of `LootState`'s loot-item loop **as upstream wrote it**. The fork
+narrowed that loop in its `#if` branch (`LootState.cs:103-112`) to `if (itemQuality ==
+ItemQuality.Epic || itemToLoot.IsCoins)` with the comment 'Only loot epics / coins to not clutter
+bag'. That narrowing does **not** apply to the new file, so once a character knows Skinning the bot
+will loot hides and other Common/Poor trade goods even though the grind loop is configured to skip
+exactly those. Deliberately **not** mirrored, for two reasons: mirroring the epics-and-coins filter
+into `SkinningState` would make skinning loot nothing at all (hides are Common or Poor), which
+defeats the feature; and the filter is a fork preference about grind-loot clutter, not a defect.
+The feature is also inert until a character actually knows the spell (`!player.KnowsSpell('Skinning')`
+exits immediately at `SkinningState.cs:41`). If the anti-clutter policy is meant to be global, the
+fix is a guard in `SkinningState.Update()` - or not pushing the state at all from
+`LootState.cs:72` - rather than copying the quality filter across.
 
-Second standing observation, new with this commit: if the user ever turns
-`PermanentlyBlacklistUnreachableTargets` on, the 30-second / >=99%-health heuristic writes to the
-database permanently, so a single false positive (a low-DPS character, a heavily-armoured mob)
-blacklists that mob for good rather than until restart. Nothing to fix - it is opt-in and upstream's
-design - but worth knowing before flipping it.
+Standing observation carried forward: upstream's `ItemCacheInfo.Name` (`6422591`) now returns `null`
+where it used to throw, and `itemToLoot.Info.Name.Contains(en)` is called without a null check in
+`LootState.cs:116/126` **and now also in `SkinningState.cs:95`** - three sites, all in both
+configurations. Upstream's own exposure, identical on and off, so there is nothing fork-specific to
+fix.
+
+Standing observation carried forward: if the user ever turns `PermanentlyBlacklistUnreachableTargets`
+(`8b35954`) on, the 30-second / >=99%-health heuristic writes to the database permanently, so a
+single false positive blacklists that mob for good rather than until restart. Opt-in and upstream's
+design - worth knowing before flipping it.

@@ -3,14 +3,14 @@
 Upstream: <https://github.com/DrewKestell/BloogBot> branch `main`, cloned at
 `$USERPROFILE/Downloads/BloogBot`, wired into this repo as the `upstream-local` remote.
 Fork point: `1d0057c` - Merge branch 'main' of github.com:DrewKestell/BloogBot into main
-High-water mark: `e6db8d9` (every commit up to and including this one is decided)
+High-water mark: `e700d6e` (every commit up to and including this one is decided)
 Upstream history is **not linear** at the start of this range: `a5e450a` and `569d3cb` both branch
 directly off the fork point and rejoin at the merge `f22af34`. So while those two were the
 high-water mark, `rev-list <mark>..upstream-local/main` over-counted by one (it still listed the
 parallel sibling). From `f22af34` on the history is linear - no further merge commits in the
 range - and the count is exact again.
 Upstream HEAD when last checked: `a9be5e8` `BeastmasterHunterBot: LOS checks, pet management, rest state rewrite` (2026-09-21)
-Remaining after the high-water mark: `43`
+Remaining after the high-water mark: `42`
 Local customizations: guarded by `USE_CUSTOM_CHANGES`, defined in `BloogBot/BloogBot.csproj`,
 `FrostMageBot/FrostMageBot.csproj` and `Loader/Loader.vcxproj`. `ArmsWarriorBot` and
 `ShadowPriestBot` had their toggles removed after `569d3cb` left them with no guards.
@@ -51,6 +51,7 @@ landed; only the mirror waits.
 | - | (mirror) | Mirror `9526661` fix into the USE_CUSTOM_CHANGES branch | applied | - | Not an upstream commit. Upstream's four-line early return was transplanted verbatim to the top of the `#if` branch's `FindThreat` in `BloogBot/AI/DependencyContainer.cs` (now lines 58-62), above the fork's `var player = ObjectManager.Player;`. Kept upstream's `ObjectManager.Player.InGhostForm` spelling rather than the local, so the two branches stay text-comparable. The `#else` branch keeps upstream's text exactly as `9526661` cherry-picked it - verified by re-deriving the preprocessed off-view, which is unchanged. Guard count unchanged (23 files, 72 regions); the first `#if` region grew by 6 lines. Both builds green: 0 errors, 12 warnings each. |
 | 17 | `d84eadd` | UI: show target buffs/debuffs | applied | - | Clean cherry-pick, no conflicts. Four files, +33/-3, all of them plain upstream code in this fork. `BloogBot/Probe.cs`: two new `TargetBuffs`/`TargetDebuffs` strings. `BloogBot/Game/ObjectManager.cs`: the probe refresh fills them with `string.Join(', ', target.Buffs.Select(u => u.Name))` and the same for `Debuffs`, and - separately - resolves `target = Player` when `Player.TargetGuid == Player.Guid`, since self-targeting never matched the `Units` lookup. `BloogBot/UI/MainViewModel.cs`: two `[ProbeField]` getters. `BloogBot/UI/MainWindow.xaml`: two grid rows and labels, Update Latency pushed from row 13 to 15, window height 900 -> 1000. All four files are byte-identical to upstream `d84eadd` afterwards. mirror n/a: no guarded file touched - `ObjectManager.cs` used to carry guards but the `569d3cb` cleanup collapsed them, and `Probe.cs`, `MainViewModel.cs` and `MainWindow.xaml` never had any. Both builds green: 0 errors, 12 warnings each. |
 | 18 | `e6db8d9` | FrostMageBot/CombatState: optimize rotation | applied | - | Clean cherry-pick, no conflicts. `FrostMageBot/CombatState.cs` only, +13/-3. Two things: (a) some auras land on the wrong list on these servers, so `IsTargetFrozen` now checks `HasBuff` as well as `HasDebuff` for both Frostbite and Frost Nova, and a new `PlayerHasIceBarrier` property checks both lists for Ice Barrier, replacing the two bare `player.HasBuff(IceBarrier)` tests in the Evocation and Ice Barrier conditions; (b) Brain Freeze support - two new constants (`BrainFreezeBuff = 'Fireball!'`, `FrostfireBolt`) and two `TryCastSpell` calls that fire Frostfire Bolt at 40 yd then Fireball at 35 yd while the proc is up, placed just above the normal nuke. The file carries no guards and the fork's copy was byte-identical to upstream's parent (including `5c8fd85`'s unstucking block); it is now byte-identical to upstream `e6db8d9`. mirror n/a: no guarded file touched. `FrostMageBot` does define the toggle, but its two guard regions are the `FoodNames`/`DrinkNames` lookups in `RestState.cs` and `ConjureItemsState.cs`, which this commit does not touch. Both builds green: 0 errors, 12 warnings each. |
+| 19 | `e700d6e` | frost mage: allow setting multiple food items | adapted | `FrostMageBot/ConjureItemsState.cs`, `FrostMageBot/RestState.cs` | The first commit since `569d3cb` to hit a guard head-on. Upstream replaced the exact-match lookups `i.Info.Name == container.BotSettings.Food` (and `.Drink`) with `container.BotSettings.Food.Split('|').Any(m => i.Info.Name.Contains(m))`, making the setting a pipe-separated list matched by substring, and dropped a stale `//player.Stand();`. Both files carry one guard region each wrapping exactly those four lines, so upstream's text went into the `#else` branch of each and the `#if` branch - the fork's `player.FoodNames.Contains(i.Info.Name) || i.Info.Name == container.BotSettings.Food` - was left alone. Git placed the food line itself and conflicted only on the drink line, purely because `#endif` follows it; resolved by taking upstream's line and keeping the `#endif`. The `//player.Stand();` deletion is in shared code after the `#endif` and applied cleanly. Preprocessed off-views of both files match upstream `e700d6e` apart from fork-added dead usings (`using System;` in both, plus `using System.Data;` in `RestState.cs` - these were missing from the dead-using list below and are now noted there). mirror n/a (both files): this is a feature, not a correction, and the fork already solves the same problem its own way - `player.FoodNames`/`DrinkNames` are static lists of 20-odd consumable names, so the on-configuration already matches many items. One interaction worth knowing: the `#if` branch's settings arm is still exact-match, so a pipe-separated `Food` value in `botSettings.json` would not work with the symbol on (the fork's value is the single name 'Conjured Sweet Roll'). Say so if you want that mirrored later. Both builds green: 0 errors, 12 warnings each. |
 
 ## Guarded files
 
@@ -114,8 +115,10 @@ Deliberately not guarded, per the skill's do-not-guard list:
 - `FastCall/FastCall.vcxproj` platform-toolset change.
 - `BloogBot/Properties/Resources.Designer.cs`, `Settings.Designer.cs` - designer-regenerated churn.
   These are the only two code files whose diff against the fork point still contains deletions.
-- Three dead `using System;` additions (`ArcaneMageBot/ConjureItemsState.cs`,
-  `BloogBot/AI/SharedStates/EquipArmorState.cs`, `FrostMageBot/BuffSelfState.cs`), the unused
+- Five dead `using System;` additions (`ArcaneMageBot/ConjureItemsState.cs`,
+  `BloogBot/AI/SharedStates/EquipArmorState.cs`, `FrostMageBot/BuffSelfState.cs`,
+  `FrostMageBot/ConjureItemsState.cs`, `FrostMageBot/RestState.cs`), the unused
+  `using System.Data;` in `FrostMageBot/RestState.cs`, the unused
   `using System.ComponentModel;` in `LocalPlayer.cs`/`DependencyContainer.cs`, the unused
   `using BloogBot.AI;` in `Navigation.cs`, and a commented-out `Health` property experiment in
   `WoWUnit.cs`. All non-behavioral in both configurations. **`ArcaneMageBot` therefore needs no
@@ -123,6 +126,6 @@ Deliberately not guarded, per the skill's do-not-guard list:
 
 ## Open questions
 
-None. The next run starts at `e700d6e` ('frost mage: allow setting multiple food items') - it lands
-in `FrostMageBot`, whose `RestState.cs`/`ConjureItemsState.cs` guards are exactly the
-`FoodNames`/`DrinkNames` lookups, so expect a conflict or a mirror question.
+None. The next run starts at `5b4f37c` ('Add auto login support') - the skill flags it as a likely
+ask: a new `LoginState`, new csproj entries, and wiring through `Bot.cs`, which is the fork's most
+heavily guarded file.

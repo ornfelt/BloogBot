@@ -3,14 +3,14 @@
 Upstream: <https://github.com/DrewKestell/BloogBot> branch `main`, cloned at
 `$USERPROFILE/Downloads/BloogBot`, wired into this repo as the `upstream-local` remote.
 Fork point: `1d0057c` - Merge branch 'main' of github.com:DrewKestell/BloogBot into main
-High-water mark: `6422591` (every commit up to and including this one is decided)
+High-water mark: `556e8c8` (every commit up to and including this one is decided)
 Upstream history is **not linear** at the start of this range: `a5e450a` and `569d3cb` both branch
 directly off the fork point and rejoin at the merge `f22af34`. So while those two were the
 high-water mark, `rev-list <mark>..upstream-local/main` over-counted by one (it still listed the
 parallel sibling). From `f22af34` on the history is linear - no further merge commits in the
 range - and the count is exact again.
 Upstream HEAD when last checked: `a9be5e8` `BeastmasterHunterBot: LOS checks, pet management, rest state rewrite` (2026-09-21)
-Remaining after the high-water mark: `34`
+Remaining after the high-water mark: `33`
 Local customizations: guarded by `USE_CUSTOM_CHANGES`, defined in `BloogBot/BloogBot.csproj`,
 `FrostMageBot/FrostMageBot.csproj` and `Loader/Loader.vcxproj`. `ArmsWarriorBot` and
 `ShadowPriestBot` had their toggles removed after `569d3cb` left them with no guards.
@@ -103,6 +103,7 @@ no longer define the symbol.
 | 25 | `3164fde` | FrostMageBot/BuffSelfState: use molten armor | applied | - | Clean cherry-pick, no conflicts. `FrostMageBot/BuffSelfState.cs` only, +14/-3. Adds the `Molten Armor` constant, accepts it in the already-buffed early-exit alongside Frost/Ice/Mage Armor, and puts it at the top of the armor-selection chain (Molten -> Mage -> Ice -> Frost), so a WotLK-level mage self-buffs the spell power armor instead of stopping at Mage Armor. The rest of the diff is brace-style and one trailing-whitespace trim. mirror n/a: no guarded file touched. `BuffSelfState.cs` carries no `#if` at all - the fork's only divergence in it is a stray `using System;` at line 6, which this pick left in place and which nothing in the file uses. The fork's guarded FrostMage files are `ConjureItemsState.cs` and `RestState.cs`, neither of which this commit goes near. Both builds green: 0 errors, 12 warnings each. |
 | 26 | `1fdd6ee` | Update README.md | applied | - | Clean cherry-pick, no conflicts. `README.md` only, +1/-1: the Discord invite link changes from `discord.gg/S4tvykaGcJ` to `discord.gg/YfNqMgfFBh` (the old invite had presumably expired). `README.md` is one of the **unguarded** customizations - the fork appends a 30-line `## Notes` section at the tail - and the two edits are nowhere near each other, so git placed upstream's line 3 change without asking. Verified afterwards: `git diff 1fdd6ee main -- README.md` is 30 insertions and **0 deletions**, i.e. the fork's README is now upstream's verbatim plus the fork's tail. mirror n/a: no guarded file touched, and `README.md` has no preprocessor to guard with. Both builds green: 0 errors, 12 warnings each. |
 | 27 | `6422591` | ItemCacheInfo: return null if we encounter errors when getting name | applied | - | Clean cherry-pick, no conflicts. `BloogBot/Game/Cache/ItemCacheInfo.cs` only, +15/-1: the `Name` expression-bodied property becomes a full getter that wraps `MemoryManager.ReadString(itemCacheEntry.NamePtr)` in `try`/`catch (Exception e)`, logs the exception and returns `null`. Upstream's note: a few items throw an access violation when their name is read, rarely enough that skipping them beats letting the throw break the whole filtering call. `using System;` was already present, so nothing else was needed. The fork's copy of the file was byte-identical to upstream's parent and is now byte-identical to `6422591`. mirror n/a: no guarded file touched. Checked the callers anyway, because this is the other half of `797496d` (`ReadBytes` no longer swallows faults): the guarded call sites that read `Info.Name` are `LootState.cs:116/126`, `FrostMageBot/ConjureItemsState.cs:33-42` and `FrostMageBot/RestState.cs:31-40`, and in every one of them the `#if` and `#else` halves dereference `Name` the **same** way or the `#if` half is the safer of the two - `LootState` runs the identical `LootExcludedNames...Contains(itemToLoot.Info.Name)` expression in both branches, and the fork's FrostMage `#if` branch uses `player.FoodNames.Contains(i.Info.Name)` plus `==`, both null-tolerant, where upstream's `#else` uses `i.Info.Name.Contains(m)`, which is not. So there is no asymmetry for a mirror to correct. Both builds green: 0 errors, 12 warnings each. |
+| 28 | `556e8c8` | FrostMageBot/CombatState: optimize rotation | applied | - | Clean cherry-pick, no conflicts. `FrostMageBot/CombatState.cs` only, +14/-1. Four new spell-name constants (`Deep Freeze`, `Fingers of Frost`, `Ice Lance`, `Shattered Barrier`); two new `TryCastSpell` lines in the rotation, both gated on `IsTargetFrozen || player.HasBuff(FingersOfFrostBuff)` and placed above the existing `ConeOfCold`/`FireBlast` lines so the frost-proc finishers take priority; and `IsTargetFrozen` widened to also count `Deep Freeze` and `Shattered Barrier` buffs on the target, reformatted onto one clause per line. The fork's copy of the file was byte-identical to upstream's parent and is now byte-identical to `556e8c8`. mirror n/a: no guarded file touched. `FrostMageBot/CombatState.cs` carries no `#if` at all - the fork's guarded FrostMage files are `ConjureItemsState.cs` and `RestState.cs`. Both builds green: 0 errors, 12 warnings each. |
 
 ## Unguarded customizations
 
@@ -134,9 +135,11 @@ Deliberately not guarded, per the skill's do-not-guard list:
 
 ## Open questions
 
-None. The next run starts at `556e8c8` ('FrostMageBot/CombatState: optimize rotation'), +14/-1 in
-`FrostMageBot/CombatState.cs`. That file carries **no** guards - the fork's guarded FrostMage files
-are `ConjureItemsState.cs` and `RestState.cs` - so expect a clean pick and `mirror n/a`.
+None. The next run starts at `feaf991` ('FeralDruidBot: overhaul combat logic'), +41/-60 across
+`FeralDruidBot/BuffSelfState.cs`, `CombatState.cs` and `MoveToTargetState.cs`. **None** of the three
+carries guards - the fork never customized `FeralDruidBot` - so expect a clean pick and `mirror n/a`.
+Note that the very next commit, `a2d0e48` ('FeralDruidBot: more combat overhaul'), continues the same
+work; they are still separate commits and go in one at a time.
 
 Standing observation, not a question: upstream's `ItemCacheInfo.Name` (`6422591`) now returns `null`
 where it used to throw, and `LootState.cs:116/126` calls `itemToLoot.Info.Name.Contains(en)` in

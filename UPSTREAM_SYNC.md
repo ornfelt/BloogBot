@@ -3,14 +3,14 @@
 Upstream: <https://github.com/DrewKestell/BloogBot> branch `main`, cloned at
 `$USERPROFILE/Downloads/BloogBot`, wired into this repo as the `upstream-local` remote.
 Fork point: `1d0057c` - Merge branch 'main' of github.com:DrewKestell/BloogBot into main
-High-water mark: `9526661` (every commit up to and including this one is decided)
+High-water mark: `d84eadd` (every commit up to and including this one is decided)
 Upstream history is **not linear** at the start of this range: `a5e450a` and `569d3cb` both branch
 directly off the fork point and rejoin at the merge `f22af34`. So while those two were the
 high-water mark, `rev-list <mark>..upstream-local/main` over-counted by one (it still listed the
 parallel sibling). From `f22af34` on the history is linear - no further merge commits in the
 range - and the count is exact again.
 Upstream HEAD when last checked: `a9be5e8` `BeastmasterHunterBot: LOS checks, pet management, rest state rewrite` (2026-09-21)
-Remaining after the high-water mark: `45`
+Remaining after the high-water mark: `44`
 Local customizations: guarded by `USE_CUSTOM_CHANGES`, defined in `BloogBot/BloogBot.csproj`,
 `FrostMageBot/FrostMageBot.csproj` and `Loader/Loader.vcxproj`. `ArmsWarriorBot` and
 `ShadowPriestBot` had their toggles removed after `569d3cb` left them with no guards.
@@ -49,6 +49,7 @@ landed; only the mirror waits.
 | - | (mirror) | Mirror `41e3331` fix into the USE_CUSTOM_CHANGES branch | applied | - | Not an upstream commit. Upstream's four-line re-lookup was transplanted verbatim into the `#if` branch of `BloogBot/AI/DependencyContainer.cs` (now lines 136-143), directly below the fork's `var player = ObjectManager.Player;`: `var checkThreat = ObjectManager.Units.FirstOrDefault(u => u.Guid == threat?.Guid);` then `if (threat != null && checkThreat != null && checkThreat.Health != 0 && !checkThreat.TappedByOther) return checkThreat;`. The `#else` branch keeps upstream's text exactly as `41e3331` cherry-picked it - verified by re-deriving the preprocessed off-view, which is unchanged. Guard count unchanged (23 files, 72 regions); the `#if` region simply grew by 5 lines. Both builds green: 0 errors, 12 warnings each. Note the fork's `FindThreat` casts a wider net than upstream's - it also returns units targeting `player.BotFriend` - so the on-configuration now filters dead summons out of that larger set too. |
 | 16 | `9526661` | FindThreat: return nothing when dead | applied | - | Clean cherry-pick, no conflicts. Six lines in `BloogBot/AI/DependencyContainer.cs`: `FindThreat` now opens with `if (ObjectManager.Player.InGhostForm) return null;` so a corpse-running ghost is not handed a target. The hunk landed at line 100, inside the `#else` branch (95-136) - correct, that is upstream's half. Off-view matches upstream `9526661` apart from the known unguarded dead `using System.ComponentModel;`. No guard added, moved or removed; no csproj touched. **mirrored** (`DependencyContainer.cs`): the fork's own `FindThreat` in the `#if` branch had no ghost-form check either, and the defect bites harder there - `MoveToPositionState.Update` calls `FindThreat()` first thing (`MoveToPositionState.cs:33`) and pushes a move-to-target state before its own guarded ghost-form pop at lines 54/74 is ever reached, and `RetrieveCorpseState` drives corpse runs through exactly that state (with the 60 s deadline `1260c1b` added). On top of that the fork's `FindThreat` also counts units targeting `player.BotFriend`, which stay live while the player is dead, so a ghost can be pulled off its corpse run by a mob fighting the npcbot friend. Ported in the follow-up commit below, on the user's say-so. Both builds green: 0 errors, 12 warnings each. |
 | - | (mirror) | Mirror `9526661` fix into the USE_CUSTOM_CHANGES branch | applied | - | Not an upstream commit. Upstream's four-line early return was transplanted verbatim to the top of the `#if` branch's `FindThreat` in `BloogBot/AI/DependencyContainer.cs` (now lines 58-62), above the fork's `var player = ObjectManager.Player;`. Kept upstream's `ObjectManager.Player.InGhostForm` spelling rather than the local, so the two branches stay text-comparable. The `#else` branch keeps upstream's text exactly as `9526661` cherry-picked it - verified by re-deriving the preprocessed off-view, which is unchanged. Guard count unchanged (23 files, 72 regions); the first `#if` region grew by 6 lines. Both builds green: 0 errors, 12 warnings each. |
+| 17 | `d84eadd` | UI: show target buffs/debuffs | applied | - | Clean cherry-pick, no conflicts. Four files, +33/-3, all of them plain upstream code in this fork. `BloogBot/Probe.cs`: two new `TargetBuffs`/`TargetDebuffs` strings. `BloogBot/Game/ObjectManager.cs`: the probe refresh fills them with `string.Join(', ', target.Buffs.Select(u => u.Name))` and the same for `Debuffs`, and - separately - resolves `target = Player` when `Player.TargetGuid == Player.Guid`, since self-targeting never matched the `Units` lookup. `BloogBot/UI/MainViewModel.cs`: two `[ProbeField]` getters. `BloogBot/UI/MainWindow.xaml`: two grid rows and labels, Update Latency pushed from row 13 to 15, window height 900 -> 1000. All four files are byte-identical to upstream `d84eadd` afterwards. mirror n/a: no guarded file touched - `ObjectManager.cs` used to carry guards but the `569d3cb` cleanup collapsed them, and `Probe.cs`, `MainViewModel.cs` and `MainWindow.xaml` never had any. Both builds green: 0 errors, 12 warnings each. |
 
 ## Guarded files
 
@@ -121,4 +122,4 @@ Deliberately not guarded, per the skill's do-not-guard list:
 
 ## Open questions
 
-None. The next run starts at `d84eadd` ('UI: show target buffs/debuffs').
+None. The next run starts at `e6db8d9` ('FrostMageBot/CombatState: optimize rotation').

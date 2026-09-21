@@ -3,14 +3,14 @@
 Upstream: <https://github.com/DrewKestell/BloogBot> branch `main`, cloned at
 `$USERPROFILE/Downloads/BloogBot`, wired into this repo as the `upstream-local` remote.
 Fork point: `1d0057c` - Merge branch 'main' of github.com:DrewKestell/BloogBot into main
-High-water mark: `1fdd6ee` (every commit up to and including this one is decided)
+High-water mark: `6422591` (every commit up to and including this one is decided)
 Upstream history is **not linear** at the start of this range: `a5e450a` and `569d3cb` both branch
 directly off the fork point and rejoin at the merge `f22af34`. So while those two were the
 high-water mark, `rev-list <mark>..upstream-local/main` over-counted by one (it still listed the
 parallel sibling). From `f22af34` on the history is linear - no further merge commits in the
 range - and the count is exact again.
 Upstream HEAD when last checked: `a9be5e8` `BeastmasterHunterBot: LOS checks, pet management, rest state rewrite` (2026-09-21)
-Remaining after the high-water mark: `35`
+Remaining after the high-water mark: `34`
 Local customizations: guarded by `USE_CUSTOM_CHANGES`, defined in `BloogBot/BloogBot.csproj`,
 `FrostMageBot/FrostMageBot.csproj` and `Loader/Loader.vcxproj`. `ArmsWarriorBot` and
 `ShadowPriestBot` had their toggles removed after `569d3cb` left them with no guards.
@@ -102,6 +102,7 @@ no longer define the symbol.
 | 24 | `797496d` | MemoryManager: don't try catch in `ReadBytes` | applied | - | Clean cherry-pick, no conflicts. `BloogBot/MemoryManager.cs` only, +6/-18. Upstream strips the `catch (NullReferenceException)` / `catch (AccessViolationException)` pair out of `ReadBytes`, so a bad address now throws out to the caller instead of silently returning `default` (null). Upstream's reasoning: swallowing the fault turned a read error into an unexpected null that blew up somewhere else - `ReadString` in the same class dereferenced `buffer.Length` right after. The commit also drops the now-unused `using BloogBot.Game;` (the fork's `Logger` is in `BloogBot`, so nothing breaks) and trims ~700 trailing spaces off a `return start;` line. mirror n/a (`MemoryManager.cs`): the file's single guard (`ReadString`, lines 183-186) is the fork's own `if (buffer == null) return default;` - it is a defence against exactly the defect upstream just fixed, not a copy of it. After this commit `ReadBytes` can only return null when `address == IntPtr.Zero`, and `ReadString` already early-returns on that above, so the guarded check is now unreachable in both configurations. Harmless and left alone; it is not a bug to mirror. Behaviour note for both configurations: callers of `ReadBytes` other than `ReadString` no longer get a null on a bad address, they get an `AccessViolationException` - the intended change, but it is the sort of thing that surfaces as a new crash rather than a silent misread. Both builds green: 0 errors, 12 warnings each. |
 | 25 | `3164fde` | FrostMageBot/BuffSelfState: use molten armor | applied | - | Clean cherry-pick, no conflicts. `FrostMageBot/BuffSelfState.cs` only, +14/-3. Adds the `Molten Armor` constant, accepts it in the already-buffed early-exit alongside Frost/Ice/Mage Armor, and puts it at the top of the armor-selection chain (Molten -> Mage -> Ice -> Frost), so a WotLK-level mage self-buffs the spell power armor instead of stopping at Mage Armor. The rest of the diff is brace-style and one trailing-whitespace trim. mirror n/a: no guarded file touched. `BuffSelfState.cs` carries no `#if` at all - the fork's only divergence in it is a stray `using System;` at line 6, which this pick left in place and which nothing in the file uses. The fork's guarded FrostMage files are `ConjureItemsState.cs` and `RestState.cs`, neither of which this commit goes near. Both builds green: 0 errors, 12 warnings each. |
 | 26 | `1fdd6ee` | Update README.md | applied | - | Clean cherry-pick, no conflicts. `README.md` only, +1/-1: the Discord invite link changes from `discord.gg/S4tvykaGcJ` to `discord.gg/YfNqMgfFBh` (the old invite had presumably expired). `README.md` is one of the **unguarded** customizations - the fork appends a 30-line `## Notes` section at the tail - and the two edits are nowhere near each other, so git placed upstream's line 3 change without asking. Verified afterwards: `git diff 1fdd6ee main -- README.md` is 30 insertions and **0 deletions**, i.e. the fork's README is now upstream's verbatim plus the fork's tail. mirror n/a: no guarded file touched, and `README.md` has no preprocessor to guard with. Both builds green: 0 errors, 12 warnings each. |
+| 27 | `6422591` | ItemCacheInfo: return null if we encounter errors when getting name | applied | - | Clean cherry-pick, no conflicts. `BloogBot/Game/Cache/ItemCacheInfo.cs` only, +15/-1: the `Name` expression-bodied property becomes a full getter that wraps `MemoryManager.ReadString(itemCacheEntry.NamePtr)` in `try`/`catch (Exception e)`, logs the exception and returns `null`. Upstream's note: a few items throw an access violation when their name is read, rarely enough that skipping them beats letting the throw break the whole filtering call. `using System;` was already present, so nothing else was needed. The fork's copy of the file was byte-identical to upstream's parent and is now byte-identical to `6422591`. mirror n/a: no guarded file touched. Checked the callers anyway, because this is the other half of `797496d` (`ReadBytes` no longer swallows faults): the guarded call sites that read `Info.Name` are `LootState.cs:116/126`, `FrostMageBot/ConjureItemsState.cs:33-42` and `FrostMageBot/RestState.cs:31-40`, and in every one of them the `#if` and `#else` halves dereference `Name` the **same** way or the `#if` half is the safer of the two - `LootState` runs the identical `LootExcludedNames...Contains(itemToLoot.Info.Name)` expression in both branches, and the fork's FrostMage `#if` branch uses `player.FoodNames.Contains(i.Info.Name)` plus `==`, both null-tolerant, where upstream's `#else` uses `i.Info.Name.Contains(m)`, which is not. So there is no asymmetry for a mirror to correct. Both builds green: 0 errors, 12 warnings each. |
 
 ## Unguarded customizations
 
@@ -133,9 +134,11 @@ Deliberately not guarded, per the skill's do-not-guard list:
 
 ## Open questions
 
-None. The next run starts at `6422591` ('ItemCacheInfo: return null if we encounter errors when
-getting name'), +15/-1 in `BloogBot/Game/Cache/ItemCacheInfo.cs`. That file carries **no** guards, so
-expect a clean pick. It is a fix though - upstream swallows an access violation when reading an item
-name so one bad item stops breaking the whole calling function - and it is the other half of the
-`797496d` story (`ReadBytes` no longer swallows faults itself), so read the callers before deciding
-`mirror n/a`.
+None. The next run starts at `556e8c8` ('FrostMageBot/CombatState: optimize rotation'), +14/-1 in
+`FrostMageBot/CombatState.cs`. That file carries **no** guards - the fork's guarded FrostMage files
+are `ConjureItemsState.cs` and `RestState.cs` - so expect a clean pick and `mirror n/a`.
+
+Standing observation, not a question: upstream's `ItemCacheInfo.Name` (`6422591`) now returns `null`
+where it used to throw, and `LootState.cs:116/126` calls `itemToLoot.Info.Name.Contains(en)` in
+**both** branches. If a name ever does come back null the loot filter will NRE - upstream's own
+exposure, identical in the on- and off-configurations, so there is nothing fork-specific to fix.

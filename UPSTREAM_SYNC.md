@@ -3,14 +3,14 @@
 Upstream: <https://github.com/DrewKestell/BloogBot> branch `main`, cloned at
 `$USERPROFILE/Downloads/BloogBot`, wired into this repo as the `upstream-local` remote.
 Fork point: `1d0057c` - Merge branch 'main' of github.com:DrewKestell/BloogBot into main
-High-water mark: `6e1b77e` (every commit up to and including this one is decided)
+High-water mark: `e371754` (every commit up to and including this one is decided)
 Upstream history is **not linear** at the start of this range: `a5e450a` and `569d3cb` both branch
 directly off the fork point and rejoin at the merge `f22af34`. So while those two were the
 high-water mark, `rev-list <mark>..upstream-local/main` over-counted by one (it still listed the
 parallel sibling). From `f22af34` on the history is linear - no further merge commits in the
 range - and the count is exact again.
 Upstream HEAD when last checked: `a9be5e8` `BeastmasterHunterBot: LOS checks, pet management, rest state rewrite` (2026-09-22)
-Remaining after the high-water mark: `9`
+Remaining after the high-water mark: `8`
 Local customizations: guarded by `USE_CUSTOM_CHANGES`, defined in `BloogBot/BloogBot.csproj`,
 `FrostMageBot/FrostMageBot.csproj` and `Loader/Loader.vcxproj`. `ArmsWarriorBot` and
 `ShadowPriestBot` had their toggles removed after `569d3cb` left them with no guards.
@@ -61,9 +61,10 @@ landed; only the mirror waits.
 | - | (mirror) | Mirror `ee5a367` fix into the USE_CUSTOM_CHANGES branch | applied | - | Not an upstream commit. Upstream's comment and `return;` were transplanted verbatim to the end of the `#if` branch of the same death block (`BloogBot/AI/Bot.cs`, now lines 677-678), after the `playerInBg` if/else. The `#if` branch carried the identical defect: having pushed the corpse states it fell through to the fork's `if (!playerInBg)` repair block and then to the tick's `botStates.Peek().Update()`. The practical effect is small in both branches - the death block also sets `container.RunningErrands = true`, and every repair/sell check below it is gated on `!container.RunningErrands`, so the only live difference is that the freshly pushed state is no longer `Update()`d in the same tick it was pushed (one 100 ms tick in the fork, 50 ms upstream). Judged clear-cut and mirrored without asking: the shape is identical in both branches, the change is a single statement copied verbatim, and nothing the fork chose on purpose changes. Both builds green after the mirror. |
 | 51 | `b1c3479` | EnhancementShamenBot: improve rotation | applied | - | Clean cherry-pick, no conflicts. Four files, +52/-9. `BloogBot/Game/Objects/LocalPlayer.cs` is the only guarded file touched and the hunk is a pure addition of two new properties next to the existing `MainhandIsEnchanted` - `OffhandIsEnchanted` (reads the 4th return of the `GetWeaponEnchantInfo()` Lua call) and `OffhandHasWeapon` - landing at lines 416/418, far above the file's single guard region (485-716, the fork's wander-node / waypoint / zone tracking block). The other three files, `EnhancementShamanBot/{CombatState,HealSelfState,RestState}.cs`, carry no guards and the fork has never touched them. mirror n/a: the commit corrects nothing the fork copied - it adds two new shared properties and rewrites a bot rotation the fork does not customize. |
 | 52 | `6e1b77e` | FeralDruidBot/HealSelfState: use barskin | applied | - | Clean cherry-pick, no conflicts. One file, +6/-0, and it touches **no guarded file at all** - the guarded-file intersection for this commit is empty, so step 6 had nothing to weigh. `FeralDruidBot/HealSelfState.cs` gains a `Barkskin` constant and a three-line block that casts it right after the existing `CastSpell(SurvivalInstincts)`, gated on `!player.HasBuff(SurvivalInstincts)` so the two damage-reduction cooldowns are not burned on the same emergency. The fork has never modified `FeralDruidBot`. mirror n/a: no guarded file touched. |
+| 53 | `e371754` | MoveToCorpseState: res from graveyard if corpse is unreachable | adapted | `BloogBot/AI/SharedStates/MoveToCorpseState.cs` | 4 files, +113/-2 (upstream's +111/-2 plus the two guard lines below). Adds `BloogBot/AI/SharedStates/ResurrectFromGraveyardState.cs` (76 lines, taken **unguarded** as upstream's own code - it walks to the `Spirit Healer` unit, interacts, `AcceptXPLoss()`, and retries if still a ghost), one `<Compile Include>` line in `BloogBot.csproj`, and an `!player.InGhostForm` early exit in `RetrieveCorpseState`'s `Initializing` branch. **One conflict, and it was small**: upstream's new `Position startingPosition;` field lands exactly where the fork's guarded field block (`s_HasReachedWpCloseToCorpse`, `random`) sits, so git could not place it. Resolved by moving upstream's field into that block's `#else` branch. Its assignment in the **shared** `!initialized` block then had to be wrapped in `#if !USE_CUSTOM_CHANGES` (precedent: `WoWObject.cs`, `Position.cs`) - `startingPosition` is read only by the `#else` navigation path, so leaving the assignment unguarded would warn `CS0414 assigned but never used` in the on-build. That is the +2 lines and the 4 -> 5 region count for this file. Upstream's substantive hunk - `GetNextWaypoint` replaced by `CalculatePath`, with `path.Length <= 1` plus `DistanceTo2D(startingPosition) < 10` meaning 'unreachable, go to the spirit healer' and otherwise falling back to the corpse position - auto-merged correctly into the `#else` branch; the `#if` branch keeps its wander-node `HasReachedWpCloseToCorpse()` path at `:73` untouched. `RetrieveCorpseState.cs` and `BloogBot.csproj` auto-merged clean. **mirror pending** on `MoveToCorpseState.cs` - see Open questions. mirror n/a on `RetrieveCorpseState.cs`: upstream's new ghost check is the *same* check the fork's `#if` branch already runs unconditionally at `:41`, one level earlier, so the `#if` branch is already fixed and upstream's copy is merely redundant there (it is genuinely needed in `#else`). mirror n/a on `BloogBot.csproj`: a build-file `<Compile Include>` line, not code. Both `UseCustomChanges` PropertyGroups in `BloogBot.csproj` verified intact after the auto-merge. |
 ## Guarded files
 
-23 files carry `USE_CUSTOM_CHANGES`, 72 guard regions total. Re-derive from the tree - it is the
+23 files carry `USE_CUSTOM_CHANGES`, 74 guard regions total. Re-derive from the tree - it is the
 source of truth, not this list. Note two traps when counting: `BattlegroundQueueState.cs` and
 `ArenaSkirmishQueueState.cs` open with a BOM before `#if`, and `WoWObject.cs`/`Position.cs` use
 negated `#if !USE_CUSTOM_CHANGES` regions, so an anchored `^#if USE_CUSTOM_CHANGES` grep misses six
@@ -79,7 +80,7 @@ git grep -c USE_CUSTOM_CHANGES -- '*.cs' '*.cpp' '*.h' | awk -F: '{s+=$2;n++} EN
 | `BloogBot/AI/SharedStates/GrindState.cs` | 5 | Whole wander-node/waypoint-blacklist/forced-wp-path body (`HandleWpSelection` and helpers), Z-delta target gate, non-readonly `player` plus `isInBg`/`playerLevel` |
 | `BloogBot/AI/SharedStates/CombatStateBase.cs` | 5 | `DeathsAtWp` link-teleport, `loopTimer`/`lastTargetHealth` unstick loop, npcbot-friend and dead-player bail-out |
 | `BloogBot/Game/Position.cs` | 5 | 8-arg `[JsonConstructor]` (negated region keeps upstream's 3-arg one), `ID`/`Zone`/`MinLevel`/`MaxLevel`/`Links`, `ToStringFull`, `ZoneIdNameDict`, `GetZoneName` |
-| `BloogBot/AI/SharedStates/MoveToCorpseState.cs` | 4 | Whole rewritten `Update` body, `HasReachedWpCloseToCorpse`, `ForcedWpPathToCorpse` (BFS over waypoint links) |
+| `BloogBot/AI/SharedStates/MoveToCorpseState.cs` | 5 | Whole rewritten `Update` body, `HasReachedWpCloseToCorpse`, `ForcedWpPathToCorpse` (BFS over waypoint links) |
 | `BloogBot/Game/Objects/WoWObject.cs` | 4 | Three suppressed access-violation logs (negated regions - upstream's logging is the `#if !` side), null-pointer name guard |
 | `BloogBot/AI/DependencyContainer.cs` | 3 | `FindThreat` rewrite, `FindClosestTarget` rewrite plus `CanAttackTarget`/`GetHotspotById`, map-id-driven `GetCurrentHotspot` |
 | `BloogBot/AI/SharedStates/RetrieveCorpseState.cs` | 3 | `resDistance` 25 vs 30, ghost-form bail-out and `WpStuckCount` reset, res-location log |
@@ -159,6 +160,36 @@ Deliberately not guarded, per the skill's do-not-guard list:
   toggle** - its only fork change is one of those dead usings.
 
 ## Open questions
+
+- **`e371754` - mirror pending.** Upstream made an unreachable corpse recoverable: if
+  `Navigation.CalculatePath` returns a path of length <= 1 **and** the bot has not moved 10 yards
+  from where `MoveToCorpseState` started, it gives up on walking and hands off to the new
+  `ResurrectFromGraveyardState` (spirit healer, `AcceptXPLoss()`). That now protects the `#else`
+  branch only. The `#if USE_CUSTOM_CHANGES` branch calls `Navigation.GetNextWaypoint` at
+  `MoveToCorpseState.cs:73`, which swallows a failed path and returns the destination itself, so it
+  never learns the corpse is unreachable. The fork is **not** defenceless - `MoveToCorpseState.cs:94`
+  force-teleports to the corpse with a GM `.go xyz` chat command once `stuckCount > 40` - but that
+  counter only advances via `StuckHelper.CheckIfStuck()`, which requires the player to move less than
+  0.05 units for a full second. A bot drifting in the void, falling, or grinding against geometry
+  keeps moving, never trips the helper, and so never reaches the teleport: that is the gap upstream
+  just closed on its side.
+  **Recommended: `no-mirror e371754`** - keep upstream's spirit-healer fallback out of the `#if`
+  branch, but close the gap the fork's own way by testing the path *before* trusting
+  `GetNextWaypoint`, and dropping straight to the existing GM teleport when it comes back empty:
+  around `:73`, `var path = Navigation.CalculatePath(...); if (path.Length <= 1) { <the :94 .go xyz
+  LuaCall>; return; } var nextWaypoint = path[1];`. Reasoning: a straight mirror would replace a
+  free teleport with a graveyard resurrection that costs XP and durability, which is precisely the
+  penalty the fork's teleport exists to avoid, and it would fire much earlier than `stuckCount > 40`,
+  pre-empting the fork's chosen recovery in cases the teleport would have handled fine. Rejected
+  alternatives: (a) mirror upstream verbatim - changes fork-chosen behavior as above, and assumes
+  a `Spirit Healer` unit is in `ObjectManager.Units`, which `ResurrectFromGraveyardState.cs:36`
+  asserts with `.First()` and will throw if it is not; (b) leave the `#if` branch completely alone -
+  simplest, and defensible if the user only ever dies somewhere walkable, but it keeps a real
+  forever-loop reachable; (c) lower the `stuckCount > 40` threshold - does not help, because the
+  scenario is one where the counter never advances at all.
+  Answer with `mirror e371754` (take upstream's spirit-healer handoff into the `#if` branch),
+  `no-mirror e371754 <reason>` (leave it as it is), or say to apply the recommended path-check
+  variant instead. The commit itself has **landed** and both builds are green; only the mirror waits.
 
 - **`a5d5325` - settled 2026-09-21: mirrored** in `ced1206`. The answer was `mirror a5d5325`. The
   open uncertainty that had held it back - whether `onLoginComplete` could fire on a reconnect, where

@@ -25,6 +25,10 @@ Upstream reference clone (read-only), branch `main`, remote
 
 `$USERPROFILE/Downloads/BloogBot` (PowerShell: `$env:USERPROFILE\Downloads\BloogBot`)
 
+**On Linux there is no `USERPROFILE`** - use `$HOME/Downloads/BloogBot` there. Every
+`$USERPROFILE/Downloads` written in the snippets below means `$HOME/Downloads` on Linux; set `UP`
+accordingly (`UP="$HOME/Downloads/BloogBot"`) and the rest of the commands are unchanged.
+
 Target - the fork this skill writes to, remote `https://github.com/ornfelt/BloogBot`:
 
 `$code_root_dir/Code2/C#/BloogBot` (PowerShell: `$env:code_root_dir\Code2\C#\BloogBot`)
@@ -640,6 +644,16 @@ git -C "$FORK" status --short | grep "^UU\|^AA\|^DU\|^UD"
 git -C "$FORK" diff --diff-filter=U
 ```
 
+**The default rule when a commit conflicts with a customization:** if upstream's change would
+benefit the `#if USE_CUSTOM_CHANGES` branch as much as the `#else` one, put it in **both** - take
+upstream's text into `#else`, and re-express the same change on top of the customization in `#if`.
+A fix that is right for upstream's code is usually right for the fork's code too, and only landing
+it in `#else` leaves the bug in the half that actually runs.
+
+**If that is not clear-cut, ask the user to verify rather than guessing** - and never ask bare:
+come with a recommended resolution, spelled out as the clean, logical way to resolve it, plus the
+reasoning and the alternatives you rejected.
+
 For each conflicted file, work out which of these it is:
 
 - **Conflict away from the guards** - upstream changed code the fork never touched, and git only
@@ -746,21 +760,31 @@ was **correcting** something or **changing** something. `Task.Delay(25)` becomin
 is a change - the fork's `100` stands. A missing `!= null` before `.Name` is a correction, and the
 fork's rewritten block dereferences the same thing, so it needs the same check.
 
-**When it is a fix that applies: land the commit as normal, then ask before mirroring it.** Do not
-edit the `#if` branch on your own judgement, and do not hold the commit back waiting for an answer -
-the commit is upstream's and is correct on its own terms. Finish steps 5 and 7 as usual, record the
-commit with its real status, and add the mirror question on top:
+**When it is a fix that applies and mirroring it is unambiguous, mirror it in the same run.** That
+is the same rule as step 4: if the fix benefits the `#if USE_CUSTOM_CHANGES` branch as much as the
+`#else` one, it belongs in both. Unambiguous means the same defect is plainly there in the `#if`
+branch, the mirrored change is mechanical, and nothing about the fork's chosen behavior changes.
+Land the commit first (steps 5 and 7), then mirror it in a commit of its own as described below, and
+record `mirrored` in that row's `Notes` - no question needed.
+
+**When it is not clear-cut, ask the user to verify instead of guessing.** Not clear-cut means the
+mirrored fix would touch behavior the fork chose on purpose, the customization would have to be
+reshaped to carry it, or it is genuinely uncertain whether the defect is present in the `#if` branch
+at all. Do not hold the commit back waiting for the answer - the commit is upstream's and is correct
+on its own terms. Finish steps 5 and 7 as usual, record the commit with its real status, and add the
+mirror question on top:
 
 - put it under "Open questions" in the ledger, keyed to the commit;
 - append `mirror pending` to that row's `Notes`;
 - state it in the summary with: the defect upstream fixed, the exact place in the `#if` branch that
-  has the same defect (file and line), what the mirrored fix would look like, and a recommendation.
+  has the same defect (file and line), what the mirrored fix would look like, and a recommended
+  resolution - the clean, logical fix, with its reasoning and the alternatives you rejected.
 
 Then stop. The next run answers it with `mirror <commit-id>` or `no-mirror <commit-id> <reason>`.
 
-A run may mirror in the same pass **only** when the user has already said yes in that invocation -
-for instance `apply <commit-id>` together with an explicit instruction to mirror, or a `mirror`
-argument naming the commit just landed. When mirroring:
+A run mirrors in the same pass when the fix is clear-cut as above, or when the user has already said
+yes in that invocation - for instance `apply <commit-id>` together with an explicit instruction to
+mirror, or a `mirror` argument naming the commit just landed. When mirroring:
 
 - edit the `#if` branch only; the `#else` branch keeps upstream's text exactly as cherry-picked;
 - keep the mirrored fix as close to upstream's wording as the customization's shape allows, so the
@@ -768,7 +792,8 @@ argument naming the commit just landed. When mirroring:
 - rebuild both configurations (step 7) - a mirror is a real code change and can break either side;
 - commit it **separately** from the cherry-pick, so a bad mirror can be reverted without losing the
   upstream commit. Subject shape: `Mirror <commit> fix into the USE_CUSTOM_CHANGES branch`;
-- clear the open question and change `mirror pending` to `mirrored` in the row's `Notes`.
+- clear the open question if one was raised, and record `mirrored` in the row's `Notes` (replacing
+  `mirror pending` when it is there).
 
 If the answer was no, change `mirror pending` to `mirror declined: <reason>` and clear the question.
 Do not raise the same question again on a later run.

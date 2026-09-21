@@ -3,14 +3,14 @@
 Upstream: <https://github.com/DrewKestell/BloogBot> branch `main`, cloned at
 `$USERPROFILE/Downloads/BloogBot`, wired into this repo as the `upstream-local` remote.
 Fork point: `1d0057c` - Merge branch 'main' of github.com:DrewKestell/BloogBot into main
-High-water mark: `6d24d14` (every commit up to and including this one is decided)
+High-water mark: `ea53e65` (every commit up to and including this one is decided)
 Upstream history is **not linear** at the start of this range: `a5e450a` and `569d3cb` both branch
 directly off the fork point and rejoin at the merge `f22af34`. So while those two were the
 high-water mark, `rev-list <mark>..upstream-local/main` over-counted by one (it still listed the
 parallel sibling). From `f22af34` on the history is linear - no further merge commits in the
 range - and the count is exact again.
 Upstream HEAD when last checked: `a9be5e8` `BeastmasterHunterBot: LOS checks, pet management, rest state rewrite` (2026-09-21)
-Remaining after the high-water mark: `18`
+Remaining after the high-water mark: `17`
 Local customizations: guarded by `USE_CUSTOM_CHANGES`, defined in `BloogBot/BloogBot.csproj`,
 `FrostMageBot/FrostMageBot.csproj` and `Loader/Loader.vcxproj`. `ArmsWarriorBot` and
 `ShadowPriestBot` had their toggles removed after `569d3cb` left them with no guards.
@@ -119,6 +119,7 @@ no longer define the symbol.
 | 41 | `760fe13` | generated code change | adapted | `BloogBot/Properties/Settings.Designer.cs` | Designer churn, and it landed as **one line**. Upstream's commit touches both `Resources.Designer.cs` (+?/-?) and `Settings.Designer.cs` (+27/-39 between them): VS regenerated them, collapsing Allman braces to the generator's K&R style, restoring `using System;`, swapping `(resourceMan == null)` for `object.ReferenceEquals(resourceMan, null)`, and bumping two `GeneratedCodeAttribute` version strings. **`Resources.Designer.cs` contributed nothing** - verified with `git show 760fe13:<path>` against `HEAD~1:<path>`, the fork's copy was **already byte-identical to upstream's post-`760fe13` state**, so git had nothing to apply. `Settings.Designer.cs` conflicted on exactly one line, the `SettingsSingleFileGenerator` version attribute: `17.5.0.0` in the fork against upstream's `17.14.0.0` - two different Visual Studio versions having regenerated the same file. Took upstream's, per the skill's do-not-guard rule for designer output; there is no behaviour in that string and nothing to preserve. Both files are now byte-identical to upstream `760fe13`. Expect it to flip back to whatever this machine's VS writes if the settings designer is ever opened - that is the churn the do-not-guard rule exists for, not a regression. mirror n/a: no guarded file touched - neither designer file carries an `#if`, and both are on the do-not-guard list. Both builds green: 0 errors, 12 warnings each. |
 | 42 | `eefad78` | ProtectionPaladinBot/RestState: use max level heal in WotLK | applied | - | Clean cherry-pick, no conflicts. One file, +17/-4, and `ProtectionPaladinBot/RestState.cs` is now **byte-identical** to upstream `eefad78`. The fork had never touched the file - its copy was byte-identical to upstream's parent too - and the whole `ProtectionPaladinBot` project carries no guards and no `UseCustomChanges` toggle. The change is in the out-of-combat self-heal at `:74-90`: the two heal conditions were independent `if`s (`HealthPercent < 70` cast full-rank Holy Light, `> 70 && < 90` cast `Holy Light(Rank 1)`), and are now an `if`/`else if`, so only one can fire per tick. Inside the 70-90 arm the rank choice is version-gated: pre-WotLK still downranks to Rank 1, WotLK casts full-rank Holy Light instead, because in WotLK every rank costs the same mana so downranking buys nothing and just heals less. Needs one new `using BloogBot.Game.Enums;` for `ClientVersion`. The rest of the diff is two trailing-whitespace lines. mirror n/a: no guarded file touched. The state's other arms call into unguarded code only - `BuffSelfState` and `Wait` - so nothing crosses into a `#if` branch here. |
 | 43 | `6d24d14` | ProtectionPaladinBot/MoveToTargetState: check for stuckness | applied | - | Clean cherry-pick, no conflicts. One file, +16/-0, and `ProtectionPaladinBot/MoveToTargetState.cs` is now **byte-identical** to upstream `6d24d14`. The fork had never touched it and the whole `ProtectionPaladinBot` project carries no guards. Adds a `stateStartTime` field stamped with `Environment.TickCount` in the constructor, and a new early arm at the top of `Update()`: if 30 s have passed still trying to reach the target, add `target.Guid` to `container.Probe.BlacklistedMobIds`, `StopAllMovement()`, pop the state and return. Placed **above** `stuckHelper.CheckIfStuck()`, so the timeout wins over the stuck handler once it fires. Needs one new `using System;`. mirror n/a: no guarded file touched. This is the third of the four 'check for stuckness' commits on the skill's likely-ask list, and it turned out not to be an ask - it is confined to a bot project with no guards, and the blacklist it writes to is the **in-memory** `Probe.BlacklistedMobIds`, the same list `CombatStateBase.cs:140` (upstream `8b35954`) already writes to, not the fork's own waypoint blacklists in `GrindState`. Two different blacklists that never meet. The new code does *call into* guarded subsystems, as with `5c8fd85` / `ade1551`: `StuckHelper.CheckIfStuck()` carries a pure-addition guard at `StuckHelper.cs:32-35` (`player.WpStuckCount++` plus a console line when the symbol is on), which in turn scales `StuckState`'s distance and move time - so a paladin that trips the stuck handler before the 30 s timeout unsticks differently between the two configurations. Guard working as intended, not a defect. Also note `DependencyContainer.cs` reads this list in four places, two of them null-safe (`Probe?.BlacklistedMobIds?.Contains(u.Guid) ?? true`, `:168` and `:247`) and two not (`:73`, `:115`) - that split is the `#if`/`#else` pair and predates this commit; upstream did not touch it here. |
+| 44 | `ea53e65` | ProtectionPaladinBot/CombatState: some rotation change | applied | - | Clean cherry-pick, no conflicts. One file, +7/-4, and `ProtectionPaladinBot/CombatState.cs` is now **byte-identical** to upstream `ea53e65`. The fork had never touched it and the project carries no guards. Three real changes in the rotation: a `TryCastSpell(HammerOfTheRighteous, 0, 4)` at melee range, inserted between Hammer of Justice and Consecration so it fires ahead of the AoE; and, in the WotLK arm of the judgement block, Judgement of Wisdom is now tried **first** and Judgement of Light demoted to a fallback gated on `!player.KnowsSpell(JudgementOfWisdom)` - the reverse of the old order, which only ever cast Light. The `JudgementOfWisdom` const already existed at `:22`, unused, and upstream's two-line comment wondering whether prot even needs it was deleted with the change. Also adds two consts, `AvengersShield` and `HammerOfTheRighteous`; **`AvengersShield` is declared but never referenced** - upstream's dead const, taken as-is (an unused `const` produces no C# warning, so neither build notices). Pre-WotLK rotation untouched. mirror n/a: no guarded file touched, and nothing here reaches a guarded subsystem - the whole diff is `TryCastSpell` calls on the paladin's own state. |
 
 ## Unguarded customizations
 
@@ -150,16 +151,22 @@ Deliberately not guarded, per the skill's do-not-guard list:
 
 ## Open questions
 
-None. `6d24d14` was a clean, single-file pick in a project with no guards - the third of the four
-'check for stuckness' commits, and it raised no question after all.
+None. `ea53e65` was a clean, single-file pick in a project with no guards.
 
-The next run starts at `ea53e65` ('ProtectionPaladinBot/CombatState: some rotation change'),
-`ProtectionPaladinBot/CombatState.cs` only, +7/-4. Still inside the unguarded `ProtectionPaladinBot`
-project, so expect another clean pick and a `mirror n/a`. The two commits after it, `6987f77`
-('ProtectionPaladinBot/HealSelfState: stop movement') and then `608ab7f` ('Build settings'), are the
-ones to slow down for: `608ab7f` makes the **same** v4.6.1 -> v4.8 retarget the fork already made, so
-per the skill it should conflict trivially or come out empty - take upstream's version, do not guard
-it.
+The next run starts at `6987f77` ('ProtectionPaladinBot/HealSelfState: stop movement'),
+`ProtectionPaladinBot/HealSelfState.cs` only, **+2/-0** - the last of the four consecutive
+`ProtectionPaladinBot` commits, and the smallest. Upstream's message explains it: entering the heal
+state while still moving makes the cast fail, so the state now stops movement first. Expect a clean
+pick and a `mirror n/a`.
+
+Then comes `608ab7f` ('Build settings'), the one to slow down for. It makes the **same** v4.6.1 ->
+v4.8 `TargetFrameworkVersion` retarget the fork already made across every csproj, so per the skill's
+do-not-guard rule it should either conflict trivially or come out empty. Take upstream's version,
+note it, and do **not** guard it. Watch two things there: the csprojs that carry the
+`UseCustomChanges` toggle (`BloogBot`, `FrostMageBot`) must keep their two PropertyGroups after the
+resolution, and the toggle must still flip - re-check with the `-v:n | Select-String USE_CUSTOM_CHANGES`
+probe from Phase 0 step 6 rather than trusting the exit codes, since a csproj merge is exactly the
+thing that can silently drop the define.
 
 Standing observation, new with `24f4359` and worth a decision at some point: `SkinningState.cs`
 lines 78-100 are a verbatim copy of `LootState`'s loot-item loop **as upstream wrote it**. The fork

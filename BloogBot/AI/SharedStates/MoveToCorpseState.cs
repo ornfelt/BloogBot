@@ -21,6 +21,8 @@ namespace BloogBot.AI.SharedStates
 #if USE_CUSTOM_CHANGES
         private static bool s_HasReachedWpCloseToCorpse;
 
+        int noPathCount;
+
         static readonly Random random = new Random();
 #else
         Position startingPosition;
@@ -35,6 +37,7 @@ namespace BloogBot.AI.SharedStates
 #if USE_CUSTOM_CHANGES
             s_HasReachedWpCloseToCorpse = false;
             stuckCount = 0;
+            noPathCount = 0;
 #endif
         }
 
@@ -70,7 +73,25 @@ namespace BloogBot.AI.SharedStates
 
             if (s_HasReachedWpCloseToCorpse)
             {
-                var nextWaypoint = Navigation.GetNextWaypoint(ObjectManager.MapId, player.Position, player.CorpsePosition, false);
+                var path = Navigation.CalculatePath(ObjectManager.MapId, player.Position, player.CorpsePosition, false);
+                Position nextWaypoint;
+                if (path.Length <= 1)
+                {
+                    // No path to the corpse. This fires constantly while swimming or falling, so
+                    // only treat it as unreachable once it keeps failing - e.g. we fell into the
+                    // void. The stuckCount teleport below cannot cover that case on its own:
+                    // StuckHelper only counts ticks where we barely moved, and a bot that keeps
+                    // drifting never advances it. Head for the corpse meanwhile, as before.
+                    if (++noPathCount > 20)
+                        TeleportToCorpse();
+
+                    nextWaypoint = player.CorpsePosition;
+                }
+                else
+                {
+                    noPathCount = 0;
+                    nextWaypoint = path[1];
+                }
 
                 if (player.Position.Z - nextWaypoint.Z > 5)
                     walkingOnWater = true;
@@ -92,9 +113,7 @@ namespace BloogBot.AI.SharedStates
 
             // Force teleport to corpse pos
             if (stuckCount > 40)
-                player.LuaCall($"SendChatMessage('.go xyz {player.CorpsePosition.X.ToString().Replace(',', '.')}" +
-                    $" {player.CorpsePosition.Y.ToString().Replace(',', '.')}" +
-                    $" {player.CorpsePosition.Z.ToString().Replace(',', '.')}', 'GUILD', nil)");
+                TeleportToCorpse();
 #else
             if (stuckCount == 10)
             {
@@ -161,6 +180,13 @@ namespace BloogBot.AI.SharedStates
         }
 
 #if USE_CUSTOM_CHANGES
+        private void TeleportToCorpse()
+        {
+            player.LuaCall($"SendChatMessage('.go xyz {player.CorpsePosition.X.ToString().Replace(',', '.')}" +
+                $" {player.CorpsePosition.Y.ToString().Replace(',', '.')}" +
+                $" {player.CorpsePosition.Z.ToString().Replace(',', '.')}', 'GUILD', nil)");
+        }
+
         // Try to move to corpse with a path based on WPs
         public bool HasReachedWpCloseToCorpse()
         {

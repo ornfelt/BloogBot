@@ -3,14 +3,14 @@
 Upstream: <https://github.com/DrewKestell/BloogBot> branch `main`, cloned at
 `$USERPROFILE/Downloads/BloogBot`, wired into this repo as the `upstream-local` remote.
 Fork point: `1d0057c` - Merge branch 'main' of github.com:DrewKestell/BloogBot into main
-High-water mark: `0f3ce40` (every commit up to and including this one is decided)
+High-water mark: `cd41082` (every commit up to and including this one is decided)
 Upstream history is **not linear** at the start of this range: `a5e450a` and `569d3cb` both branch
 directly off the fork point and rejoin at the merge `f22af34`. So while those two were the
 high-water mark, `rev-list <mark>..upstream-local/main` over-counted by one (it still listed the
 parallel sibling). From `f22af34` on the history is linear - no further merge commits in the
 range - and the count is exact again.
 Upstream HEAD when last checked: `a9be5e8` `BeastmasterHunterBot: LOS checks, pet management, rest state rewrite` (2026-09-21)
-Remaining after the high-water mark: `49`
+Remaining after the high-water mark: `48`
 Local customizations: guarded by `USE_CUSTOM_CHANGES`, defined in `BloogBot/BloogBot.csproj`,
 `FrostMageBot/FrostMageBot.csproj` and `Loader/Loader.vcxproj`. `ArmsWarriorBot` and
 `ShadowPriestBot` had their toggles removed after `569d3cb` left them with no guards.
@@ -43,6 +43,7 @@ landed; only the mirror waits.
 | 10 | `fc7c7fd` | Fix crash | applied | - | Clean cherry-pick, no conflicts. Three lines in `BloogBot/WardenDisabler.cs`: `DisableWardenHook` now wraps the `WardenBaseAddress` log and the two `InitializeWardenPageScanHook`/`InitializeWardenMemScanHook` calls in `if (wardenBaseAddr != IntPtr.Zero)`, so a null Warden base pointer no longer gets detoured (both hook installers write at `wardenBaseAddr + offset`, which is what crashed). The file carries a guard but it wraps only `Initialize()` (lines 172-288, the fork's `useWarden = false` flag around the whole detour install); the hunk lands at lines 323-329, in the shared code after `#endif`. The preprocessed off-view of the file is byte-identical to upstream `fc7c7fd`. mirror n/a: the fix is in unguarded shared code, so the `#if` branch already has it verbatim - and with `useWarden = false` the fork never installs the WardenLoad detour, so `DisableWardenHook` is not reached at all in the on-configuration. Both builds green: 0 errors, 12 warnings each. |
 | 11 | `9594a43` | Check for threat before looting | applied | - | Clean cherry-pick, no conflicts. Seven lines in `BloogBot/AI/SharedStates/CombatStateBase.cs`: in the target-dead branch, after `LootState` is pushed, `Update` now calls `container.FindThreat()` and pushes `container.CreateMoveToTargetState(...)` on top when an aggressor is found, so the bot fights whatever is hitting it before it loots (the push order puts the move-to-target state above the loot state on the stack). The file carries 5 guard regions but all of them sit above line 136 and the hunk lands at lines 157-162, in the shared code after the last `#endif`. Off-view of the file matches upstream `9594a43` apart from four blank lines the guard removal leaves behind. mirror n/a: the fix is in unguarded shared code, so the `#if` branch has it verbatim - and none of the five guards (`loopTimer`/`lastTargetHealth` fields, `loopTimer = 0` in the ctor, the `DeathsAtWp` link-teleport, the unstick loop, the extended `TappedByOther` bail-out) holds a second copy of the loot push. Note the new call reaches a guarded subsystem: `FindThreat()` in `DependencyContainer.cs` is a fork rewrite that also treats units targeting `player.BotFriend` as threats, so the on-configuration will chase npcbot-friend aggressors after a kill where upstream only chases the player's and pet's. That is the guard working, not a defect. Both builds green: 0 errors, 12 warnings each. |
 | 12 | `0f3ce40` | WotLK: use buffs to determin eating/drinking status | applied | - | Clean cherry-pick, no conflicts. `BloogBot/Game/Objects/WoWPlayer.cs` only, +2/-16: `IsEating` and `IsDrinking` drop their WotLK-specific branches (`MemoryManager.ReadInt(Pointer + 0xC70) > 0` and `ReadInt(Pointer + 0xF3C) == 4`) and now return `HasBuff('Food')` / `HasBuff('Drink')` on every client version, the way Vanilla and TBC already did. Upstream kept its stray double semicolon on the drink line; taken as-is. The file carries no guards and the fork's copy was byte-identical to upstream's parent, so nothing to reconcile - the file is now byte-identical to upstream `0f3ce40`. mirror n/a: no guarded file touched. The two properties are read by every bot project's `RestState` and by `FrostMageBot/RestState.cs`, whose only guard is the `FoodNames`/`DrinkNames` lookup - that guard picks *which* consumables to use and does not re-implement the eating check, so both configurations get the new buff-based test. Both builds green: 0 errors, 12 warnings each. |
+| 13 | `cd41082` | eating/drinking status: check for debuffs as well | applied | - | Clean cherry-pick, no conflicts. Direct follow-up to `0f3ce40`, same two properties in `BloogBot/Game/Objects/WoWPlayer.cs`: `IsEating` becomes `HasBuff('Food') || HasDebuff('Food')` and `IsDrinking` becomes `HasBuff('Drink') || HasDebuff('Drink')` - some client versions file the food/drink aura in the debuff list rather than the buff list, so the buff-only test from `0f3ce40` missed it there. The stray double semicolon `0f3ce40` left on the drink line goes away with the rewritten expression. `HasDebuff` already exists on `WoWUnit` (`WoWUnit.cs:317`, upstream code, unguarded), so nothing new was needed. The file carries no guards and is byte-identical to upstream `cd41082`. mirror n/a: no guarded file touched; as with `0f3ce40` the `FrostMageBot` rest/conjure guards only choose which consumables to use and do not re-implement the eating test. Both builds green: 0 errors, 12 warnings each. |
 
 ## Guarded files
 
@@ -115,4 +116,6 @@ Deliberately not guarded, per the skill's do-not-guard list:
 
 ## Open questions
 
-None. The next run starts at `cd41082` ('eating/drinking status: check for debuffs as well').
+None. The next run starts at `f3f6858` ('TravelState: check for stuckness') - one of the stuckness
+commits the skill flags as a likely ask, since the fork has its own `StuckHelper`/`StuckState`
+customizations.

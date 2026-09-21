@@ -3,14 +3,14 @@
 Upstream: <https://github.com/DrewKestell/BloogBot> branch `main`, cloned at
 `$USERPROFILE/Downloads/BloogBot`, wired into this repo as the `upstream-local` remote.
 Fork point: `1d0057c` - Merge branch 'main' of github.com:DrewKestell/BloogBot into main
-High-water mark: `6987f77` (every commit up to and including this one is decided)
+High-water mark: `608ab7f` (every commit up to and including this one is decided)
 Upstream history is **not linear** at the start of this range: `a5e450a` and `569d3cb` both branch
 directly off the fork point and rejoin at the merge `f22af34`. So while those two were the
 high-water mark, `rev-list <mark>..upstream-local/main` over-counted by one (it still listed the
 parallel sibling). From `f22af34` on the history is linear - no further merge commits in the
 range - and the count is exact again.
 Upstream HEAD when last checked: `a9be5e8` `BeastmasterHunterBot: LOS checks, pet management, rest state rewrite` (2026-09-21)
-Remaining after the high-water mark: `16`
+Remaining after the high-water mark: `15`
 Local customizations: guarded by `USE_CUSTOM_CHANGES`, defined in `BloogBot/BloogBot.csproj`,
 `FrostMageBot/FrostMageBot.csproj` and `Loader/Loader.vcxproj`. `ArmsWarriorBot` and
 `ShadowPriestBot` had their toggles removed after `569d3cb` left them with no guards.
@@ -121,6 +121,7 @@ no longer define the symbol.
 | 43 | `6d24d14` | ProtectionPaladinBot/MoveToTargetState: check for stuckness | applied | - | Clean cherry-pick, no conflicts. One file, +16/-0, and `ProtectionPaladinBot/MoveToTargetState.cs` is now **byte-identical** to upstream `6d24d14`. The fork had never touched it and the whole `ProtectionPaladinBot` project carries no guards. Adds a `stateStartTime` field stamped with `Environment.TickCount` in the constructor, and a new early arm at the top of `Update()`: if 30 s have passed still trying to reach the target, add `target.Guid` to `container.Probe.BlacklistedMobIds`, `StopAllMovement()`, pop the state and return. Placed **above** `stuckHelper.CheckIfStuck()`, so the timeout wins over the stuck handler once it fires. Needs one new `using System;`. mirror n/a: no guarded file touched. This is the third of the four 'check for stuckness' commits on the skill's likely-ask list, and it turned out not to be an ask - it is confined to a bot project with no guards, and the blacklist it writes to is the **in-memory** `Probe.BlacklistedMobIds`, the same list `CombatStateBase.cs:140` (upstream `8b35954`) already writes to, not the fork's own waypoint blacklists in `GrindState`. Two different blacklists that never meet. The new code does *call into* guarded subsystems, as with `5c8fd85` / `ade1551`: `StuckHelper.CheckIfStuck()` carries a pure-addition guard at `StuckHelper.cs:32-35` (`player.WpStuckCount++` plus a console line when the symbol is on), which in turn scales `StuckState`'s distance and move time - so a paladin that trips the stuck handler before the 30 s timeout unsticks differently between the two configurations. Guard working as intended, not a defect. Also note `DependencyContainer.cs` reads this list in four places, two of them null-safe (`Probe?.BlacklistedMobIds?.Contains(u.Guid) ?? true`, `:168` and `:247`) and two not (`:73`, `:115`) - that split is the `#if`/`#else` pair and predates this commit; upstream did not touch it here. |
 | 44 | `ea53e65` | ProtectionPaladinBot/CombatState: some rotation change | applied | - | Clean cherry-pick, no conflicts. One file, +7/-4, and `ProtectionPaladinBot/CombatState.cs` is now **byte-identical** to upstream `ea53e65`. The fork had never touched it and the project carries no guards. Three real changes in the rotation: a `TryCastSpell(HammerOfTheRighteous, 0, 4)` at melee range, inserted between Hammer of Justice and Consecration so it fires ahead of the AoE; and, in the WotLK arm of the judgement block, Judgement of Wisdom is now tried **first** and Judgement of Light demoted to a fallback gated on `!player.KnowsSpell(JudgementOfWisdom)` - the reverse of the old order, which only ever cast Light. The `JudgementOfWisdom` const already existed at `:22`, unused, and upstream's two-line comment wondering whether prot even needs it was deleted with the change. Also adds two consts, `AvengersShield` and `HammerOfTheRighteous`; **`AvengersShield` is declared but never referenced** - upstream's dead const, taken as-is (an unused `const` produces no C# warning, so neither build notices). Pre-WotLK rotation untouched. mirror n/a: no guarded file touched, and nothing here reaches a guarded subsystem - the whole diff is `TryCastSpell` calls on the paladin's own state. |
 | 45 | `6987f77` | ProtectionPaladinBot/HealSelfState: stop movement | applied | - | Clean cherry-pick, no conflicts. One file, **+2/-0**, and `ProtectionPaladinBot/HealSelfState.cs` is now **byte-identical** to upstream `6987f77`. The fork had never touched it. A single `player.StopAllMovement();` at the very top of `Update()`, above the `player.IsCasting` early return - upstream's message says entering the state while still moving makes the cast fail, so the state now halts first, which it should be doing anyway while healing. The last of the four consecutive `ProtectionPaladinBot` commits. mirror n/a: no guarded file touched. `LocalPlayer.StopAllMovement()` at `:188` is shared code, well clear of that file's single guard at `:481`, so the new call behaves identically in both configurations. Note this one *is* a genuine defect fix rather than a preference - had it landed in a guarded file it would have been a mirror candidate - but the defect and the fix are both entirely inside `ProtectionPaladinBot`, which the fork has never customized. |
+| 46 | `608ab7f` | Build settings | applied | - | **Empty - the change was already present in the fork.** Git reported 'The previous cherry-pick is now empty', and it was finished with `git cherry-pick --skip`: **no commit created, not one byte written**, HEAD still at the previous ledger commit. This is the retarget the skill predicted - upstream's 14 files are the v4.6.1 -> v4.8 `TargetFrameworkVersion` bump plus `<TargetFrameworkProfile />`, the exact change the fork made long ago, which is why it is on the do-not-guard list. Verified per-file rather than trusting git's 'empty': all 13 csprojs in upstream's list carry `<TargetFrameworkVersion>v4.8</TargetFrameworkVersion>` and a `TargetFrameworkProfile` element, and `BloogBotTests/app.config` already has upstream's `<startup><supportedRuntime ... v4.8/></startup>` line and the BOM already stripped. Nothing guarded, as the rule requires. mirror n/a: no guarded file touched, and nothing was written at all. **The `UseCustomChanges` define was re-proved anyway**, because this commit's file list included `FrostMageBot.csproj`, which carries a toggle - a csproj merge dropping the define is the silent failure both builds pass through. Note the probe needs `-t:Rebuild`: on an up-to-date tree `csc` never runs and the `-v:n` log shows no `/define:` at all, which reads as a failure and is not one. Rebuilt: with the default, exactly `BloogBot.exe`, `FrostMageBot.dll` and the Loader `CL` line carry the symbol - matching the three toggle files exactly; with `-p:UseCustomChanges=false`, zero mentions anywhere. Both rebuilds exit 0. |
 
 ## Unguarded customizations
 
@@ -152,29 +153,32 @@ Deliberately not guarded, per the skill's do-not-guard list:
 
 ## Open questions
 
-None. `6987f77` was a clean, single-file, two-line pick in a project with no guards. That closes the
-run of four consecutive `ProtectionPaladinBot` commits (`eefad78`, `6d24d14`, `ea53e65`, `6987f77`),
-none of which touched a guarded file.
+None. `608ab7f` came out empty - the fork had already made that retarget - so nothing was written
+and there was nothing to judge.
 
-**The next run is `608ab7f` ('Build settings'), and it is the first one in a while that needs care.**
-14 files, +29/-17, all csproj plus one app.config - and two of them collide with the fork:
+**The next run is `1b9fbef` ('build config: add dependency StreamJsonRpc'), and it is the one the
+`608ab7f` warning was really meant for.** 41 files, +936/-42, and it collides with the fork on both
+fronts at once:
 
-- `FrostMageBot/FrostMageBot.csproj` (upstream +1/-1) **carries the `UseCustomChanges` toggle**, and
-  the fork's own diff against the fork point there is +9/-1 (the two PropertyGroups plus the
-  retarget). This is the one that can go quietly wrong: a csproj merge that drops or reorders the
-  toggle still builds green in both configurations while silently compiling the upstream branch.
-  After resolving, the two PropertyGroups must still sit **after the last `Configuration|Platform`
-  group and before the first `ItemGroup`**, and the define must be proved to flip with the Phase 0
-  step 6 probe (`-v:n | Select-String USE_CUSTOM_CHANGES` - present for `BloogBot` and `FrostMageBot`
-  with the default, absent with `-p:UseCustomChanges=false`). Exit codes alone do not catch this.
-- `BloogBotTests/app.config` (upstream +4/-4) is on the **cannot-be-guarded** list and the fork's
-  divergence there is also exactly +4/-4 - the same shape, so the fork has very likely already made
-  this change. Hand-merge; do not guard.
+- It touches **both** toggle-carrying csprojs - `BloogBot/BloogBot.csproj` **and**
+  `FrostMageBot/FrostMageBot.csproj` - adding the StreamJsonRpc package reference and its
+  dependencies. `608ab7f` only grazed one of them and turned out empty; this one will not. After
+  resolving, the two `UseCustomChanges` PropertyGroups must still sit **after the last
+  `Configuration|Platform` group and before the first `ItemGroup`**, and the define must be re-proved
+  with **`-t:Rebuild`** (see the `608ab7f` row - without `-t:Rebuild` the probe is silent and proves
+  nothing).
+- It touches **all three** fork-edited `App.config` files - `BloogBot/App.config`,
+  `BloogBotTests/app.config` and `Bootstrapper/App.config` - plus it adds a new per-bot `app.config`
+  to most bot projects. These are on the **cannot-be-guarded** list: hand-merge, do not guard.
+- `packages.config` and the checked-in `packages/` directory are involved. If the StreamJsonRpc
+  package is not actually present on disk the build will fail on a missing reference; restore it
+  with `nuget restore BloogBot.sln`, **not** `dotnet restore`.
 
-The remaining 12 csprojs are the v4.6.1 -> v4.8 `TargetFrameworkVersion` retarget the fork already
-made, per the skill's do-not-guard rule. `BloogBot/BloogBot.csproj` - the other toggle-carrying
-project - is **not** in upstream's file list, so it is not at risk here. Expect these to conflict
-trivially or come out empty; take upstream's version and note it.
+It is also the first half of the skill's named dependency pair: `1b9fbef` adds the dependency and
+`a5d5325` ('bot: add an RPC service') is the code that uses it. The skill allows taking both in one
+run when the first plainly cannot compile without the second - but here the order is dependency
+first, consumer second, so `1b9fbef` should build on its own. Take it alone, confirm both
+configurations are green, and leave `a5d5325` for the run after.
 
 Standing observation, new with `24f4359` and worth a decision at some point: `SkinningState.cs`
 lines 78-100 are a verbatim copy of `LootState`'s loot-item loop **as upstream wrote it**. The fork

@@ -3,14 +3,14 @@
 Upstream: <https://github.com/DrewKestell/BloogBot> branch `main`, cloned at
 `$USERPROFILE/Downloads/BloogBot`, wired into this repo as the `upstream-local` remote.
 Fork point: `1d0057c` - Merge branch 'main' of github.com:DrewKestell/BloogBot into main
-High-water mark: `f3f6858` (every commit up to and including this one is decided)
+High-water mark: `41e3331` (every commit up to and including this one is decided)
 Upstream history is **not linear** at the start of this range: `a5e450a` and `569d3cb` both branch
 directly off the fork point and rejoin at the merge `f22af34`. So while those two were the
 high-water mark, `rev-list <mark>..upstream-local/main` over-counted by one (it still listed the
 parallel sibling). From `f22af34` on the history is linear - no further merge commits in the
 range - and the count is exact again.
 Upstream HEAD when last checked: `a9be5e8` `BeastmasterHunterBot: LOS checks, pet management, rest state rewrite` (2026-09-21)
-Remaining after the high-water mark: `47`
+Remaining after the high-water mark: `46`
 Local customizations: guarded by `USE_CUSTOM_CHANGES`, defined in `BloogBot/BloogBot.csproj`,
 `FrostMageBot/FrostMageBot.csproj` and `Loader/Loader.vcxproj`. `ArmsWarriorBot` and
 `ShadowPriestBot` had their toggles removed after `569d3cb` left them with no guards.
@@ -45,6 +45,7 @@ landed; only the mirror waits.
 | 12 | `0f3ce40` | WotLK: use buffs to determin eating/drinking status | applied | - | Clean cherry-pick, no conflicts. `BloogBot/Game/Objects/WoWPlayer.cs` only, +2/-16: `IsEating` and `IsDrinking` drop their WotLK-specific branches (`MemoryManager.ReadInt(Pointer + 0xC70) > 0` and `ReadInt(Pointer + 0xF3C) == 4`) and now return `HasBuff('Food')` / `HasBuff('Drink')` on every client version, the way Vanilla and TBC already did. Upstream kept its stray double semicolon on the drink line; taken as-is. The file carries no guards and the fork's copy was byte-identical to upstream's parent, so nothing to reconcile - the file is now byte-identical to upstream `0f3ce40`. mirror n/a: no guarded file touched. The two properties are read by every bot project's `RestState` and by `FrostMageBot/RestState.cs`, whose only guard is the `FoodNames`/`DrinkNames` lookup - that guard picks *which* consumables to use and does not re-implement the eating check, so both configurations get the new buff-based test. Both builds green: 0 errors, 12 warnings each. |
 | 13 | `cd41082` | eating/drinking status: check for debuffs as well | applied | - | Clean cherry-pick, no conflicts. Direct follow-up to `0f3ce40`, same two properties in `BloogBot/Game/Objects/WoWPlayer.cs`: `IsEating` becomes `HasBuff('Food') || HasDebuff('Food')` and `IsDrinking` becomes `HasBuff('Drink') || HasDebuff('Drink')` - some client versions file the food/drink aura in the debuff list rather than the buff list, so the buff-only test from `0f3ce40` missed it there. The stray double semicolon `0f3ce40` left on the drink line goes away with the rewritten expression. `HasDebuff` already exists on `WoWUnit` (`WoWUnit.cs:317`, upstream code, unguarded), so nothing new was needed. The file carries no guards and is byte-identical to upstream `cd41082`. mirror n/a: no guarded file touched; as with `0f3ce40` the `FrostMageBot` rest/conjure guards only choose which consumables to use and do not re-implement the eating test. Both builds green: 0 errors, 12 warnings each. |
 | 14 | `f3f6858` | TravelState: check for stuckness | applied | - | Clean cherry-pick, no conflicts, despite being one of the four stuckness commits the skill flags as likely asks. Four lines in `BloogBot/AI/SharedStates/TravelState.cs`: a `readonly StuckHelper stuckHelper` field, `new StuckHelper(botStates, container)` in the constructor, and a `stuckHelper.CheckIfStuck()` call just before `player.MoveToward(...)` in `Update`. This is the same wiring the 17 per-bot `MoveToTargetState` files and `MoveToHotspotWaypointState`/`MoveToPositionState`/`LootState`/`MoveToCorpseState` already had; `TravelState` was the odd one out. Upstream ignores the bool return here and moves anyway on the tick that pushes `StuckState`, as `MoveToHotspotWaypointState` does - taken as-is. The file carries no guards and the fork's copy was byte-identical to upstream's parent; it is now byte-identical to upstream `f3f6858`. mirror n/a: no guarded file touched. But note the new call reaches guarded code - `StuckHelper.CheckIfStuck` increments `player.WpStuckCount` and logs it inside its one `#if` region, so in the on-configuration travelling now feeds that counter. `WpStuckCount` scales `StuckState`'s unstick distance and move time, gates `MoveToHotspotWaypointState`'s pop, is reset by `RetrieveCorpseState`, and - most relevant - is the second half of the fork's rewritten killswitch at `Bot.cs:537` (`... || player.WpStuckCount > 200` -> `HandleBotStuck`). Upstream deliberately exempts `TravelState` from the 300 s stuck-in-state killswitch on the same line, but the fork's `WpStuckCount > 200` arm has no such exemption, so long travel paths now contribute to it. Left alone: that is the guard's own policy, not something this commit broke. Both builds green: 0 errors, 12 warnings each. |
+| 15 | `41e3331` | {FindClosestTarget, CombatStateBase}: do not choose a dead summoned unit when finding new targets | applied | - | Clean cherry-pick despite touching two of the three files the skill calls certain conflicts. Two files. `BloogBot/AI/SharedStates/CombatStateBase.cs`: the threat block `9594a43` added now re-looks the threat up in `ObjectManager.Units` and returns early if it is gone, dead or tapped, instead of pushing a move-to-target state at it; plus one trailing-whitespace line removed near `CastSpell`. Both hunks landed at lines 158-165 and 289, in the shared code below the file's last `#endif` (line 136), so both configurations get them - the preprocessed off-view is identical to upstream `41e3331`. `BloogBot/AI/DependencyContainer.cs`: the same correction in `FindClosestTarget` - `if (threat != null) return threat;` becomes a re-lookup plus `checkThreat != null && checkThreat.Health != 0 && !checkThreat.TappedByOther`, returning `checkThreat` and otherwise falling through to the normal target scan. That hunk landed at line 209, inside the `#else` branch (206-257), which is correct: upstream's half is what a cherry-pick patches. The off-view matches upstream apart from the known unguarded dead `using System.ComponentModel;`. No guard added, moved or removed; no csproj touched. mirror n/a (`CombatStateBase.cs`): the fix is in shared code, so the `#if` branch already has it. **mirror pending** (`DependencyContainer.cs`): the fork's own `FindClosestTarget` in the `#if` branch opens with the identical unchecked `var threat = FindThreat(); if (threat != null) return threat;` at lines 136-138 and carries exactly the defect upstream just corrected. Both builds green: 0 errors, 12 warnings each. |
 
 ## Guarded files
 
@@ -117,5 +118,26 @@ Deliberately not guarded, per the skill's do-not-guard list:
 
 ## Open questions
 
-None. The next run starts at `41e3331` ('{FindClosestTarget, CombatStateBase}: do not choose a dead
-summoned unit when finding new targets') - touches two heavily guarded files, expect conflicts.
+- **`41e3331` - mirror the dead-summoned-unit check into the `#if` branch of `FindClosestTarget`?**
+  Upstream corrected `DependencyContainer.FindClosestTarget`: a `WoWUnit` handed back by `FindThreat`
+  can be a stale reference to a summoned unit (a totem, a pet, a temporary guardian) that has since
+  died or despawned, and returning it makes the bot walk to and swing at something that is not there.
+  Upstream's fix re-looks the guid up in `ObjectManager.Units` and only returns it when the fresh
+  object exists, has `Health != 0` and is not `TappedByOther`; otherwise it falls through to the
+  ordinary target scan. That fix went into the `#else` branch (`DependencyContainer.cs:209`).
+  The fork's `#if` branch has the same three lines unguarded against that case at
+  `DependencyContainer.cs:136-138`:
+
+  ```csharp
+  var threat = FindThreat();
+  if (threat != null)
+      return threat;
+  ```
+
+  and the fork's `FindThreat` (its own `#if` rewrite) filters only on `TargetGuid`, never on health,
+  so it can return exactly such a corpse - and more of them than upstream's, since it also counts
+  units targeting `player.BotFriend`. The mirrored fix would be upstream's four lines transplanted
+  verbatim into the `#if` branch, keeping the fork's `var player = ObjectManager.Player;` line above
+  them. Recommended: **mirror**. This is a correction, not a preference; the customization did not
+  choose to skip the check, it simply predates it, and the `#if` branch is the half that actually runs.
+  Answer with `mirror 41e3331` or `no-mirror 41e3331 <reason>`.

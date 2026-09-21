@@ -3,14 +3,14 @@
 Upstream: <https://github.com/DrewKestell/BloogBot> branch `main`, cloned at
 `$USERPROFILE/Downloads/BloogBot`, wired into this repo as the `upstream-local` remote.
 Fork point: `1d0057c` - Merge branch 'main' of github.com:DrewKestell/BloogBot into main
-High-water mark: `6406359` (every commit up to and including this one is decided)
+High-water mark: `760fe13` (every commit up to and including this one is decided)
 Upstream history is **not linear** at the start of this range: `a5e450a` and `569d3cb` both branch
 directly off the fork point and rejoin at the merge `f22af34`. So while those two were the
 high-water mark, `rev-list <mark>..upstream-local/main` over-counted by one (it still listed the
 parallel sibling). From `f22af34` on the history is linear - no further merge commits in the
 range - and the count is exact again.
 Upstream HEAD when last checked: `a9be5e8` `BeastmasterHunterBot: LOS checks, pet management, rest state rewrite` (2026-09-21)
-Remaining after the high-water mark: `21`
+Remaining after the high-water mark: `20`
 Local customizations: guarded by `USE_CUSTOM_CHANGES`, defined in `BloogBot/BloogBot.csproj`,
 `FrostMageBot/FrostMageBot.csproj` and `Loader/Loader.vcxproj`. `ArmsWarriorBot` and
 `ShadowPriestBot` had their toggles removed after `569d3cb` left them with no guards.
@@ -116,6 +116,7 @@ no longer define the symbol.
 | 38 | `b4fb1cb` | LocalPlayer: update lua script to get combo points | applied | - | Clean cherry-pick, no conflicts. One file, +5/-3, three hunks, all in **shared** code well above the file's single guard (`:481-714`). The real change is `ComboPoints` at `:289-297`: the getter branched on `ClientHelper.ClientVersion == ClientVersion.WotLK` and now asks `GetComboPoints('player', 'target')` there while keeping `GetComboPoints('target')` for Vanilla/TBC - upstream's note says the API changed and it is unsure when, so it scoped the new signature to WotLK only. The call also moved from `ObjectManager.Player.LuaCallWithResults($"...")` to `Functions.LuaCallWithResult("...")` (singular, no interpolation - the `$` was pointless once the braces are literal). The other two hunks are whitespace: a double space in the Vanilla `spellPtr` read at `:340` and trailing whitespace after `GetEquippedItemGuid` at `:417`. mirror n/a: the fix is in shared code, so the `#if` configuration gets it directly - and the file's one guard is a **pure addition** with no `#else` at all, so there is no upstream half for a fix to be stranded in. Checked the guarded block (`:481-714`, the fork's +247 lines of player helpers) for the same defect: it contains no `LuaCall`, no `GetComboPoints` and no `ClientVersion` branch, so nothing there shares the old signature. Verified by rendering the off-configuration view and diffing against upstream `b4fb1cb` - identical apart from two pre-existing cosmetics unrelated to this commit: the fork's extra `using System.ComponentModel;` (needed by the guarded block but itself unguarded) and one blank line where the guard sits. Both builds green: 0 errors, 12 warnings each. |
 | 39 | `cb6140c` | WotLKGameFunctionHandler: add a sanity check for cooldown calculating | applied | - | Clean cherry-pick, no conflicts. One file, +3/-1, and `BloogBot/Game/WotLKGameFunctionHandler.cs` is now **byte-identical** to upstream `cb6140c`. In `IsSpellReady` at `:192`, `var result = start + duration - (int)PerformanceCounter();` becomes `var result = start != 0 ? start + duration - (int)PerformanceCounter() : 0;`, with a comment saying the engine sometimes hands back `start = 0` and that value has to be ignored. With `start = 0` the old expression evaluated to `duration - PerformanceCounter()`, a large negative number, which made `result > 0` false and drove `cooldown` to `0f` - so `IsSpellReady` returned false and the spell looked permanently on cooldown. mirror n/a: no guarded file touched - `WotLKGameFunctionHandler.cs` carries no `#if` at all. Checked the sibling handlers for the same arithmetic as well, since a per-client-version fix is the shape that often needs copying: `grep 'start + duration'` across the tree returns **this line only**, so the Vanilla and TBC handlers compute cooldowns differently and nothing else shares the defect. Both builds green: 0 errors, 12 warnings each. |
 | 40 | `6406359` | MemoryManager: handle null reference exceptions | applied | - | Clean cherry-pick, no conflicts. One file, **+30/-0**: six identical five-line `catch (NullReferenceException) { Logger.Log('Null Reference on ' + address.ToString('X') + ' with type <T>'); return default; }` blocks, one appended after the existing `catch (AccessViolationException)` in each of `ReadByte`, `ReadInt`, `ReadUint`, `ReadUlong`, `ReadIntPtr` and `ReadFloat`. All six land in **shared** code; the fork's single guard in this file is elsewhere and untouched. mirror n/a - and this one is worth spelling out, because the fork's guard addresses **the same failure mode from the other side**. That guard (`:213-216`, a pure addition with no `#else`) sits inside `ReadString` and reads `if (buffer == null) return default;` immediately after `var buffer = ReadBytes(address, size);`, pre-empting the `NullReferenceException` that `buffer.Length` on the next line would otherwise throw. Upstream's commit does **not** touch `ReadString` - it added catches to the six numeric readers only - so there is no overlap, no double-handling, and nothing stranded in an `#else`. The asymmetry that remains runs in the safe direction: with the symbol **on**, `ReadString` is protected by the fork's null check; with it **off**, `ReadString` has neither the check nor an NRE catch and can still throw. That is upstream's own exposure in the configuration nobody runs, not a fork defect. Verified by rendering the off-configuration view and diffing against upstream `6406359` - **byte-identical**, `using` block included. Both builds green: 0 errors, 12 warnings each. |
+| 41 | `760fe13` | generated code change | adapted | `BloogBot/Properties/Settings.Designer.cs` | Designer churn, and it landed as **one line**. Upstream's commit touches both `Resources.Designer.cs` (+?/-?) and `Settings.Designer.cs` (+27/-39 between them): VS regenerated them, collapsing Allman braces to the generator's K&R style, restoring `using System;`, swapping `(resourceMan == null)` for `object.ReferenceEquals(resourceMan, null)`, and bumping two `GeneratedCodeAttribute` version strings. **`Resources.Designer.cs` contributed nothing** - verified with `git show 760fe13:<path>` against `HEAD~1:<path>`, the fork's copy was **already byte-identical to upstream's post-`760fe13` state**, so git had nothing to apply. `Settings.Designer.cs` conflicted on exactly one line, the `SettingsSingleFileGenerator` version attribute: `17.5.0.0` in the fork against upstream's `17.14.0.0` - two different Visual Studio versions having regenerated the same file. Took upstream's, per the skill's do-not-guard rule for designer output; there is no behaviour in that string and nothing to preserve. Both files are now byte-identical to upstream `760fe13`. Expect it to flip back to whatever this machine's VS writes if the settings designer is ever opened - that is the churn the do-not-guard rule exists for, not a regression. mirror n/a: no guarded file touched - neither designer file carries an `#if`, and both are on the do-not-guard list. Both builds green: 0 errors, 12 warnings each. |
 
 ## Unguarded customizations
 
@@ -147,15 +148,16 @@ Deliberately not guarded, per the skill's do-not-guard list:
 
 ## Open questions
 
-None. `6406359` picked clean, and its fix and the fork's guard address the same failure mode in
-different methods without overlapping.
+None. `760fe13` conflicted on a single generated version string and the do-not-guard rule settled
+it without a judgement call.
 
-The next run starts at `760fe13` ('generated code change'), `BloogBot/Properties/Resources.Designer.cs`
-(+?/-?) and `Settings.Designer.cs`, +27/-39. Both are on the skill's explicit **do-not-guard** list -
-designer-regenerated churn - and the fork edited both at setup time, so this is the first commit in
-the run that is likely to conflict on a file where the right answer is simply 'take upstream's
-generated output'. Expect a conflict and resolve it by accepting upstream wholesale; there is no
-behaviour to preserve and nothing to guard.
+The next run starts at `eefad78` ('ProtectionPaladinBot/RestState: use max level heal in WotLK'),
+`ProtectionPaladinBot/RestState.cs` only, +17/-4. The whole `ProtectionPaladinBot` project carries
+**no guards** and has no `UseCustomChanges` toggle in its csproj, so expect a clean pick and a
+`mirror n/a: no guarded file touched`. It is followed immediately by `6d24d14`
+('ProtectionPaladinBot/MoveToTargetState: check for stuckness'), the third of the four stuckness
+commits on the skill's likely-ask list - but that one is also confined to `ProtectionPaladinBot`,
+so the fork's `StuckHelper` / `StuckState` guards are probably not in play there either.
 
 Standing observation, new with `24f4359` and worth a decision at some point: `SkinningState.cs`
 lines 78-100 are a verbatim copy of `LootState`'s loot-item loop **as upstream wrote it**. The fork

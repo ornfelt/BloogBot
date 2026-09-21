@@ -3,14 +3,14 @@
 Upstream: <https://github.com/DrewKestell/BloogBot> branch `main`, cloned at
 `$USERPROFILE/Downloads/BloogBot`, wired into this repo as the `upstream-local` remote.
 Fork point: `1d0057c` - Merge branch 'main' of github.com:DrewKestell/BloogBot into main
-High-water mark: `41e3331` (every commit up to and including this one is decided)
+High-water mark: `9526661` (every commit up to and including this one is decided)
 Upstream history is **not linear** at the start of this range: `a5e450a` and `569d3cb` both branch
 directly off the fork point and rejoin at the merge `f22af34`. So while those two were the
 high-water mark, `rev-list <mark>..upstream-local/main` over-counted by one (it still listed the
 parallel sibling). From `f22af34` on the history is linear - no further merge commits in the
 range - and the count is exact again.
 Upstream HEAD when last checked: `a9be5e8` `BeastmasterHunterBot: LOS checks, pet management, rest state rewrite` (2026-09-21)
-Remaining after the high-water mark: `46`
+Remaining after the high-water mark: `45`
 Local customizations: guarded by `USE_CUSTOM_CHANGES`, defined in `BloogBot/BloogBot.csproj`,
 `FrostMageBot/FrostMageBot.csproj` and `Loader/Loader.vcxproj`. `ArmsWarriorBot` and
 `ShadowPriestBot` had their toggles removed after `569d3cb` left them with no guards.
@@ -47,6 +47,7 @@ landed; only the mirror waits.
 | 14 | `f3f6858` | TravelState: check for stuckness | applied | - | Clean cherry-pick, no conflicts, despite being one of the four stuckness commits the skill flags as likely asks. Four lines in `BloogBot/AI/SharedStates/TravelState.cs`: a `readonly StuckHelper stuckHelper` field, `new StuckHelper(botStates, container)` in the constructor, and a `stuckHelper.CheckIfStuck()` call just before `player.MoveToward(...)` in `Update`. This is the same wiring the 17 per-bot `MoveToTargetState` files and `MoveToHotspotWaypointState`/`MoveToPositionState`/`LootState`/`MoveToCorpseState` already had; `TravelState` was the odd one out. Upstream ignores the bool return here and moves anyway on the tick that pushes `StuckState`, as `MoveToHotspotWaypointState` does - taken as-is. The file carries no guards and the fork's copy was byte-identical to upstream's parent; it is now byte-identical to upstream `f3f6858`. mirror n/a: no guarded file touched. But note the new call reaches guarded code - `StuckHelper.CheckIfStuck` increments `player.WpStuckCount` and logs it inside its one `#if` region, so in the on-configuration travelling now feeds that counter. `WpStuckCount` scales `StuckState`'s unstick distance and move time, gates `MoveToHotspotWaypointState`'s pop, is reset by `RetrieveCorpseState`, and - most relevant - is the second half of the fork's rewritten killswitch at `Bot.cs:537` (`... || player.WpStuckCount > 200` -> `HandleBotStuck`). Upstream deliberately exempts `TravelState` from the 300 s stuck-in-state killswitch on the same line, but the fork's `WpStuckCount > 200` arm has no such exemption, so long travel paths now contribute to it. Left alone: that is the guard's own policy, not something this commit broke. Both builds green: 0 errors, 12 warnings each. |
 | 15 | `41e3331` | {FindClosestTarget, CombatStateBase}: do not choose a dead summoned unit when finding new targets | applied | - | Clean cherry-pick despite touching two of the three files the skill calls certain conflicts. Two files. `BloogBot/AI/SharedStates/CombatStateBase.cs`: the threat block `9594a43` added now re-looks the threat up in `ObjectManager.Units` and returns early if it is gone, dead or tapped, instead of pushing a move-to-target state at it; plus one trailing-whitespace line removed near `CastSpell`. Both hunks landed at lines 158-165 and 289, in the shared code below the file's last `#endif` (line 136), so both configurations get them - the preprocessed off-view is identical to upstream `41e3331`. `BloogBot/AI/DependencyContainer.cs`: the same correction in `FindClosestTarget` - `if (threat != null) return threat;` becomes a re-lookup plus `checkThreat != null && checkThreat.Health != 0 && !checkThreat.TappedByOther`, returning `checkThreat` and otherwise falling through to the normal target scan. That hunk landed at line 209, inside the `#else` branch (206-257), which is correct: upstream's half is what a cherry-pick patches. The off-view matches upstream apart from the known unguarded dead `using System.ComponentModel;`. No guard added, moved or removed; no csproj touched. mirror n/a (`CombatStateBase.cs`): the fix is in shared code, so the `#if` branch already has it. **mirrored** (`DependencyContainer.cs`): the fork's own `FindClosestTarget` in the `#if` branch opened with the identical unchecked `var threat = FindThreat(); if (threat != null) return threat;` and carried exactly the defect upstream corrected. Ported in the follow-up commit below, on the user's say-so. Both builds green: 0 errors, 12 warnings each. |
 | - | (mirror) | Mirror `41e3331` fix into the USE_CUSTOM_CHANGES branch | applied | - | Not an upstream commit. Upstream's four-line re-lookup was transplanted verbatim into the `#if` branch of `BloogBot/AI/DependencyContainer.cs` (now lines 136-143), directly below the fork's `var player = ObjectManager.Player;`: `var checkThreat = ObjectManager.Units.FirstOrDefault(u => u.Guid == threat?.Guid);` then `if (threat != null && checkThreat != null && checkThreat.Health != 0 && !checkThreat.TappedByOther) return checkThreat;`. The `#else` branch keeps upstream's text exactly as `41e3331` cherry-picked it - verified by re-deriving the preprocessed off-view, which is unchanged. Guard count unchanged (23 files, 72 regions); the `#if` region simply grew by 5 lines. Both builds green: 0 errors, 12 warnings each. Note the fork's `FindThreat` casts a wider net than upstream's - it also returns units targeting `player.BotFriend` - so the on-configuration now filters dead summons out of that larger set too. |
+| 16 | `9526661` | FindThreat: return nothing when dead | applied | - | Clean cherry-pick, no conflicts. Six lines in `BloogBot/AI/DependencyContainer.cs`: `FindThreat` now opens with `if (ObjectManager.Player.InGhostForm) return null;` so a corpse-running ghost is not handed a target. The hunk landed at line 100, inside the `#else` branch (95-136) - correct, that is upstream's half. Off-view matches upstream `9526661` apart from the known unguarded dead `using System.ComponentModel;`. No guard added, moved or removed; no csproj touched. **mirror pending** (`DependencyContainer.cs`): the fork's own `FindThreat` in the `#if` branch (lines 54-95) has no ghost-form check either, and the defect bites harder there - `MoveToPositionState.Update` calls `FindThreat()` first thing (`MoveToPositionState.cs:33`) and pushes a move-to-target state before its own guarded ghost-form pop at lines 54/74 is ever reached, and `RetrieveCorpseState` drives corpse runs through exactly that state (with the 60 s deadline `1260c1b` added). On top of that the fork's `FindThreat` also counts units targeting `player.BotFriend`, which stay live while the player is dead, so a ghost can be pulled off its corpse run by a mob fighting the npcbot friend. Both builds green: 0 errors, 12 warnings each. |
 
 ## Guarded files
 
@@ -119,5 +120,31 @@ Deliberately not guarded, per the skill's do-not-guard list:
 
 ## Open questions
 
-None. The next run starts at `9526661` ('FindThreat: return nothing when dead') - it touches the
-same `FindThreat` the fork rewrote in its own `#if` branch, so expect another mirror question.
+- **`9526661` - mirror the ghost-form early return into the `#if` branch of `FindThreat`?**
+  Upstream added six lines at the top of `DependencyContainer.FindThreat`:
+
+  ```csharp
+  // If we are dead, nothing is a threat.
+  if (ObjectManager.Player.InGhostForm)
+  {
+      return null;
+  }
+  ```
+
+  That went into the `#else` branch (`DependencyContainer.cs:100`). The fork's own `FindThreat`
+  in the `#if` branch (`DependencyContainer.cs:54-95`) has no such check.
+
+  Why it matters more in the fork than upstream: `MoveToPositionState.Update` calls
+  `container.FindThreat()` as its very first statement (`MoveToPositionState.cs:33`) and, on a
+  non-null result, stops movement and pushes a move-to-target state - *before* the fork's own
+  guarded ghost-form pop at `MoveToPositionState.cs:54`/`:74` can run. `RetrieveCorpseState` drives
+  the corpse run through that state (with the 60 s deadline `1260c1b` added). And the fork's
+  `FindThreat` additionally treats any unit targeting `player.BotFriend` as a threat; those stay
+  live while the player is dead. So a ghost can be yanked off its corpse run by a mob that is
+  fighting the npcbot friend, and will keep being yanked every tick.
+
+  The mirrored fix is upstream's four lines transplanted verbatim at the top of the `#if`
+  `FindThreat`, above `var player = ObjectManager.Player;` (or using that local, which is
+  equivalent). Recommended: **mirror** - this is a correction, the customization has the same hole,
+  and the `#if` branch is the half that runs.
+  Answer with `mirror 9526661` or `no-mirror 9526661 <reason>`.

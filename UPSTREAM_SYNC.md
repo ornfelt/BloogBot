@@ -123,7 +123,7 @@ no longer define the symbol.
 | 45 | `6987f77` | ProtectionPaladinBot/HealSelfState: stop movement | applied | - | Clean cherry-pick, no conflicts. One file, **+2/-0**, and `ProtectionPaladinBot/HealSelfState.cs` is now **byte-identical** to upstream `6987f77`. The fork had never touched it. A single `player.StopAllMovement();` at the very top of `Update()`, above the `player.IsCasting` early return - upstream's message says entering the state while still moving makes the cast fail, so the state now halts first, which it should be doing anyway while healing. The last of the four consecutive `ProtectionPaladinBot` commits. mirror n/a: no guarded file touched. `LocalPlayer.StopAllMovement()` at `:188` is shared code, well clear of that file's single guard at `:481`, so the new call behaves identically in both configurations. Note this one *is* a genuine defect fix rather than a preference - had it landed in a guarded file it would have been a mirror candidate - but the defect and the fix are both entirely inside `ProtectionPaladinBot`, which the fork has never customized. |
 | 46 | `608ab7f` | Build settings | applied | - | **Empty - the change was already present in the fork.** Git reported 'The previous cherry-pick is now empty', and it was finished with `git cherry-pick --skip`: **no commit created, not one byte written**, HEAD still at the previous ledger commit. This is the retarget the skill predicted - upstream's 14 files are the v4.6.1 -> v4.8 `TargetFrameworkVersion` bump plus `<TargetFrameworkProfile />`, the exact change the fork made long ago, which is why it is on the do-not-guard list. Verified per-file rather than trusting git's 'empty': all 13 csprojs in upstream's list carry `<TargetFrameworkVersion>v4.8</TargetFrameworkVersion>` and a `TargetFrameworkProfile` element, and `BloogBotTests/app.config` already has upstream's `<startup><supportedRuntime ... v4.8/></startup>` line and the BOM already stripped. Nothing guarded, as the rule requires. mirror n/a: no guarded file touched, and nothing was written at all. **The `UseCustomChanges` define was re-proved anyway**, because this commit's file list included `FrostMageBot.csproj`, which carries a toggle - a csproj merge dropping the define is the silent failure both builds pass through. Note the probe needs `-t:Rebuild`: on an up-to-date tree `csc` never runs and the `-v:n` log shows no `/define:` at all, which reads as a failure and is not one. Rebuilt: with the default, exactly `BloogBot.exe`, `FrostMageBot.dll` and the Loader `CL` line carry the symbol - matching the three toggle files exactly; with `-p:UseCustomChanges=false`, zero mentions anywhere. Both rebuilds exit 0. |
 | 47 | `1b9fbef` | build config: add dependency StreamJsonRpc | adapted | `ArcaneMageBot/ArcaneMageBot.csproj`, `BloogBot/App.config`, `BloogBot/BloogBot.csproj`, `Bootstrapper/App.config`, `Bootstrapper/Bootstrapper.csproj`, `EnhancementShamanBot/EnhancementShamanBot.csproj`, `FeralDruidBot/FeralDruidBot.csproj`, `FuryWarriorBot/FuryWarriorBot.csproj`, `ProtectionWarriorBot/ProtectionWarriorBot.csproj` (9) | 40 files, +909/-22. Adds StreamJsonRpc and its dependency tree to `BloogBot/packages.config` and the reference list in `BloogBot.csproj`, plus a per-bot `app.config` to 17 bot projects. **All 9 conflicts were the same one-line collision**: the fork's `v4.8` against upstream's `v4.6.2`. Kept the fork's `v4.8` in every one - upstream's own tree is inconsistent (`608ab7f` put 13 csprojs at v4.8, this commit puts others at v4.6.2) and v4.8 satisfies StreamJsonRpc's 4.6.2 floor. `BloogBot/App.config` was the one substantive resolution: took **upstream's side in full**, including all seven new `assemblyBinding` redirects StreamJsonRpc needs at runtime (Microsoft.Bcl.AsyncInterfaces, System.Collections.Immutable, System.Threading.Tasks.Extensions, Newtonsoft.Json, System.Memory, Microsoft.VisualStudio.Validation, Microsoft.VisualStudio.Threading), changing only the `supportedRuntime` back to v4.8. After resolving, all 20 csprojs and all three App.configs are uniformly v4.8. **Both `UseCustomChanges` PropertyGroups survived intact and correctly placed** - `BloogBot.csproj:60-64` (last `Configuration|Platform` group ends :46, first `ItemGroup` :66) and `FrostMageBot.csproj:35-39` (:25 / :41); `FrostMageBot.csproj` auto-merged, upstream only appended an `ItemGroup` at the end. mirror n/a: no guarded source file touched - csproj and app.config only, all on the cannot-be-guarded list. **This commit cannot build alone**: its `BloogBot.csproj` adds a `Compile Include` for `UI\BotService.cs` but that file arrives in `a5d5325`, so the off-build failed with `CS2001 Source file BotService.cs could not be found`. That is the skill's named dependency pair, confirmed empirically, so `a5d5325` was taken in the same run - next row. |
-| 48 | `a5d5325` | bot: add an RPC service | applied | - | Clean cherry-pick, no conflicts; `BloogBot/AI/Bot.cs` auto-merged. 6 files, +158/-14. Adds `BloogBot/UI/BotService.cs` (a StreamJsonRpc service over a named pipe so a watchdog process can restart the bot when it crashes or freezes), `RpcLogin` in `MainViewModel.cs`, the host startup in `MainWindow.xaml.cs`, and gives `LoginState` an optional `Action onLoginComplete` third parameter plus realm-selection-dialog handling. Taken in the same run as `1b9fbef` because that commit does not compile without this file. **mirror pending** - see Open questions. The `Bot.cs` hunk landed at `:66` in **shared** code (between the guard ending `:28` and the one starting `:100`), so it compiles into both configurations - and that is exactly the problem: upstream's new `onLoginComplete` callback inlines the very initialization sequence the fork replaced with `ResetValues(container, true)` behind the guard at `Bot.cs:100-112`. |
+| 48 | `a5d5325` | bot: add an RPC service | applied | - | Clean cherry-pick, no conflicts; `BloogBot/AI/Bot.cs` auto-merged. 6 files, +158/-14. Adds `BloogBot/UI/BotService.cs` (a StreamJsonRpc service over a named pipe so a watchdog process can restart the bot when it crashes or freezes), `RpcLogin` in `MainViewModel.cs`, the host startup in `MainWindow.xaml.cs`, and gives `LoginState` an optional `Action onLoginComplete` third parameter plus realm-selection-dialog handling. Taken in the same run as `1b9fbef` because that commit does not compile without this file. **mirrored** in `ced1206`. The `Bot.cs` hunk landed at `:66` in **shared** code (between the guard ending `:28` and the one starting `:100`), so it compiled into both configurations - and that was the problem: upstream's new `onLoginComplete` callback inlines the very initialization sequence the fork replaced with `ResetValues(container, true)` behind the guard at `Bot.cs:100-112`, so `Login()` and `Start()` initialized differently in the configuration that runs. The callback body is now guarded the same way `Start()` is - `ResetValues(container, true)` under `#if`, upstream's inline block verbatim in `#else`, `CheckForTravelPath` left outside. Safe because `ResetValues` is a strict superset of upstream's block, and because the reconnect push at `Bot.cs:399` passes **no** callback, so `onLoginComplete` is null there and neither invocation site (`LoginState.cs:37`, `:98`) can fire mid-session. |
 
 ## Unguarded customizations
 
@@ -155,47 +155,12 @@ Deliberately not guarded, per the skill's do-not-guard list:
 
 ## Open questions
 
-- **`a5d5325` - mirror pending.** The commit has landed and both builds are green; only the mirror
-  waits. Answer with `mirror a5d5325` or `no-mirror a5d5325 <reason>`.
-
-  **What upstream did.** `a5d5325` gives `LoginState` an optional `onLoginComplete` callback and, in
-  `Bot.Login()`, passes a callback that initializes the bot and pushes `GrindState`
-  (`Bot.cs:66-79`). Its body is, verbatim, the sequence `currentLevel` / `botStates.Push(new
-  GrindState(...))` / `currentState` / `currentStateStartTime` / `currentPosition` /
-  `currentPositionStartTime` / `teleportCheckPosition`, then `container.CheckForTravelPath(botStates,
-  false)`.
-
-  **Where the fork has the same subject.** That is exactly the sequence the fork replaced in
-  `Bot.Start()`: `Bot.cs:100-112` is `#if USE_CUSTOM_CHANGES` -> `ResetValues(container, true)`,
-  `#else` -> upstream's inline block. `ResetValues` (`Bot.cs:125-157`, itself entirely inside a
-  guard) does everything upstream's block does **plus** the fork's session setup: logs a session
-  marker to `VisitedWanderNodes.txt`, sets `LastWpId`, derives faction via `UnitRace('player')` to
-  set `player.IsAlly` and `player.BotFriend`, and resets `CurrWpId`, `CurrZone`, `DeathsAtWp`,
-  `WpStuckCount`, `StuckInStateOrPosCount`, `ForcedWpPath`, `VisitedWps`, `HasBeenStuckAtWp`,
-  `HasJoinedBg`, `HasOverLeveled` and `LastKnownMapId`.
-
-  **Why it matters.** Upstream's callback landed in shared code, so in the **on**-configuration a bot
-  entering play through `Login()` pushes `GrindState` with none of that fork state initialized -
-  `IsAlly` / `BotFriend` never set, `ForcedWpPath` / `VisitedWps` left at whatever they were, zone and
-  map bookkeeping stale. The path is live, not theoretical: `MainViewModel.cs:97` and the new
-  `RpcLogin` at `MainViewModel.cs:1713`, which `BotService.Start()` calls over the pipe. So `Start()`
-  and `Login()` now initialize differently in the configuration that actually runs.
-
-  **Recommended fix.** Guard the callback body the same way `Start()` already is - the mechanical
-  parallel to `Bot.cs:100-112`: `#if USE_CUSTOM_CHANGES` calls `ResetValues(container, true)`,
-  `#else` keeps upstream's inline block verbatim, with `container.CheckForTravelPath(botStates,
-  false)` left outside the guard so both branches still run it.
-
-  **Why it was not done unasked.** Two things make it a judgement call rather than a mechanical
-  mirror. First, `resetLevel: true` has side effects beyond initialization - it writes a new session
-  line to `VisitedWanderNodes.txt` and re-derives faction - so it is a deliberate 'new session'
-  marker, not a neutral reset. Second, `LoginState` invokes `onLoginComplete` at **two** sites
-  (`LoginState.cs:37` and `:98`); if either fires on a reconnect rather than only on a first login, a
-  mirrored `ResetValues(..., true)` would wipe `VisitedWps` / `ForcedWpPath` / `CurrWpId` mid-session
-  and open a fresh session log. Worth confirming before wiring it in. Alternatives rejected: passing
-  `resetLevel: false` (leaves `IsAlly` / `BotFriend` unset, which the npcbot-friend handling in
-  `CombatStateBase` depends on), and leaving it alone (keeps `Start()` and `Login()` divergent in the
-  on-configuration, which is the defect).
+- **`a5d5325` - settled 2026-09-21: mirrored** in `ced1206`. The answer was `mirror a5d5325`. The
+  open uncertainty that had held it back - whether `onLoginComplete` could fire on a reconnect, where
+  `ResetValues(..., true)` would wipe `VisitedWps` / `ForcedWpPath` / `CurrWpId` mid-session and open a
+  spurious session log - was checked and ruled out: `Bot.cs:399`, the disconnect path, constructs
+  `LoginState` without a callback, so both invocation sites are no-ops there. `ResetValues(..., true)`
+  runs exactly once per session start. Both builds green after the mirror. No question remains.
 
 Note on the build for these two commits: `1b9fbef` pulls in StreamJsonRpc and ~26 packages that were
 **not** present in `packages/`. The skill's `nuget restore` remedy could not be used - there is no
@@ -207,7 +172,7 @@ skill's description of a 'checked-in packages/ directory' does not match this tr
 `NU1902` / `NU1903` vulnerability warnings for upstream's pinned `MessagePack 2.5.198` and
 `Nerdbank.MessagePack 1.0.2` - upstream's choice, not the fork's, and not build-blocking.
 
-The run after the mirror answer starts at `b353f7d` ('MoveToTargetState: factor out common logic into
+The next run starts at `b353f7d` ('MoveToTargetState: factor out common logic into
 a base class'), which is on the skill's likely-ask list - it restructures a file family the fork
 touches.
 

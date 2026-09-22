@@ -1,4 +1,5 @@
-﻿using BloogBot.AI;
+﻿// Ported from BloogBot/BloogBot/BotLoader.cs (.NET Framework 4.8 -> .NET 9). Replica - do not redesign.
+using BloogBot.AI;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
@@ -38,6 +39,12 @@ namespace BloogBot
             container?.Dispose();
 
             var currentFolder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            // POTENTIAL BUG FOUND: botPaths spells the assembly 'BeastMasterHunterBot.dll' but the
+            //   project builds 'BeastmasterHunterBot.dll' (lowercase 'm'), so File.ReadAllBytes
+            //   throws FileNotFoundException on a case-sensitive volume. It only works today because
+            //   NTFS is case-insensitive.
+            //   Original: BloogBot/BotLoader.cs:40
+            //   Ported as-is - behavior matches .NET Framework BloogBot.
             var botPaths = new[] { "AfflictionWarlockBot.dll", "ArcaneMageBot.dll", "ArmsWarriorBot.dll", "BackstabRogueBot.dll", "BalanceDruidBot.dll", "BeastMasterHunterBot.dll", "CombatRogueBot.dll", "EnhancementShamanBot.dll", "ElementalShamanBot.dll", "FeralDruidBot.dll", "FrostMageBot.dll", "FuryWarriorBot.dll", "ProtectionPaladinBot.dll", "ProtectionWarriorBot.dll", "RetributionPaladinBot.dll", "ShadowPriestBot.dll", "TestBot.dll" };
 
             foreach (var botPath in botPaths)

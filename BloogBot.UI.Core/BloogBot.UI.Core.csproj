@@ -1,8 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <!-- plain net9.0 on purpose: a WPF or Avalonia type leaking in here must not compile -->
-    <TargetFramework>net9.0</TargetFramework>
+    <!-- net9.0-windows rather than the plain net9.0 the skill's project table gives, because this
+         project references BloogBot, which is net9.0-windows. UseWPF and UseWindowsForms stay off,
+         so the WPF and WinForms assemblies are still not referenced and a WPF type leaking in here
+         still does not compile - which is what the plain-net9.0 rule was for. -->
+    <TargetFramework>net9.0-windows</TargetFramework>
     <OutputType>Library</OutputType>
     <RootNamespace>BloogBot.UI</RootNamespace>
     <AssemblyName>BloogBot.UI.Core</AssemblyName>
@@ -10,6 +13,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\BloogBot.UI.Abstractions\BloogBot.UI.Abstractions.csproj" />
+    <ProjectReference Include="..\BloogBot\BloogBot.csproj" />
   </ItemGroup>
 
 </Project>

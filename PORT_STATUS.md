@@ -4,12 +4,14 @@ Maintained by the `bloogbot-net9-port` skill. A hint for the next run, not the s
 the two trees are. Re-derive from this directory with the commands in the skill's "Orient"
 section.
 
-**Last run:** the Fasm.NET blocker, resolved. New `Fasm.NET` project - a managed `FasmNet` shim
-over the stock 32-bit `FASM.DLL` in namespace `Binarysharp.Assemblers.Fasm` - replaces the net461
-mixed-mode assembly, and `MemoryManager.cs` is byte-identical to the original again. No
-`TODO: port body here` markers are left anywhere in the port. All four configurations green.
-**Next:** group 6 - `AI/Bot.cs` (1,046 lines, 23 USE_CUSTOM_CHANGES sites), which finishes the
-group. Still open: deleting the unported originals so the scaffolding can go away.
+**Last run:** groups 6 and 7 finished - `AI/Bot.cs`, `BotLoader.cs`, `HotspotGenerator.cs`,
+`TravelPathGenerator.cs` and `Loader.cs` rewritten as the hostfxr entry point, plus
+`UI/CommandHandler.cs` into `BloogBot.UI.Core`. `MainViewModel` forced the UI project references to
+be turned around - see "The UI assembly cycle" below. All four configurations green.
+**Next:** group 8 - `UI/MainViewModel.cs` (1,901 lines) and `UI/BotService.cs` into
+`BloogBot.UI.Core`, with the `UiTheme` / `IThemeService` pair in `BloogBot.UI.Abstractions` that the
+Dark Mode property needs. Still open: deleting the unported originals so the scaffolding can go
+away.
 
 ## Blocked - read this first
 
@@ -69,6 +71,33 @@ configuration `InjectAssembly` is never called (`SignalEventManager`'s hooks are
 `WardenDisabler.Initialize` sits behind `bool useWarden = false`). Not verified against a real
 `FASM.DLL` in this tree; the first injection test is the place that proves it.
 
+## The UI assembly cycle
+
+The skill's project layout puts a `ProjectReference` from `BloogBot` onto `BloogBot.UI.Core` and
+onto the selected shell. That cannot hold: `UI/MainViewModel.cs` uses `BotLoader`, `Probe`,
+`BotSettings`, `Logger`, `Repository`, `DiscordClientWrapper`, `TravelPathGenerator` and
+`ThreadSynchronizer`, so `BloogBot.UI.Core` has to reference `BloogBot`, and a reference back is a
+project cycle. The references therefore run the other way:
+
+```
+BloogBot.UI.Abstractions  (net9.0)
+BloogBot                  -> (nothing in the UI layer)
+BloogBot.UI.Core          -> BloogBot, BloogBot.UI.Abstractions
+BloogBot.UI.Wpf           -> BloogBot.UI.Core, BloogBot.UI.Abstractions
+BloogBot.UI.Avalonia      -> BloogBot.UI.Core, BloogBot.UI.Abstractions
+```
+
+Three consequences, all recorded in "Deviations from the original":
+
+- `BloogBot/Loader.cs` cannot name `App.Main`. It loads the selected shell assembly by path and
+  binds `App.Main` by reflection, which keeps `BloogBot.dll` as the single assembly `hostfxr`
+  loads and keeps `UI_WPF` / `UI_AVALONIA` in exactly the one place the skill allows.
+- `BloogBot.UI.Core` is `net9.0-windows`, not plain `net9.0` - a `net9.0` project cannot reference
+  a `net9.0-windows` one. `UseWPF` stays off, so a leaked WPF type is still a compile error, which
+  is what the plain-`net9.0` rule was protecting.
+- `Assembly.GetAssembly(typeof(MainViewModel))` in `AI/Bot.cs` and `AI/SharedStates/GrindState.cs`
+  is permanently `typeof(Bot)` / `typeof(GrindState)`. It is not a placeholder waiting for group 8.
+
 ## Header convention
 
 Every ported file starts with `// Ported from BloogBot/<path relative to the source repository
@@ -81,21 +110,26 @@ what the skill's Orient pipeline compares against.
 
 - [x] 1. Setup - solution, Directory.Build.props, csproj files, assets
 - [x] 2. Leaf types - Position, XYZ, XYZXYZ, the 20 Game/Enums, Hotspot, Npc, TravelPath, GatherRoute, CommandModel, Wait, Logger, BotSettings
-- [ ] 3. Memory and native interop - MemoryManager, Detour, Hack, HackManager, ThreadSynchronizer, SignalEventManager, WardenDisabler, Navigation, ClientHelper, Probe
-  - all ten ported; `MemoryManager.cs` still carries `TODO: port body here` at the three Fasm.NET sites (blocked, see above)
+- [x] 3. Memory and native interop - MemoryManager, Detour, Hack, HackManager, ThreadSynchronizer, SignalEventManager, WardenDisabler, Navigation, ClientHelper, Probe
+  - all ten ported; the three Fasm.NET sites in `MemoryManager.cs` were unblocked by the `Fasm.NET` shim project, so the file is byte-identical to the original again
 - [x] 4. Game layer - Objects, Frames, ObjectManager, Functions, the three function handlers
 - [x] 5. Data layer - IRepository, Repository, Sql/Sqlite/TSql repositories
-- [ ] 6. AI layer - Bot, DependencyContainer, the 28 SharedStates
+- [x] 6. AI layer - Bot, DependencyContainer, the 28 SharedStates
   - `AI/IBotState.cs` ported early: `Navigation.cs` has `using BloogBot.AI;` and the namespace had
     to exist for the solution to build
-  - done: `IBot`, `IDependencyContainer`, `PlayerTracker`, `StuckHelper`, `DependencyContainer`,
-    and all 28 `AI/SharedStates/` files
-  - left: `AI/Bot.cs` only. It needs the same `Enumerable.Reverse` change as
-    `DependencyContainer.cs` (its `AI/Bot.cs:193`) and carries the same `typeof(MainViewModel)`
-    substitution as `GrindState.cs` - see "Deviations from the original"
-- [ ] 7. Bot loading and services - BotLoader, DiscordClientWrapper, Loader (hostfxr entry)
+  - `AI/Bot.cs` carries all 23 `USE_CUSTOM_CHANGES` sites, the same `Enumerable.Reverse` change as
+    `DependencyContainer.cs`, and the same `typeof(MainViewModel)` substitution as `GrindState.cs`
+- [x] 7. Bot loading and services - BotLoader, DiscordClientWrapper, HotspotGenerator, TravelPathGenerator, Loader (hostfxr entry)
   - `DiscordClientWrapper.cs` ported early: `ObjectManager.cs` calls `KillswitchAlert`
+  - `Loader.cs` is the one genuinely rewritten managed file - see "The UI assembly cycle"
 - [ ] 8. UI abstractions and viewmodels - BloogBot.UI.Abstractions, BloogBot.UI.Core
+  - done: `UI/CommandHandler.cs` -> `BloogBot.UI.Core/CommandHandler.cs`, byte-identical
+  - left: `UI/MainViewModel.cs` (1,901 lines) and `UI/BotService.cs`. `BloogBot.UI.Abstractions` is
+    still empty on purpose: `MainViewModel` touches no WPF type at all - only
+    `System.Windows.Input.ICommand`, which is in the .NET 9 base class library, plus an unused
+    `using System.Windows.Documents;` - so nothing needs `IUiDispatcher`, `IDialogService` or
+    `IClipboardService` yet. The first types the project gets are `UiTheme` and `IThemeService`,
+    added by the run that ports `MainViewModel` and its Dark Mode property
 - [ ] 9. WPF shell - BloogBot.UI.Wpf (default, the reference shell)
 - [ ] 10. Avalonia shell - BloogBot.UI.Avalonia, at parity with 9
 - [ ] 11. The 17 bot plugins
@@ -115,6 +149,7 @@ what the skill's Orient pipeline compares against.
 | `BloogBot/Repository.cs` | 109 | `AddHotspot` computes `encodedZone` / `encodedDescription` / `encodedFaction` and then passes the raw values on, so an apostrophe in any of the three produces malformed SQL; `AddNpc` does pass its encoded values | `BloogBot/Repository.cs:103-108` |
 | `BloogBot/AI/DependencyContainer.cs` | 77, 127 | `FindThreat`: `&&` binds tighter than `||`, so the blacklist check guards only the pet-target clause - a blacklisted mob targeting the player is still returned as a threat (both `#if` branches) | `BloogBot/AI/DependencyContainer.cs:75-77`, `:117-119` |
 | `BloogBot/AI/DependencyContainer.cs` | 191, 277 | `FindClosestTarget`: `TargetingIncludedNames` is a string, so `.Any(n => u.Name.Contains(n))` enumerates its *characters* - any elite whose name shares one character with the setting bypasses the elite filter (both `#if` branches) | `BloogBot/AI/DependencyContainer.cs:174`, `:253` |
+| `BloogBot/BotLoader.cs` | 41 | `botPaths` spells the assembly `BeastMasterHunterBot.dll` but the project builds `BeastmasterHunterBot.dll`, so `File.ReadAllBytes` throws on a case-sensitive volume | `BloogBot/BotLoader.cs:40` |
 | `BloogBot/AI/SharedStates/CombatStateBase.cs` | 77 | the `DeathsAtWp > 2` block dereferences a `FirstOrDefault()` that can be null, and `Int32.Parse` on an empty `Links` string throws; either throws out of `Update()` on the bot's main loop | `BloogBot/AI/SharedStates/CombatStateBase.cs:70` |
 
 ## Deviations from the original
@@ -133,7 +168,13 @@ Every place the port had to differ, and why. One line each.
 | `BloogBot/TSqlRepository.cs` (runtime note, no code change) | `SqlConnection` / `SqlCommand` compile with warning CS0618 (`System.Data.SqlClient` is deprecated in favour of `Microsoft.Data.SqlClient`) | kept on `System.Data.SqlClient` so `SqlRepository.cs` and `TSqlRepository.cs` stay byte-identical to the original, as the skill's API map prescribes |
 | `BloogBot/DiscordClientWrapper.cs` (runtime note, no code change) | `ServicePointManager.SecurityProtocol = Tls12` compiles with warning SYSLIB0014 and no longer has any effect: on .NET 9 `ServicePointManager` settings do not reach `HttpClient`, which is what Discord.Net 3.x uses | ported as-is; TLS 1.2+ is the platform default on .NET 9, so the line being inert does not change behavior |
 | `BloogBot/AI/SharedStates/CombatStateBase.cs` | `using BloogBot.Properties;` dropped (it was unused) | `Properties/Resources.resx` and `Properties/Settings.settings` are not carried across, so the generated `BloogBot.Properties` namespace does not exist |
-| `BloogBot/AI/SharedStates/GrindState.cs` | `using BloogBot.UI;` dropped and `LogToFile`'s `Assembly.GetAssembly(typeof(MainViewModel))` -> `typeof(GrindState)` | `MainViewModel` moves to `BloogBot.UI.Core` and is not ported yet (group 8). Both assemblies build into the same `..\Bot\` folder, so `VisitedWanderNodes.txt` resolves to the same path. Restore the `MainViewModel` spelling once group 8 lands - `AI/Bot.cs` has the same two sites |
+| `BloogBot/AI/SharedStates/GrindState.cs` | `using BloogBot.UI;` dropped and `LogToFile`'s `Assembly.GetAssembly(typeof(MainViewModel))` -> `typeof(GrindState)` | `BloogBot.UI.Core` references `BloogBot`, so `BloogBot` cannot reference it back. Both assemblies build into the same `..\Bot\` folder, so `VisitedWanderNodes.txt` resolves to the same path. Permanent, not a placeholder - see "The UI assembly cycle" |
+| `BloogBot/AI/Bot.cs` | `using BloogBot.UI;` dropped; both `LogToFile` overloads use `Assembly.GetAssembly(typeof(Bot))` instead of `typeof(MainViewModel)` | the same cycle as `GrindState.cs` above; `StuckLog.txt` and `VisitedWanderNodes.txt` resolve to the same path as before |
+| `BloogBot/AI/Bot.cs` | `Travel`: `waypoints.Reverse().ToArray()` -> `Enumerable.Reverse(waypoints).ToArray()` | the same `MemoryExtensions.Reverse(Span<T>)` binding change as `DependencyContainer.cs` |
+| `BloogBot/AI/Bot.cs`, `AI/SharedStates/GrindState.cs` (runtime note, no code change) | `Assembly.CodeBase` compiles with warning SYSLIB0012 | kept because it is the original's call; on .NET 9 it still returns the `file://` URI of a file-loaded assembly, so `new UriBuilder(dir).Path` behaves as before |
+| `BloogBot/Loader.cs` | `class Loader` / `static int Load(string args)` -> `public class Loader` / `public static int Load(IntPtr arg, int argSize)`; `new Thread(App.Main)` -> the shell assembly loaded by path and `App.Main` bound by reflection | the signature is what `hostfxr`'s `load_assembly_and_get_function_pointer` requires (`component_entry_point_fn`); the reflection is the UI assembly cycle. `UI_WPF` / `UI_AVALONIA` pick the assembly name and appear nowhere else. Not exercised until the shells exist (groups 9 and 10) and a real injection test runs |
+| `BloogBot/BloogBot.csproj` | the `ProjectReference`s onto `BloogBot.UI.Core` and onto the two shells removed | they would be a project cycle - see "The UI assembly cycle" |
+| `BloogBot.UI.Core/BloogBot.UI.Core.csproj` | `net9.0-windows` instead of the plain `net9.0` the skill's project table gives; `ProjectReference` onto `BloogBot` added | a `net9.0` project cannot reference a `net9.0-windows` one. `UseWPF` stays off, so a leaked WPF type is still a compile error |
 
 ## NuGet packages
 
@@ -144,11 +185,16 @@ Every place the port had to differ, and why. One line each.
 | `Discord.Net` | 3.17.4 | `BloogBot` | `DiscordClientWrapper.cs` (original referenced Discord.Net 2.2.0, net461-only) |
 | `System.Data.SQLite.Core` | 1.0.119 | `BloogBot` | `SqliteRepository.cs` (same `System.Data.SQLite` namespace, source unchanged) |
 | `System.Data.SqlClient` | 4.9.0 | `BloogBot` | `SqlRepository.cs`, `TSqlRepository.cs` (a BCL assembly reference on .NET Framework, a package on .NET 9) |
+| `System.ComponentModel.Composition` | 9.0.0 | `BloogBot` | `BotLoader.cs` - MEF (`[ImportMany]`, `AggregateCatalog`, `AssemblyCatalog`, `CompositionContainer`). A BCL assembly reference on .NET Framework, a package on .NET 9; the source is unchanged |
 
 `DiscordClientWrapper.cs` needed **no source change at all** on Discord.Net 3.x: every member it
 uses - `DiscordSocketClient`, `Log`, `Ready`, `LoginAsync(TokenType.Bot, ...)`, `StartAsync`,
 `GetGuild`, `GetRole`, `GetChannel`, `SendMessageAsync` - kept its 2.x spelling, so the file is
 byte-identical to the original apart from the header line.
+
+`BotLoader.cs` needed **no source change** either: the whole MEF surface it uses, and its
+`AppDomain.CurrentDomain.AssemblyResolve` handler, still work on .NET 9. The 17 bot plugins need the
+same package in group 11 for their `[Export(typeof(IBot))]` attributes.
 
 Still to come, with the file that needs them (checked with grep over the source tree):
 **`StreamJsonRpc`
@@ -186,3 +232,4 @@ Dropped as in-box on .NET 9 or unreferenced by any source file: `System.Memory`,
 | group 5 + AI root (+ TravelState, MoveToPositionState, StuckState) | 14 files | ~2200 | green | green | green | green |
 | group 6 - the remaining 21 `AI/SharedStates/` files | 21 files | ~2990 | green | green | green | green |
 | Fasm.NET shim (new project); `MemoryManager.cs` restored byte-identical | 2 new files | ~230 new | green | green | green | green |
+| group 6 finished (`AI/Bot.cs`) + group 7 + `UI/CommandHandler.cs`; UI project references turned around | 6 files | ~1250 | green | green | green | green |

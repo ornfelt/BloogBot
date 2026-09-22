@@ -19,6 +19,9 @@
     <!-- System.Data.SQLite.Core: SqliteRepository.cs. Replaces the System.Data.SQLite reference
          from packages.config; same System.Data.SQLite namespace, so the source is unchanged. -->
     <PackageReference Include="System.Data.SQLite.Core" Version="1.0.119" />
+    <!-- System.ComponentModel.Composition (MEF): BotLoader.cs. On .NET Framework this was a BCL
+         assembly reference; on .NET 9 the same namespace ships as a package. -->
+    <PackageReference Include="System.ComponentModel.Composition" Version="9.0.0" />
     <!-- System.Data.SqlClient: SqlRepository.cs, TSqlRepository.cs. On .NET Framework this was a
          BCL assembly reference; on .NET 9 the same namespace ships as a package. -->
     <PackageReference Include="System.Data.SqlClient" Version="4.9.0" />
@@ -29,9 +32,11 @@
          mixed-mode C++/CLI built for net461 and cannot load on .NET 9. Same namespace and members,
          so MemoryManager.cs is unchanged. -->
     <ProjectReference Include="..\Fasm.NET\Fasm.NET.csproj" />
-    <ProjectReference Include="..\BloogBot.UI.Core\BloogBot.UI.Core.csproj" />
-    <ProjectReference Include="..\BloogBot.UI.Wpf\BloogBot.UI.Wpf.csproj" Condition="'$(Ui)'=='Wpf'" />
-    <ProjectReference Include="..\BloogBot.UI.Avalonia\BloogBot.UI.Avalonia.csproj" Condition="'$(Ui)'=='Avalonia'" />
+    <!-- No reference to BloogBot.UI.Core or to either shell, although the skill's project layout
+         shows one on BloogBot: UI/MainViewModel.cs uses BotLoader, Probe, BotSettings, Logger,
+         Repository, DiscordClientWrapper, TravelPathGenerator and ThreadSynchronizer, so
+         BloogBot.UI.Core has to reference BloogBot and a reference back would be a cycle.
+         Loader.cs reaches the selected shell's App.Main by reflection instead. -->
   </ItemGroup>
 
   <!-- Same copy rules as the original csproj: settings PreserveNewest, schemas Always. -->

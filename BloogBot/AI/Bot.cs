@@ -1,10 +1,12 @@
-﻿using BloogBot.AI.SharedStates;
+﻿// Ported from BloogBot/BloogBot/AI/Bot.cs (.NET Framework 4.8 -> .NET 9). Replica - do not redesign.
+using BloogBot.AI.SharedStates;
 using BloogBot.Game;
 using BloogBot.Game.Enums;
 #if USE_CUSTOM_CHANGES
 using BloogBot.Game.Objects;
 #endif
-using BloogBot.UI;
+// 'using BloogBot.UI;' dropped: MainViewModel moves to the BloogBot.UI.Core project, which
+// references BloogBot, so BloogBot cannot reference it back. See the two LogToFile comments.
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -190,7 +192,10 @@ namespace BloogBot.AI
                     .Waypoints;
 
                 if (reverseTravelPath)
-                    waypoints = waypoints.Reverse().ToArray();
+                    // .NET 9: Position[].Reverse() now binds to MemoryExtensions.Reverse(Span<T>),
+                    //   which reverses in place and returns void. Called through Enumerable so it
+                    //   keeps the .NET Framework meaning: a new reversed sequence, source untouched.
+                    waypoints = Enumerable.Reverse(waypoints).ToArray();
 
                 var closestWaypoint = waypoints
                     .OrderBy(w => w.DistanceTo(ObjectManager.Player.Position))
@@ -985,7 +990,11 @@ namespace BloogBot.AI
 
         void LogToFile(string text)
         {
-            var dir = Path.GetDirectoryName(Assembly.GetAssembly(typeof(MainViewModel)).CodeBase);
+            // Original: Assembly.GetAssembly(typeof(MainViewModel)) - MainViewModel lives in
+            // BloogBot.UI.Core, which references BloogBot, so this assembly cannot reference it.
+            // The same assembly directory is taken from a type in this assembly instead; both land
+            // in the same output folder, so the file path is unchanged.
+            var dir = Path.GetDirectoryName(Assembly.GetAssembly(typeof(Bot)).CodeBase);
             var path = new UriBuilder(dir).Path;
             var file = Path.Combine(path, "StuckLog.txt");
 
@@ -1008,7 +1017,11 @@ namespace BloogBot.AI
 #if USE_CUSTOM_CHANGES
         private void LogToFile(string fileName, string text)
         {
-            var dir = Path.GetDirectoryName(Assembly.GetAssembly(typeof(MainViewModel)).CodeBase);
+            // Original: Assembly.GetAssembly(typeof(MainViewModel)) - MainViewModel lives in
+            // BloogBot.UI.Core, which references BloogBot, so this assembly cannot reference it.
+            // The same assembly directory is taken from a type in this assembly instead; both land
+            // in the same output folder, so the file path is unchanged.
+            var dir = Path.GetDirectoryName(Assembly.GetAssembly(typeof(Bot)).CodeBase);
             var path = new UriBuilder(dir).Path;
             var file = Path.Combine(path, fileName);
             string altFileName = "C:\\local\\VisitedWanderNodes.txt";

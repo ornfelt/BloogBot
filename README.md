@@ -1,4 +1,4 @@
-# BloogBot
+# BloogBot in .net 9
 
 Join the [BloogBot Discord Server](https://discord.gg/YfNqMgfFBh) to chat with other folks hacking on BloogBot!
 

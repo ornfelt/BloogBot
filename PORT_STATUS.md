@@ -4,14 +4,14 @@ Maintained by the `bloogbot-net9-port` skill. A hint for the next run, not the s
 the two trees are. Re-derive from this directory with the commands in the skill's "Orient"
 section.
 
-**Last run:** group 9 started - the WPF shell. `App.xaml(.cs)` with the hand-written
-`[STAThread] Main`, `MainWindow.xaml.cs`, `Themes/Dark.xaml` + `Themes/Light.xaml` (15 keys
-each) and `WpfThemeService`, plus `MainWindow.xaml`'s Overview, Settings and Travel Paths tabs
-and the console trailer. All four configurations green.
-**Next:** finish group 9 - the four `MainWindow.xaml` tabs still marked
-`TODO: port body here`, in source order: NPCs (original lines 972-1041), Hotspots (1042-1287),
-Powerlevel (1288-1347), Gathering (1348-1507). They are a verbatim copy of the original's
-lines; only the window header and the two console colours ever needed changing.
+**Last run:** groups 9 and 10 finished - the whole UI layer. `MainWindow.xaml`'s last four
+tabs (NPCs, Hotspots, Powerlevel, Gathering) landed verbatim in the WPF shell, and the whole
+Avalonia shell followed: `App.axaml(.cs)`, `MainWindow.axaml(.cs)`, `Themes/Dark.axaml` +
+`Themes/Light.axaml` + `Themes/Controls.axaml`, and `AvaloniaThemeService`. Both parity diffs
+clean, all 15 theme keys identical across the four theme files, all four configurations green.
+**Next:** group 11 - the 17 bot plugins. Mechanical: one `.csproj` each plus a straight copy of
+the 6-10 sources, with `System.ComponentModel.Composition` for the `[Export(typeof(IBot))]`
+attributes. Several per run.
 Still open: deleting the unported originals so the scaffolding can go away.
 
 ## Blocked - read this first
@@ -56,9 +56,10 @@ the stock `FASM.DLL`.
 `AddLine(string, params object[])`, `Assemble()`, `Assemble(IntPtr)`, `Assemble(string)`,
 `GetVersion()`, plus `FasmAssemblerException`, `FasmErrors` and `FasmConditions`. It P/Invokes
 `fasm_Assemble` / `fasm_GetVersion` and reads the `FASM_STATE` block the way `FASMDLL.TXT`
-documents it. Because the namespace and the member names match, **`BloogBot/MemoryManager.cs` is
-byte-identical to the original apart from its header line** - the commented-out `using`, the
-`fasm` field and both `InjectAssembly` bodies are restored verbatim.
+documents it. Because the namespace and the member names match, **`BloogBot/MemoryManager.cs`
+needed no code change for Fasm.NET at all** - the commented-out `using`, the `fasm` field and both
+`InjectAssembly` bodies are restored verbatim. Apart from the header line and the `WriteBytes`
+`POTENTIAL BUG FOUND` comment, the file matches the original line for line.
 
 Two details recovered from the old binary rather than guessed: the exception message format
 (`An error occurred during FASM was assembling mnemonics. Error code: {0} ({1}); Error line: {2};
@@ -112,7 +113,8 @@ what the skill's Orient pipeline compares against.
 - [x] 1. Setup - solution, Directory.Build.props, csproj files, assets
 - [x] 2. Leaf types - Position, XYZ, XYZXYZ, the 20 Game/Enums, Hotspot, Npc, TravelPath, GatherRoute, CommandModel, Wait, Logger, BotSettings
 - [x] 3. Memory and native interop - MemoryManager, Detour, Hack, HackManager, ThreadSynchronizer, SignalEventManager, WardenDisabler, Navigation, ClientHelper, Probe
-  - all ten ported; the three Fasm.NET sites in `MemoryManager.cs` were unblocked by the `Fasm.NET` shim project, so the file is byte-identical to the original again
+  - all ten ported; the three Fasm.NET sites in `MemoryManager.cs` were unblocked by the `Fasm.NET` shim project, so the file matches the original again
+  - that restore also dropped the `POTENTIAL BUG FOUND` tag on `WriteBytes`, which the inventory below still listed. Restored by the group 9 + 10 run, so `MemoryManager.cs` now differs from the original in two places: the header line and that five-line comment
 - [x] 4. Game layer - Objects, Frames, ObjectManager, Functions, the three function handlers
 - [x] 5. Data layer - IRepository, Repository, Sql/Sqlite/TSql repositories
 - [x] 6. AI layer - Bot, DependencyContainer, the 28 SharedStates
@@ -135,21 +137,32 @@ what the skill's Orient pipeline compares against.
     `MainViewModel` touches no WPF type at all, so `IUiHost`, `IUiDispatcher`,
     `IDialogService` and `IClipboardService` are not needed yet. `IUiHost` arrives with
     group 9, the rest only if a shell genuinely needs one
-- [ ] 9. WPF shell - BloogBot.UI.Wpf (default, the reference shell)
-  - done: `App.xaml` + `App.xaml.cs` (namespace `BloogBot.UI.Wpf`, with the hand-written
+- [x] 9. WPF shell - BloogBot.UI.Wpf (default, the reference shell)
+  - `App.xaml` + `App.xaml.cs` (namespace `BloogBot.UI.Wpf`, with the hand-written
     `[STAThread] Main` the library build needs), `MainWindow.xaml.cs`, `Themes/Dark.xaml` and
     `Themes/Light.xaml`, `WpfThemeService`
-  - done in `MainWindow.xaml`: the `Window` element, the outer `Grid`, the `TabControl`, the
-    Overview, Settings and Travel Paths tabs, and the console / Clear Log trailer. The three
-    tab bodies are byte-identical to the original; the only insertion anywhere in the file is
-    the 10-line Dark Mode checkbox in Overview's already-defined, previously unused row 11
-  - left: the NPCs (972-1041), Hotspots (1042-1287), Powerlevel (1288-1347) and Gathering
-    (1348-1507) tabs, each marked `TODO: port body here` in place
+  - `MainWindow.xaml` is complete: all seven tabs in source order plus the console / Clear Log
+    trailer. Every tab body is byte-identical to the original; the only insertion anywhere in
+    the file is the 10-line Dark Mode checkbox in Overview's already-defined, previously unused
+    row 11. Against the original the whole 1,555-line file differs in five places only - the
+    header line, the `x:Class`, the requalified `xmlns:local`, the dropped
+    `<Window.DataContext>`, that checkbox, and the two console colours
   - `IUiHost`, `IUiDispatcher`, `IDialogService` and `IClipboardService` are still not in
-    `BloogBot.UI.Abstractions`: nothing needs them. `Loader.cs` reaches `App.Main` by
-    reflection, and `MainViewModel` touches no WPF type, so `IThemeService` remains the only
-    contract a shell has to implement
-- [ ] 10. Avalonia shell - BloogBot.UI.Avalonia, at parity with 9
+    `BloogBot.UI.Abstractions`, and now never will be: neither shell needs one. `Loader.cs`
+    reaches `App.Main` by reflection, and `MainViewModel` touches no WPF or Avalonia type, so
+    `IThemeService` is the only contract a shell has to implement
+- [x] 10. Avalonia shell - BloogBot.UI.Avalonia, at parity with 9
+  - `App.axaml` + `App.axaml.cs` (the same `[STAThread] public static void Main` name and
+    signature as the WPF shell, which is what lets `Loader.cs` bind either by reflection),
+    `MainWindow.axaml` + `MainWindow.axaml.cs`, `Themes/Dark.axaml`, `Themes/Light.axaml`,
+    `Themes/Controls.axaml`, `AvaloniaThemeService`
+  - `MainWindow.axaml` is generated from the WPF window and differs from it in four places
+    only: the `x:Class` and the default xmlns, `ResizeMode="CanMinimize"` ->
+    `CanResize="False"`, six `IsEditable="False"` dropped, and `Name="Console"` ->
+    `x:Name="Console"`. Both parity diffs come back empty
+  - nothing in the original window needed an Avalonia-only workaround. The `MultiBinding` +
+    `StringFormat`, `{Binding Path=.}`, star column widths, `SizeToContent` and `Separator`
+    all carry over as written
 - [ ] 11. The 17 bot plugins
 - [x] 12. Bootstrapper - ported out of order in the setup run: it depends on nothing in BloogBot, and an `Exe` project with no `Main` would have kept the solution red
 - [ ] 13. Native - Loader/dllmain.cpp on hostfxr, FastCall/Navigation build config
@@ -157,18 +170,24 @@ what the skill's Orient pipeline compares against.
 
 ## Potential bugs found
 
+Every row here has a matching `POTENTIAL BUG FOUND` comment in the port, and the line column is
+the port's line. Cross-check with
+`grep -rn 'POTENTIAL BUG FOUND' . --include='*.cs' --include='*.xaml' --include='*.axaml' --include='*.cpp'`;
+the fifteen tags map onto these thirteen rows, `DependencyContainer.cs` contributing two tags to
+each of its two rows because both `#if USE_CUSTOM_CHANGES` branches carry one.
+
 | File (port) | Line | What looks wrong | Original |
 | --- | --- | --- | --- |
 | `Bootstrapper/Program.cs` | 47 | `VirtualAllocEx` reserves `loaderPath.Length` bytes but `Encoding.Unicode.GetBytes(loaderPath)` writes twice that; works only because the allocation rounds up to a zeroed page | `Bootstrapper/Program.cs:46` |
 | `Bootstrapper/Program.cs` | 62 | no `DllImport` in `WinImports.cs` sets `SetLastError = true`, so the four `Marshal.GetLastWin32Error()` checks never reflect those calls | `Bootstrapper/Program.cs:56`, `Bootstrapper/WinImports.cs` |
-| `BloogBot/MemoryManager.cs` | 295 | the `OpenProcess` handle in `WriteBytes` is never closed, so every call leaks a process handle; the Warden page-scan hook calls it per scanned byte | `BloogBot/MemoryManager.cs:289` |
-| `BloogBot/Game/Objects/WoWObject.cs` | 234 | `ptr == null` on an `IntPtr` is always false (compiler-confirmed, CS0472), so the `USE_CUSTOM_CHANGES` branch is dead; taken, it would `ReadString` through a null pointer | `BloogBot/Game/Objects/WoWObject.cs:227` |
-| `BloogBot/Game/WowDb.cs` | 48 | `GetLocalizedRow` returns a 4 KiB `AllocHGlobal` block nobody frees, leaking per Spells.db lookup; its `result` is never checked, so a failed call returns uninitialized memory | `BloogBot/Game/WowDb.cs:40` |
+| `BloogBot/MemoryManager.cs` | 290 | the `OpenProcess` handle in `WriteBytes` is never closed, so every call leaks a process handle; the Warden page-scan hook calls it per scanned byte | `BloogBot/MemoryManager.cs:289` |
+| `BloogBot/Game/Objects/WoWObject.cs` | 228 | `ptr == null` on an `IntPtr` is always false (compiler-confirmed, CS0472), so the `USE_CUSTOM_CHANGES` branch is dead; taken, it would `ReadString` through a null pointer | `BloogBot/Game/Objects/WoWObject.cs:227` |
+| `BloogBot/Game/WowDb.cs` | 42 | `GetLocalizedRow` returns a 4 KiB `AllocHGlobal` block nobody frees, leaking per Spells.db lookup; its `result` is never checked, so a failed call returns uninitialized memory | `BloogBot/Game/WowDb.cs:40` |
 | `BloogBot/Repository.cs` | 109 | `AddHotspot` computes `encodedZone` / `encodedDescription` / `encodedFaction` and then passes the raw values on, so an apostrophe in any of the three produces malformed SQL; `AddNpc` does pass its encoded values | `BloogBot/Repository.cs:103-108` |
 | `BloogBot/AI/DependencyContainer.cs` | 77, 127 | `FindThreat`: `&&` binds tighter than `||`, so the blacklist check guards only the pet-target clause - a blacklisted mob targeting the player is still returned as a threat (both `#if` branches) | `BloogBot/AI/DependencyContainer.cs:75-77`, `:117-119` |
 | `BloogBot/AI/DependencyContainer.cs` | 191, 277 | `FindClosestTarget`: `TargetingIncludedNames` is a string, so `.Any(n => u.Name.Contains(n))` enumerates its *characters* - any elite whose name shares one character with the setting bypasses the elite filter (both `#if` branches) | `BloogBot/AI/DependencyContainer.cs:174`, `:253` |
-| `BloogBot/BotLoader.cs` | 41 | `botPaths` spells the assembly `BeastMasterHunterBot.dll` but the project builds `BeastmasterHunterBot.dll`, so `File.ReadAllBytes` throws on a case-sensitive volume | `BloogBot/BotLoader.cs:40` |
-| `BloogBot/AI/SharedStates/CombatStateBase.cs` | 77 | the `DeathsAtWp > 2` block dereferences a `FirstOrDefault()` that can be null, and `Int32.Parse` on an empty `Links` string throws; either throws out of `Update()` on the bot's main loop | `BloogBot/AI/SharedStates/CombatStateBase.cs:70` |
+| `BloogBot/BotLoader.cs` | 42 | `botPaths` spells the assembly `BeastMasterHunterBot.dll` but the project builds `BeastmasterHunterBot.dll`, so `File.ReadAllBytes` throws on a case-sensitive volume | `BloogBot/BotLoader.cs:40` |
+| `BloogBot/AI/SharedStates/CombatStateBase.cs` | 73 | the `DeathsAtWp > 2` block dereferences a `FirstOrDefault()` that can be null, and `Int32.Parse` on an empty `Links` string throws; either throws out of `Update()` on the bot's main loop | `BloogBot/AI/SharedStates/CombatStateBase.cs:70` |
 | `BloogBot.UI.Core/MainViewModel.cs` | 1759 | the `continue` in `InitializeCommandHandler` skips the loop's `await Task.Delay(250)`, so the login path spins with no delay at all | `BloogBot/UI/MainViewModel.cs:1737` |
 | `BloogBot.UI.Core/MainViewModel.cs` | 1831 | `!status` dereferences `GrindingHotspot` behind `CurrentBot.Running()`, but Travel, Powerlevel and Gathering all run with it null | `BloogBot/UI/MainViewModel.cs:1804` |
 | `BloogBot.UI.Core/MainViewModel.cs` | 1884 | the same null `GrindingHotspot` in `SignLatestReport`; it throws into the caller's catch, so the report signature is never written | `BloogBot/UI/MainViewModel.cs:1852` |
@@ -181,7 +200,7 @@ Every place the port had to differ, and why. One line each.
 | --- | --- | --- |
 | `Directory.Build.props` | every SDK property is conditioned on `.csproj`; the shared `..\Bot\` / `..\Bot\Release\` output path lives here instead of in each csproj | the four native `.vcxproj` files import `Directory.Build.props` too; the output path is identical for all 24 managed projects |
 | `Bootstrapper/Bootstrapper.csproj` | `Newtonsoft.Json` 13.0.4 (BloogBot uses 13.0.3) | mirrors the two original `packages.config` files, which already differed |
-| `BloogBot.UI.Avalonia`, `BloogBotTests` | no package references yet | packages are added by the run that ports the first file needing them (groups 10 and 14) |
+| `BloogBotTests` | no package references yet | packages are added by the run that ports the first file needing them (group 14) |
 | `Fasm.NET/Fasm.NET.csproj`, `Fasm.NET/FasmNet.cs` | new project, not in the original: a managed `FasmNet` in namespace `Binarysharp.Assemblers.Fasm` P/Invoking the stock 32-bit `FASM.DLL`, replacing the prebuilt `Fasm.NET.dll` reference | the prebuilt assembly is mixed-mode C++/CLI built for net461 and cannot load on .NET 9. Same namespace and members, so `MemoryManager.cs` needs no change at all. `FASM.DLL` must be present at runtime - see "Fasm.NET - resolved" |
 | `BloogBot/MemoryManager.cs`, `Game/Objects/WoWObject.cs`, the three `*GameFunctionHandler.cs` (runtime note, no code change) | 16 `[HandleProcessCorruptedStateExceptions]` methods compile with warning SYSLIB0032; on .NET 9 an `AccessViolationException` is fatal and the `catch (AccessViolationException)` blocks never run | .NET 9 does not support recovering from corrupted-state exceptions; ported as-is because the attribute and the catches are the original's behavior on .NET Framework |
 | `UnportedOriginals.targets`, `Directory.Build.targets` | new files, not in the original: `<Compile Remove>` for every `.cs` that exists at the same path in the source tree and has no `// Ported from BloogBot/` header yet. Files that exist only in the port, such as `Fasm.NET/FasmNet.cs`, are never listed | the port tree is a clone, the unported originals cannot be deleted under this session's permission policy, and SDK projects glob every `.cs`. Temporary - both files go away when the originals are removed. See "Blocked" |
@@ -211,6 +230,18 @@ Every place the port had to differ, and why. One line each.
 | `BloogBot.UI.Wpf/MainWindow.xaml` | a `Dark Mode` checkbox added at `Grid.Row="11"` of the Overview killswitch grid | the theme toggle the skill requires. Row 11 was already defined in the original and unused, so no grid structure changed. It is the only control in the window that is not in the original |
 | `BloogBot.UI.Wpf/Themes/Dark.xaml`, `Themes/Light.xaml` | new files: the 15 theme brushes plus implicit styles for `Window`, `Grid`, `TabControl`, `TabItem`, `Label`, `TextBlock`, `TextBox`, `CheckBox`, `Button`, `ComboBox`, `ComboBoxItem`, `Separator` and `ScrollViewer` | the implicit styles are what let `MainWindow.xaml` stay a straight port - it carries no colour attributes of its own. Only `Button` is re-templated; the rest set brushes on the stock WPF templates, so some default chrome (the ComboBox drop-down button, the scrollbars) keeps its system colours in dark mode |
 | `BloogBot/BloogBot.csproj`, `BloogBot.UI.Core/BloogBot.UI.Core.csproj` | `InternalsVisibleTo` for `BloogBot.UI.Wpf` and `BloogBot.UI.Avalonia` added to both | `App.xaml.cs` calls the internal `WardenDisabler.Initialize()` and `MainWindow.xaml.cs` the internal `BotService.Run`, exactly as the original did from inside one assembly. Handing the internals over keeps both modifiers as the original wrote them |
+| `BloogBot.UI.Avalonia/MainWindow.axaml` | `ResizeMode="CanMinimize"` -> `CanResize="False"` | Avalonia has no `ResizeMode`; `CanResize="False"` is the same user-visible behaviour, a window that cannot be dragged larger. Its `SizeToContent`, `Title` and the six Min/Max/Width/Height attributes carry over unchanged |
+| `BloogBot.UI.Avalonia/MainWindow.axaml` | six `IsEditable="False"` attributes on `ComboBox` dropped | Avalonia's `ComboBox` has no editable mode and so no `IsEditable`. Every site set it to `False`, which is WPF's default, so nothing about those six combo boxes changes |
+| `BloogBot.UI.Avalonia/MainWindow.axaml` | `Name="Console"` -> `x:Name="Console"` on the output `ScrollViewer` | Avalonia generates the code-behind field from `x:Name`; `MainWindow.axaml.cs` reads that field exactly as the WPF one does |
+| `BloogBot.UI.Avalonia/MainWindow.axaml.cs` | `Console.VerticalOffset == Console.ScrollableHeight` -> `Console.Offset.Y == Console.Extent.Height - Console.Viewport.Height` | Avalonia's `ScrollViewer` exposes the scroll position as `Offset`, `Extent` and `Viewport` instead of WPF's `VerticalOffset` / `ScrollableHeight`. Same comparison, same `ScrollToEnd()` |
+| `BloogBot.UI.Avalonia/App.axaml.cs` | `protected override void OnStartup(StartupEventArgs)` -> `public override void OnFrameworkInitializationCompleted()`, with the window set on `IClassicDesktopStyleApplicationLifetime.MainWindow` | Avalonia's lifetime hook in place of WPF's. The body is the original's line for line: the `#if DEBUG Debugger.Launch()`, `WardenDisabler.Initialize()`, the `Closed` handler calling `Environment.Exit(0)` and `Show()` |
+| `BloogBot.UI.Avalonia/App.axaml.cs` | `Main` is `AppBuilder.Configure<App>().UsePlatformDetect().StartWithClassicDesktopLifetime(...)`, not `new App(); InitializeComponent(); Run()` | the Avalonia equivalent of the hand-written WPF entry point. The name, the `[STAThread]` and the signature are identical in both shells, which is what lets `BloogBot/Loader.cs` bind either one by reflection without knowing which is which |
+| `BloogBot.UI.Avalonia/Themes/Controls.axaml` | new file: the implicit control styles the two WPF theme files carry inline, in one theme-independent `Styles` file | an Avalonia `ResourceDictionary` cannot hold `Style` elements. Splitting them out keeps `Themes/Dark.axaml` and `Themes/Light.axaml` to exactly the 15 brush keys the WPF pair defines, so the four theme files still match key for key and value for value |
+| `BloogBot.UI.Avalonia/Themes/Controls.axaml` | WPF `Style.Triggers` on `IsSelected` / `IsMouseOver` / `IsEnabled` become Avalonia `:selected`, `:pointerover`, `:pressed` and `:disabled` selectors, several reaching into the Fluent template with `/template/` | Avalonia has no triggers. Fluent re-binds background and border per state inside each control template, so the base setters alone only reach the resting state. Same states, same brushes. The WPF shell gets the Button states by re-templating instead; Avalonia keeps the Fluent template and overrides it |
+| `BloogBot.UI.Avalonia/Themes/Controls.axaml` | the `ComboBox` drop-down popup is themed here; the WPF shell leaves it to the stock chrome | recorded because it is the one place the two shells deliberately do not match: WPF's `ComboBox` popup keeps its system colours in dark mode, Avalonia's follows the palette |
+| `BloogBot.UI.Avalonia/App.axaml` | `Application.Styles` holds `<FluentTheme/>` plus a `StyleInclude`; `RequestedThemeVariant="Dark"` on the `Application` | Avalonia has no built-in control templates without a theme, and `RequestedThemeVariant` is what makes Fluent draw its own chrome dark. `AvaloniaThemeService` moves it with the resource include, so both halves switch together |
+| `BloogBot.UI.Avalonia/BloogBot.UI.Avalonia.csproj` | `<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>` | `BloogBot/Loader.cs` reaches this shell with `Assembly.LoadFrom`, not a `ProjectReference`, so nothing else pulls Avalonia's managed assemblies or its x86 `libSkiaSharp.dll` / `av_libglesv2.dll` into the shared `..\Bot\` folder. `LoadFrom` probes that folder for what it loaded. WPF needs no equivalent - it is in-box |
+| `BloogBot.UI.Avalonia/BloogBot.UI.Avalonia.csproj` | `<AvaloniaUseCompiledBindingsByDefault>false</AvaloniaUseCompiledBindingsByDefault>` | compiled bindings would need an `x:DataType` on the window and on all ten `DataTemplate`s, which the original does not have. Off, Avalonia binds by reflection exactly as WPF does, and the window stays a replica |
 
 ## NuGet packages
 
@@ -223,6 +254,9 @@ Every place the port had to differ, and why. One line each.
 | `System.Data.SqlClient` | 4.9.0 | `BloogBot` | `SqlRepository.cs`, `TSqlRepository.cs` (a BCL assembly reference on .NET Framework, a package on .NET 9) |
 | `System.ComponentModel.Composition` | 9.0.0 | `BloogBot` | `BotLoader.cs` - MEF (`[ImportMany]`, `AggregateCatalog`, `AssemblyCatalog`, `CompositionContainer`). A BCL assembly reference on .NET Framework, a package on .NET 9; the source is unchanged |
 | `StreamJsonRpc` | 2.24.84 | `BloogBot.UI.Core` | `UI/BotService.cs`. The same version the original `packages.config` pinned, and it already shipped `netstandard2.0`, so the source is unchanged |
+| `Avalonia` | 11.2.1 | `BloogBot.UI.Avalonia` | `App.axaml`, `MainWindow.axaml`, `AvaloniaThemeService.cs` - the alternate shell. No counterpart in the original, which was WPF only |
+| `Avalonia.Desktop` | 11.2.1 | `BloogBot.UI.Avalonia` | `App.axaml.cs` - `StartWithClassicDesktopLifetime` and the Win32 / Skia backends |
+| `Avalonia.Themes.Fluent` | 11.2.1 | `BloogBot.UI.Avalonia` | `App.axaml` - the `<FluentTheme/>` the port's own styles sit on top of |
 
 `DiscordClientWrapper.cs` needed **no source change at all** on Discord.Net 3.x: every member it
 uses - `DiscordSocketClient`, `Log`, `Ready`, `LoginAsync(TokenType.Bot, ...)`, `StartAsync`,
@@ -233,9 +267,9 @@ byte-identical to the original apart from the header line.
 `AppDomain.CurrentDomain.AssemblyResolve` handler, still work on .NET 9. The 17 bot plugins need the
 same package in group 11 for their `[Export(typeof(IBot))]` attributes.
 
-Still to come, with the file that needs them (checked with grep over the source tree): Avalonia
-11.x (`BloogBot.UI.Avalonia`, group 10), MSTest (`BloogBotTests/NavigationTests.cs`), Moq and
-Castle.Core (tests).
+Still to come, with the file that needs them (checked with grep over the source tree): MSTest
+(`BloogBotTests/NavigationTests.cs`), Moq and Castle.Core (tests). The 17 bot plugins in group 11
+need `System.ComponentModel.Composition`, which `BloogBot` already carries.
 
 Dropped as in-box on .NET 9 or unreferenced by any source file: `System.Memory`, `System.Buffers`,
 `System.Numerics.Vectors`, `System.Runtime.CompilerServices.Unsafe`, `System.Threading.Tasks.Extensions`,
@@ -247,17 +281,20 @@ Dropped as in-box on .NET 9 or unreferenced by any source file: `System.Memory`,
 
 ## UI parity
 
-A tab is ticked here only when **both** shells have it and both parity diffs are clean, so
-every WPF-only box below stays empty until group 10 lands the Avalonia shell.
+A tab is ticked here only when **both** shells have it and both parity diffs are clean. All
+seven are, as of the group 9 + 10 run: the bound-member diff and the visible-text diff between
+`BloogBot.UI.Wpf/MainWindow.xaml` and `BloogBot.UI.Avalonia/MainWindow.axaml` both come back
+empty, and `grep -o 'x:Key="[^"]*"'` gives the same 15 keys with the same values in all four
+theme files.
 
 | Tab | WPF | Avalonia |
 | --- | --- | --- |
-| Overview | ported | [ ] |
-| Settings | ported | [ ] |
-| Travel Paths | ported | [ ] |
-| NPCs | [ ] | [ ] |
-| Hotspots | [ ] | [ ] |
-| Powerlevel | [ ] | [ ] |
+| Overview | [x] | [x] |
+| Settings | [x] | [x] |
+| Travel Paths | [x] | [x] |
+| NPCs | [x] | [x] |
+| Hotspots | [x] | [x] |
+| Powerlevel | [x] | [x] |
 | Gathering | [ ] | [ ] |
 
 ## Run log
@@ -273,3 +310,4 @@ every WPF-only box below stays empty until group 10 lands the Avalonia shell.
 | group 6 finished (`AI/Bot.cs`) + group 7 + `UI/CommandHandler.cs`; UI project references turned around | 6 files | ~1250 | green | green | green | green |
 | group 8 finished - `UI/MainViewModel.cs`, `UI/BotService.cs`, `UiTheme`, `IThemeService` | 4 files (2 ported, 2 new) | ~2015 | green | green | green | green |
 | group 9 part 1 - WPF shell scaffolding, themes, and MainWindow's first three tabs | 7 files (4 ported, 3 new) | ~1750 | green | green | green | green |
+| group 9 finished (MainWindow's last four tabs) + group 10 - the whole Avalonia shell | 7 files (1 extended, 3 ported, 4 new) | ~2400 | green | green | green | green |

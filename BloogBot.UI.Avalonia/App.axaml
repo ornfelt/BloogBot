@@ -1,0 +1,22 @@
+<!-- Ported from BloogBot/BloogBot/UI/App.xaml (.NET Framework 4.8 -> .NET 9, Avalonia shell). Replica - do not redesign. -->
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="BloogBot.UI.Avalonia.App"
+             RequestedThemeVariant="Dark">
+    <Application.Resources>
+        <!-- The original's Application.Resources was empty. MergedDictionaries[0] is the live theme
+             slot AvaloniaThemeService swaps between Themes/Dark.axaml and Themes/Light.axaml; it
+             starts on Dark, which is the port's default. -->
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="avares://BloogBot.UI.Avalonia/Themes/Dark.axaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Application.Resources>
+    <Application.Styles>
+        <FluentTheme/>
+        <!-- The implicit control styles. Theme-independent - they only name the fifteen keys the
+             dictionary above supplies - so this include is never swapped. -->
+        <StyleInclude Source="avares://BloogBot.UI.Avalonia/Themes/Controls.axaml"/>
+    </Application.Styles>
+</Application>

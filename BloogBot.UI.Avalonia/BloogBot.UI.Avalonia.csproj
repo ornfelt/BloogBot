@@ -4,13 +4,28 @@
     <OutputType>Library</OutputType>
     <RootNamespace>BloogBot.UI.Avalonia</RootNamespace>
     <AssemblyName>BloogBot.UI.Avalonia</AssemblyName>
+    <!-- Avalonia's XAML compiler resolves every {Binding} at build time when this is on. The
+         ported window is a replica of the WPF one and carries no x:DataType, so it stays off -
+         the same reflection-based binding WPF uses. -->
+    <AvaloniaUseCompiledBindingsByDefault>false</AvaloniaUseCompiledBindingsByDefault>
+    <!-- BloogBot/Loader.cs reaches this shell with Assembly.LoadFrom rather than a project
+         reference, so nothing else pulls Avalonia's assemblies or its native assets into the
+         shared ..\Bot\ output folder. LoadFrom probes that folder for the dependencies of what
+         it loaded, so they have to be in it. WPF needs no equivalent - it is in-box. -->
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
 
-  <!-- Avalonia 11.x packages are added by the run that ports the Avalonia shell (group 10). -->
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="11.2.1" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.2.1" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.2.1" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\BloogBot.UI.Abstractions\BloogBot.UI.Abstractions.csproj" />
     <ProjectReference Include="..\BloogBot.UI.Core\BloogBot.UI.Core.csproj" />
+    <!-- App.axaml.cs calls WardenDisabler.Initialize(), which the original App did too. -->
+    <ProjectReference Include="..\BloogBot\BloogBot.csproj" />
   </ItemGroup>
 
 </Project>

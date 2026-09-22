@@ -287,6 +287,11 @@ namespace BloogBot
                          ProcessAccessFlags.PROCESS_VM_WRITE |
                          ProcessAccessFlags.SYNCHRONIZE;
 
+            // POTENTIAL BUG FOUND: the handle OpenProcess returns here is never closed, so
+            //   every WriteBytes call leaks a process handle; WardenDisabler's page-scan hook
+            //   calls it once per scanned byte.
+            //   Original: BloogBot/MemoryManager.cs:289
+            //   Ported as-is - behavior matches .NET Framework BloogBot.
             var process = OpenProcess(access, false, Process.GetCurrentProcess().Id);
 
             int ret = 0;

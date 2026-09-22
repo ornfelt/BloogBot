@@ -1,15 +1,15 @@
-﻿<!-- Ported from BloogBot/BloogBot/UI/MainWindow.xaml (.NET Framework 4.8 -> .NET 9, WPF shell). Replica - do not redesign. -->
-<Window x:Class="BloogBot.UI.Wpf.MainWindow"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+﻿<!-- Ported from BloogBot/BloogBot/UI/MainWindow.xaml (.NET Framework 4.8 -> .NET 9, Avalonia shell). Replica - do not redesign. -->
+<Window x:Class="BloogBot.UI.Avalonia.MainWindow"
+        xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:BloogBot.UI;assembly=BloogBot.UI.Core"
         mc:Ignorable="d"
-        Title="BloogBot" MinHeight="1000" Height="1000" MaxHeight="1000" MinWidth="437" Width="400" MaxWidth="400" ResizeMode="CanMinimize" SizeToContent="WidthAndHeight">
+        Title="BloogBot" MinHeight="1000" Height="1000" MaxHeight="1000" MinWidth="437" Width="400" MaxWidth="400" CanResize="False" SizeToContent="WidthAndHeight">
     <!-- The original declared <Window.DataContext><local:MainViewModel /></Window.DataContext>
          here. MainViewModel takes the shell's IThemeService now, so it cannot be constructed
-         from XAML; MainWindow.xaml.cs assigns the DataContext instead. -->
+         from XAML; MainWindow.axaml.cs assigns the DataContext instead. -->
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition/>
@@ -948,7 +948,6 @@
                         <ComboBox
                             Grid.Column="1"
                             Margin="0,4,0,4"
-                            IsEditable="False"
                             VerticalContentAlignment="Center"
                             IsEnabled="{Binding Path=CurrentTravelPathEnabled}"
                             SelectedItem="{Binding Path=CurrentTravelPath, Mode=TwoWay}"
@@ -1159,7 +1158,6 @@
                             Grid.Row="2"
                             Grid.Column="1"
                             Margin="0,4,0,4"
-                            IsEditable="False"
                             VerticalContentAlignment="Center"
                             SelectedItem="{Binding Path=NewHotspotInnkeeper, Mode=TwoWay}"
                             ItemsSource="{Binding Path=InkeeperNpcs, Mode=OneWay}">
@@ -1185,7 +1183,6 @@
                             Grid.Row="3"
                             Grid.Column="1"
                             Margin="0,4,0,4"
-                            IsEditable="False"
                             VerticalContentAlignment="Center"
                             SelectedItem="{Binding Path=NewHotspotRepairVendor, Mode=TwoWay}"
                             ItemsSource="{Binding Path=RepairNpcs, Mode=OneWay}">
@@ -1211,7 +1208,6 @@
                             Grid.Row="4"
                             Grid.Column="1"
                             Margin="0,4,0,4"
-                            IsEditable="False"
                             VerticalContentAlignment="Center"
                             SelectedItem="{Binding Path=NewHotspotAmmoVendor, Mode=TwoWay}"
                             ItemsSource="{Binding Path=AmmoNpcs, Mode=OneWay}">
@@ -1237,7 +1233,6 @@
                             Grid.Row="5"
                             Grid.Column="1"
                             Margin="0,4,0,4"
-                            IsEditable="False"
                             VerticalContentAlignment="Center"
                             SelectedItem="{Binding Path=NewHotspotTravelPath, Mode=TwoWay}"
                             ItemsSource="{Binding Path=TravelPaths, Mode=OneWay}">
@@ -1497,7 +1492,6 @@
                             Grid.Row="2"
                             Grid.Column="1"
                             Margin="0,4,6,4"
-                            IsEditable="False"
                             VerticalContentAlignment="Center"
                             SelectedItem="{Binding Path=NewGatherRouteTravelPath, Mode=TwoWay}"
                             ItemsSource="{Binding Path=TravelPaths, Mode=OneWay}">
@@ -1526,7 +1520,7 @@
                 <ColumnDefinition Width="353*"/>
             </Grid.ColumnDefinitions>
 
-            <ScrollViewer Name="Console" Padding="10" Background="{DynamicResource PanelBackgroundBrush}" Grid.ColumnSpan="2">
+            <ScrollViewer x:Name="Console" Padding="10" Background="{DynamicResource PanelBackgroundBrush}" Grid.ColumnSpan="2">
                 <StackPanel>
                     <ItemsControl ItemsSource="{Binding ConsoleOutput, Mode=OneWay}">
                         <ItemsControl.ItemTemplate>

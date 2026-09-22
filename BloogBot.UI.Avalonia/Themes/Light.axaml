@@ -1,0 +1,26 @@
+<!-- Added by the .NET 9 port - no counterpart in BloogBot, whose window used the stock WPF chrome.
+     The keys and their values are fixed by the skill's theming table and are identical in all four
+     theme files across the two shells; only the values differ between Dark and Light.
+     Avalonia keeps styles and resources in separate files, so the implicit control styles that
+     BloogBot.UI.Wpf/Themes/Light.xaml carries alongside these brushes live in Themes/Controls.axaml
+     here. That file is theme-independent: it only ever names the keys below. -->
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <SolidColorBrush x:Key="WindowBackgroundBrush" Color="#FFF5F5F5"/>
+    <SolidColorBrush x:Key="PanelBackgroundBrush" Color="#FFFFFFFF"/>
+    <SolidColorBrush x:Key="ControlBackgroundBrush" Color="#FFFFFFFF"/>
+    <SolidColorBrush x:Key="ControlBorderBrush" Color="#FFCCCCCC"/>
+    <SolidColorBrush x:Key="ForegroundBrush" Color="#FF1E1E1E"/>
+    <SolidColorBrush x:Key="MutedForegroundBrush" Color="#FF6E6E6E"/>
+    <SolidColorBrush x:Key="AccentBrush" Color="#FF0078D4"/>
+    <SolidColorBrush x:Key="AccentForegroundBrush" Color="#FFFFFFFF"/>
+    <SolidColorBrush x:Key="SuccessBrush" Color="#FF107C10"/>
+    <SolidColorBrush x:Key="WarningBrush" Color="#FF9D5D00"/>
+    <SolidColorBrush x:Key="ErrorBrush" Color="#FFC42B1C"/>
+    <SolidColorBrush x:Key="SeparatorBrush" Color="#FFE0E0E0"/>
+    <SolidColorBrush x:Key="SelectionBrush" Color="#FFCCE4F7"/>
+    <SolidColorBrush x:Key="TabActiveBackgroundBrush" Color="#FFFFFFFF"/>
+    <SolidColorBrush x:Key="TabInactiveBackgroundBrush" Color="#FFECECEC"/>
+
+</ResourceDictionary>

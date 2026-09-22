@@ -1,4 +1,4 @@
-# BloogBot in .net 9
+﻿# BloogBot in .net 9
 
 This directory is the **.NET 9 port of BloogBot**: the same files, namespaces, types, members and
 behavior as the .NET Framework 4.8 tree at `Code2/C#/BloogBot`, the same `botSettings.json` /
@@ -70,6 +70,155 @@ msbuild Navigation\Navigation.vcxproj /p:Configuration=Debug /p:Platform=Win32
 it somewhere else. `nethost.lib` is an import library, so the build also copies `nethost.dll` into
 the output folder next to `Loader.dll`. `FastCall`, `Navigation` and `NavigationTests` are
 unchanged from the .NET Framework tree and need nothing beyond the v143 toolset.
+
+## Running it
+
+There is exactly one executable in the solution: **`Bootstrapper.exe`**. Every other managed
+project is a `Library`, `BloogBot` included - under .NET Framework it was a `WinExe`, but `hostfxr`
+loads an assembly rather than running one, so the bot is a DLL that lives inside `WoW.exe`. Trying
+to start `BloogBot`, a shell or a bot plugin will not work; none of them has an entry point.
+
+### Where the exe ends up
+
+Every managed project and all four native projects write into **one flat folder**, which is what
+lets `Bootstrapper.exe` find `Loader.dll` beside itself and lets `hostfxr` find `BloogBot.dll` and
+its `runtimeconfig.json`:
+
+| Configuration | Output folder | Set in |
+| --- | --- | --- |
+| Debug | `Bot\` | `Directory.Build.props` (managed), each `.vcxproj` (native) |
+| Release | `Bot\Release\` | same |
+
+There is no `bin\Debug\net9.0-windows\win-x86` anywhere - `AppendTargetFrameworkToOutputPath`
+and `AppendRuntimeIdentifierToOutputPath` are both off, mirroring the original solution's layout so
+an existing install can be pointed at the new build unchanged.
+
+A complete folder holds `Bootstrapper.exe`, `BloogBot.dll` + `BloogBot.runtimeconfig.json`, the two
+shells, the 17 plugin DLLs, `Loader.dll` + `nethost.dll`, `Navigation.dll`, `FastCall.dll`, both
+settings files and both schema files.
+
+### From the command line
+
+```powershell
+dotnet build BloogBot_net9.sln -c Debug
+.\Bot\Bootstrapper.exe
+```
+
+Release is the same with `-c Release`, run from `Bot\Release\`. `dotnet run --project
+Bootstrapper\Bootstrapper.csproj -c Debug` is equivalent to launching the exe directly.
+
+`dotnet build` does **not** build the native projects - the .NET CLI cannot build `.vcxproj`. They
+are built once with msbuild from a Developer Command Prompt, and only need rebuilding when their
+sources change:
+
+```powershell
+msbuild Loader\Loader.vcxproj /p:Configuration=Debug /p:Platform=Win32
+msbuild FastCall\FastCall.vcxproj /p:Configuration=Debug /p:Platform=Win32
+msbuild Navigation\Navigation.vcxproj /p:Configuration=Debug /p:Platform=Win32
+```
+
+Without `Loader.dll` nothing is injected at all; without `Navigation.dll` and `FastCall.dll` the
+bot window opens but pathing and the game-function trampolines fail.
+
+### From Visual Studio
+
+1. Open `BloogBot_net9.sln`.
+2. Set the solution platform to **x86**. It is the only one that exists - the solution defines
+   `Debug|x86` and `Release|x86` and nothing else - so there is no `Any CPU` to pick by mistake.
+3. Right-click `Bootstrapper` -> **Set as Startup Project**.
+4. F5.
+
+**The four native projects are not in `BloogBot_net9.sln`** - it holds the 25 managed projects
+only. `Loader`, `FastCall`, `Navigation` and `NavigationTests` still exist as `.vcxproj` files in
+the tree and still build, but you have to build them with msbuild as above before the first F5, or
+`Bootstrapper.exe` will start WoW and then fail to inject because `Loader.dll` is not in the output
+folder. The original `BloogBot.sln` did include them; see "Deviations from the original" in
+`PORT_STATUS.md`.
+
+### Settings and database
+
+Both settings files are read from the folder the assembly that reads them sits in - that is `Bot\`
+or `Bot\Release\`, not the project directory. Edit the copies under `BloogBot\` and
+`Bootstrapper\`; they are copied to the output on build (`PreserveNewest`), so editing the output
+copy directly works until the next build overwrites it.
+
+| File | Read by | Required |
+| --- | --- | --- |
+| `bootstrapperSettings.json` | `Bootstrapper.exe` at startup | **yes** - one key, `PathToWoW` |
+| `botSettings.json` | `MainViewModel`'s constructor, so as the UI opens | **yes** - the whole bot config |
+| `SqliteSchema.SQL` | `SqliteRepository` on first run | yes, when `DatabaseType` is `sqlite` |
+| `TSqlSchema.SQL` | `TSqlRepository` on **every** start | yes, when `DatabaseType` is `mssql` |
+| `db.db` | `SqliteRepository` | created automatically - see below |
+| `mmaps\` | `Navigation.dll` | for pathfinding; generate them yourself, see the FAQ below |
+| `FASM.DLL` | the `Fasm.NET` shim, lazily | only if something calls `MemoryManager.InjectAssembly`, which nothing does in the stock configuration |
+
+The database needs no setup in the default configuration. `DatabaseType` is `sqlite`, and
+`SqliteRepository.Initialize` **ignores the connection string it is handed**: it creates `db.db`
+next to `BloogBot.dll` on first run and executes `SqliteSchema.SQL` against it. So the Azure SQL
+connection string that ships in `DatabasePath` is dead config while `DatabaseType` is `sqlite` -
+leave it, or replace it, nothing reads it.
+
+Set `DatabaseType` to `mssql` and it is the other way round: `DatabasePath` is used as the
+connection string, and `TSqlSchema.SQL` is executed on every start (the script checks for each
+table before creating it). Any other value throws `NotImplementedException` from
+`Repository.Initialize`.
+
+Discord is off out of the box (`DiscordBotEnabled: false`), so the token and the three ID keys can
+stay as they are.
+
+### You do not start the UI yourself
+
+The bot window opens on its own once injection succeeds. Nothing is launched by hand after
+`Bootstrapper.exe`, and there is no second executable to run:
+
+| # | What happens | Where |
+| --- | --- | --- |
+| 1 | `Bootstrapper.exe` starts `WoW.exe` suspended-ish, writes the path to `Loader.dll` into it and `CreateRemoteThread`s at `LoadLibraryW` | `Bootstrapper/Program.cs` |
+| 2 | WoW loads `Loader.dll`, which opens a console window and resolves `hostfxr` through `nethost` | `Loader/dllmain.cpp` |
+| 3 | `hostfxr` reads `BloogBot.runtimeconfig.json`, starts .NET 9 **inside the WoW process** and calls `BloogBot.Loader.Load` | `Loader/dllmain.cpp` |
+| 4 | `Load` starts an STA thread on the selected shell's `App.Main`, found by reflection | `BloogBot/Loader.cs` |
+| 5 | `App.OnStartup` calls `WardenDisabler.Initialize()`, constructs `MainWindow` and shows it | `BloogBot.UI.Wpf/App.xaml.cs` |
+
+So the window is a child of `WoW.exe`, not a separate process - it will not appear in the taskbar
+as its own app, and closing it calls `Environment.Exit(0)`, which takes the game client down with
+it.
+
+### In a Debug build the window is gated twice
+
+Both gates are inherited from the original and are absent from Release builds:
+
+1. **A 10-second native wait.** `Loader.dll` prints `Attach a debugger now to WoW.exe if you want
+   to debug Loader.dll. Waiting 10 seconds...` to the console it just allocated, and blocks. Wait
+   it out or attach Visual Studio to `WoW.exe`.
+   With `USE_CUSTOM_CHANGES` on - the default - the console *also* prints
+   `Skipping attaching debugger...` immediately before it. That message is misleading: the flag it
+   reports on is `int skipDebug = 0`, so the wait still happens. Ported as-is from the original.
+2. **A managed `Debugger.Launch()`.** `App.OnStartup` opens the Windows JIT-debugger dialog before
+   anything else. **The UI does not appear until you answer it** - attach a debugger, or dismiss
+   the dialog to carry on without one.
+
+A Release build (`-c Release`, output in `Bot\Release\`) has neither, and the window comes up
+directly.
+
+### Which shell you get
+
+`BloogBot.UI.Wpf.dll` and `BloogBot.UI.Avalonia.dll` can both sit in `Bot\` at once; the one that
+starts is whichever `UI_WPF` / `UI_AVALONIA` constant was compiled into `BloogBot.dll`. Rebuild
+with `-p:Ui=Avalonia` to switch, then run `Bootstrapper.exe` again.
+
+### When nothing happens
+
+- **`Access is denied.` from `Process.get_Handle` at `Program.cs:41`** - this almost always means
+  `PathToWoW` is wrong, not that you need elevation. `CreateProcess`'s return value is never
+  checked, so a bad path leaves `dwProcessId` at 0, and `Process.GetProcessById(0)` is the System
+  Idle Process, which cannot be opened. Check the path first; only if it is correct does this mean
+  WoW is running at a higher integrity level than `Bootstrapper.exe`, which elevation fixes.
+- **A message box from `Loader.dll`** - `Could not locate hostfxr`, `Invalid runtimeconfig.json`
+  and friends come from the native loader and name the step that failed. See
+  "Runtime requirements for injection" below.
+- **A console window but no bot window** - you are in a Debug build and have not answered the
+  `Debugger.Launch()` dialog yet.
+- **The bot window opens but navigation fails** - movemaps are missing; they belong in `Bot\mmaps`.
 
 ## Runtime requirements for injection
 

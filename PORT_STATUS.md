@@ -229,6 +229,7 @@ Every place the port had to differ, and why. One line each.
 
 | Port file | What differs | Why |
 | --- | --- | --- |
+| `BloogBot_net9.sln` | holds the 25 managed projects only; `Loader`, `FastCall`, `Navigation` and `NavigationTests` are not in it, though the `.vcxproj` files are unchanged in the tree and still build | `dotnet build` cannot build a `.vcxproj`, so keeping them in the solution would break the four CLI build commands this port is verified with. They are built separately with msbuild - documented under 'From Visual Studio' in README.md. The original `BloogBot.sln` did include them |
 | `Directory.Build.props` | every SDK property is conditioned on `.csproj`; the shared `..\Bot\` / `..\Bot\Release\` output path lives here instead of in each csproj | the four native `.vcxproj` files import `Directory.Build.props` too; the output path is identical for all 24 managed projects |
 | `Bootstrapper/Bootstrapper.csproj` | `Newtonsoft.Json` 13.0.4 (BloogBot uses 13.0.3) | mirrors the two original `packages.config` files, which already differed |
 | `BloogBotTests/BloogBotTests.csproj` | MSTest 3.6.4 in place of 2.2.7; the three `Assets\*.png` `Content` items restated because the SDK does not glob them | MSTest 2.2.7 ships `net45` assemblies only. `[TestClass]` / `[TestMethod]` / `Assert` are unchanged in 3.x, so `NavigationTests.cs` is byte-identical to the original apart from the header line |

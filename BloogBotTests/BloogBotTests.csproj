@@ -6,7 +6,24 @@
     <AssemblyName>BloogBotTests</AssemblyName>
   </PropertyGroup>
 
-  <!-- MSTest 3.x, Moq 4.18.3 and Castle.Core 5.1.0 are added by the run that ports the tests (group 14). -->
+  <ItemGroup>
+    <!-- MSTest 2.2.7 is net45-only; 3.x is the same [TestClass] / [TestMethod] surface on net9.0.
+         Moq and Castle.Core keep the versions packages.config pinned - both are netstandard2.0
+         already. The rest of that packages.config (System.Diagnostics.EventLog,
+         System.Reflection.Emit, System.Runtime.CompilerServices.Unsafe,
+         System.Security.Principal.Windows, System.Threading.Tasks.Extensions) is in-box on
+         .NET 9 and dropped. -->
+    <PackageReference Include="MSTest.TestAdapter" Version="3.6.4" />
+    <PackageReference Include="MSTest.TestFramework" Version="3.6.4" />
+    <PackageReference Include="Moq" Version="4.18.3" />
+    <PackageReference Include="Castle.Core" Version="5.1.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Assets\CalculatePathTest_1.png" />
+    <Content Include="Assets\CalculatePathTest_2.png" />
+    <Content Include="Assets\TargetingLogicTest_1.png" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\BloogBot\BloogBot.csproj" />

@@ -63,6 +63,14 @@ msbuild FastCall\FastCall.vcxproj /p:Configuration=Debug /p:Platform=Win32
 msbuild Navigation\Navigation.vcxproj /p:Configuration=Debug /p:Platform=Win32
 ```
 
+`Loader` compiles against `nethost.h`, `hostfxr.h` and `coreclr_delegates.h` and links
+`nethost.lib` from the .NET 9 **x86 host pack**, which the .NET 9 SDK installs at
+`C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Host.win-x86\9.*\runtimes\win-x86\native`.
+`Loader.vcxproj` finds that pack itself; pass `/p:NetHostDir=<dir containing nethost.h>` to point
+it somewhere else. `nethost.lib` is an import library, so the build also copies `nethost.dll` into
+the output folder next to `Loader.dll`. `FastCall`, `Navigation` and `NavigationTests` are
+unchanged from the .NET Framework tree and need nothing beyond the v143 toolset.
+
 ## Runtime requirements for injection
 
 `Loader.dll` resolves `hostfxr` through `nethost` for the bitness of the process it is loaded into,

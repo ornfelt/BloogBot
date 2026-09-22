@@ -39,6 +39,17 @@
     <PackageReference Include="System.Data.SqlClient" Version="4.9.0" />
   </ItemGroup>
 
+  <!-- hostfxr initializes the runtime from BloogBot.runtimeconfig.json and from nothing else, so
+       every shared framework the process will need has to be named here - including the one the
+       shell needs, which Loader.cs loads later with Assembly.LoadFrom. Without this the WPF shell
+       fails to load PresentationFramework at injection time. The Avalonia shell needs no shared
+       framework beyond Microsoft.NETCore.App, so the reference is conditional.
+       UseWPF is deliberately not used: it would turn every .xaml under this directory into a page,
+       and BloogBot/UI/ still holds the unported .NET Framework originals. -->
+  <ItemGroup Condition="'$(Ui)'=='Wpf'">
+    <FrameworkReference Include="Microsoft.WindowsDesktop.App.WPF" />
+  </ItemGroup>
+
   <ItemGroup>
     <!-- Replaces the prebuilt Fasm.NET.dll reference from the original csproj: that assembly is
          mixed-mode C++/CLI built for net461 and cannot load on .NET 9. Same namespace and members,

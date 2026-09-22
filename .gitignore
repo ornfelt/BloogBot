@@ -1,6 +1,14 @@
 bin/
 obj/
 Bot/
+# native (vcxproj) intermediates
+Debug/
+Release/
+x64/
+Loader/Loader/
+FastCall/FastCall/
+Navigation/Navigation/
+NavigationTests/NavigationTests/
 .vs/
 .idea/
 .vscode/

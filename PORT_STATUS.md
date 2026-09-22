@@ -4,16 +4,20 @@ Maintained by the `bloogbot-net9-port` skill. A hint for the next run, not the s
 the two trees are. Re-derive from this directory with the commands in the skill's "Orient"
 section.
 
-**Last run:** group 11 finished - the remaining eleven plugins: `CombatRogueBot`,
-`ElementalShamanBot`, `EnhancementShamanBot`, `FeralDruidBot`, `FrostMageBot`, `FuryWarriorBot`,
-`ProtectionPaladinBot`, `ProtectionWarriorBot`, `RetributionPaladinBot`, `ShadowPriestBot`,
-`TestBot.cs`. 68 files, every one byte-identical to its original apart from the header line. No new
-`POTENTIAL BUG FOUND` tag and no `.csproj` change. Carries the two `USE_CUSTOM_CHANGES` sites in
-`FrostMageBot/FrostMageConsumables.cs`, both compiled on and off. All 17 plugin assemblies build.
-All four configurations green.
-**Next:** group 13 - the native side: `Loader/dllmain.cpp` rewritten against `nethost` / `hostfxr`,
-and the build configuration of `FastCall`, `Navigation` and `NavigationTests`. Then group 14,
-`BloogBotTests/NavigationTests.cs` on MSTest 3.x - the last managed file left.
+**Last run:** groups 13 and 14 - the last two. `Loader/dllmain.cpp` rewritten against
+`nethost` / `hostfxr`; `Loader.vcxproj` given the host-pack include and library paths and a
+post-build copy of `nethost.dll`; `BloogBot.csproj` given a `Ui`-conditional `FrameworkReference`
+on `Microsoft.WindowsDesktop.App.WPF` so the runtimeconfig hostfxr reads actually names the
+framework the WPF shell needs. `FastCall`, `Navigation` and `NavigationTests` needed no change at
+all and build as they are. `BloogBotTests/NavigationTests.cs` ported byte-identical apart from the
+header line, on MSTest 3.6.4 + Moq 4.18.3 + Castle.Core 5.1.0. Two new `POTENTIAL BUG FOUND` tags,
+both in `dllmain.cpp`. All four managed configurations green; all four `.vcxproj` files build
+Win32/Debug, and `Loader` also builds Win32/Release and with `UseCustomChanges=false`.
+
+**Next:** nothing. Every source file outside "Not ported" has a counterpart, no
+`TODO: port body here` marker is left anywhere, and all four configurations are green. The port is
+feature-complete. The remaining work is not porting: `review` over the tree, and a real injection
+test against a WoW client - which this skill never runs.
 Still open: deleting the unported originals so the scaffolding can go away.
 
 ## Blocked - read this first
@@ -44,8 +48,9 @@ in git and unmodified, so `git restore <path>` puts any of it back:
 Confirmed with a grep over the source tree: nothing reads `Properties.Resources`,
 `Properties.Settings` or `ConfigurationManager`, so dropping those three is not a code change.
 
-The `Loader/`, `FastCall/`, `Navigation/` and `NavigationTests/` trees stay: they are the verbatim
-copies group 13 starts from. `BloogBotTests/Assets/` stays for group 14.
+The `Loader/`, `FastCall/`, `Navigation/` and `NavigationTests/` trees stay for good: they are the
+port's own native projects, three of them still byte-identical to the source tree.
+`BloogBotTests/Assets/` stays - the three PNGs the test comments point at.
 
 ### Fasm.NET - resolved
 
@@ -182,15 +187,24 @@ what the skill's Orient pipeline compares against.
   - every plugin's `FileName` property matches the assembly its project builds, so the
     `BotLoader.cs` casing bug is confined to `BeastMasterHunterBot.dll` as tagged
 - [x] 12. Bootstrapper - ported out of order in the setup run: it depends on nothing in BloogBot, and an `Exe` project with no `Main` would have kept the solution red
-- [ ] 13. Native - Loader/dllmain.cpp on hostfxr, FastCall/Navigation build config
-- [ ] 14. Tests - BloogBotTests on MSTest 3.x
+- [x] 13. Native - Loader/dllmain.cpp on hostfxr, FastCall/Navigation build config
+  - `Loader/dllmain.cpp` is the only native file whose source changed. Everything outside the
+    CLR-hosting calls is the original line for line: the Zzuk credit, `WIN32_LEAN_AND_MEAN`, the
+    commented-out DomainManager defines, the `MB()` macro, `AllocConsole` / `freopen`, the whole
+    `#ifdef USE_CUSTOM_CHANGES` debugger-wait block with both branches, `LoadClr`'s
+    `_beginthreadex`, and `DllMain`'s shape
+  - `FastCall`, `Navigation` and `NavigationTests` are byte-identical to the source tree, build
+    configuration included - their `OutDir` was already `..\Bot\` / `..\Bot\Release\` and their
+    `v143` toolset is installed. Nothing needed changing, so nothing was changed
+- [x] 14. Tests - BloogBotTests on MSTest 3.x
+  - `BloogBotTests/NavigationTests.cs` is byte-identical to the original apart from the header line
 
 ## Potential bugs found
 
 Every row here has a matching `POTENTIAL BUG FOUND` comment in the port, and the line column is
 the port's line. Cross-check with
 `grep -rn 'POTENTIAL BUG FOUND' . --include='*.cs' --include='*.xaml' --include='*.axaml' --include='*.cpp'`;
-the sixteen tags map onto these fourteen rows, `DependencyContainer.cs` contributing two tags to
+the eighteen tags map onto these sixteen rows, `DependencyContainer.cs` contributing two tags to
 each of its two rows because both `#if USE_CUSTOM_CHANGES` branches carry one.
 
 | File (port) | Line | What looks wrong | Original |
@@ -209,6 +223,8 @@ each of its two rows because both `#if USE_CUSTOM_CHANGES` branches carry one.
 | `BloogBot.UI.Core/MainViewModel.cs` | 1759 | the `continue` in `InitializeCommandHandler` skips the loop's `await Task.Delay(250)`, so the login path spins with no delay at all | `BloogBot/UI/MainViewModel.cs:1737` |
 | `BloogBot.UI.Core/MainViewModel.cs` | 1831 | `!status` dereferences `GrindingHotspot` behind `CurrentBot.Running()`, but Travel, Powerlevel and Gathering all run with it null | `BloogBot/UI/MainViewModel.cs:1804` |
 | `BloogBot.UI.Core/MainViewModel.cs` | 1884 | the same null `GrindingHotspot` in `SignLatestReport`; it throws into the caller's catch, so the report signature is never written | `BloogBot/UI/MainViewModel.cs:1852` |
+| `Loader/dllmain.cpp` | 229 | `GetModuleFileNameW` is given a fixed 255-wchar buffer; a longer install path is truncated without the call failing, so the loader builds a bad path to the managed assembly instead of returning | `Loader/dllmain.cpp:213` |
+| `Loader/dllmain.cpp` | 280 | `TerminateThread` on `DLL_PROCESS_DETACH` kills the managed thread without unwinding it; killed under a lock or inside the CRT it leaves the heap or that lock inconsistent, and detach runs under the loader lock | `Loader/dllmain.cpp:265` |
 
 ## Deviations from the original
 
@@ -218,7 +234,7 @@ Every place the port had to differ, and why. One line each.
 | --- | --- | --- |
 | `Directory.Build.props` | every SDK property is conditioned on `.csproj`; the shared `..\Bot\` / `..\Bot\Release\` output path lives here instead of in each csproj | the four native `.vcxproj` files import `Directory.Build.props` too; the output path is identical for all 24 managed projects |
 | `Bootstrapper/Bootstrapper.csproj` | `Newtonsoft.Json` 13.0.4 (BloogBot uses 13.0.3) | mirrors the two original `packages.config` files, which already differed |
-| `BloogBotTests` | no package references yet | packages are added by the run that ports the first file needing them (group 14) |
+| `BloogBotTests/BloogBotTests.csproj` | MSTest 3.6.4 in place of 2.2.7; the three `Assets\*.png` `Content` items restated because the SDK does not glob them | MSTest 2.2.7 ships `net45` assemblies only. `[TestClass]` / `[TestMethod]` / `Assert` are unchanged in 3.x, so `NavigationTests.cs` is byte-identical to the original apart from the header line |
 | `Fasm.NET/Fasm.NET.csproj`, `Fasm.NET/FasmNet.cs` | new project, not in the original: a managed `FasmNet` in namespace `Binarysharp.Assemblers.Fasm` P/Invoking the stock 32-bit `FASM.DLL`, replacing the prebuilt `Fasm.NET.dll` reference | the prebuilt assembly is mixed-mode C++/CLI built for net461 and cannot load on .NET 9. Same namespace and members, so `MemoryManager.cs` needs no change at all. `FASM.DLL` must be present at runtime - see "Fasm.NET - resolved" |
 | `BloogBot/MemoryManager.cs`, `Game/Objects/WoWObject.cs`, the three `*GameFunctionHandler.cs` (runtime note, no code change) | 16 `[HandleProcessCorruptedStateExceptions]` methods compile with warning SYSLIB0032; on .NET 9 an `AccessViolationException` is fatal and the `catch (AccessViolationException)` blocks never run | .NET 9 does not support recovering from corrupted-state exceptions; ported as-is because the attribute and the catches are the original's behavior on .NET Framework |
 | `UnportedOriginals.targets`, `Directory.Build.targets` | new files, not in the original: `<Compile Remove>` for every `.cs` that exists at the same path in the source tree and has no `// Ported from BloogBot/` header yet. Files that exist only in the port, such as `Fasm.NET/FasmNet.cs`, are never listed | the port tree is a clone, the unported originals cannot be deleted under this session's permission policy, and SDK projects glob every `.cs`. Temporary - both files go away when the originals are removed. See "Blocked" |
@@ -261,6 +277,13 @@ Every place the port had to differ, and why. One line each.
 | `BloogBot.UI.Avalonia/BloogBot.UI.Avalonia.csproj` | `<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>` | `BloogBot/Loader.cs` reaches this shell with `Assembly.LoadFrom`, not a `ProjectReference`, so nothing else pulls Avalonia's managed assemblies or its x86 `libSkiaSharp.dll` / `av_libglesv2.dll` into the shared `..\Bot\` folder. `LoadFrom` probes that folder for what it loaded. WPF needs no equivalent - it is in-box |
 | `BloogBot.UI.Avalonia/BloogBot.UI.Avalonia.csproj` | `<AvaloniaUseCompiledBindingsByDefault>false</AvaloniaUseCompiledBindingsByDefault>` | compiled bindings would need an `x:DataType` on the window and on all ten `DataTemplate`s, which the original does not have. Off, Avalonia binds by reflection exactly as WPF does, and the window stays a replica |
 | `FrostMageBot/RestState.cs`, `FrostMageBot/ConjureItemsState.cs`, `FrostMageBot/FrostMageConsumables.cs` | CRLF line endings where the source tree's working copy has LF | not a port decision: both repositories hold the same commit for these three files, and the two checkouts normalise differently. Content is identical byte for byte once line endings are normalised, and git stores them the same way. Recorded so a future `diff` across the two trees is not mistaken for drift |
+| `Loader/dllmain.cpp` | `CLRCreateInstance` / `ICLRMetaHostPolicy::GetRequestedRuntime` / `ICLRRuntimeInfo::GetInterface` / `ICLRRuntimeHost::Start` / `ExecuteInDefaultAppDomain` -> `get_hostfxr_path`, `LoadLibraryW` + three `GetProcAddress`, `hostfxr_initialize_for_runtime_config`, `hostfxr_get_runtime_delegate(hdt_load_assembly_and_get_function_pointer)`, `load_assembly_and_get_function_pointer` | the mscoree hosting API and app domains do not exist on .NET 9. Everything outside these calls is the original line for line |
+| `Loader/dllmain.cpp` | `ICLRRuntimeInfo::BindAsLegacyV2Runtime` dropped outright, with a comment where the call was | it has no .NET 9 counterpart - no legacy v2 binding policy, and no mixed-mode .NET 3.5 assembly left to bind for |
+| `Loader/dllmain.cpp` | `DLL_PROCESS_DETACH` calls `hostfxr_close(ctx)` instead of `ICLRRuntimeHost::Stop()` + `Release()` | .NET 9 cannot be unloaded from a process, and hostfxr is a flat API with nothing to `Release`. The `TerminateThread` below it is unchanged and tagged |
+| `Loader/dllmain.cpp` | `#define FOR_DOTNET_4` and the `metahost.h` / `mscoree.h` choice gone; `#include "CorError.h"` gone; `#pragma comment(lib, "mscoree")` -> `"nethost"` | nothing left to choose between, and the `HOST_E_*` constants `CorError.h` supplied were only used by the `ExecuteInDefaultAppDomain` switch. That switch keeps its shape and its `Result is: 0x%lx` default, over hostfxr status codes spelled numerically because hostfxr ships no header for them |
+| `Loader/dllmain.cpp` | `LOAD_DLL_FILE_NAME` `BloogBot.exe` -> `BloogBot.dll`; `NAMESPACE_AND_CLASS` assembly-qualified as `BloogBot.Loader, BloogBot`; `MAIN_METHOD_ARGS` dropped; a second path built for `BloogBot.runtimeconfig.json` | `BloogBot` is a library now, `load_assembly_and_get_function_pointer` wants `Type, Assembly`, `component_entry_point_fn` takes no string, and hostfxr initializes from the runtimeconfig rather than from the assembly |
+| `Loader/Loader.vcxproj` | the .NET 9 x86 host pack added to `IncludePath` / `LibraryPath` (resolved from a `9.*` glob under `$(DotNetHostRoot)\packs`, overridable with `-p:NetHostDir=`), an `Error` when it is missing, and a post-build `Copy` of `nethost.dll` into `$(OutDir)` | `nethost.h`, `hostfxr.h` and `coreclr_delegates.h` are not in the Windows SDK, and `nethost.lib` is an import library, so `nethost.dll` has to sit next to `Loader.dll`. No other setting in the file changed |
+| `BloogBot/BloogBot.csproj` | `<FrameworkReference Include="Microsoft.WindowsDesktop.App.WPF" />` under `Condition="'$(Ui)'=='Wpf'"` | hostfxr initializes the runtime from `BloogBot.runtimeconfig.json` and nothing else, so a shared framework the shell needs has to be named there or `Assembly.LoadFrom` of `BloogBot.UI.Wpf.dll` cannot resolve `PresentationFramework`. `UseWPF` would have done it too, but it turns every `.xaml` under `BloogBot/` into a page and `BloogBot/UI/` still holds the unported originals. Avalonia needs no framework beyond `Microsoft.NETCore.App`, so the Avalonia build's runtimeconfig is unchanged |
 
 ## NuGet packages
 
@@ -276,6 +299,10 @@ Every place the port had to differ, and why. One line each.
 | `Avalonia` | 11.2.1 | `BloogBot.UI.Avalonia` | `App.axaml`, `MainWindow.axaml`, `AvaloniaThemeService.cs` - the alternate shell. No counterpart in the original, which was WPF only |
 | `Avalonia.Desktop` | 11.2.1 | `BloogBot.UI.Avalonia` | `App.axaml.cs` - `StartWithClassicDesktopLifetime` and the Win32 / Skia backends |
 | `Avalonia.Themes.Fluent` | 11.2.1 | `BloogBot.UI.Avalonia` | `App.axaml` - the `<FluentTheme/>` the port's own styles sit on top of |
+| `MSTest.TestAdapter` | 3.6.4 | `BloogBotTests` | `NavigationTests.cs` (original pinned 2.2.7, whose assemblies are `net45`) |
+| `MSTest.TestFramework` | 3.6.4 | `BloogBotTests` | `NavigationTests.cs` - `[TestClass]`, `[TestMethod]`, `Assert`; same surface as 2.2.7 |
+| `Moq` | 4.18.3 | `BloogBotTests` | `NavigationTests.cs` - `Mock<WoWUnit>`, `SetupGet`. The version `packages.config` pinned; already `netstandard2.0` |
+| `Castle.Core` | 5.1.0 | `BloogBotTests` | Moq's proxy generator. The version `packages.config` pinned; already `netstandard2.0` |
 
 `DiscordClientWrapper.cs` needed **no source change at all** on Discord.Net 3.x: every member it
 uses - `DiscordSocketClient`, `Log`, `Ready`, `LoginAsync(TokenType.Bot, ...)`, `StartAsync`,
@@ -286,8 +313,10 @@ byte-identical to the original apart from the header line.
 `AppDomain.CurrentDomain.AssemblyResolve` handler, still work on .NET 9. The 17 bot plugins need the
 same package in group 11 for their `[Export(typeof(IBot))]` attributes.
 
-Still to come, with the file that needs them (checked with grep over the source tree): MSTest
-(`BloogBotTests/NavigationTests.cs`), Moq and Castle.Core (tests). The 17 bot plugins in group 11
+Nothing is still to come: every package a ported file references is in the table above. Five of
+`BloogBotTests/packages.config`'s nine entries were dropped as in-box on .NET 9 -
+`System.Diagnostics.EventLog`, `System.Reflection.Emit`, `System.Runtime.CompilerServices.Unsafe`,
+`System.Security.Principal.Windows`, `System.Threading.Tasks.Extensions`. The 17 bot plugins in group 11
 need `System.ComponentModel.Composition`, which `BloogBot` already carries.
 
 Dropped as in-box on .NET 9 or unreferenced by any source file: `System.Memory`, `System.Buffers`,
@@ -332,3 +361,4 @@ theme files.
 | group 9 finished (MainWindow's last four tabs) + group 10 - the whole Avalonia shell | 7 files (1 extended, 3 ported, 4 new) | ~2400 | green | green | green | green |
 | group 11 part 1 - the first six bot plugins | 40 files | ~2970 | green | green | green | green |
 | group 11 finished - the remaining eleven bot plugins | 68 files | ~5040 | green | green | green | green |
+| groups 13 + 14 - `Loader/dllmain.cpp` on hostfxr, `Loader.vcxproj`, `BloogBotTests` | 2 ported (1 native, 1 managed), 3 project files touched | ~280 | green | green | green | green |

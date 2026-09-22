@@ -74,6 +74,33 @@
     <UseCustomChanges Condition="'$(UseCustomChanges)'==''">true</UseCustomChanges>
     <CustomChangesDefine Condition="'$(UseCustomChanges)'=='true'">USE_CUSTOM_CHANGES;</CustomChangesDefine>
   </PropertyGroup>
+  <!-- .NET 9 is hosted through nethost / hostfxr instead of mscoree, so dllmain.cpp needs
+       nethost.h, hostfxr.h and coreclr_delegates.h plus the nethost import library. They ship in
+       the .NET host pack, whose RID has to match the process this DLL is injected into - win-x86,
+       because WoW.exe is 32-bit. Override NetHostDir to point at another copy. -->
+  <PropertyGroup>
+    <NetHostRid Condition="'$(NetHostRid)'=='' And '$(Platform)'=='Win32'">win-x86</NetHostRid>
+    <NetHostRid Condition="'$(NetHostRid)'==''">win-x64</NetHostRid>
+    <DotNetHostRoot Condition="'$(DotNetHostRoot)'=='' And '$(ProgramW6432)'!=''">$(ProgramW6432)\dotnet</DotNetHostRoot>
+    <DotNetHostRoot Condition="'$(DotNetHostRoot)'==''">$(ProgramFiles)\dotnet</DotNetHostRoot>
+  </PropertyGroup>
+  <ItemGroup>
+    <NetHostHeader Include="$(DotNetHostRoot)\packs\Microsoft.NETCore.App.Host.$(NetHostRid)\9.*\runtimes\$(NetHostRid)\native\nethost.h" />
+    <NetHostRuntime Include="$(DotNetHostRoot)\packs\Microsoft.NETCore.App.Host.$(NetHostRid)\9.*\runtimes\$(NetHostRid)\native\nethost.dll" />
+  </ItemGroup>
+  <PropertyGroup>
+    <NetHostDir Condition="'$(NetHostDir)'==''">@(NetHostHeader->'%(RootDir)%(Directory)')</NetHostDir>
+    <IncludePath>$(NetHostDir);$(IncludePath)</IncludePath>
+    <LibraryPath>$(NetHostDir);$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <Target Name="CheckNetHost" BeforeTargets="ClCompile">
+    <Error Condition="'$(NetHostDir)'==''"
+           Text="The .NET 9 $(NetHostRid) host pack was not found under $(DotNetHostRoot)\packs\Microsoft.NETCore.App.Host.$(NetHostRid). Install the .NET 9 SDK or pass -p:NetHostDir=&lt;dir containing nethost.h&gt;." />
+  </Target>
+  <!-- nethost.lib is an import library, so nethost.dll has to sit next to Loader.dll at runtime. -->
+  <Target Name="CopyNetHost" AfterTargets="Build">
+    <Copy SourceFiles="@(NetHostRuntime)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+  </Target>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
     <OutDir>..\Bot\</OutDir>

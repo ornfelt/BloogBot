@@ -1,4 +1,5 @@
-﻿using BloogBot;
+﻿// Ported from BloogBot/BloogBotTests/NavigationTests.cs (.NET Framework 4.8 -> .NET 9). Replica - do not redesign.
+using BloogBot;
 using BloogBot.Game;
 using BloogBot.Game.Enums;
 using BloogBot.Game.Objects;

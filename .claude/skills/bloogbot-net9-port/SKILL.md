@@ -36,9 +36,9 @@ Source (read-only reference), the .NET Framework 4.8 solution, on branch `migrat
 
 `$code_root_dir/Code2/C#/BloogBot` (PowerShell: `$env:code_root_dir\Code2\C#\BloogBot`)
 
-Target, created by setup mode, its own git repository:
+Target, created by setup mode, its own git repository, on branch `net9-port`:
 
-`$code_root_dir/Code2/C#/BloogBot_net9`
+`$code_root_dir/Code2/C#/BloogBot_net9` (PowerShell: `$env:code_root_dir\Code2\C#\BloogBot_net9`)
 
 The source tree stays on .NET Framework and keeps receiving upstream syncs. **Never edit it** apart
 from this skill file and its own `commit_message.txt`. That is what makes `bloogbot-upstream-sync`
@@ -85,7 +85,8 @@ fixing it here.
 
 ## Branch and repositories
 
-Every run starts by making sure both sides are on `migrate-to-net9`:
+The two repositories use **different branch names on purpose**. The source tree is on
+`migrate-to-net9`; the port is on `net9-port`. Every run starts by making sure of both:
 
 ```bash
 SRC="$code_root_dir/Code2/C#/BloogBot"
@@ -95,13 +96,54 @@ DST="$code_root_dir/Code2/C#/BloogBot_net9"
 cd "$SRC"
 git rev-parse --verify migrate-to-net9 >/dev/null 2>&1 || git checkout -b migrate-to-net9
 [ "$(git branch --show-current)" = "migrate-to-net9" ] || git checkout migrate-to-net9
+
+# port repo
+cd "$DST"
+git rev-parse --verify net9-port >/dev/null 2>&1 || git checkout -b net9-port
+[ "$(git branch --show-current)" = "net9-port" ] || git checkout net9-port
 ```
 
-If the working tree is dirty with changes this skill did not make, say so and stop rather than
+If either working tree is dirty with changes this skill did not make, say so and stop rather than
 switching branches under the user.
 
-The target is its own repository, created once by setup mode with `git init -b migrate-to-net9`, so
-the port has a history independent of the upstream syncs happening in the source tree.
+The target is its own repository, created once by setup mode with `git init -b net9-port`, so the
+port has a history independent of the upstream syncs happening in the source tree.
+
+### Why the branch names differ
+
+Both repositories push to the same GitHub remote, `https://github.com/ornfelt/BloogBot`:
+
+| Repository | Local branch | Remote branch |
+| --- | --- | --- |
+| `BloogBot` (source) | `migrate-to-net9` | `origin/migrate-to-net9` |
+| `BloogBot_net9` (port) | `net9-port` | `origin/net9-port` |
+
+`origin/migrate-to-net9` belongs to the source tree. The port must never be pushed there: the two
+repositories have unrelated histories, so such a push is rejected as a non-fast-forward and only
+goes through with `--force`, which would repoint the branch away from the source-tree history.
+
+GitHub shows `net9-port` as "122 commits behind". `ornfelt/BloogBot` is a **fork** of
+`DrewKestell/BloogBot`, and for a fork GitHub compares each branch against the *parent* repository's
+default branch, not against your own `main`. 122 is exactly the commit count of
+`DrewKestell/BloogBot:main`, and `net9-port` is a root commit that shares no ancestor with it, so
+every one of those 122 counts as absent. The badge says nothing about whether the port is current -
+`main` is caught up with upstream and the port was taken from `main`. Ignore it. The real question
+is which source commit the port was taken from, which "Orient" answers by diffing the two working
+trees.
+
+### What the port is based on
+
+The port replicates the source tree's **working tree** as it stands when a run executes, which on
+`migrate-to-net9` is `main` plus this skill file. Confirm that `migrate-to-net9` carries no C#
+changes of its own before porting:
+
+```bash
+cd "$SRC"
+git diff main..migrate-to-net9 --stat    # expect only .claude/ and .gitignore
+```
+
+If that diff ever touches a `.cs`, `.csproj`, `.vcxproj`, `.xaml` or `.sql` file, stop and say so:
+the port would no longer be a replica of `main`.
 
 **Never commit anything.** A run stages nothing, commits nothing and pushes nothing. It writes the
 message it *would* use to `commit_message.txt` and stops there - see "Output expectations".
@@ -463,7 +505,7 @@ Rules:
 
 Create, in this order:
 
-1. **`$code_root_dir/Code2/C#/BloogBot_net9/`** and `git init -b migrate-to-net9` inside it.
+1. **`$code_root_dir/Code2/C#/BloogBot_net9/`** and `git init -b net9-port` inside it.
    `Code2/C#` already exists and holds the other C# projects, so create only the `BloogBot_net9`
    directory inside it - nothing else in `Code2/C#` is touched.
 

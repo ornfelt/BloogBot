@@ -381,17 +381,17 @@ their exact spelling. The UI namespace `BloogBot.UI` stays on the viewmodels; th
 The first line of every ported `.cs` / `.xaml` / `.axaml`, above the `using` block, is:
 
 ```csharp
-// Ported from BloogBot/AI/SharedStates/GrindState.cs (.NET Framework 4.8 -> .NET 9). Replica - do not redesign.
+// Ported from BloogBot/BloogBot/AI/SharedStates/GrindState.cs (.NET Framework 4.8 -> .NET 9). Replica - do not redesign.
 ```
 
-The path is relative to the source tree root, exactly as `find` prints it. This is not decoration:
+The path is relative to the source tree root, exactly as `find` prints it, behind a leading `BloogBot/` for the source repository directory itself - so a Bootstrapper file reads `// Ported from BloogBot/Bootstrapper/Program.cs` and the Orient pipeline above, which strips `// Ported from BloogBot/`, gets back exactly the `find` path. This is not decoration:
 **it is how the next run works out what is already done** (see "Orient"). A file with no header line
 is invisible to the next run and will be ported twice.
 
 For the two shells, both point at the same original:
 
 ```xml
-<!-- Ported from BloogBot/UI/MainWindow.xaml (.NET Framework 4.8 -> .NET 9, Avalonia shell). Replica - do not redesign. -->
+<!-- Ported from BloogBot/BloogBot/UI/MainWindow.xaml (.NET Framework 4.8 -> .NET 9, Avalonia shell). Replica - do not redesign. -->
 ```
 
 ### Not ported

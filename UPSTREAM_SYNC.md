@@ -18,6 +18,7 @@ Local customizations: guarded by `USE_CUSTOM_CHANGES`, defined in `BloogBot/Bloo
 `FrostMageBot/FrostMageBot.csproj` and `Loader/Loader.vcxproj`. `ArmsWarriorBot` and
 `ShadowPriestBot` had their toggles removed after `569d3cb` left them with no guards.
 Branch: `main`. The `commented` branch is out of scope.
+Histories rejoined at `a9be5e8` on 2026-09-22 by merge `b5334a2` (tree unchanged) - 0 behind / 364 ahead.
 
 Statuses: `applied` (cherry-picked clean), `adapted` (landed, conflicts resolved by hand),
 `partial` (part landed, part dropped - the notes say which), `skipped` (deliberately not landed),
@@ -173,33 +174,49 @@ Deliberately not guarded, per the skill's do-not-guard list:
 
 ## Open questions
 
-- **Caught up as of 2026-09-22 - the 'N commits behind' banner is now actionable.** `a9be5e8` was the
-  last commit in the range, so the fork qualifies for the ancestry-restoring merge described in the
-  skill. The diagnostic was run and **the fork is a content superset of upstream**:
-  `rev-list --left-right --count upstream-local/main...main` gives **61 behind / 362 ahead**, and the
-  61 is pure cherry-pick ancestry, not missing content. `diff --stat upstream-local/main main` is
-  54 files, **+3701/-25**. The skill says zero deletions; there are 25, and **every one was checked
-  and is benign** - no upstream code was dropped anywhere:
-  - **2** are the only source-line deletions in the whole tree, both in `FrostMageConsumables.cs`:
-    `'Conjured Croissant'` and `'Conjured Glacier Water'` gaining a **trailing comma** so the guarded
-    WotLK entries can follow. Across every `.cs` and `.cpp` in the repo those two lines are the
-    complete list.
-  - **7** `<TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>` and **2** `<supportedRuntime ...
-    v4.6.2/>` - the v4.8 retarget, explicitly on the do-not-guard list.
-  - **4** `Loader.vcxproj` `PreprocessorDefinitions` lines - **not dropped**, each re-emitted verbatim
-    with a `$(CustomChangesDefine)` prefix (verified at `:96`, `:114`, `:132`, `:149`).
-  - **2** `FastCall.vcxproj` `<PrecompiledHeader>Use</PrecompiledHeader>` - the toolset change, also
-    do-not-guard.
-  - **8** fork config values in `botSettings.json` / `bootstrapperSettings.json` (`PathToWoW`,
-    `GrindingHotspotId`, the `Loot*` flags, `TargetingExcludedNames`, `DatabaseType`,
-    `CurrentTravelPathId`) - the cannot-be-guarded category.
+- **Caught up, and the histories were rejoined on 2026-09-22.** `a9be5e8` was the last commit in the
+  range. The 'N commits behind' banner has been **cleared**: `rev-list --left-right --count
+  upstream-local/main...main` went from **61 behind / 362 ahead** to **0 behind / 364 ahead**, and
+  `git merge-base --is-ancestor upstream-local/main main` now succeeds. The merge base moved from the
+  fork point `1d0057c` to `a9be5e8`, so a later run's `rev-list` range works from there unchanged.
 
-  So the banner is cosmetic and the merge is safe to do. **It was not done**: the skill requires the
-  user's go-ahead first, since it changes a branch they publish. To proceed, note `main^{tree}`, run
-  `git merge --no-commit --no-ff upstream-local/main`, confirm every conflict is a `#if` block against
-  an empty upstream side, `checkout --ours` those files, and prove `git write-tree` equals the noted
-  hash before committing. Never `-s ours` - it asserts what the tree-hash check proves. The no-push
-  rule still applies afterwards.
+  The merge is `b5334a2`, made with `--no-commit --no-ff` and **proved to change nothing**:
+  `main^{tree}` was `91e7d393` before and `git write-tree` returned `91e7d393` after resolving, so
+  `git diff 06d2ddb HEAD` is empty - a byte-identical tree. `-s ours` was deliberately **not** used;
+  it asserts what the tree-hash check proves. No rebuild was run afterwards and none was needed: the
+  tree is bit-for-bit the one already built green in both configurations at `06d2ddb`.
+
+  All **18** conflicts were read first. **9 were in guarded source files** - `Bot.cs`,
+  `DependencyContainer.cs`, `CombatStateBase.cs`, `MoveToCorpseState.cs`, `ReleaseCorpseState.cs`,
+  `RetrieveCorpseState.cs`, `StuckState.cs`, `Navigation.cs` and `FrostMageConsumables.cs` - and each
+  was a `#if USE_CUSTOM_CHANGES` block against an **empty upstream side**: insertions only, **zero
+  deletions** (`Bot.cs` +430/-0, `MoveToCorpseState.cs` +165/-0, `DependencyContainer.cs` +161/-0, and
+  so on), so `--ours` discarded nothing. `FrostMageConsumables.cs` was an `AA` add/add - upstream
+  created it in `879191b` and the fork cherry-picked it, so both sides added it independently - and its
+  only 2 deletions are the trailing commas already documented below.
+
+  **The other 9 were in unguarded files**, which the skill says to stop and investigate. Each was
+  checked individually and every one is the **single v4.6.2 -> v4.8 retarget line**: seven
+  `<TargetFrameworkVersion>` in `ArcaneMageBot`, `Bootstrapper`, `EnhancementShamanBot`,
+  `FeralDruidBot`, `FuryWarriorBot`, `ProtectionWarriorBot` and `BloogBot` csprojs, plus two
+  `<supportedRuntime ... v4.6.2/>` in `BloogBot/App.config` and `Bootstrapper/App.config`. That is the
+  documented do-not-guard category, not a cherry-pick that failed to land. Files that auto-merged were
+  covered by the same tree-hash proof.
+
+  **Not pushed** - the no-push rule stands. The user runs `git push origin main` themselves; it is a
+  fast-forward and needs no force. **GitHub's banner only updates after that push.**
+
+  For the record, the superset diagnostic taken before the merge: `diff --stat upstream-local/main
+  main` was 54 files, **+3701/-25**. The skill expects zero deletions; all 25 were checked and are
+  benign - **2** trailing commas in `FrostMageConsumables.cs` (`'Conjured Croissant'` and
+  `'Conjured Glacier Water'`, the only source-line deletions in the entire tree), **7+2** the v4.8
+  retarget, **4** `Loader.vcxproj` `PreprocessorDefinitions` re-emitted verbatim with a
+  `$(CustomChangesDefine)` prefix rather than dropped (`:96`, `:114`, `:132`, `:149`), **2**
+  `FastCall.vcxproj` `<PrecompiledHeader>`, and **8** fork config values in `botSettings.json` /
+  `bootstrapperSettings.json`.
+
+  Next time the counter climbs and the fork is caught up again, just re-merge the same way. Keep
+  cherry-picking one commit at a time - do not switch to a merge-based flow.
 
 - **`879191b` - settled 2026-09-22: resolved as option (a)**, the recommended path. Upstream's
   refactor was taken in full and both `#if` guards were dropped from `ConjureItemsState.cs` and

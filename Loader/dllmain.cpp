@@ -1,4 +1,4 @@
-// Ported from BloogBot/Loader/dllmain.cpp (.NET Framework 4.8 -> .NET 9). Replica - do not redesign.
+﻿// Ported from BloogBot/Loader/dllmain.cpp (.NET Framework 4.8 -> .NET 9). Replica - do not redesign.
 // credit to Zzuk: https://github.com/Zz9uk3/ZzukBot_V3/blob/master/Loader/Main.cpp
 
 #define WIN32_LEAN_AND_MEAN
@@ -14,14 +14,27 @@
 // std::wstring
 #include <string>
 // CLR hosting API
+// NETHOST_USE_AS_STATIC makes nethost.h declare get_hostfxr_path plainly instead of
+// __declspec(dllimport); it is what libnethost.lib (static) expects. See the pragma below.
+#define NETHOST_USE_AS_STATIC
 #include <nethost.h>
 #include <hostfxr.h>
 #include <coreclr_delegates.h>
 // 'CorError.h' dropped with the ICLRRuntimeHost call it described - see the status switch below.
 #include <iostream>
 
-// No rough configuration needed. :)
-#pragma comment( lib, "nethost" )
+// No nethost library is linked. Linking the import library (nethost.lib) made Loader.dll
+// depend on nethost.dll at load time, and LoadLibraryW does not search the loaded DLL's own
+// directory for its dependencies - it searches the host process's directory (WoW.exe's),
+// System32, the current directory and PATH. nethost.dll ships in Bot\\ next to Loader.dll, so
+// it was not found, LoadLibraryW failed, and the injection died silently: no console, no
+// message box, Bootstrapper.exe exiting 0. The .NET Framework original imported mscoree.dll,
+// a system DLL that is always resolvable, so it never hit this.
+// libnethost.lib (the static one) is not an option either: it is built /MT and this project is
+// /MDd, and switching CRTs would undefine _DEBUG and silently drop the debugger wait above.
+// So nethost.dll is loaded explicitly, by full path, next to this DLL - see LoadNetHost below.
+typedef int (NETHOST_CALLTYPE *get_hostfxr_path_fn)(
+	char_t *buffer, size_t *buffer_size, const struct get_hostfxr_parameters *parameters);
 
 //#define LOAD_DLL_FILE_NAME L"DomainManager.dll"
 //#define NAMESPACE_AND_CLASS L"DomainManager.EntryPoint"
@@ -32,6 +45,7 @@
 // runtimeconfig.json that BloogBot.csproj emits because of <EnableDynamicLoading>true</...>.
 #define LOAD_DLL_FILE_NAME L"BloogBot.dll"
 #define RUNTIME_CONFIG_FILE_NAME L"BloogBot.runtimeconfig.json"
+#define NETHOST_FILE_NAME L"nethost.dll"
 // Assembly-qualified now: load_assembly_and_get_function_pointer takes 'Namespace.Type, Assembly'.
 #define NAMESPACE_AND_CLASS L"BloogBot.Loader, BloogBot"
 #define MAIN_METHOD L"Load"
@@ -54,6 +68,8 @@ HANDLE g_hThread = NULL;
 wchar_t* dllLocation = NULL;
 // Location of its runtimeconfig.json, which is what hostfxr is initialized from.
 wchar_t* runtimeConfigLocation = NULL;
+// Location of nethost.dll, which is loaded explicitly rather than imported. See the typedef above.
+wchar_t* nethostLocation = NULL;
 
 #define MB(s) MessageBoxW(NULL, s, NULL, MB_OK);
 
@@ -113,9 +129,26 @@ unsigned __stdcall ThreadMain(void* pParam)
 
 	// nethost resolves the hostfxr for this process's bitness - x86 here, since WoW.exe is 32-bit.
 	// Replaces CLRCreateInstance(CLSID_CLRMetaHostPolicy, ...).
+	HMODULE nethost = LoadLibraryW(nethostLocation);
+
+	if (!nethost)
+	{
+		MB(L"Could not load nethost.dll -- it must sit next to Loader.dll.");
+		return 1;
+	}
+
+	get_hostfxr_path_fn get_hostfxr_path_ptr =
+		(get_hostfxr_path_fn)GetProcAddress(nethost, "get_hostfxr_path");
+
+	if (!get_hostfxr_path_ptr)
+	{
+		MB(L"Could not resolve get_hostfxr_path in nethost.dll!");
+		return 1;
+	}
+
 	wchar_t hostfxrPath[MAX_PATH];
 	size_t hostfxrPathLength = MAX_PATH;
-	int hr = get_hostfxr_path(hostfxrPath, &hostfxrPathLength, nullptr);
+	int hr = get_hostfxr_path_ptr(hostfxrPath, &hostfxrPathLength, nullptr);
 
 	if (FAILED(hr))
 	{
@@ -241,8 +274,10 @@ void LoadClr()
 	// Get just the directory path.
 	modulePath = modulePath.substr(0, modulePath.find_last_of('\\') + 1);
 	std::wstring configPath(modulePath);
+	std::wstring nethostPath(modulePath);
 	modulePath = modulePath.append(LOAD_DLL_FILE_NAME);
 	configPath = configPath.append(RUNTIME_CONFIG_FILE_NAME);
+	nethostPath = nethostPath.append(NETHOST_FILE_NAME);
 
 	// Copy the string, or we end up with junk data by the time we send it off
 	// to our thread routine.
@@ -253,6 +288,10 @@ void LoadClr()
 	runtimeConfigLocation = new wchar_t[configPath.length() + 1];
 	wcscpy(runtimeConfigLocation, configPath.c_str());
 	runtimeConfigLocation[configPath.length()] = '\0';
+
+	nethostLocation = new wchar_t[nethostPath.length() + 1];
+	wcscpy(nethostLocation, nethostPath.c_str());
+	nethostLocation[nethostPath.length()] = '\0';
 
 	g_hThread = (HANDLE)_beginthreadex(NULL, 0, ThreadMain, NULL, 0, NULL);
 }

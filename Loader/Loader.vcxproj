@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -75,7 +75,8 @@
     <CustomChangesDefine Condition="'$(UseCustomChanges)'=='true'">USE_CUSTOM_CHANGES;</CustomChangesDefine>
   </PropertyGroup>
   <!-- .NET 9 is hosted through nethost / hostfxr instead of mscoree, so dllmain.cpp needs
-       nethost.h, hostfxr.h and coreclr_delegates.h plus the nethost import library. They ship in
+       nethost.h, hostfxr.h and coreclr_delegates.h and nethost.dll, which is loaded
+       explicitly at runtime rather than linked (see dllmain.cpp for why). They ship in
        the .NET host pack, whose RID has to match the process this DLL is injected into - win-x86,
        because WoW.exe is 32-bit. Override NetHostDir to point at another copy. -->
   <PropertyGroup>
@@ -93,13 +94,15 @@
     <IncludePath>$(NetHostDir);$(IncludePath)</IncludePath>
     <LibraryPath>$(NetHostDir);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
+  <!-- nethost.dll is loaded explicitly by full path at runtime (see dllmain.cpp), not imported,
+       so it still has to sit next to Loader.dll - but a missing one now reports itself instead of
+       failing the injection silently. -->
+  <Target Name="CopyNetHost" AfterTargets="Build">
+    <Copy SourceFiles="@(NetHostRuntime)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+  </Target>
   <Target Name="CheckNetHost" BeforeTargets="ClCompile">
     <Error Condition="'$(NetHostDir)'==''"
            Text="The .NET 9 $(NetHostRid) host pack was not found under $(DotNetHostRoot)\packs\Microsoft.NETCore.App.Host.$(NetHostRid). Install the .NET 9 SDK or pass -p:NetHostDir=&lt;dir containing nethost.h&gt;." />
-  </Target>
-  <!-- nethost.lib is an import library, so nethost.dll has to sit next to Loader.dll at runtime. -->
-  <Target Name="CopyNetHost" AfterTargets="Build">
-    <Copy SourceFiles="@(NetHostRuntime)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
   </Target>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>

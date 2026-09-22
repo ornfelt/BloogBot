@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <!-- net9.0-windows rather than the plain net9.0 the skill's project table gives, because this
@@ -10,6 +10,12 @@
     <RootNamespace>BloogBot.UI</RootNamespace>
     <AssemblyName>BloogBot.UI.Core</AssemblyName>
   </PropertyGroup>
+
+  <ItemGroup>
+    <!-- StreamJsonRpc 2.24.84, the same version as the original packages.config: BotService.cs.
+         The package already shipped netstandard2.0, so the source is unchanged. -->
+    <PackageReference Include="StreamJsonRpc" Version="2.24.84" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\BloogBot.UI.Abstractions\BloogBot.UI.Abstractions.csproj" />

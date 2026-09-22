@@ -11,6 +11,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- UI/MainViewModel.cs lived in this assembly in the original, so it reached BotLoader,
+         Probe, Repository, Logger and the rest at their original internal accessibility. It is
+         BloogBot.UI.Core now, so the internals are handed to that assembly instead of widening
+         any of those declarations - the replication rules keep every access modifier as it is. -->
+    <InternalsVisibleTo Include="BloogBot.UI.Core" />
+  </ItemGroup>
+
+  <ItemGroup>
     <!-- Newtonsoft.Json 13.0.3 (same as packages.config): Game/Position.cs, BotSettings.cs -->
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <!-- Discord.Net 3.x: DiscordClientWrapper.cs. The original referenced Discord.Net 2.2.0,

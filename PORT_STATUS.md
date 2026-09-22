@@ -4,14 +4,16 @@ Maintained by the `bloogbot-net9-port` skill. A hint for the next run, not the s
 the two trees are. Re-derive from this directory with the commands in the skill's "Orient"
 section.
 
-**Last run:** groups 6 and 7 finished - `AI/Bot.cs`, `BotLoader.cs`, `HotspotGenerator.cs`,
-`TravelPathGenerator.cs` and `Loader.cs` rewritten as the hostfxr entry point, plus
-`UI/CommandHandler.cs` into `BloogBot.UI.Core`. `MainViewModel` forced the UI project references to
-be turned around - see "The UI assembly cycle" below. All four configurations green.
-**Next:** group 8 - `UI/MainViewModel.cs` (1,901 lines) and `UI/BotService.cs` into
-`BloogBot.UI.Core`, with the `UiTheme` / `IThemeService` pair in `BloogBot.UI.Abstractions` that the
-Dark Mode property needs. Still open: deleting the unported originals so the scaffolding can go
-away.
+**Last run:** group 8 finished - `UI/MainViewModel.cs` and `UI/BotService.cs` into
+`BloogBot.UI.Core`, plus the first two `BloogBot.UI.Abstractions` types (`UiTheme`,
+`IThemeService`) and the `DarkMode` property / `botSettings.json` `Theme` key they back. The
+assembly split forced an `InternalsVisibleTo` rather than widening any declaration. All four
+configurations green.
+**Next:** group 9 - the WPF shell `BloogBot.UI.Wpf`: `App.xaml(.cs)` with the hand-written
+`[STAThread] Main`, `MainWindow.xaml` ported tab by tab in source order (Overview first),
+`Themes/Dark.xaml` + `Themes/Light.xaml` with the 15 theme keys, and the `IThemeService` /
+`IUiHost` implementations. `MainWindow.xaml` is 1,544 lines, so expect two or three runs.
+Still open: deleting the unported originals so the scaffolding can go away.
 
 ## Blocked - read this first
 
@@ -122,14 +124,18 @@ what the skill's Orient pipeline compares against.
 - [x] 7. Bot loading and services - BotLoader, DiscordClientWrapper, HotspotGenerator, TravelPathGenerator, Loader (hostfxr entry)
   - `DiscordClientWrapper.cs` ported early: `ObjectManager.cs` calls `KillswitchAlert`
   - `Loader.cs` is the one genuinely rewritten managed file - see "The UI assembly cycle"
-- [ ] 8. UI abstractions and viewmodels - BloogBot.UI.Abstractions, BloogBot.UI.Core
-  - done: `UI/CommandHandler.cs` -> `BloogBot.UI.Core/CommandHandler.cs`, byte-identical
-  - left: `UI/MainViewModel.cs` (1,901 lines) and `UI/BotService.cs`. `BloogBot.UI.Abstractions` is
-    still empty on purpose: `MainViewModel` touches no WPF type at all - only
-    `System.Windows.Input.ICommand`, which is in the .NET 9 base class library, plus an unused
-    `using System.Windows.Documents;` - so nothing needs `IUiDispatcher`, `IDialogService` or
-    `IClipboardService` yet. The first types the project gets are `UiTheme` and `IThemeService`,
-    added by the run that ports `MainViewModel` and its Dark Mode property
+- [x] 8. UI abstractions and viewmodels - BloogBot.UI.Abstractions, BloogBot.UI.Core
+  - `UI/CommandHandler.cs`, `UI/BotService.cs` and `UI/MainViewModel.cs` all ported into
+    `BloogBot.UI.Core`. `BotService.cs` and `CommandHandler.cs` are byte-identical to the
+    originals apart from their header line
+  - `MainViewModel.cs` differs from the original in five places only: the dropped unused
+    `using System.Windows.Documents;`, the added `using BloogBot.UI.Abstractions;`, the
+    `IThemeService` constructor parameter and its field, the two-line persisted-theme read in
+    the constructor, and the appended `DarkMode` property. Nothing else moved
+  - `BloogBot.UI.Abstractions` holds `UiTheme` and `IThemeService` and nothing else:
+    `MainViewModel` touches no WPF type at all, so `IUiHost`, `IUiDispatcher`,
+    `IDialogService` and `IClipboardService` are not needed yet. `IUiHost` arrives with
+    group 9, the rest only if a shell genuinely needs one
 - [ ] 9. WPF shell - BloogBot.UI.Wpf (default, the reference shell)
 - [ ] 10. Avalonia shell - BloogBot.UI.Avalonia, at parity with 9
 - [ ] 11. The 17 bot plugins
@@ -151,6 +157,9 @@ what the skill's Orient pipeline compares against.
 | `BloogBot/AI/DependencyContainer.cs` | 191, 277 | `FindClosestTarget`: `TargetingIncludedNames` is a string, so `.Any(n => u.Name.Contains(n))` enumerates its *characters* - any elite whose name shares one character with the setting bypasses the elite filter (both `#if` branches) | `BloogBot/AI/DependencyContainer.cs:174`, `:253` |
 | `BloogBot/BotLoader.cs` | 41 | `botPaths` spells the assembly `BeastMasterHunterBot.dll` but the project builds `BeastmasterHunterBot.dll`, so `File.ReadAllBytes` throws on a case-sensitive volume | `BloogBot/BotLoader.cs:40` |
 | `BloogBot/AI/SharedStates/CombatStateBase.cs` | 77 | the `DeathsAtWp > 2` block dereferences a `FirstOrDefault()` that can be null, and `Int32.Parse` on an empty `Links` string throws; either throws out of `Update()` on the bot's main loop | `BloogBot/AI/SharedStates/CombatStateBase.cs:70` |
+| `BloogBot.UI.Core/MainViewModel.cs` | 1759 | the `continue` in `InitializeCommandHandler` skips the loop's `await Task.Delay(250)`, so the login path spins with no delay at all | `BloogBot/UI/MainViewModel.cs:1737` |
+| `BloogBot.UI.Core/MainViewModel.cs` | 1831 | `!status` dereferences `GrindingHotspot` behind `CurrentBot.Running()`, but Travel, Powerlevel and Gathering all run with it null | `BloogBot/UI/MainViewModel.cs:1804` |
+| `BloogBot.UI.Core/MainViewModel.cs` | 1884 | the same null `GrindingHotspot` in `SignLatestReport`; it throws into the caller's catch, so the report signature is never written | `BloogBot/UI/MainViewModel.cs:1852` |
 
 ## Deviations from the original
 
@@ -175,6 +184,12 @@ Every place the port had to differ, and why. One line each.
 | `BloogBot/Loader.cs` | `class Loader` / `static int Load(string args)` -> `public class Loader` / `public static int Load(IntPtr arg, int argSize)`; `new Thread(App.Main)` -> the shell assembly loaded by path and `App.Main` bound by reflection | the signature is what `hostfxr`'s `load_assembly_and_get_function_pointer` requires (`component_entry_point_fn`); the reflection is the UI assembly cycle. `UI_WPF` / `UI_AVALONIA` pick the assembly name and appear nowhere else. Not exercised until the shells exist (groups 9 and 10) and a real injection test runs |
 | `BloogBot/BloogBot.csproj` | the `ProjectReference`s onto `BloogBot.UI.Core` and onto the two shells removed | they would be a project cycle - see "The UI assembly cycle" |
 | `BloogBot.UI.Core/BloogBot.UI.Core.csproj` | `net9.0-windows` instead of the plain `net9.0` the skill's project table gives; `ProjectReference` onto `BloogBot` added | a `net9.0` project cannot reference a `net9.0-windows` one. `UseWPF` stays off, so a leaked WPF type is still a compile error |
+| `BloogBot/BloogBot.csproj` | `<InternalsVisibleTo Include="BloogBot.UI.Core" />` added | `UI/MainViewModel.cs` was in this assembly originally and reaches `BotLoader`, `Probe`, `Repository`, `Logger`, `DiscordClientWrapper`, `TravelPathGenerator` and `ThreadSynchronizer` at their original `internal` accessibility. Handing the internals to the one assembly that needs them keeps every access modifier in the ported sources exactly as the original wrote it |
+| `BloogBot.UI.Core/MainViewModel.cs` | `using System.Windows.Documents;` dropped | unused in the original, and the skill permits dropping it. `using System.Windows.Input;` stays - `ICommand` is in the .NET 9 base class library |
+| `BloogBot.UI.Core/MainViewModel.cs` | `MainViewModel()` -> `MainViewModel(IThemeService themeService)`, a `readonly IThemeService themeService` field, a two-line theme read in the constructor, and an appended `DarkMode` property | the theming the skill requires. The original's `<local:MainViewModel />` DataContext is gone anyway - the shell assigns the DataContext in code-behind. Nothing else in the file changed |
+| `BloogBot/BotSettings.cs`, `botSettings.json` | `public string Theme { get; set; } = "Dark";` added after `LastUsedBotType` | the one settings key the port adds, as the skill's theming section prescribes. Read at startup, persisted by the existing `SaveSettings`; anything other than `"Light"`, a missing key included, means Dark. The rest of the file is untouched |
+| `BloogBot.UI.Core/MainViewModel.cs` (runtime note, no code change) | the `!info` command reads `$"{path}\\BloogBot.exe"`, which no longer exists - `BloogBot` is a library now, so the file on disk is `BloogBot.dll` | ported as-is under the replica rule. `AssemblyName.GetAssemblyName` will throw `FileNotFoundException` there until the user decides how `!info` should report a version; flagged rather than fixed |
+| `BloogBot.UI.Core/MainViewModel.cs` (runtime note, no code change) | `Assembly.CodeBase` in `!info` compiles with warning SYSLIB0012 | the same call the original makes; `Assembly.GetAssembly(typeof(MainViewModel))` now resolves to `BloogBot.UI.Core.dll`, which sits in the same `..\Bot\` folder, so the path is unchanged |
 
 ## NuGet packages
 
@@ -186,6 +201,7 @@ Every place the port had to differ, and why. One line each.
 | `System.Data.SQLite.Core` | 1.0.119 | `BloogBot` | `SqliteRepository.cs` (same `System.Data.SQLite` namespace, source unchanged) |
 | `System.Data.SqlClient` | 4.9.0 | `BloogBot` | `SqlRepository.cs`, `TSqlRepository.cs` (a BCL assembly reference on .NET Framework, a package on .NET 9) |
 | `System.ComponentModel.Composition` | 9.0.0 | `BloogBot` | `BotLoader.cs` - MEF (`[ImportMany]`, `AggregateCatalog`, `AssemblyCatalog`, `CompositionContainer`). A BCL assembly reference on .NET Framework, a package on .NET 9; the source is unchanged |
+| `StreamJsonRpc` | 2.24.84 | `BloogBot.UI.Core` | `UI/BotService.cs`. The same version the original `packages.config` pinned, and it already shipped `netstandard2.0`, so the source is unchanged |
 
 `DiscordClientWrapper.cs` needed **no source change at all** on Discord.Net 3.x: every member it
 uses - `DiscordSocketClient`, `Log`, `Ready`, `LoginAsync(TokenType.Bot, ...)`, `StartAsync`,
@@ -196,11 +212,9 @@ byte-identical to the original apart from the header line.
 `AppDomain.CurrentDomain.AssemblyResolve` handler, still work on .NET 9. The 17 bot plugins need the
 same package in group 11 for their `[Export(typeof(IBot))]` attributes.
 
-Still to come, with the file that needs them (checked with grep over the source tree):
-**`StreamJsonRpc`
-(`UI/BotService.cs` - the skill lists it as unreferenced, but `BotService.cs` has
-`using StreamJsonRpc;`, so it stays and goes into `BloogBot.UI.Core`)**, MSTest
-(`BloogBotTests/NavigationTests.cs`), Moq and Castle.Core (tests).
+Still to come, with the file that needs them (checked with grep over the source tree): Avalonia
+11.x (`BloogBot.UI.Avalonia`, group 10), MSTest (`BloogBotTests/NavigationTests.cs`), Moq and
+Castle.Core (tests).
 
 Dropped as in-box on .NET 9 or unreferenced by any source file: `System.Memory`, `System.Buffers`,
 `System.Numerics.Vectors`, `System.Runtime.CompilerServices.Unsafe`, `System.Threading.Tasks.Extensions`,
@@ -233,3 +247,4 @@ Dropped as in-box on .NET 9 or unreferenced by any source file: `System.Memory`,
 | group 6 - the remaining 21 `AI/SharedStates/` files | 21 files | ~2990 | green | green | green | green |
 | Fasm.NET shim (new project); `MemoryManager.cs` restored byte-identical | 2 new files | ~230 new | green | green | green | green |
 | group 6 finished (`AI/Bot.cs`) + group 7 + `UI/CommandHandler.cs`; UI project references turned around | 6 files | ~1250 | green | green | green | green |
+| group 8 finished - `UI/MainViewModel.cs`, `UI/BotService.cs`, `UiTheme`, `IThemeService` | 4 files (2 ported, 2 new) | ~2015 | green | green | green | green |

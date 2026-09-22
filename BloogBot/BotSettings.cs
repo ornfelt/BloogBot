@@ -105,6 +105,10 @@ namespace BloogBot
 
         public BotType LastUsedBotType { get; set; } = BotType.Grinding;
 
+        // Added by the .NET 9 port - the one settings key the port adds. "Dark" or "Light";
+        // anything else, including a missing key, is read as Dark. See MainViewModel.DarkMode.
+        public string Theme { get; set; } = "Dark";
+
         [JsonIgnore]
         public Hotspot GrindingHotspot { get; set; }
 

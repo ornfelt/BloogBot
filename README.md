@@ -150,7 +150,7 @@ copy directly works until the next build overwrites it.
 | `TSqlSchema.SQL` | `TSqlRepository` on **every** start | yes, when `DatabaseType` is `mssql` |
 | `db.db` | `SqliteRepository` | created automatically - see below |
 | `mmaps\` | `Navigation.dll` | for pathfinding; generate them yourself, see the FAQ below |
-| `FASM.DLL` | the `Fasm.NET` shim, lazily | only if something calls `MemoryManager.InjectAssembly`, which nothing does in the stock configuration |
+| `FASM.DLL` | the `Fasm.NET` shim, lazily | only if something calls `MemoryManager.InjectAssembly`. Nothing does in the stock configuration - but a `-p:UseCustomChanges=false` build takes the upstream branch of `WardenDisabler.Initialize`, which **does** call it, so such a build needs FASM.DLL or it throws `DllNotFoundException` before the window opens |
 
 The database needs no setup in the default configuration. `DatabaseType` is `sqlite`, and
 `SqliteRepository.Initialize` **ignores the connection string it is handed**: it creates `db.db`

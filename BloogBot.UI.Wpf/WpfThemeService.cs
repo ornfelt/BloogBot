@@ -24,7 +24,11 @@ namespace BloogBot.UI.Wpf
             // "Assembly.GetEntryAssembly() returns null". Naming the assembly sidesteps it.
             var uri = new Uri("pack://application:,,,/BloogBot.UI.Wpf;component/Themes/"
                 + (theme == UiTheme.Light ? "Light" : "Dark") + ".xaml", UriKind.Absolute);
-            var dictionary = (ResourceDictionary)Application.LoadComponent(uri);
+            // ResourceDictionary.Source, not Application.LoadComponent: the single-argument
+            // LoadComponent overload rejects an absolute URI outright (ArgumentException,
+            // "Cannot use absolute URI"), while Source is happy with an absolute pack URI and
+            // does not consult Assembly.GetEntryAssembly() at all.
+            var dictionary = new ResourceDictionary { Source = uri };
 
             var merged = Application.Current.Resources.MergedDictionaries;
             if (merged.Count == 0)

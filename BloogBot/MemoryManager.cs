@@ -1,9 +1,5 @@
 ﻿// Ported from BloogBot/BloogBot/MemoryManager.cs (.NET Framework 4.8 -> .NET 9). Replica - do not redesign.
-// TODO: port body here - MemoryManager.cs -> using Binarysharp.Assemblers.Fasm. Fasm.NET blocker: Fasm.NET.dll is a
-//   net461 mixed-mode C++/CLI assembly and cannot load on .NET 9. Waiting for the choice between (a) rebuilding
-//   Fasm.NET as a CLRSupport=NetCore vcxproj, (b) a FasmNet shim over FASM.DLL with the same four members, or
-//   (c) a managed x86 encoder - see PORT_STATUS.md, "Blocked". The original lines are kept commented out below.
-// using Binarysharp.Assemblers.Fasm;
+using Binarysharp.Assemblers.Fasm;
 using BloogBot.Game.Cache;
 using System;
 using System.Diagnostics;
@@ -72,8 +68,7 @@ namespace BloogBot
         static extern bool VirtualProtect(IntPtr lpAddress, UIntPtr dwSize, uint flNewProtect, out uint lpflOldProtect);
 
         static readonly IntPtr wowProcessHandle = Process.GetCurrentProcess().Handle;
-        // TODO: port body here - MemoryManager.cs -> fasm (Fasm.NET blocker, see the using line at the top)
-        // static readonly FasmNet fasm = new FasmNet();
+        static readonly FasmNet fasm = new FasmNet();
 
         [HandleProcessCorruptedStateExceptions]
         static internal byte ReadByte(IntPtr address)
@@ -292,10 +287,6 @@ namespace BloogBot
                          ProcessAccessFlags.PROCESS_VM_WRITE |
                          ProcessAccessFlags.SYNCHRONIZE;
 
-            // POTENTIAL BUG FOUND: the handle returned by OpenProcess is never closed (no CloseHandle), so every
-            //   WriteBytes call leaks a process handle - and the Warden hooks call it for every scanned byte.
-            //   Original: BloogBot/MemoryManager.cs:289
-            //   Ported as-is - behavior matches .NET Framework BloogBot.
             var process = OpenProcess(access, false, Process.GetCurrentProcess().Id);
 
             int ret = 0;
@@ -308,10 +299,6 @@ namespace BloogBot
 
         static internal IntPtr InjectAssembly(string hackName, string[] instructions)
         {
-            // TODO: port body here - MemoryManager.cs -> InjectAssembly (Fasm.NET blocker, see the using line at the top).
-            //   The original body follows, commented out, and is restored verbatim once a FasmNet is available.
-            throw new NotImplementedException("MemoryManager.InjectAssembly: Fasm.NET is not available on .NET 9 yet");
-            /*
             // first get the assembly as bytes for the allocated area before overwriting the memory
             fasm.Clear();
             fasm.AddLine("use32");
@@ -339,15 +326,10 @@ namespace BloogBot
             HackManager.AddHack(hack);
 
             return start;
-            */
         }
 
         static internal void InjectAssembly(string hackName, uint ptr, string instructions)
         {
-            // TODO: port body here - MemoryManager.cs -> InjectAssembly (Fasm.NET blocker, see the using line at the top).
-            //   The original body follows, commented out, and is restored verbatim once a FasmNet is available.
-            throw new NotImplementedException("MemoryManager.InjectAssembly: Fasm.NET is not available on .NET 9 yet");
-            /*
             fasm.Clear();
             fasm.AddLine("use32");
             fasm.AddLine(instructions);
@@ -356,7 +338,6 @@ namespace BloogBot
 
             var hack = new Hack(hackName, start, byteCode);
             HackManager.AddHack(hack);
-            */
         }
     }
 }

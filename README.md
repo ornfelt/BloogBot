@@ -30,6 +30,7 @@ the reference for every later port run, and keeps receiving upstream syncs from
 | `Bootstrapper` | `net9.0-windows` | `Exe` | starts `WoW.exe` and injects `Loader.dll` |
 | 17 bot plugins | `net9.0-windows` | `Library` | one per spec, names unchanged (`TestBot` lives in `TestBot.cs/`, as in the original) |
 | `BloogBotTests` | `net9.0-windows` | `Library` | MSTest 3.x |
+| `Fasm.NET` | `net9.0-windows` | `Library` | **new**: a managed `Binarysharp.Assemblers.Fasm.FasmNet` over the stock `FASM.DLL`, replacing the prebuilt net461 mixed-mode `Fasm.NET.dll` |
 | `Loader`, `FastCall`, `Navigation`, `NavigationTests` | - | native | `vcxproj`, unchanged layout |
 
 Everything managed is **x86** (`PlatformTarget=x86`, RID `win-x86`), because the WoW clients
@@ -70,6 +71,16 @@ under `C:\Program Files (x86)\dotnet\` (`Microsoft.NETCore.App` and `Microsoft.W
 9.0.x). A 64-bit-only .NET install builds the solution fine but cannot host inside `WoW.exe`.
 A self-contained x86 publish with `hostfxr.dll` beside `Loader.dll` is the fallback if you would
 rather not install a runtime.
+
+The original referenced a prebuilt `Fasm.NET.dll`, Binarysharp's mixed-mode C++/CLI wrapper around
+the flat assembler, built for `net461`. Mixed-mode assemblies built against .NET Framework cannot
+load on .NET 9, so the `Fasm.NET` project here exposes the same namespace and members and
+P/Invokes the assembler instead. Put the **32-bit `FASM.DLL`** from
+[flatassembler.net](https://flatassembler.net) in the `Bot\` folder next to `BloogBot.dll`. It is
+loaded lazily on the first assemble, so the solution builds without it, and so does any run that
+never calls `MemoryManager.InjectAssembly` - which in the default configuration is every run, since
+`SignalEventManager`'s hooks are commented out and `WardenDisabler.Initialize` sits behind
+`useWarden = false`.
 
 ## Potential bugs in the original
 

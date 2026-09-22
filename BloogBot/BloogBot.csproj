@@ -25,6 +25,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Replaces the prebuilt Fasm.NET.dll reference from the original csproj: that assembly is
+         mixed-mode C++/CLI built for net461 and cannot load on .NET 9. Same namespace and members,
+         so MemoryManager.cs is unchanged. -->
+    <ProjectReference Include="..\Fasm.NET\Fasm.NET.csproj" />
     <ProjectReference Include="..\BloogBot.UI.Core\BloogBot.UI.Core.csproj" />
     <ProjectReference Include="..\BloogBot.UI.Wpf\BloogBot.UI.Wpf.csproj" Condition="'$(Ui)'=='Wpf'" />
     <ProjectReference Include="..\BloogBot.UI.Avalonia\BloogBot.UI.Avalonia.csproj" Condition="'$(Ui)'=='Avalonia'" />

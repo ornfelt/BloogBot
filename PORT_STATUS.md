@@ -4,11 +4,12 @@ Maintained by the `bloogbot-net9-port` skill. A hint for the next run, not the s
 the two trees are. Re-derive from this directory with the commands in the skill's "Orient"
 section.
 
-**Last run:** group 6 - the remaining 21 files in `AI/SharedStates/` (~2,990 lines, 26
-USE_CUSTOM_CHANGES sites). All four configurations green.
+**Last run:** the Fasm.NET blocker, resolved. New `Fasm.NET` project - a managed `FasmNet` shim
+over the stock 32-bit `FASM.DLL` in namespace `Binarysharp.Assemblers.Fasm` - replaces the net461
+mixed-mode assembly, and `MemoryManager.cs` is byte-identical to the original again. No
+`TODO: port body here` markers are left anywhere in the port. All four configurations green.
 **Next:** group 6 - `AI/Bot.cs` (1,046 lines, 23 USE_CUSTOM_CHANGES sites), which finishes the
-group. Still open: the Fasm.NET decision for `MemoryManager.cs`, and deleting the unported
-originals so the scaffolding can go away.
+group. Still open: deleting the unported originals so the scaffolding can go away.
 
 ## Blocked - read this first
 
@@ -31,7 +32,8 @@ in git and unmodified, so `git restore <path>` puts any of it back:
 
 - every `.cs` / `.xaml` file **without** a `// Ported from BloogBot/` header line
 - the old non-SDK leftovers: `*/packages.config`, `*/App.config`, `*/app.config`,
-  `*/Properties/` (AssemblyInfo, Resources, Settings), `BloogBot/Fasm.NET.dll`
+  `*/Properties/` (AssemblyInfo, Resources, Settings), `BloogBot/Fasm.NET.dll` (superseded by the
+  `Fasm.NET` project - see below)
 - source-repository tooling: `BloogBot.sln`, `UPSTREAM_SYNC.md`, `bloogbot_diff.ps1`, `.claude/`
 
 Confirmed with a grep over the source tree: nothing reads `Properties.Resources`,
@@ -40,25 +42,32 @@ Confirmed with a grep over the source tree: nothing reads `Properties.Resources`
 The `Loader/`, `FastCall/`, `Navigation/` and `NavigationTests/` trees stay: they are the verbatim
 copies group 13 starts from. `BloogBotTests/Assets/` stays for group 14.
 
-### Fasm.NET - decision needed
+### Fasm.NET - resolved
 
-`MemoryManager.cs` is ported, but `Fasm.NET.dll` (`Binarysharp.Assemblers.Fasm`) is a net461
-mixed-mode C++/CLI assembly and cannot load on .NET 9. The `using` line, the `fasm` field and the
-two `InjectAssembly` bodies are commented out behind `TODO: port body here` markers; the stubs throw
-`NotImplementedException`. Facts that bear on the choice:
+`Fasm.NET.dll` (`Binarysharp.Assemblers.Fasm`) is a net461 mixed-mode C++/CLI assembly and cannot
+load on .NET 9. Of the three options the skill lists, the user chose **(b)**: a managed shim over
+the stock `FASM.DLL`.
 
-- `InjectAssembly` is called from two places only: `SignalEventManager` (both hooks are commented
-  out in the static constructor) and `WardenDisabler.Initialize` (under `USE_CUSTOM_CHANGES` it is
-  behind `bool useWarden = false`). In the fork's default configuration FASM is never invoked at
-  runtime; only the `static readonly FasmNet fasm = new FasmNet()` field initializer would have run.
-- The whole tree assembles a very small x86 subset: `PUSH`/`POP` reg, `PUSHFD`/`POPFD`,
-  `PUSHAD`/`POPAD`, `CLD`, `INC`, `MOV` reg/reg, reg/imm, reg/[reg+disp], [imm]/reg, `ADD` reg/reg
-  and reg/imm, `CALL imm`, `JMP imm`.
-- Options, as the skill lists them: (a) rebuild Binarysharp's Fasm.NET C++/CLI wrapper as a
-  `CLRSupport=NetCore` x86 vcxproj in this solution, (b) P/Invoke `FASM.DLL` behind a `FasmNet`
-  shim in namespace `Binarysharp.Assemblers.Fasm` with `Clear`, `AddLine`, `Assemble()`,
-  `Assemble(IntPtr)` and `FasmAssemblerException` - with that namespace and those names
-  `MemoryManager.cs` goes back to byte-identical, (c) a managed encoder for the subset above.
+`Fasm.NET/FasmNet.cs` is a new project - assembly name `Fasm.NET`, root namespace
+`Binarysharp.Assemblers.Fasm` - exposing `FasmNet.Clear()`, `AddLine(string)`,
+`AddLine(string, params object[])`, `Assemble()`, `Assemble(IntPtr)`, `Assemble(string)`,
+`GetVersion()`, plus `FasmAssemblerException`, `FasmErrors` and `FasmConditions`. It P/Invokes
+`fasm_Assemble` / `fasm_GetVersion` and reads the `FASM_STATE` block the way `FASMDLL.TXT`
+documents it. Because the namespace and the member names match, **`BloogBot/MemoryManager.cs` is
+byte-identical to the original apart from its header line** - the commented-out `using`, the
+`fasm` field and both `InjectAssembly` bodies are restored verbatim.
+
+Two details recovered from the old binary rather than guessed: the exception message format
+(`An error occurred during FASM was assembling mnemonics. Error code: {0} ({1}); Error line: {2};
+Error offset: {3}`) and the `org {0}` directive `Assemble(IntPtr)` prepends - both are literals in
+`Fasm.NET.dll`.
+
+**What is still needed to run:** the 32-bit `FASM.DLL` from flatassembler.net has to sit next to
+the bot (the `Bot\` output folder). It is loaded lazily on the first `Assemble` call, so the build
+does not need it, and neither does any run that never assembles - in the fork's default
+configuration `InjectAssembly` is never called (`SignalEventManager`'s hooks are commented out and
+`WardenDisabler.Initialize` sits behind `bool useWarden = false`). Not verified against a real
+`FASM.DLL` in this tree; the first injection test is the place that proves it.
 
 ## Header convention
 
@@ -117,9 +126,9 @@ Every place the port had to differ, and why. One line each.
 | `Directory.Build.props` | every SDK property is conditioned on `.csproj`; the shared `..\Bot\` / `..\Bot\Release\` output path lives here instead of in each csproj | the four native `.vcxproj` files import `Directory.Build.props` too; the output path is identical for all 24 managed projects |
 | `Bootstrapper/Bootstrapper.csproj` | `Newtonsoft.Json` 13.0.4 (BloogBot uses 13.0.3) | mirrors the two original `packages.config` files, which already differed |
 | `BloogBot.UI.Avalonia`, `BloogBotTests` | no package references yet | packages are added by the run that ports the first file needing them (groups 10 and 14) |
-| `BloogBot/MemoryManager.cs` | `using Binarysharp.Assemblers.Fasm`, the `fasm` field and both `InjectAssembly` bodies are commented out; the stubs throw `NotImplementedException` | Fasm.NET blocker - temporary, see "Blocked" |
+| `Fasm.NET/Fasm.NET.csproj`, `Fasm.NET/FasmNet.cs` | new project, not in the original: a managed `FasmNet` in namespace `Binarysharp.Assemblers.Fasm` P/Invoking the stock 32-bit `FASM.DLL`, replacing the prebuilt `Fasm.NET.dll` reference | the prebuilt assembly is mixed-mode C++/CLI built for net461 and cannot load on .NET 9. Same namespace and members, so `MemoryManager.cs` needs no change at all. `FASM.DLL` must be present at runtime - see "Fasm.NET - resolved" |
 | `BloogBot/MemoryManager.cs`, `Game/Objects/WoWObject.cs`, the three `*GameFunctionHandler.cs` (runtime note, no code change) | 16 `[HandleProcessCorruptedStateExceptions]` methods compile with warning SYSLIB0032; on .NET 9 an `AccessViolationException` is fatal and the `catch (AccessViolationException)` blocks never run | .NET 9 does not support recovering from corrupted-state exceptions; ported as-is because the attribute and the catches are the original's behavior on .NET Framework |
-| `UnportedOriginals.targets`, `Directory.Build.targets` | new files, not in the original: `<Compile Remove>` for every source file that has no `// Ported from BloogBot/` header yet | the port tree is a clone, the unported originals cannot be deleted under this session's permission policy, and SDK projects glob every `.cs`. Temporary - both files go away when the originals are removed. See "Blocked" |
+| `UnportedOriginals.targets`, `Directory.Build.targets` | new files, not in the original: `<Compile Remove>` for every `.cs` that exists at the same path in the source tree and has no `// Ported from BloogBot/` header yet. Files that exist only in the port, such as `Fasm.NET/FasmNet.cs`, are never listed | the port tree is a clone, the unported originals cannot be deleted under this session's permission policy, and SDK projects glob every `.cs`. Temporary - both files go away when the originals are removed. See "Blocked" |
 | `BloogBot/AI/DependencyContainer.cs` | `travelPath.Waypoints.Reverse().ToArray()` -> `Enumerable.Reverse(travelPath.Waypoints).ToArray()` | on .NET 9 `Position[].Reverse()` binds to `MemoryExtensions.Reverse(Span<T>)`, which reverses in place and returns `void` (CS0023). The explicit `Enumerable` call keeps the .NET Framework meaning - a new reversed sequence, source untouched. `AI/Bot.cs:193` has the same call and will need the same change |
 | `BloogBot/TSqlRepository.cs` (runtime note, no code change) | `SqlConnection` / `SqlCommand` compile with warning CS0618 (`System.Data.SqlClient` is deprecated in favour of `Microsoft.Data.SqlClient`) | kept on `System.Data.SqlClient` so `SqlRepository.cs` and `TSqlRepository.cs` stay byte-identical to the original, as the skill's API map prescribes |
 | `BloogBot/DiscordClientWrapper.cs` (runtime note, no code change) | `ServicePointManager.SecurityProtocol = Tls12` compiles with warning SYSLIB0014 and no longer has any effect: on .NET 9 `ServicePointManager` settings do not reach `HttpClient`, which is what Discord.Net 3.x uses | ported as-is; TLS 1.2+ is the platform default on .NET 9, so the line being inert does not change behavior |
@@ -176,3 +185,4 @@ Dropped as in-box on .NET 9 or unreferenced by any source file: `System.Memory`,
 | group 4 (+ IBotState, DiscordClientWrapper) | 27 files | ~4255 | green | green | green | green |
 | group 5 + AI root (+ TravelState, MoveToPositionState, StuckState) | 14 files | ~2200 | green | green | green | green |
 | group 6 - the remaining 21 `AI/SharedStates/` files | 21 files | ~2990 | green | green | green | green |
+| Fasm.NET shim (new project); `MemoryManager.cs` restored byte-identical | 2 new files | ~230 new | green | green | green | green |

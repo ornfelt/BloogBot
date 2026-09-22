@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- NOT a ported file. This project replaces the prebuilt Fasm.NET.dll that BloogBot
+       referenced under .NET Framework: that assembly is Binarysharp's mixed-mode C++/CLI
+       wrapper built for net461, and mixed-mode assemblies built against .NET Framework
+       cannot load on .NET 9. It exposes the same namespace, type names and members that
+       BloogBot/MemoryManager.cs uses, so MemoryManager.cs stays byte-identical to the
+       original. See PORT_STATUS.md, "Deviations from the original". -->
+
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <RootNamespace>Binarysharp.Assemblers.Fasm</RootNamespace>
+    <AssemblyName>Fasm.NET</AssemblyName>
+  </PropertyGroup>
+
+</Project>

@@ -1,4 +1,5 @@
-﻿using BloogBot.Game.Enums;
+﻿// Ported from BloogBot/BloogBot/Game/Cache/ItemCacheInfo.cs (.NET Framework 4.8 -> .NET 9). Replica - do not redesign.
+using BloogBot.Game.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;

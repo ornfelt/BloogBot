@@ -1,3 +1,4 @@
+// Ported from BloogBot/FrostMageBot/FrostMageConsumables.cs (.NET Framework 4.8 -> .NET 9). Replica - do not redesign.
 using System;
 using System.Collections.Generic;
 using System.Linq;

@@ -1,4 +1,5 @@
-﻿using BloogBot;
+﻿// Ported from BloogBot/RetributionPaladinBot/RetributionPaladinBot.cs (.NET Framework 4.8 -> .NET 9). Replica - do not redesign.
+using BloogBot;
 using BloogBot.AI;
 using BloogBot.Game.Objects;
 using System.Collections.Generic;

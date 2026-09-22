@@ -1,4 +1,5 @@
-﻿using BloogBot.AI;
+﻿// Ported from BloogBot/ProtectionWarriorBot/RestState.cs (.NET Framework 4.8 -> .NET 9). Replica - do not redesign.
+using BloogBot.AI;
 using BloogBot.AI.SharedStates;
 using BloogBot.Game;
 using BloogBot.Game.Objects;

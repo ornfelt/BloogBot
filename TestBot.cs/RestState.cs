@@ -1,4 +1,5 @@
-﻿using BloogBot.AI;
+﻿// Ported from BloogBot/TestBot.cs/RestState.cs (.NET Framework 4.8 -> .NET 9). Replica - do not redesign.
+using BloogBot.AI;
 using System.Collections.Generic;
 
 namespace TestBot

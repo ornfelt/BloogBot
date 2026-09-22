@@ -4,17 +4,16 @@ Maintained by the `bloogbot-net9-port` skill. A hint for the next run, not the s
 the two trees are. Re-derive from this directory with the commands in the skill's "Orient"
 section.
 
-**Last run:** group 11, first six plugins - `AfflictionWarlockBot`, `ArcaneMageBot`,
-`ArmsWarriorBot`, `BackstabRogueBot`, `BalanceDruidBot`, `BeastmasterHunterBot`. 40 files, all
-byte-identical to the original apart from the header line and one `POTENTIAL BUG FOUND` tag in
-`BeastMasterHunterBot.cs`. No `.csproj` change was needed: the 17 plugin projects were scaffolded
-in the setup run and `System.ComponentModel.Composition` flows transitively from `BloogBot`. All
-four configurations green.
-**Next:** group 11, the remaining eleven plugins - `CombatRogueBot`, `ElementalShamanBot`,
-`EnhancementShamanBot`, `FeralDruidBot`, `FrostMageBot`, `FuryWarriorBot`, `ProtectionPaladinBot`,
-`ProtectionWarriorBot`, `RetributionPaladinBot`, `ShadowPriestBot`, `TestBot.cs` (~5,000 lines).
-Same mechanical shape: prepend the header line to each `.cs`, drop its rows from
-`UnportedOriginals.targets`, build.
+**Last run:** group 11 finished - the remaining eleven plugins: `CombatRogueBot`,
+`ElementalShamanBot`, `EnhancementShamanBot`, `FeralDruidBot`, `FrostMageBot`, `FuryWarriorBot`,
+`ProtectionPaladinBot`, `ProtectionWarriorBot`, `RetributionPaladinBot`, `ShadowPriestBot`,
+`TestBot.cs`. 68 files, every one byte-identical to its original apart from the header line. No new
+`POTENTIAL BUG FOUND` tag and no `.csproj` change. Carries the two `USE_CUSTOM_CHANGES` sites in
+`FrostMageBot/FrostMageConsumables.cs`, both compiled on and off. All 17 plugin assemblies build.
+All four configurations green.
+**Next:** group 13 - the native side: `Loader/dllmain.cpp` rewritten against `nethost` / `hostfxr`,
+and the build configuration of `FastCall`, `Navigation` and `NavigationTests`. Then group 14,
+`BloogBotTests/NavigationTests.cs` on MSTest 3.x - the last managed file left.
 Still open: deleting the unported originals so the scaffolding can go away.
 
 ## Blocked - read this first
@@ -166,14 +165,22 @@ what the skill's Orient pipeline compares against.
   - nothing in the original window needed an Avalonia-only workaround. The `MultiBinding` +
     `StringFormat`, `{Binding Path=.}`, star column widths, `SizeToContent` and `Separator`
     all carry over as written
-- [ ] 11. The 17 bot plugins
-  - done: `AfflictionWarlockBot` (7), `ArcaneMageBot` (7), `ArmsWarriorBot` (5),
+- [x] 11. The 17 bot plugins - all 108 files, each byte-identical to its original apart from the header line
+  - first six: `AfflictionWarlockBot` (7), `ArcaneMageBot` (7), `ArmsWarriorBot` (5),
     `BackstabRogueBot` (5), `BalanceDruidBot` (7), `BeastmasterHunterBot` (9, including the empty
     `Class1.cs` leftover, ported as the header line alone). None of the six carries a
     `USE_CUSTOM_CHANGES` site
-  - left: `CombatRogueBot`, `ElementalShamanBot`, `EnhancementShamanBot`, `FeralDruidBot`,
-    `FrostMageBot`, `FuryWarriorBot`, `ProtectionPaladinBot`, `ProtectionWarriorBot`,
-    `RetributionPaladinBot`, `ShadowPriestBot`, `TestBot.cs`
+  - remaining eleven: `CombatRogueBot` (5), `ElementalShamanBot` (6), `EnhancementShamanBot` (6),
+    `FeralDruidBot` (7), `FrostMageBot` (8), `FuryWarriorBot` (5), `ProtectionPaladinBot` (7),
+    `ProtectionWarriorBot` (5), `RetributionPaladinBot` (7), `ShadowPriestBot` (7),
+    `TestBot.cs` (5)
+  - the only `USE_CUSTOM_CHANGES` site in all 17 is `FrostMageBot/FrostMageConsumables.cs`: two
+    `#if` blocks with no `#else`, appending the three WotLK conjured mana items to
+    `ConjuredFoodNames` and `ConjuredDrinkNames`. Both branches compiled
+  - no plugin needed a `.csproj` change: all 17 were scaffolded in the setup run and
+    `System.ComponentModel.Composition` flows transitively from `BloogBot`
+  - every plugin's `FileName` property matches the assembly its project builds, so the
+    `BotLoader.cs` casing bug is confined to `BeastMasterHunterBot.dll` as tagged
 - [x] 12. Bootstrapper - ported out of order in the setup run: it depends on nothing in BloogBot, and an `Exe` project with no `Main` would have kept the solution red
 - [ ] 13. Native - Loader/dllmain.cpp on hostfxr, FastCall/Navigation build config
 - [ ] 14. Tests - BloogBotTests on MSTest 3.x
@@ -253,6 +260,7 @@ Every place the port had to differ, and why. One line each.
 | `BloogBot.UI.Avalonia/App.axaml` | `Application.Styles` holds `<FluentTheme/>` plus a `StyleInclude`; `RequestedThemeVariant="Dark"` on the `Application` | Avalonia has no built-in control templates without a theme, and `RequestedThemeVariant` is what makes Fluent draw its own chrome dark. `AvaloniaThemeService` moves it with the resource include, so both halves switch together |
 | `BloogBot.UI.Avalonia/BloogBot.UI.Avalonia.csproj` | `<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>` | `BloogBot/Loader.cs` reaches this shell with `Assembly.LoadFrom`, not a `ProjectReference`, so nothing else pulls Avalonia's managed assemblies or its x86 `libSkiaSharp.dll` / `av_libglesv2.dll` into the shared `..\Bot\` folder. `LoadFrom` probes that folder for what it loaded. WPF needs no equivalent - it is in-box |
 | `BloogBot.UI.Avalonia/BloogBot.UI.Avalonia.csproj` | `<AvaloniaUseCompiledBindingsByDefault>false</AvaloniaUseCompiledBindingsByDefault>` | compiled bindings would need an `x:DataType` on the window and on all ten `DataTemplate`s, which the original does not have. Off, Avalonia binds by reflection exactly as WPF does, and the window stays a replica |
+| `FrostMageBot/RestState.cs`, `FrostMageBot/ConjureItemsState.cs`, `FrostMageBot/FrostMageConsumables.cs` | CRLF line endings where the source tree's working copy has LF | not a port decision: both repositories hold the same commit for these three files, and the two checkouts normalise differently. Content is identical byte for byte once line endings are normalised, and git stores them the same way. Recorded so a future `diff` across the two trees is not mistaken for drift |
 
 ## NuGet packages
 
@@ -323,3 +331,4 @@ theme files.
 | group 9 part 1 - WPF shell scaffolding, themes, and MainWindow's first three tabs | 7 files (4 ported, 3 new) | ~1750 | green | green | green | green |
 | group 9 finished (MainWindow's last four tabs) + group 10 - the whole Avalonia shell | 7 files (1 extended, 3 ported, 4 new) | ~2400 | green | green | green | green |
 | group 11 part 1 - the first six bot plugins | 40 files | ~2970 | green | green | green | green |
+| group 11 finished - the remaining eleven bot plugins | 68 files | ~5040 | green | green | green | green |

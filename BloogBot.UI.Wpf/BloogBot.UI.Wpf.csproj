@@ -8,8 +8,19 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- The SDK globs App.xaml in as an ApplicationDefinition, which a Library project may not
+         have: an ApplicationDefinition is what generates the entry point, and this shell has
+         its own [STAThread] Main in App.xaml.cs. Compiled as a Page, App.xaml still gives App
+         its InitializeComponent and its MergedDictionaries theme slot. -->
+    <ApplicationDefinition Remove="App.xaml" />
+    <Page Include="App.xaml" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\BloogBot.UI.Abstractions\BloogBot.UI.Abstractions.csproj" />
     <ProjectReference Include="..\BloogBot.UI.Core\BloogBot.UI.Core.csproj" />
+    <!-- App.xaml.cs calls WardenDisabler.Initialize(), which the original App did too. -->
+    <ProjectReference Include="..\BloogBot\BloogBot.csproj" />
   </ItemGroup>
 
 </Project>

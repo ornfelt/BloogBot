@@ -12,6 +12,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- MainWindow.xaml.cs calls BotService.Run, and BotService is internal here exactly as
+         it was in the original. Handing the internals to the two shells keeps that modifier
+         as the original wrote it. -->
+    <InternalsVisibleTo Include="BloogBot.UI.Wpf" />
+    <InternalsVisibleTo Include="BloogBot.UI.Avalonia" />
+  </ItemGroup>
+
+  <ItemGroup>
     <!-- StreamJsonRpc 2.24.84, the same version as the original packages.config: BotService.cs.
          The package already shipped netstandard2.0, so the source is unchanged. -->
     <PackageReference Include="StreamJsonRpc" Version="2.24.84" />

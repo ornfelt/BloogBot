@@ -1,0 +1,15 @@
+﻿<!-- Ported from BloogBot/BloogBot/UI/App.xaml (.NET Framework 4.8 -> .NET 9, WPF shell). Replica - do not redesign. -->
+<Application x:Class="BloogBot.UI.Wpf.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Application.Resources>
+        <!-- The original's Application.Resources was empty. MergedDictionaries[0] is the live theme
+             slot WpfThemeService swaps between Themes/Dark.xaml and Themes/Light.xaml; it starts on
+             Dark, which is the port's default. -->
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Themes/Dark.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

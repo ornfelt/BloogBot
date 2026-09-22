@@ -4,15 +4,14 @@ Maintained by the `bloogbot-net9-port` skill. A hint for the next run, not the s
 the two trees are. Re-derive from this directory with the commands in the skill's "Orient"
 section.
 
-**Last run:** group 8 finished - `UI/MainViewModel.cs` and `UI/BotService.cs` into
-`BloogBot.UI.Core`, plus the first two `BloogBot.UI.Abstractions` types (`UiTheme`,
-`IThemeService`) and the `DarkMode` property / `botSettings.json` `Theme` key they back. The
-assembly split forced an `InternalsVisibleTo` rather than widening any declaration. All four
-configurations green.
-**Next:** group 9 - the WPF shell `BloogBot.UI.Wpf`: `App.xaml(.cs)` with the hand-written
-`[STAThread] Main`, `MainWindow.xaml` ported tab by tab in source order (Overview first),
-`Themes/Dark.xaml` + `Themes/Light.xaml` with the 15 theme keys, and the `IThemeService` /
-`IUiHost` implementations. `MainWindow.xaml` is 1,544 lines, so expect two or three runs.
+**Last run:** group 9 started - the WPF shell. `App.xaml(.cs)` with the hand-written
+`[STAThread] Main`, `MainWindow.xaml.cs`, `Themes/Dark.xaml` + `Themes/Light.xaml` (15 keys
+each) and `WpfThemeService`, plus `MainWindow.xaml`'s Overview, Settings and Travel Paths tabs
+and the console trailer. All four configurations green.
+**Next:** finish group 9 - the four `MainWindow.xaml` tabs still marked
+`TODO: port body here`, in source order: NPCs (original lines 972-1041), Hotspots (1042-1287),
+Powerlevel (1288-1347), Gathering (1348-1507). They are a verbatim copy of the original's
+lines; only the window header and the two console colours ever needed changing.
 Still open: deleting the unported originals so the scaffolding can go away.
 
 ## Blocked - read this first
@@ -137,6 +136,19 @@ what the skill's Orient pipeline compares against.
     `IDialogService` and `IClipboardService` are not needed yet. `IUiHost` arrives with
     group 9, the rest only if a shell genuinely needs one
 - [ ] 9. WPF shell - BloogBot.UI.Wpf (default, the reference shell)
+  - done: `App.xaml` + `App.xaml.cs` (namespace `BloogBot.UI.Wpf`, with the hand-written
+    `[STAThread] Main` the library build needs), `MainWindow.xaml.cs`, `Themes/Dark.xaml` and
+    `Themes/Light.xaml`, `WpfThemeService`
+  - done in `MainWindow.xaml`: the `Window` element, the outer `Grid`, the `TabControl`, the
+    Overview, Settings and Travel Paths tabs, and the console / Clear Log trailer. The three
+    tab bodies are byte-identical to the original; the only insertion anywhere in the file is
+    the 10-line Dark Mode checkbox in Overview's already-defined, previously unused row 11
+  - left: the NPCs (972-1041), Hotspots (1042-1287), Powerlevel (1288-1347) and Gathering
+    (1348-1507) tabs, each marked `TODO: port body here` in place
+  - `IUiHost`, `IUiDispatcher`, `IDialogService` and `IClipboardService` are still not in
+    `BloogBot.UI.Abstractions`: nothing needs them. `Loader.cs` reaches `App.Main` by
+    reflection, and `MainViewModel` touches no WPF type, so `IThemeService` remains the only
+    contract a shell has to implement
 - [ ] 10. Avalonia shell - BloogBot.UI.Avalonia, at parity with 9
 - [ ] 11. The 17 bot plugins
 - [x] 12. Bootstrapper - ported out of order in the setup run: it depends on nothing in BloogBot, and an `Exe` project with no `Main` would have kept the solution red
@@ -190,6 +202,15 @@ Every place the port had to differ, and why. One line each.
 | `BloogBot/BotSettings.cs`, `botSettings.json` | `public string Theme { get; set; } = "Dark";` added after `LastUsedBotType` | the one settings key the port adds, as the skill's theming section prescribes. Read at startup, persisted by the existing `SaveSettings`; anything other than `"Light"`, a missing key included, means Dark. The rest of the file is untouched |
 | `BloogBot.UI.Core/MainViewModel.cs` (runtime note, no code change) | the `!info` command reads `$"{path}\\BloogBot.exe"`, which no longer exists - `BloogBot` is a library now, so the file on disk is `BloogBot.dll` | ported as-is under the replica rule. `AssemblyName.GetAssemblyName` will throw `FileNotFoundException` there until the user decides how `!info` should report a version; flagged rather than fixed |
 | `BloogBot.UI.Core/MainViewModel.cs` (runtime note, no code change) | `Assembly.CodeBase` in `!info` compiles with warning SYSLIB0012 | the same call the original makes; `Assembly.GetAssembly(typeof(MainViewModel))` now resolves to `BloogBot.UI.Core.dll`, which sits in the same `..\Bot\` folder, so the path is unchanged |
+| `BloogBot.UI.Wpf/App.xaml(.cs)`, `MainWindow.xaml(.cs)` | namespace and `x:Class` are `BloogBot.UI.Wpf.App` / `BloogBot.UI.Wpf.MainWindow`, not `BloogBot.UI.*` | the shells are separate assemblies and both define an `App`, so they cannot share one namespace. `BloogBot/Loader.cs` already resolves `<shell assembly>.App` by that exact spelling |
+| `BloogBot.UI.Wpf/App.xaml.cs` | a hand-written `[STAThread] public static void Main()` added above the unchanged `OnStartup` | `BloogBot` is a library now, so there is no `ApplicationDefinition` generating an entry point. The `OnStartup` body is verbatim |
+| `BloogBot.UI.Wpf/BloogBot.UI.Wpf.csproj` | `<ApplicationDefinition Remove="App.xaml" />` plus `<Page Include="App.xaml" />` | the SDK globs `App.xaml` in as an `ApplicationDefinition`, which a Library project may not have (MC1002). As a `Page` it still gives `App` its `InitializeComponent` and its theme slot |
+| `BloogBot.UI.Wpf/App.xaml` | `Application.Resources`, empty in the original, now holds a `MergedDictionaries` entry pointing at `Themes/Dark.xaml` | that entry is the live theme slot `WpfThemeService` swaps; it starts on Dark, the port's default |
+| `BloogBot.UI.Wpf/MainWindow.xaml` | `<Window.DataContext><local:MainViewModel /></...>` dropped; `xmlns:local` requalified as `clr-namespace:BloogBot.UI;assembly=BloogBot.UI.Core` | `MainViewModel` takes an `IThemeService` and can no longer be constructed from XAML, and it lives in another assembly now. `MainWindow.xaml.cs` assigns the DataContext |
+| `BloogBot.UI.Wpf/MainWindow.xaml` | the console's `Background="DimGray"` and the log line's `Foreground="White"` became `{DynamicResource PanelBackgroundBrush}` and `{DynamicResource ForegroundBrush}` | the only two hardcoded colours in the original's 1,544 lines, and the skill forbids a literal colour in a view |
+| `BloogBot.UI.Wpf/MainWindow.xaml` | a `Dark Mode` checkbox added at `Grid.Row="11"` of the Overview killswitch grid | the theme toggle the skill requires. Row 11 was already defined in the original and unused, so no grid structure changed. It is the only control in the window that is not in the original |
+| `BloogBot.UI.Wpf/Themes/Dark.xaml`, `Themes/Light.xaml` | new files: the 15 theme brushes plus implicit styles for `Window`, `Grid`, `TabControl`, `TabItem`, `Label`, `TextBlock`, `TextBox`, `CheckBox`, `Button`, `ComboBox`, `ComboBoxItem`, `Separator` and `ScrollViewer` | the implicit styles are what let `MainWindow.xaml` stay a straight port - it carries no colour attributes of its own. Only `Button` is re-templated; the rest set brushes on the stock WPF templates, so some default chrome (the ComboBox drop-down button, the scrollbars) keeps its system colours in dark mode |
+| `BloogBot/BloogBot.csproj`, `BloogBot.UI.Core/BloogBot.UI.Core.csproj` | `InternalsVisibleTo` for `BloogBot.UI.Wpf` and `BloogBot.UI.Avalonia` added to both | `App.xaml.cs` calls the internal `WardenDisabler.Initialize()` and `MainWindow.xaml.cs` the internal `BotService.Run`, exactly as the original did from inside one assembly. Handing the internals over keeps both modifiers as the original wrote them |
 
 ## NuGet packages
 
@@ -226,11 +247,14 @@ Dropped as in-box on .NET 9 or unreferenced by any source file: `System.Memory`,
 
 ## UI parity
 
+A tab is ticked here only when **both** shells have it and both parity diffs are clean, so
+every WPF-only box below stays empty until group 10 lands the Avalonia shell.
+
 | Tab | WPF | Avalonia |
 | --- | --- | --- |
-| Overview | [ ] | [ ] |
-| Settings | [ ] | [ ] |
-| Travel Paths | [ ] | [ ] |
+| Overview | ported | [ ] |
+| Settings | ported | [ ] |
+| Travel Paths | ported | [ ] |
 | NPCs | [ ] | [ ] |
 | Hotspots | [ ] | [ ] |
 | Powerlevel | [ ] | [ ] |
@@ -248,3 +272,4 @@ Dropped as in-box on .NET 9 or unreferenced by any source file: `System.Memory`,
 | Fasm.NET shim (new project); `MemoryManager.cs` restored byte-identical | 2 new files | ~230 new | green | green | green | green |
 | group 6 finished (`AI/Bot.cs`) + group 7 + `UI/CommandHandler.cs`; UI project references turned around | 6 files | ~1250 | green | green | green | green |
 | group 8 finished - `UI/MainViewModel.cs`, `UI/BotService.cs`, `UiTheme`, `IThemeService` | 4 files (2 ported, 2 new) | ~2015 | green | green | green | green |
+| group 9 part 1 - WPF shell scaffolding, themes, and MainWindow's first three tabs | 7 files (4 ported, 3 new) | ~1750 | green | green | green | green |

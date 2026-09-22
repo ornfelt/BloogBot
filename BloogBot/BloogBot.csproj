@@ -16,6 +16,10 @@
          BloogBot.UI.Core now, so the internals are handed to that assembly instead of widening
          any of those declarations - the replication rules keep every access modifier as it is. -->
     <InternalsVisibleTo Include="BloogBot.UI.Core" />
+    <!-- The shells too: App.xaml.cs calls WardenDisabler.Initialize(), as the original
+         App.xaml.cs did from inside this assembly. -->
+    <InternalsVisibleTo Include="BloogBot.UI.Wpf" />
+    <InternalsVisibleTo Include="BloogBot.UI.Avalonia" />
   </ItemGroup>
 
   <ItemGroup>

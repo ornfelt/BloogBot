@@ -1,4 +1,5 @@
-﻿using System;
+﻿// Ported from BloogBot/BloogBot/Game/Enums/UnitFlags.cs (.NET Framework 4.8 -> .NET 9). Replica - do not redesign.
+using System;
 
 // https://github.com/cmangos/mangos-tbc/blob/77daf8bf20174767872eaa4dbc56c2a62259e3d2/src/game/Entities/Unit.h
 namespace BloogBot.Game.Enums

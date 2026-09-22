@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿// Ported from BloogBot/Bootstrapper/Program.cs (.NET Framework 4.8 -> .NET 9). Replica - do not redesign.
+using Newtonsoft.Json;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -43,6 +44,11 @@ namespace Bootstrapper
             var loaderPath = Path.Combine(currentFolder, "Loader.dll");
 
             // allocate enough memory to hold the full file path to Loader.dll within the BloogBot process
+            // POTENTIAL BUG FOUND: the region is loaderPath.Length bytes, but the path is written below as
+            //   Encoding.Unicode (2 bytes per char, no terminator), so twice that many bytes are written into
+            //   it. It only works because VirtualAllocEx rounds the size up to a zero-filled 4 KiB page.
+            //   Original: Bootstrapper/Program.cs:46
+            //   Ported as-is - behavior matches .NET Framework BloogBot.
             var loaderPathPtr = VirtualAllocEx(
                 processHandle, 
                 (IntPtr)0, 
@@ -53,6 +59,12 @@ namespace Bootstrapper
             // this seems to help prevent timing issues
             Thread.Sleep(500);
 
+            // POTENTIAL BUG FOUND: none of the DllImports in WinImports.cs sets SetLastError = true, so
+            //   Marshal.GetLastWin32Error() here and in the three checks below never reflects these calls.
+            //   A failed VirtualAllocEx / WriteProcessMemory / CreateRemoteThread goes undetected, and a
+            //   stale error code from an unrelated earlier call can throw instead.
+            //   Original: Bootstrapper/Program.cs:56 (DllImports: Bootstrapper/WinImports.cs)
+            //   Ported as-is - behavior matches .NET Framework BloogBot.
             int error = Marshal.GetLastWin32Error();
             if (error > 0)
                 throw new InvalidOperationException($"Failed to allocate memory for Loader.dll, error code: {error}");

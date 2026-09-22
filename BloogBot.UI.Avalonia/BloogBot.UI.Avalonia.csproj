@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <RootNamespace>BloogBot.UI.Avalonia</RootNamespace>
+    <AssemblyName>BloogBot.UI.Avalonia</AssemblyName>
+  </PropertyGroup>
+
+  <!-- Avalonia 11.x packages are added by the run that ports the Avalonia shell (group 10). -->
+
+  <ItemGroup>
+    <ProjectReference Include="..\BloogBot.UI.Abstractions\BloogBot.UI.Abstractions.csproj" />
+    <ProjectReference Include="..\BloogBot.UI.Core\BloogBot.UI.Core.csproj" />
+  </ItemGroup>
+
+</Project>

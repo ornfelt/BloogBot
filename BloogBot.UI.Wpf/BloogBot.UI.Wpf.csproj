@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <RootNamespace>BloogBot.UI.Wpf</RootNamespace>
+    <AssemblyName>BloogBot.UI.Wpf</AssemblyName>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\BloogBot.UI.Abstractions\BloogBot.UI.Abstractions.csproj" />
+    <ProjectReference Include="..\BloogBot.UI.Core\BloogBot.UI.Core.csproj" />
+  </ItemGroup>
+
+</Project>

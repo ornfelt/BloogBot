@@ -1,5 +1,93 @@
 # BloogBot in .net 9
 
+This directory is the **.NET 9 port of BloogBot**: the same files, namespaces, types, members and
+behavior as the .NET Framework 4.8 tree at `Code2/C#/BloogBot`, the same `botSettings.json` /
+`bootstrapperSettings.json`, the same SQLite / T-SQL schemas and the same injected-bot workflow.
+An existing BloogBot install can be pointed at this build and behave identically.
+
+Two things are deliberately not a straight copy:
+
+1. **The UI** - the WPF window is split into a UI-agnostic abstraction plus two shells, WPF
+   (default) and Avalonia, with the same controls, bindings and behavior, dark mode by default and
+   a light toggle in both.
+2. **The native loader** - `Loader/dllmain.cpp` hosts the runtime through `nethost` / `hostfxr`
+   instead of the .NET Framework-only `ICLRRuntimeHost`.
+
+Everything else is a replica. The source tree at `Code2/C#/BloogBot` stays on .NET Framework, stays
+the reference for every later port run, and keeps receiving upstream syncs from
+`DrewKestell/BloogBot`; those are carried across into this tree by the `bloogbot-net9-port` skill.
+`PORT_STATUS.md` records where the port stands.
+
+## Projects
+
+| Project | TFM | Output | Notes |
+| --- | --- | --- | --- |
+| `BloogBot` | `net9.0-windows` | `Library` | everything except `UI/`. `EnableDynamicLoading=true` so a `.runtimeconfig.json` is emitted for `hostfxr` |
+| `BloogBot.UI.Abstractions` | `net9.0` | `Library` | contracts + MVVM primitives. Plain `net9.0` on purpose - a WPF type here will not compile |
+| `BloogBot.UI.Core` | `net9.0` | `Library` | `MainViewModel`, `CommandHandler`, `BotService`. Same reason |
+| `BloogBot.UI.Wpf` | `net9.0-windows` | `Library` | `UseWPF=true`. The default shell |
+| `BloogBot.UI.Avalonia` | `net9.0-windows` | `Library` | the alternate shell |
+| `Bootstrapper` | `net9.0-windows` | `Exe` | starts `WoW.exe` and injects `Loader.dll` |
+| 17 bot plugins | `net9.0-windows` | `Library` | one per spec, names unchanged (`TestBot` lives in `TestBot.cs/`, as in the original) |
+| `BloogBotTests` | `net9.0-windows` | `Library` | MSTest 3.x |
+| `Loader`, `FastCall`, `Navigation`, `NavigationTests` | - | native | `vcxproj`, unchanged layout |
+
+Everything managed is **x86** (`PlatformTarget=x86`, RID `win-x86`), because the WoW clients
+BloogBot injects into are 32-bit. Every managed project writes to `Bot\` in Debug and
+`Bot\Release\` in Release, exactly like the original solution.
+
+## Building
+
+```powershell
+cd $env:code_root_dir/Code2/C#/BloogBot_net9
+dotnet build BloogBot_net9.sln -c Debug
+dotnet build BloogBot_net9.sln -c Debug -p:Ui=Avalonia
+dotnet build BloogBot_net9.sln -c Debug -p:UseCustomChanges=false
+dotnet build BloogBot_net9.sln -c Debug -p:Ui=Avalonia -p:UseCustomChanges=false
+```
+
+- `-p:Ui=Wpf` (default) or `-p:Ui=Avalonia` selects which shell `BloogBot` references and which of
+  `UI_WPF` / `UI_AVALONIA` is defined. Both shells must always build and stay at parity.
+- `-p:UseCustomChanges=true` (default) defines `USE_CUSTOM_CHANGES`, the fork's local
+  customizations on top of upstream BloogBot; `false` builds the tree as upstream wrote it. A C#
+  `#if` branch that is off is not compiled, so both settings have to build.
+
+Both switches live in `Directory.Build.props`.
+
+The native projects are built separately:
+
+```powershell
+msbuild Loader\Loader.vcxproj /p:Configuration=Debug /p:Platform=Win32
+msbuild FastCall\FastCall.vcxproj /p:Configuration=Debug /p:Platform=Win32
+msbuild Navigation\Navigation.vcxproj /p:Configuration=Debug /p:Platform=Win32
+```
+
+## Runtime requirements for injection
+
+`Loader.dll` resolves `hostfxr` through `nethost` for the bitness of the process it is loaded into,
+and `WoW.exe` is 32-bit. Injection therefore needs the **x86 .NET 9 Desktop Runtime** installed
+under `C:\Program Files (x86)\dotnet\` (`Microsoft.NETCore.App` and `Microsoft.WindowsDesktop.App`,
+9.0.x). A 64-bit-only .NET install builds the solution fine but cannot host inside `WoW.exe`.
+A self-contained x86 publish with `hostfxr.dll` beside `Loader.dll` is the fallback if you would
+rather not install a runtime.
+
+## Potential bugs in the original
+
+Where the original code looks like a real defect it is ported unchanged and tagged, so the two
+trees stay comparable:
+
+```bash
+grep -rn "POTENTIAL BUG FOUND" .
+```
+
+Each tag says what looks wrong, names the original `file:line`, and confirms the code was ported
+as-is. `PORT_STATUS.md` keeps the same list as a table.
+
+---
+
+## Original BloogBot README
+
+
 Join the [BloogBot Discord Server](https://discord.gg/YfNqMgfFBh) to chat with other folks hacking on BloogBot!
 
 BloogBot is an in-process bot for the Vanilla (v 1.12.1), Burning Crusade (v 2.4.3), and Wrath of the Lich King (v 3.3.5) clients.

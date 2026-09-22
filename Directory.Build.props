@@ -1,0 +1,58 @@
+<Project>
+
+  <!-- Managed projects only. The four native vcxproj files (Loader, FastCall, Navigation,
+       NavigationTests) import this file too, and none of the SDK properties below apply to them. -->
+  <PropertyGroup Condition="'$(MSBuildProjectExtension)'=='.csproj'">
+    <TargetFramework>net9.0-windows</TargetFramework>
+    <Platforms>x86</Platforms>
+    <PlatformTarget>x86</PlatformTarget>
+    <RuntimeIdentifier>win-x86</RuntimeIdentifier>
+    <SelfContained>false</SelfContained>
+    <LangVersion>latest</LangVersion>
+    <!-- deliberate: the original is C# 7.3 with no nullable annotations and explicit usings
+         in every file. Enabling either would mean rewriting 249 files and would make the
+         diff against BloogBot unreadable. See "Replication rules". -->
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+  </PropertyGroup>
+
+  <!-- Output paths mirror the .NET Framework tree, where every csproj wrote to ..\Bot\ in Debug
+       and ..\Bot\Release\ in Release, so the injected layout is unchanged. -->
+  <PropertyGroup Condition="'$(MSBuildProjectExtension)'=='.csproj'">
+    <OutputPath Condition="'$(Configuration)'=='Release'">..\Bot\Release\</OutputPath>
+    <OutputPath Condition="'$(Configuration)'!='Release'">..\Bot\</OutputPath>
+  </PropertyGroup>
+
+  <!-- Mirrors the same switch in the .NET Framework tree, where it lives in every csproj.
+       Local customizations on top of upstream BloogBot; set to false to build the tree as
+       upstream wrote it. Override per build with -p:UseCustomChanges=false -->
+  <PropertyGroup>
+    <UseCustomChanges Condition="'$(UseCustomChanges)'==''">true</UseCustomChanges>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(UseCustomChanges)'=='true' And '$(MSBuildProjectExtension)'=='.csproj'">
+    <DefineConstants>$(DefineConstants);USE_CUSTOM_CHANGES</DefineConstants>
+  </PropertyGroup>
+
+  <!-- Which UI shell is compiled in. Wpf is the default; Avalonia is the alternate.
+       Override per build with -p:Ui=Avalonia. Both shells must always build and must
+       always be at feature parity - see "The UI layer". -->
+  <PropertyGroup>
+    <Ui Condition="'$(Ui)'==''">Wpf</Ui>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Ui)'=='Wpf' And '$(MSBuildProjectExtension)'=='.csproj'">
+    <DefineConstants>$(DefineConstants);UI_WPF</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Ui)'=='Avalonia' And '$(MSBuildProjectExtension)'=='.csproj'">
+    <DefineConstants>$(DefineConstants);UI_AVALONIA</DefineConstants>
+  </PropertyGroup>
+  <Target Name="CheckUi" BeforeTargets="BeforeBuild" Condition="'$(MSBuildProjectExtension)'=='.csproj'">
+    <Error Condition="'$(Ui)'!='Wpf' And '$(Ui)'!='Avalonia'"
+           Text="Ui must be Wpf or Avalonia - got '$(Ui)'." />
+  </Target>
+
+</Project>

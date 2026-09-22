@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿// Ported from BloogBot/BloogBot/Game/XYZXYZ.cs (.NET Framework 4.8 -> .NET 9). Replica - do not redesign.
+using System.Runtime.InteropServices;
 
 namespace BloogBot.Game
 {

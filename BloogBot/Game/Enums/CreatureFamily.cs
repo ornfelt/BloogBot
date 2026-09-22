@@ -1,4 +1,5 @@
-﻿namespace BloogBot.Game.Enums
+﻿// Ported from BloogBot/BloogBot/Game/Enums/CreatureFamily.cs (.NET Framework 4.8 -> .NET 9). Replica - do not redesign.
+namespace BloogBot.Game.Enums
 {
     public enum CreatureFamily
     {

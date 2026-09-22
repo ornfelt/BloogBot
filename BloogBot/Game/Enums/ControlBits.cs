@@ -1,4 +1,5 @@
-﻿using System;
+﻿// Ported from BloogBot/BloogBot/Game/Enums/ControlBits.cs (.NET Framework 4.8 -> .NET 9). Replica - do not redesign.
+using System;
 
 namespace BloogBot.Game.Enums
 {

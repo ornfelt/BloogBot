@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿// Ported from BloogBot/BloogBot/BotSettings.cs (.NET Framework 4.8 -> .NET 9). Replica - do not redesign.
+using Newtonsoft.Json;
 using System.Collections.Generic;
 
 namespace BloogBot

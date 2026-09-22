@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- plain net9.0 on purpose: a WPF or Avalonia type leaking in here must not compile -->
+    <TargetFramework>net9.0</TargetFramework>
+    <OutputType>Library</OutputType>
+    <RootNamespace>BloogBot.UI.Abstractions</RootNamespace>
+    <AssemblyName>BloogBot.UI.Abstractions</AssemblyName>
+  </PropertyGroup>
+
+</Project>

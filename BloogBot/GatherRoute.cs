@@ -1,4 +1,5 @@
-﻿namespace BloogBot
+﻿// Ported from BloogBot/BloogBot/GatherRoute.cs (.NET Framework 4.8 -> .NET 9). Replica - do not redesign.
+namespace BloogBot
 {
     public class GatherRoute
     {

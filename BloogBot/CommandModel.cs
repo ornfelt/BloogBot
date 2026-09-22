@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿// Ported from BloogBot/BloogBot/CommandModel.cs (.NET Framework 4.8 -> .NET 9). Replica - do not redesign.
+using System.Collections.Generic;
 
 namespace BloogBot
 {

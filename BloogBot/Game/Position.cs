@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿// Ported from BloogBot/BloogBot/Game/Position.cs (.NET Framework 4.8 -> .NET 9). Replica - do not redesign.
+using Newtonsoft.Json;
 using System;
 #if USE_CUSTOM_CHANGES
 using System.Collections.Generic;

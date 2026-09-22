@@ -30,7 +30,6 @@
     <Compile Remove="$(MSBuildThisFileDirectory)BackstabRogueBot\Properties\AssemblyInfo.cs" />
     <Compile Remove="$(MSBuildThisFileDirectory)BalanceDruidBot\Properties\AssemblyInfo.cs" />
     <Compile Remove="$(MSBuildThisFileDirectory)BeastmasterHunterBot\Properties\AssemblyInfo.cs" />
-    <Compile Remove="$(MSBuildThisFileDirectory)BloogBotTests\NavigationTests.cs" />
     <Compile Remove="$(MSBuildThisFileDirectory)BloogBotTests\Properties\AssemblyInfo.cs" />
     <Compile Remove="$(MSBuildThisFileDirectory)BloogBot\Properties\AssemblyInfo.cs" />
     <Compile Remove="$(MSBuildThisFileDirectory)BloogBot\Properties\Resources.Designer.cs" />

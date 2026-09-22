@@ -1,24 +1,21 @@
-# BloogBot_net9 port status
+﻿# BloogBot_net9 port status
 
 Maintained by the `bloogbot-net9-port` skill. A hint for the next run, not the source of truth -
 the two trees are. Re-derive from this directory with the commands in the skill's "Orient"
 section.
 
-**Last run:** groups 13 and 14 - the last two. `Loader/dllmain.cpp` rewritten against
-`nethost` / `hostfxr`; `Loader.vcxproj` given the host-pack include and library paths and a
-post-build copy of `nethost.dll`; `BloogBot.csproj` given a `Ui`-conditional `FrameworkReference`
-on `Microsoft.WindowsDesktop.App.WPF` so the runtimeconfig hostfxr reads actually names the
-framework the WPF shell needs. `FastCall`, `Navigation` and `NavigationTests` needed no change at
-all and build as they are. `BloogBotTests/NavigationTests.cs` ported byte-identical apart from the
-header line, on MSTest 3.6.4 + Moq 4.18.3 + Castle.Core 5.1.0. Two new `POTENTIAL BUG FOUND` tags,
-both in `dllmain.cpp`. All four managed configurations green; all four `.vcxproj` files build
-Win32/Debug, and `Loader` also builds Win32/Release and with `UseCustomChanges=false`.
+**Last run:** verification pass over the finished port. Re-derived the state from both trees:
+every source file outside "Not ported" has a counterpart, no `TODO: port body here` marker is left,
+and 18 `POTENTIAL BUG FOUND` tags are in place. Found and fixed one stale entry in
+`UnportedOriginals.targets`: `BloogBotTests/NavigationTests.cs` was ported in place by the previous
+run but was still listed as an unported original, so the only test in the tree was being excluded
+from compilation. The exclusion list now matches its own stated rule exactly (27 entries, all of
+them files listed under "Not ported" or originals whose port lives in another project). All four
+managed configurations green, with `NavigationTests.cs` confirmed as a compile input.
 
-**Next:** nothing. Every source file outside "Not ported" has a counterpart, no
-`TODO: port body here` marker is left anywhere, and all four configurations are green. The port is
-feature-complete. The remaining work is not porting: `review` over the tree, and a real injection
-test against a WoW client - which this skill never runs.
-Still open: deleting the unported originals so the scaffolding can go away.
+**Next:** nothing to port. The port is feature-complete. The remaining work is not porting:
+`review` over the tree, and a real injection test against a WoW client - which this skill never
+runs. Still open: deleting the unported originals so the scaffolding can go away.
 
 ## Blocked - read this first
 
@@ -362,3 +359,4 @@ theme files.
 | group 11 part 1 - the first six bot plugins | 40 files | ~2970 | green | green | green | green |
 | group 11 finished - the remaining eleven bot plugins | 68 files | ~5040 | green | green | green | green |
 | groups 13 + 14 - `Loader/dllmain.cpp` on hostfxr, `Loader.vcxproj`, `BloogBotTests` | 2 ported (1 native, 1 managed), 3 project files touched | ~280 | green | green | green | green |
+| verification pass - stale `UnportedOriginals.targets` entry removed | 1 project file | - | green | green | green | green |

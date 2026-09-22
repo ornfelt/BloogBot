@@ -1,4 +1,5 @@
-﻿#if USE_CUSTOM_CHANGES
+﻿// Ported from BloogBot/BloogBot/AI/SharedStates/ArenaSkirmishQueueState.cs (.NET Framework 4.8 -> .NET 9). Replica - do not redesign.
+#if USE_CUSTOM_CHANGES
 using BloogBot.Game;
 using BloogBot.Game.Objects;
 using System;

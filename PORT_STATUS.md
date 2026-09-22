@@ -4,13 +4,11 @@ Maintained by the `bloogbot-net9-port` skill. A hint for the next run, not the s
 the two trees are. Re-derive from this directory with the commands in the skill's "Orient"
 section.
 
-**Last run:** group 5 - the whole data layer (5 files), plus the group 6 AI root types
-(`IBot`, `IDependencyContainer`, `PlayerTracker`, `StuckHelper`, `DependencyContainer`) and the
-three shared states they reach for (`TravelState`, `MoveToPositionState`, `StuckState`). All four
-configurations green.
-**Next:** group 6 - `AI/Bot.cs` (1,046 lines, 23 USE_CUSTOM_CHANGES sites) and the remaining 25
-files in `AI/SharedStates/`. Still open: the Fasm.NET decision for `MemoryManager.cs`, and deleting
-the unported originals so the scaffolding can go away.
+**Last run:** group 6 - the remaining 21 files in `AI/SharedStates/` (~2,990 lines, 26
+USE_CUSTOM_CHANGES sites). All four configurations green.
+**Next:** group 6 - `AI/Bot.cs` (1,046 lines, 23 USE_CUSTOM_CHANGES sites), which finishes the
+group. Still open: the Fasm.NET decision for `MemoryManager.cs`, and deleting the unported
+originals so the scaffolding can go away.
 
 ## Blocked - read this first
 
@@ -82,9 +80,10 @@ what the skill's Orient pipeline compares against.
   - `AI/IBotState.cs` ported early: `Navigation.cs` has `using BloogBot.AI;` and the namespace had
     to exist for the solution to build
   - done: `IBot`, `IDependencyContainer`, `PlayerTracker`, `StuckHelper`, `DependencyContainer`,
-    and 3 of the 28 shared states - `TravelState` and `MoveToPositionState` (pushed by
-    `DependencyContainer.CheckForTravelPath`) and `StuckState` (pushed by `StuckHelper`)
-  - left: `AI/Bot.cs` and the other 25 `AI/SharedStates/` files
+    and all 28 `AI/SharedStates/` files
+  - left: `AI/Bot.cs` only. It needs the same `Enumerable.Reverse` change as
+    `DependencyContainer.cs` (its `AI/Bot.cs:193`) and carries the same `typeof(MainViewModel)`
+    substitution as `GrindState.cs` - see "Deviations from the original"
 - [ ] 7. Bot loading and services - BotLoader, DiscordClientWrapper, Loader (hostfxr entry)
   - `DiscordClientWrapper.cs` ported early: `ObjectManager.cs` calls `KillswitchAlert`
 - [ ] 8. UI abstractions and viewmodels - BloogBot.UI.Abstractions, BloogBot.UI.Core
@@ -107,6 +106,7 @@ what the skill's Orient pipeline compares against.
 | `BloogBot/Repository.cs` | 109 | `AddHotspot` computes `encodedZone` / `encodedDescription` / `encodedFaction` and then passes the raw values on, so an apostrophe in any of the three produces malformed SQL; `AddNpc` does pass its encoded values | `BloogBot/Repository.cs:103-108` |
 | `BloogBot/AI/DependencyContainer.cs` | 77, 127 | `FindThreat`: `&&` binds tighter than `||`, so the blacklist check guards only the pet-target clause - a blacklisted mob targeting the player is still returned as a threat (both `#if` branches) | `BloogBot/AI/DependencyContainer.cs:75-77`, `:117-119` |
 | `BloogBot/AI/DependencyContainer.cs` | 191, 277 | `FindClosestTarget`: `TargetingIncludedNames` is a string, so `.Any(n => u.Name.Contains(n))` enumerates its *characters* - any elite whose name shares one character with the setting bypasses the elite filter (both `#if` branches) | `BloogBot/AI/DependencyContainer.cs:174`, `:253` |
+| `BloogBot/AI/SharedStates/CombatStateBase.cs` | 77 | the `DeathsAtWp > 2` block dereferences a `FirstOrDefault()` that can be null, and `Int32.Parse` on an empty `Links` string throws; either throws out of `Update()` on the bot's main loop | `BloogBot/AI/SharedStates/CombatStateBase.cs:70` |
 
 ## Deviations from the original
 
@@ -123,6 +123,8 @@ Every place the port had to differ, and why. One line each.
 | `BloogBot/AI/DependencyContainer.cs` | `travelPath.Waypoints.Reverse().ToArray()` -> `Enumerable.Reverse(travelPath.Waypoints).ToArray()` | on .NET 9 `Position[].Reverse()` binds to `MemoryExtensions.Reverse(Span<T>)`, which reverses in place and returns `void` (CS0023). The explicit `Enumerable` call keeps the .NET Framework meaning - a new reversed sequence, source untouched. `AI/Bot.cs:193` has the same call and will need the same change |
 | `BloogBot/TSqlRepository.cs` (runtime note, no code change) | `SqlConnection` / `SqlCommand` compile with warning CS0618 (`System.Data.SqlClient` is deprecated in favour of `Microsoft.Data.SqlClient`) | kept on `System.Data.SqlClient` so `SqlRepository.cs` and `TSqlRepository.cs` stay byte-identical to the original, as the skill's API map prescribes |
 | `BloogBot/DiscordClientWrapper.cs` (runtime note, no code change) | `ServicePointManager.SecurityProtocol = Tls12` compiles with warning SYSLIB0014 and no longer has any effect: on .NET 9 `ServicePointManager` settings do not reach `HttpClient`, which is what Discord.Net 3.x uses | ported as-is; TLS 1.2+ is the platform default on .NET 9, so the line being inert does not change behavior |
+| `BloogBot/AI/SharedStates/CombatStateBase.cs` | `using BloogBot.Properties;` dropped (it was unused) | `Properties/Resources.resx` and `Properties/Settings.settings` are not carried across, so the generated `BloogBot.Properties` namespace does not exist |
+| `BloogBot/AI/SharedStates/GrindState.cs` | `using BloogBot.UI;` dropped and `LogToFile`'s `Assembly.GetAssembly(typeof(MainViewModel))` -> `typeof(GrindState)` | `MainViewModel` moves to `BloogBot.UI.Core` and is not ported yet (group 8). Both assemblies build into the same `..\Bot\` folder, so `VisitedWanderNodes.txt` resolves to the same path. Restore the `MainViewModel` spelling once group 8 lands - `AI/Bot.cs` has the same two sites |
 
 ## NuGet packages
 
@@ -173,3 +175,4 @@ Dropped as in-box on .NET 9 or unreferenced by any source file: `System.Memory`,
 | group 3 (+ MemoryAddresses, ItemCacheInfo) | 12 files | ~2260 | red - unported originals still in tree; scratch compile of the 43 ported `BloogBot` files: only error is `Navigation.cs` `using BloogBot.AI;` (namespace arrives with group 6) | not run | scratch compile, no custom: same single error | not run |
 | group 4 (+ IBotState, DiscordClientWrapper) | 27 files | ~4255 | green | green | green | green |
 | group 5 + AI root (+ TravelState, MoveToPositionState, StuckState) | 14 files | ~2200 | green | green | green | green |
+| group 6 - the remaining 21 `AI/SharedStates/` files | 21 files | ~2990 | green | green | green | green |

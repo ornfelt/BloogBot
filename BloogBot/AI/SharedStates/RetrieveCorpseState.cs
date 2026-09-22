@@ -1,4 +1,5 @@
-﻿using BloogBot.Game;
+﻿// Ported from BloogBot/BloogBot/AI/SharedStates/RetrieveCorpseState.cs (.NET Framework 4.8 -> .NET 9). Replica - do not redesign.
+using BloogBot.Game;
 using BloogBot.Game.Enums;
 using BloogBot.Game.Objects;
 using System;

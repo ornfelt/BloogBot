@@ -1,4 +1,5 @@
-﻿using BloogBot.Game;
+﻿// Ported from BloogBot/BloogBot/AI/SharedStates/GrindState.cs (.NET Framework 4.8 -> .NET 9). Replica - do not redesign.
+using BloogBot.Game;
 using BloogBot.Game.Objects;
 using System;
 using System.Collections.Generic;
@@ -6,7 +7,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.IO;
 using System.Reflection;
-using BloogBot.UI;
+// 'using BloogBot.UI;' dropped for now: MainViewModel moves to the BloogBot.UI.Core project
+// and has not been ported yet (porting order group 8). See the LogToFile comment below.
 #endif
 
 namespace BloogBot.AI.SharedStates
@@ -395,7 +397,11 @@ namespace BloogBot.AI.SharedStates
 
         void LogToFile(string text)
         {
-            var dir = Path.GetDirectoryName(Assembly.GetAssembly(typeof(MainViewModel)).CodeBase);
+            // Original: Assembly.GetAssembly(typeof(MainViewModel)) - MainViewModel now lives in
+            // BloogBot.UI.Core and is not ported yet, so the same assembly directory is taken from a
+            // type in this assembly instead. Both land in the same output folder, so the file path is
+            // unchanged. Restore the MainViewModel spelling once BloogBot.UI.Core is ported.
+            var dir = Path.GetDirectoryName(Assembly.GetAssembly(typeof(GrindState)).CodeBase);
             var path = new UriBuilder(dir).Path;
             var file = Path.Combine(path, "VisitedWanderNodes.txt");
             string altFileName = "C:\\local\\VisitedWanderNodes.txt";

@@ -1,4 +1,5 @@
-﻿using BloogBot.Game;
+﻿// Ported from BloogBot/BloogBot/AI/SharedStates/BuyItemsState.cs (.NET Framework 4.8 -> .NET 9). Replica - do not redesign.
+using BloogBot.Game;
 using BloogBot.Game.Enums;
 using BloogBot.Game.Frames;
 using BloogBot.Game.Objects;

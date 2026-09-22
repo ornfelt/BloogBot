@@ -1,4 +1,5 @@
-﻿using BloogBot.Game;
+﻿// Ported from BloogBot/BloogBot/AI/SharedStates/ReleaseCorpseState.cs (.NET Framework 4.8 -> .NET 9). Replica - do not redesign.
+using BloogBot.Game;
 using System;
 using System.Collections.Generic;
 using System.Linq;

@@ -1,7 +1,10 @@
-﻿using BloogBot.Game;
+﻿// Ported from BloogBot/BloogBot/AI/SharedStates/CombatStateBase.cs (.NET Framework 4.8 -> .NET 9). Replica - do not redesign.
+using BloogBot.Game;
 using BloogBot.Game.Enums;
 using BloogBot.Game.Objects;
-using BloogBot.Properties;
+// 'using BloogBot.Properties;' dropped: Properties/Resources.resx and Properties/Settings.settings
+// are not carried across to the SDK-style project (nothing in the tree reads them), so the
+// generated BloogBot.Properties namespace does not exist. Nothing in this file used it.
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -67,6 +70,13 @@ namespace BloogBot.AI.SharedStates
             {
                 // Select new waypoint based on links
                 var hotspot = container.GetCurrentHotspot();
+                // POTENTIAL BUG FOUND: FirstOrDefault can return null when player.CurrWpId is not in the
+                //   current hotspot's waypoints, and waypoint.Links is dereferenced on the next line;
+                //   likewise an empty Links string makes Int32.Parse(linkSplit[randLink]) throw a
+                //   FormatException, and linkWp can be null at the Console.WriteLine below. Any of the
+                //   three throws out of Update() on the bot's main loop.
+                //   Original: BloogBot/BloogBot/AI/SharedStates/CombatStateBase.cs:70
+                //   Ported as-is - behavior matches .NET Framework BloogBot.
                 var waypoint = hotspot.Waypoints.Where(x => x.ID == player.CurrWpId).FirstOrDefault();
                 string wpLinks = waypoint.Links.Replace(":0", "");
                 if (wpLinks.EndsWith(" "))

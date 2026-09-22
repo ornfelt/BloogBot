@@ -1,4 +1,5 @@
-﻿// Friday owns this file!
+﻿// Ported from BloogBot/BeastmasterHunterBot/PowerlevelCombatState.cs (.NET Framework 4.8 -> .NET 9). Replica - do not redesign.
+// Friday owns this file!
 
 using BloogBot.AI;
 using BloogBot.Game.Objects;

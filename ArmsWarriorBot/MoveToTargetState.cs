@@ -1,4 +1,5 @@
-﻿using BloogBot;
+﻿// Ported from BloogBot/ArmsWarriorBot/MoveToTargetState.cs (.NET Framework 4.8 -> .NET 9). Replica - do not redesign.
+using BloogBot;
 using BloogBot.AI;
 using BloogBot.AI.SharedStates;
 using BloogBot.Game;

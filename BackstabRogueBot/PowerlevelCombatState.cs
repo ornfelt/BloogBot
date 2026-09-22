@@ -1,4 +1,5 @@
-﻿// Nat owns this file!
+﻿// Ported from BloogBot/BackstabRogueBot/PowerlevelCombatState.cs (.NET Framework 4.8 -> .NET 9). Replica - do not redesign.
+// Nat owns this file!
 
 using BloogBot.AI;
 using BloogBot.Game.Objects;

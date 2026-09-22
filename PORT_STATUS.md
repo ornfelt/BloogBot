@@ -4,14 +4,17 @@ Maintained by the `bloogbot-net9-port` skill. A hint for the next run, not the s
 the two trees are. Re-derive from this directory with the commands in the skill's "Orient"
 section.
 
-**Last run:** groups 9 and 10 finished - the whole UI layer. `MainWindow.xaml`'s last four
-tabs (NPCs, Hotspots, Powerlevel, Gathering) landed verbatim in the WPF shell, and the whole
-Avalonia shell followed: `App.axaml(.cs)`, `MainWindow.axaml(.cs)`, `Themes/Dark.axaml` +
-`Themes/Light.axaml` + `Themes/Controls.axaml`, and `AvaloniaThemeService`. Both parity diffs
-clean, all 15 theme keys identical across the four theme files, all four configurations green.
-**Next:** group 11 - the 17 bot plugins. Mechanical: one `.csproj` each plus a straight copy of
-the 6-10 sources, with `System.ComponentModel.Composition` for the `[Export(typeof(IBot))]`
-attributes. Several per run.
+**Last run:** group 11, first six plugins - `AfflictionWarlockBot`, `ArcaneMageBot`,
+`ArmsWarriorBot`, `BackstabRogueBot`, `BalanceDruidBot`, `BeastmasterHunterBot`. 40 files, all
+byte-identical to the original apart from the header line and one `POTENTIAL BUG FOUND` tag in
+`BeastMasterHunterBot.cs`. No `.csproj` change was needed: the 17 plugin projects were scaffolded
+in the setup run and `System.ComponentModel.Composition` flows transitively from `BloogBot`. All
+four configurations green.
+**Next:** group 11, the remaining eleven plugins - `CombatRogueBot`, `ElementalShamanBot`,
+`EnhancementShamanBot`, `FeralDruidBot`, `FrostMageBot`, `FuryWarriorBot`, `ProtectionPaladinBot`,
+`ProtectionWarriorBot`, `RetributionPaladinBot`, `ShadowPriestBot`, `TestBot.cs` (~5,000 lines).
+Same mechanical shape: prepend the header line to each `.cs`, drop its rows from
+`UnportedOriginals.targets`, build.
 Still open: deleting the unported originals so the scaffolding can go away.
 
 ## Blocked - read this first
@@ -164,6 +167,13 @@ what the skill's Orient pipeline compares against.
     `StringFormat`, `{Binding Path=.}`, star column widths, `SizeToContent` and `Separator`
     all carry over as written
 - [ ] 11. The 17 bot plugins
+  - done: `AfflictionWarlockBot` (7), `ArcaneMageBot` (7), `ArmsWarriorBot` (5),
+    `BackstabRogueBot` (5), `BalanceDruidBot` (7), `BeastmasterHunterBot` (9, including the empty
+    `Class1.cs` leftover, ported as the header line alone). None of the six carries a
+    `USE_CUSTOM_CHANGES` site
+  - left: `CombatRogueBot`, `ElementalShamanBot`, `EnhancementShamanBot`, `FeralDruidBot`,
+    `FrostMageBot`, `FuryWarriorBot`, `ProtectionPaladinBot`, `ProtectionWarriorBot`,
+    `RetributionPaladinBot`, `ShadowPriestBot`, `TestBot.cs`
 - [x] 12. Bootstrapper - ported out of order in the setup run: it depends on nothing in BloogBot, and an `Exe` project with no `Main` would have kept the solution red
 - [ ] 13. Native - Loader/dllmain.cpp on hostfxr, FastCall/Navigation build config
 - [ ] 14. Tests - BloogBotTests on MSTest 3.x
@@ -173,7 +183,7 @@ what the skill's Orient pipeline compares against.
 Every row here has a matching `POTENTIAL BUG FOUND` comment in the port, and the line column is
 the port's line. Cross-check with
 `grep -rn 'POTENTIAL BUG FOUND' . --include='*.cs' --include='*.xaml' --include='*.axaml' --include='*.cpp'`;
-the fifteen tags map onto these thirteen rows, `DependencyContainer.cs` contributing two tags to
+the sixteen tags map onto these fourteen rows, `DependencyContainer.cs` contributing two tags to
 each of its two rows because both `#if USE_CUSTOM_CHANGES` branches carry one.
 
 | File (port) | Line | What looks wrong | Original |
@@ -187,6 +197,7 @@ each of its two rows because both `#if USE_CUSTOM_CHANGES` branches carry one.
 | `BloogBot/AI/DependencyContainer.cs` | 77, 127 | `FindThreat`: `&&` binds tighter than `||`, so the blacklist check guards only the pet-target clause - a blacklisted mob targeting the player is still returned as a threat (both `#if` branches) | `BloogBot/AI/DependencyContainer.cs:75-77`, `:117-119` |
 | `BloogBot/AI/DependencyContainer.cs` | 191, 277 | `FindClosestTarget`: `TargetingIncludedNames` is a string, so `.Any(n => u.Name.Contains(n))` enumerates its *characters* - any elite whose name shares one character with the setting bypasses the elite filter (both `#if` branches) | `BloogBot/AI/DependencyContainer.cs:174`, `:253` |
 | `BloogBot/BotLoader.cs` | 42 | `botPaths` spells the assembly `BeastMasterHunterBot.dll` but the project builds `BeastmasterHunterBot.dll`, so `File.ReadAllBytes` throws on a case-sensitive volume | `BloogBot/BotLoader.cs:40` |
+| `BeastmasterHunterBot/BeastMasterHunterBot.cs` | 19 | `FileName` returns the same misspelled `BeastMasterHunterBot.dll`; the `!info` command feeds it to `AssemblyName.GetAssemblyName`, which throws on a case-sensitive volume. The declaration site of the name `BotLoader.cs:40` repeats | `BloogBot/BeastmasterHunterBot/BeastMasterHunterBot.cs:18` |
 | `BloogBot/AI/SharedStates/CombatStateBase.cs` | 73 | the `DeathsAtWp > 2` block dereferences a `FirstOrDefault()` that can be null, and `Int32.Parse` on an empty `Links` string throws; either throws out of `Update()` on the bot's main loop | `BloogBot/AI/SharedStates/CombatStateBase.cs:70` |
 | `BloogBot.UI.Core/MainViewModel.cs` | 1759 | the `continue` in `InitializeCommandHandler` skips the loop's `await Task.Delay(250)`, so the login path spins with no delay at all | `BloogBot/UI/MainViewModel.cs:1737` |
 | `BloogBot.UI.Core/MainViewModel.cs` | 1831 | `!status` dereferences `GrindingHotspot` behind `CurrentBot.Running()`, but Travel, Powerlevel and Gathering all run with it null | `BloogBot/UI/MainViewModel.cs:1804` |
@@ -295,7 +306,7 @@ theme files.
 | NPCs | [x] | [x] |
 | Hotspots | [x] | [x] |
 | Powerlevel | [x] | [x] |
-| Gathering | [ ] | [ ] |
+| Gathering | [x] | [x] |
 
 ## Run log
 
@@ -311,3 +322,4 @@ theme files.
 | group 8 finished - `UI/MainViewModel.cs`, `UI/BotService.cs`, `UiTheme`, `IThemeService` | 4 files (2 ported, 2 new) | ~2015 | green | green | green | green |
 | group 9 part 1 - WPF shell scaffolding, themes, and MainWindow's first three tabs | 7 files (4 ported, 3 new) | ~1750 | green | green | green | green |
 | group 9 finished (MainWindow's last four tabs) + group 10 - the whole Avalonia shell | 7 files (1 extended, 3 ported, 4 new) | ~2400 | green | green | green | green |
+| group 11 part 1 - the first six bot plugins | 40 files | ~2970 | green | green | green | green |

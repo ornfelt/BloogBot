@@ -1,4 +1,5 @@
-﻿// Friday owns this file!
+﻿// Ported from BloogBot/BeastmasterHunterBot/RestState.cs (.NET Framework 4.8 -> .NET 9). Replica - do not redesign.
+// Friday owns this file!
 
 using BloogBot;
 using BloogBot.AI;

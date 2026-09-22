@@ -1,4 +1,5 @@
-﻿// Friday owns this file!
+﻿// Ported from BloogBot/BeastmasterHunterBot/BeastMasterHunterBot.cs (.NET Framework 4.8 -> .NET 9). Replica - do not redesign.
+// Friday owns this file!
 
 using BeastmasterHunterBot;
 using BloogBot;
@@ -15,6 +16,14 @@ namespace BeastMasterHunterBot
     {
         public string Name => "Beast Master Hunter";
 
+        // POTENTIAL BUG FOUND: FileName spells the assembly 'BeastMasterHunterBot.dll' but the
+        //   project builds 'BeastmasterHunterBot.dll' (lowercase 'm'), so the !info command's
+        //   AssemblyName.GetAssemblyName($"{path}\\{CurrentBot.FileName}") throws
+        //   FileNotFoundException on a case-sensitive volume. Same mismatch as the
+        //   BeastMasterHunterBot.dll entry in BloogBot/BotLoader.cs:40; it only works today
+        //   because NTFS is case-insensitive.
+        //   Original: BloogBot/BeastmasterHunterBot/BeastMasterHunterBot.cs:18
+        //   Ported as-is - behavior matches .NET Framework BloogBot.
         public string FileName => "BeastMasterHunterBot.dll";
 
         bool AdditionalTargetingCriteria(WoWUnit unit) => true;

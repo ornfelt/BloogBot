@@ -17,7 +17,13 @@ namespace BloogBot.UI.Wpf
 
         public void Apply(UiTheme theme)
         {
-            var uri = new Uri("Themes/" + (theme == UiTheme.Light ? "Light" : "Dark") + ".xaml", UriKind.Relative);
+            // An absolute pack URI naming the assembly, not a relative one. hostfxr loads
+            // BloogBot.dll as a component rather than as an entry-point app, so
+            // Assembly.GetEntryAssembly() is null - and the single-argument
+            // Application.LoadComponent resolves a relative URI against it, throwing
+            // "Assembly.GetEntryAssembly() returns null". Naming the assembly sidesteps it.
+            var uri = new Uri("pack://application:,,,/BloogBot.UI.Wpf;component/Themes/"
+                + (theme == UiTheme.Light ? "Light" : "Dark") + ".xaml", UriKind.Absolute);
             var dictionary = (ResourceDictionary)Application.LoadComponent(uri);
 
             var merged = Application.Current.Resources.MergedDictionaries;

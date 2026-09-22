@@ -13,6 +13,14 @@ namespace BloogBot.UI.Wpf
         [STAThread]
         public static void Main()
         {
+            // Added by the .NET 9 port. hostfxr loads BloogBot.dll as a component, not as an
+            // entry-point application, so Assembly.GetEntryAssembly() is null for the whole life
+            // of the process. WPF resolves relative pack URIs against it - App.xaml's own
+            // MergedDictionaries Source among them - so without this, resource lookups throw
+            // "Assembly.GetEntryAssembly() returns null". Under .NET Framework BloogBot was a
+            // WinExe and the question never came up.
+            ResourceAssembly = typeof(App).Assembly;
+
             var app = new App();
             app.InitializeComponent();
             app.Run();

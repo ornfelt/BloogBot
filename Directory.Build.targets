@@ -1,0 +1,8 @@
+<Project>
+
+  <!-- TEMPORARY PORT SCAFFOLDING - see UnportedOriginals.targets for why this exists and when it
+       goes away. -->
+  <Import Project="$(MSBuildThisFileDirectory)UnportedOriginals.targets"
+          Condition="Exists('$(MSBuildThisFileDirectory)UnportedOriginals.targets')" />
+
+</Project>

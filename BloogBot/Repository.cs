@@ -1,4 +1,5 @@
-﻿using BloogBot.Game;
+﻿// Ported from BloogBot/BloogBot/Repository.cs (.NET Framework 4.8 -> .NET 9). Replica - do not redesign.
+using BloogBot.Game;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -105,6 +106,13 @@ namespace BloogBot
             var encodedFaction = Encode(faction);
 
             var waypointsJson = JsonConvert.SerializeObject(waypoints);
+            // POTENTIAL BUG FOUND: encodedZone, encodedDescription and encodedFaction are computed
+            //   just above and then never used - the raw zone/description/faction are passed on
+            //   instead. Both repositories build the INSERT by string interpolation, so a zone or
+            //   description containing an apostrophe produces malformed SQL and the insert throws.
+            //   AddNpc, three methods up, does pass its encoded values.
+            //   Original: BloogBot/Repository.cs:103-108
+            //   Ported as-is - behavior matches .NET Framework BloogBot.
             return databaseWrapper.AddHotspot(description, zone, faction, waypointsJson, innkeeper, repairVendor, ammoVendor, minLevel, travelPath, safeForGrinding, waypoints);
         }
 

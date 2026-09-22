@@ -1,4 +1,5 @@
-﻿using BloogBot.Game.Frames;
+﻿// Ported from BloogBot/BloogBot/Game/WoWEventHandler.cs (.NET Framework 4.8 -> .NET 9). Replica - do not redesign.
+using BloogBot.Game.Frames;
 using System;
 
 namespace BloogBot.Game

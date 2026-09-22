@@ -1,4 +1,5 @@
-﻿using BloogBot.Game.Enums;
+﻿// Ported from BloogBot/BloogBot/Game/Objects/WoWObject.cs (.NET Framework 4.8 -> .NET 9). Replica - do not redesign.
+using BloogBot.Game.Enums;
 using System;
 using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
@@ -224,6 +225,12 @@ namespace BloogBot.Game.Objects
                     var ptr = getNameFunction(Pointer);
 
 #if USE_CUSTOM_CHANGES
+                    // POTENTIAL BUG FOUND: ptr is an IntPtr, so 'ptr == null' lifts both sides to
+                    //   IntPtr? and is always false - the compiler says so (CS0472). The branch is
+                    //   dead, and were it ever taken it would ReadString through a null pointer.
+                    //   The guard below, 'if (ptr != IntPtr.Zero)', is presumably what was meant.
+                    //   Original: BloogBot/Game/Objects/WoWObject.cs:227
+                    //   Ported as-is - behavior matches .NET Framework BloogBot.
                     if (ptr == null)
                         return MemoryManager.ReadString(ptr);
 #endif

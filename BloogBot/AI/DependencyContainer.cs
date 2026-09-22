@@ -1,4 +1,5 @@
-﻿using BloogBot.AI.SharedStates;
+﻿// Ported from BloogBot/BloogBot/AI/DependencyContainer.cs (.NET Framework 4.8 -> .NET 9). Replica - do not redesign.
+using BloogBot.AI.SharedStates;
 using BloogBot.Game;
 using BloogBot.Game.Enums;
 using BloogBot.Game.Objects;
@@ -73,6 +74,14 @@ namespace BloogBot.AI
                     (botFriend != null && u.Name != botFriendName && u.TargetGuid == botFriend.Guid 
                     && u.Guid != botFriend.Guid) || // Required to help npcbots
                     u.TargetGuid == player.Guid ||
+                    // POTENTIAL BUG FOUND: && binds tighter than ||, so this reads
+                    //   (targets me) || (targets my pet && not blacklisted). The blacklist check
+                    //   therefore never applies to the first clause, and a blacklisted mob that is
+                    //   targeting the player is still returned as a threat - which is the case the
+                    //   blacklist exists for.
+                    //   Original: BloogBot/AI/DependencyContainer.cs:75-77 (and :117-119 in the
+                    //   #else branch)
+                    //   Ported as-is - behavior matches .NET Framework BloogBot.
                     u.TargetGuid == ObjectManager.Pet?.Guid &&
                     !Probe.BlacklistedMobIds.Contains(u.Guid));
 
@@ -115,6 +124,14 @@ namespace BloogBot.AI
             var potentialThreats = ObjectManager.Units
                 .Where(u =>
                     u.TargetGuid == ObjectManager.Player.Guid ||
+                    // POTENTIAL BUG FOUND: && binds tighter than ||, so this reads
+                    //   (targets me) || (targets my pet && not blacklisted). The blacklist check
+                    //   therefore never applies to the first clause, and a blacklisted mob that is
+                    //   targeting the player is still returned as a threat - which is the case the
+                    //   blacklist exists for.
+                    //   Original: BloogBot/AI/DependencyContainer.cs:75-77 (and :117-119 in the
+                    //   #else branch)
+                    //   Ported as-is - behavior matches .NET Framework BloogBot.
                     u.TargetGuid == ObjectManager.Pet?.Guid &&
                     !Probe.BlacklistedMobIds.Contains(u.Guid));
 
@@ -171,6 +188,13 @@ namespace BloogBot.AI
                 // only consider units that have not been blacklisted
                 .Where(u => !Probe?.BlacklistedMobIds?.Contains(u.Guid) ?? true)
                 // exclude elites, unless their names have been explicitly included in the targeting settings
+                // POTENTIAL BUG FOUND: TargetingIncludedNames is a string, so Any() enumerates its
+                //   characters and n is a char - the test is 'does this unit's name contain any one
+                //   character of the included-names setting', not 'is this unit's name in the list'.
+                //   With a setting like 'Kobold Vermin' every elite whose name contains an 'o' is
+                //   let through. The next Where() does the split on '|' correctly.
+                //   Original: BloogBot/AI/DependencyContainer.cs:174 (and :253 in the #else branch)
+                //   Ported as-is - behavior matches .NET Framework BloogBot.
                 .Where(u => u.CreatureRank == CreatureRank.Normal || BotSettings.TargetingIncludedNames.Any(n => u.Name != null && u.Name.Contains(n)))
                 // if included targets are specified, only consider units part of that list
                 .Where(u => string.IsNullOrWhiteSpace(BotSettings.TargetingIncludedNames) || BotSettings.TargetingIncludedNames.Split('|').Any(m => u.Name != null && u.Name.Contains(m)))
@@ -250,6 +274,13 @@ namespace BloogBot.AI
                 // only consider units that have not been blacklisted
                 .Where(u => !Probe?.BlacklistedMobIds?.Contains(u.Guid) ?? true)
                 // exclude elites, unless their names have been explicitly included in the targeting settings
+                // POTENTIAL BUG FOUND: TargetingIncludedNames is a string, so Any() enumerates its
+                //   characters and n is a char - the test is 'does this unit's name contain any one
+                //   character of the included-names setting', not 'is this unit's name in the list'.
+                //   With a setting like 'Kobold Vermin' every elite whose name contains an 'o' is
+                //   let through. The next Where() does the split on '|' correctly.
+                //   Original: BloogBot/AI/DependencyContainer.cs:174 (and :253 in the #else branch)
+                //   Ported as-is - behavior matches .NET Framework BloogBot.
                 .Where(u => u.CreatureRank == CreatureRank.Normal || BotSettings.TargetingIncludedNames.Any(n => u.Name != null && u.Name.Contains(n)))
                 // if included targets are specified, only consider units part of that list
                 .Where(u => string.IsNullOrWhiteSpace(BotSettings.TargetingIncludedNames) || BotSettings.TargetingIncludedNames.Split('|').Any(m => u.Name != null && u.Name.Contains(m)))
@@ -317,7 +348,10 @@ namespace BloogBot.AI
             {
                 Position[] waypoints;
                 if (reverse)
-                    waypoints = travelPath.Waypoints.Reverse().ToArray();
+                    // .NET 9: Position[].Reverse() now binds to MemoryExtensions.Reverse(Span<T>),
+                    //   which reverses in place and returns void. Called through Enumerable so it
+                    //   keeps the .NET Framework meaning: a new reversed sequence, source untouched.
+                    waypoints = Enumerable.Reverse(travelPath.Waypoints).ToArray();
                 else
                     waypoints = travelPath.Waypoints;
 

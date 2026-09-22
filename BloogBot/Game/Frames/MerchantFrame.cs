@@ -1,4 +1,5 @@
-﻿using BloogBot.Game.Cache;
+﻿// Ported from BloogBot/BloogBot/Game/Frames/MerchantFrame.cs (.NET Framework 4.8 -> .NET 9). Replica - do not redesign.
+using BloogBot.Game.Cache;
 using System;
 using System.Collections.Generic;
 using System.Linq;

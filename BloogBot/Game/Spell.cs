@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿// Ported from BloogBot/BloogBot/Game/Spell.cs (.NET Framework 4.8 -> .NET 9). Replica - do not redesign.
+using System.Text;
 
 namespace BloogBot.Game
 {

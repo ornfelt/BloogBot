@@ -1,4 +1,5 @@
-﻿using System;
+﻿// Ported from BloogBot/BloogBot/Game/WowDb.cs (.NET Framework 4.8 -> .NET 9). Replica - do not redesign.
+using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
@@ -38,6 +39,12 @@ namespace BloogBot.Game
             // For all DBs, we should use GetRow, except for Spells.db, which should use GetLocalizedRow
             public IntPtr GetLocalizedRow(int index)
             {
+                // POTENTIAL BUG FOUND: the 4 KiB AllocHGlobal block is returned to callers that
+                //   never free it, so every Spells.db lookup leaks 4096 bytes of unmanaged memory
+                //   for the lifetime of the process. 'result' is also assigned and never read, so
+                //   a failed GetLocalizedRow returns a buffer of uninitialized memory.
+                //   Original: BloogBot/Game/WowDb.cs:40
+                //   Ported as-is - behavior matches .NET Framework BloogBot.
                 var rowPtr = Marshal.AllocHGlobal(4 * 4 * 256);
                 var result = Functions.GetLocalizedRow(IntPtr.Subtract(pointer, 0x18), index, rowPtr);
                 return rowPtr;

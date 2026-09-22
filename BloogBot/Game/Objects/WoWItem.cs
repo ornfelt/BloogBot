@@ -1,4 +1,5 @@
-﻿using BloogBot.Game.Cache;
+﻿// Ported from BloogBot/BloogBot/Game/Objects/WoWItem.cs (.NET Framework 4.8 -> .NET 9). Replica - do not redesign.
+using BloogBot.Game.Cache;
 using BloogBot.Game.Enums;
 using System;
 

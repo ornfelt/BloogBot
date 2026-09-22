@@ -1,4 +1,5 @@
-﻿using BloogBot.Game.Enums;
+﻿// Ported from BloogBot/BloogBot/DiscordClientWrapper.cs (.NET Framework 4.8 -> .NET 9). Replica - do not redesign.
+using BloogBot.Game.Enums;
 using Discord;
 using Discord.WebSocket;
 using System;

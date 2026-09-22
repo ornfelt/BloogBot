@@ -1,4 +1,5 @@
-﻿using BloogBot.Game.Enums;
+﻿// Ported from BloogBot/BloogBot/Game/SpellEffect.cs (.NET Framework 4.8 -> .NET 9). Replica - do not redesign.
+using BloogBot.Game.Enums;
 
 namespace BloogBot.Game
 {

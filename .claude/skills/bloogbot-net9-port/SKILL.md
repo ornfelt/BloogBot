@@ -1100,6 +1100,8 @@ After the edits, summarize:
   Hard rules for this file:
 
   - **Never add a `Co-Authored-By:` trailer, and never add any other co-author, attribution or
-    tool-generated line.** The message is the message and nothing else.
+    tool-generated line.** The message is the message and nothing else. This applies to the commit
+    as well as to the file: if the user later asks for the message to be committed, it is committed
+    verbatim, with no trailer appended, whatever the session's default attribution setting says.
   - **Never use double quotes (`"`)** - where a quote is needed, use a single quote (`'`).
   - Leave the file untouched if the run wrote no code at all, and say so.

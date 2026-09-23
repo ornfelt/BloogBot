@@ -1,6 +1,7 @@
 ﻿// Ported from BloogBot/Bootstrapper/Program.cs (.NET Framework 4.8 -> .NET 9). Replica - do not redesign.
 using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
@@ -15,8 +16,7 @@ namespace Bootstrapper
     {
         static void Main()
         {
-            var currentFolder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            var bootstrapperSettingsFilePath = Path.Combine(currentFolder, "bootstrapperSettings.json");
+            var bootstrapperSettingsFilePath = ResolveFile("bootstrapperSettings.json");
             var bootstrapperSettings = JsonConvert.DeserializeObject<BootstrapperSettings>(File.ReadAllText(bootstrapperSettingsFilePath));
 
             var startupInfo = new STARTUPINFO();
@@ -40,14 +40,15 @@ namespace Bootstrapper
             // get a handle to the BloogBot process
             var processHandle = Process.GetProcessById((int)processInfo.dwProcessId).Handle;
 
-            // resolve the file path to Loader.dll relative to our current working directory
-            var loaderPath = Path.Combine(currentFolder, "Loader.dll");
+            // resolve the file path to Loader.dll, probing the same locations, so an exe started
+            // from a folder that does not hold the deployment still finds it
+            var loaderPath = ResolveFile("Loader.dll");
 
             // allocate enough memory to hold the full file path to Loader.dll within the BloogBot process
             // POTENTIAL BUG FOUND: the region is loaderPath.Length bytes, but the path is written below as
             //   Encoding.Unicode (2 bytes per char, no terminator), so twice that many bytes are written into
             //   it. It only works because VirtualAllocEx rounds the size up to a zero-filled 4 KiB page.
-            //   Original: Bootstrapper/Program.cs:46
+            //   Original: Bootstrapper/Program.cs:47
             //   Ported as-is - behavior matches .NET Framework BloogBot.
             var loaderPathPtr = VirtualAllocEx(
                 processHandle, 
@@ -63,7 +64,7 @@ namespace Bootstrapper
             //   Marshal.GetLastWin32Error() here and in the three checks below never reflects these calls.
             //   A failed VirtualAllocEx / WriteProcessMemory / CreateRemoteThread goes undetected, and a
             //   stale error code from an unrelated earlier call can throw instead.
-            //   Original: Bootstrapper/Program.cs:56 (DllImports: Bootstrapper/WinImports.cs)
+            //   Original: Bootstrapper/Program.cs:57 (DllImports: Bootstrapper/WinImports.cs)
             //   Ported as-is - behavior matches .NET Framework BloogBot.
             int error = Marshal.GetLastWin32Error();
             if (error > 0)
@@ -104,6 +105,48 @@ namespace Bootstrapper
 
             // free the memory that was allocated by VirtualAllocEx
             VirtualFreeEx(processHandle, loaderPathPtr, 0, MemoryFreeType.MEM_RELEASE);
+        }
+
+        // bootstrapperSettings.json only lands next to Bootstrapper.exe when the BloogBot project
+        // is built as well - it is BloogBot.csproj that copies it, not this project - so running or
+        // debugging Bootstrapper on its own, or after cleaning the output folder, used to die with a
+        // FileNotFoundException out of File.ReadAllText. Probe the obvious locations instead, and if
+        // the file really is missing, say where we looked rather than just which path failed.
+        static string ResolveFile(string fileName)
+        {
+            var roots = new List<string>();
+
+            var assemblyDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            if (!string.IsNullOrEmpty(assemblyDir))
+                roots.Add(assemblyDir);
+
+            var workingDir = Directory.GetCurrentDirectory();
+            if (!roots.Contains(workingDir))
+                roots.Add(workingDir);
+
+            // For each root: the folder itself, then a Bot subfolder, then the same again for up to
+            // four parents. That covers Bot\, Bot\Release\ (whose parent is Bot\), a project's own
+            // bin\Debug\ inside the repo, and the repo root.
+            var candidates = new List<string>();
+            foreach (var root in roots)
+            {
+                var dir = new DirectoryInfo(root);
+                for (var level = 0; level <= 4 && dir != null; level++, dir = dir.Parent)
+                {
+                    candidates.Add(Path.Combine(dir.FullName, fileName));
+                    candidates.Add(Path.Combine(dir.FullName, "Bot", fileName));
+                }
+            }
+
+            foreach (var candidate in candidates)
+            {
+                if (File.Exists(candidate))
+                    return candidate;
+            }
+
+            throw new FileNotFoundException(
+                $"Could not find {fileName}. Looked in:{Environment.NewLine}  " +
+                string.Join(Environment.NewLine + "  ", candidates));
         }
     }
 }

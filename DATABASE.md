@@ -104,10 +104,28 @@ sqlite3 Bot/db.db < Bot/SqliteSchema.SQL
 
 Or just delete `db.db` and start the bot - it rebuilds an empty one.
 
-## Optional seed data - `Sql\`
+## Seed data - `Sql\`
 
-The scripts in `Sql\` are **data**, not schema. They are optional: the bot runs without them, and you
-can record hotspots and NPCs yourself in the UI instead. Apply them **after** the schema exists.
+The scripts in `Sql\` are **data**, not schema. Apply them **after** the schema exists.
+
+**On a default build they are not optional.** With `USE_CUSTOM_CHANGES` on - the default -
+`DependencyContainer.GetCurrentHotspot()` ignores `GrindingHotspotId` on every known map and looks
+up a **hard-coded hotspot id** from the map and your faction:
+
+| Map | Horde | Alliance | | Map | Id |
+| --- | --- | --- | --- | --- | --- |
+| Kalimdor (1) | 1 | 2 | | Warsong Gulch (489) | 9 |
+| Eastern Kingdoms (0) | 3 | 4 | | Arathi Basin (529) | 10 |
+| Outland (530) | 5 | 6 | | Alterac Valley (30) | 11 |
+| Northrend (571) | 7 | 8 | | Nagrand Arena (559) | 12 |
+
+Those are exactly the ids the `wander_nodes_*` scripts create. Without them `GetCurrentHotspot()`
+returns null and `GrindState` throws `NullReferenceException` once per tick - the bot runs, but
+never picks a waypoint. Only an unrecognised map falls back to `GrindingHotspotId`.
+
+Build with `-p:UseCustomChanges=false` and the upstream `GetCurrentHotspot()` is used instead, which
+always honours `GrindingHotspotId`; then the seed data really is optional and you can record your
+own hotspots in the UI.
 
 | Script | Table | What it does |
 | --- | --- | --- |
@@ -170,6 +188,7 @@ not run against SQL Server unchanged.
 
 | Symptom | Cause |
 | --- | --- |
+| `NullReferenceException` in `GrindState.HandleWpSelection` | no hotspot for your map and faction. The default build needs hotspot ids 1-12 from the `Sql\` scripts - see above |
 | `no such table: <name>` | a `db.db` older than the schema. Fixed automatically now, since the schema runs every start; by hand, apply `SqliteSchema.SQL` as above |
 | `NotImplementedException` from `Repository.Initialize` | `DatabaseType` is neither `sqlite` nor `mssql` |
 | SQLite errors although `DatabaseType` is `mssql` | the stale Azure connection string that ships in `DatabasePath` is ignored under `sqlite`, but under `mssql` it is used - replace it |

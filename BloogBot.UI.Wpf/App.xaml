@@ -9,6 +9,10 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="Themes/Dark.xaml"/>
+                <!-- The implicit control styles. Theme-independent - they only name the
+                     fifteen keys the dictionary above supplies - so this one is never
+                     swapped, and stays at MergedDictionaries[1]. -->
+                <ResourceDictionary Source="Themes/Controls.xaml"/>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>

@@ -191,11 +191,13 @@ it.
 Both gates are inherited from the original and are absent from Release builds:
 
 1. **A 10-second native wait.** `Loader.dll` prints `Attach a debugger now to WoW.exe if you want
-   to debug Loader.dll. Waiting 10 seconds...` to the console it just allocated, and blocks. Wait
-   it out or attach Visual Studio to `WoW.exe`.
-   With `USE_CUSTOM_CHANGES` on - the default - the console *also* prints
-   `Skipping attaching debugger...` immediately before it. That message is misleading: the flag it
-   reports on is `int skipDebug = 0`, so the wait still happens. Ported as-is from the original.
+   to debug Loader.dll. Waiting 10 seconds... (press Enter to skip)` to the console it just
+   allocated, and blocks. **Press Enter in that console to carry on immediately**, or attach Visual
+   Studio to `WoW.exe` and let it run out.
+   The wait also ends early if something signals the named event `MyDebugEvent`, which is what that
+   event was always there for.
+   Setting `int skipDebug = 1` in `Loader/dllmain.cpp` removes the wait altogether; at `0`, the
+   default, the `Skipping attaching debugger...` line is not printed and the wait happens.
 2. **A managed `Debugger.Launch()`.** `App.OnStartup` opens the Windows JIT-debugger dialog before
    anything else. **The UI does not appear until you answer it** - attach a debugger, or dismiss
    the dialog to carry on without one.

@@ -12,6 +12,8 @@
 #include <process.h>
 // std::wstring
 #include <string>
+// std::vector, for the module-path buffer
+#include <vector>
 // CLR hosting API
 #ifdef FOR_DOTNET_4
 #include <metahost.h>
@@ -226,11 +228,29 @@ unsigned __stdcall ThreadMain(void* pParam)
 
 void LoadClr()
 {
-	wchar_t buffer[255];
-	if (!GetModuleFileNameW(g_myDllModule, buffer, 255))
-		return;
+	// GetModuleFileNameW truncates silently when the buffer is too small: it copies as much as
+	// fits, returns the buffer size rather than failing, and reports the overflow only through
+	// ERROR_INSUFFICIENT_BUFFER. The fixed wchar_t[255] this used to use therefore turned a long
+	// install path into a quietly wrong path to the managed assembly. Grow until it fits.
+	std::wstring modulePath;
+	for (DWORD capacity = MAX_PATH; capacity <= 65536; capacity *= 2)
+	{
+		std::vector<wchar_t> buffer(capacity);
+		SetLastError(ERROR_SUCCESS);
+		const DWORD copied = GetModuleFileNameW(g_myDllModule, buffer.data(), capacity);
 
-	std::wstring modulePath(buffer);
+		if (copied == 0)
+			return;
+
+		if (GetLastError() != ERROR_INSUFFICIENT_BUFFER)
+		{
+			modulePath.assign(buffer.data(), copied);
+			break;
+		}
+	}
+
+	if (modulePath.empty())
+		return;
 
 	// Get just the directory path.
 	modulePath = modulePath.substr(0, modulePath.find_last_of('\\') + 1);
@@ -262,12 +282,16 @@ BOOL WINAPI DllMain(HMODULE hDll, DWORD dwReason, LPVOID lpReserved)
 			g_clrHost->Release();
 		}
 
-		// Yes yes, I know. I should be using _endthread(ex)
-		// however, I can't. Since we don't want the thread killed until we exit.
+		// The thread is deliberately not terminated here. On process exit the loader has already
+		// stopped every other thread before this notification arrives, so there is nothing left
+		// to kill; and on a FreeLibrary detach TerminateThread would stop the managed thread
+		// wherever it happened to be, without unwinding it or letting it release a lock or the
+		// CRT heap - and DLL_PROCESS_DETACH runs under the loader lock, so that is a good way to
+		// hang the process. Closing the handle is all that is needed.
 		if (g_hThread)
 		{
-			TerminateThread(g_hThread, 0);
 			CloseHandle(g_hThread);
+			g_hThread = NULL;
 		}
 	}
 

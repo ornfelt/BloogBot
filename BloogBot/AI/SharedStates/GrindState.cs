@@ -15,6 +15,9 @@ namespace BloogBot.AI.SharedStates
     {
         static readonly Random random = new Random();
 
+        // So a missing hotspot is reported once rather than on every tick - see WarnNoHotspot.
+        static bool warnedNoHotspot;
+
         readonly Stack<IBotState> botStates;
         readonly IDependencyContainer container;
 #if USE_CUSTOM_CHANGES
@@ -30,6 +33,26 @@ namespace BloogBot.AI.SharedStates
             this.botStates = botStates;
             this.container = container;
             player = ObjectManager.Player;
+        }
+
+        // GetCurrentHotspot can return null, and every tick used to throw NullReferenceException on
+        // it. What is missing differs by branch: this fork looks up hard-coded ids from the map and
+        // the player's faction - 1 and 2 for Kalimdor, 3 and 4 for Eastern Kingdoms, and so on, which
+        // are the ids the Sql seed scripts create - while upstream just returns the hotspot named by
+        // GrindingHotspotId. IsAlly is a fork addition to LocalPlayer, so it can only be read here
+        // under USE_CUSTOM_CHANGES.
+        void WarnNoHotspot()
+        {
+            if (warnedNoHotspot)
+                return;
+
+            warnedNoHotspot = true;
+#if USE_CUSTOM_CHANGES
+            var faction = ObjectManager.Player.IsAlly ? "alliance" : "horde";
+            Logger.Log($"No hotspot in the database for map {ObjectManager.MapId} ({faction}), so no waypoint can be picked. Load the hotspot data - see the Sql scripts - or record a hotspot in the UI.");
+#else
+            Logger.Log("No hotspot in the database for the configured GrindingHotspotId, so no waypoint can be picked. Point it at a hotspot that exists, or record one in the UI.");
+#endif
         }
 
         public void Update()
@@ -51,6 +74,13 @@ namespace BloogBot.AI.SharedStates
                 HandleWpSelection();
 #else
                 var hotspot = container.GetCurrentHotspot();
+
+                if (hotspot == null)
+                {
+                    WarnNoHotspot();
+                    return;
+                }
+
                 var waypointCount = hotspot.Waypoints.Length;
                 var waypoint = hotspot.Waypoints[random.Next(0, waypointCount)];
                 botStates.Push(new MoveToHotspotWaypointState(botStates, container, waypoint));
@@ -63,6 +93,13 @@ namespace BloogBot.AI.SharedStates
         {
             // Initialize variables
             var hotspot = container.GetCurrentHotspot();
+
+            if (hotspot == null)
+            {
+                WarnNoHotspot();
+                return;
+            }
+
             player = ObjectManager.Player;
             isInBg = IsHotspotBg(hotspot.Id);
             playerLevel = player.Level;

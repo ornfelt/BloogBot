@@ -33,10 +33,24 @@ namespace BloogBot
         static CalculatePathDelegate calculatePath;
         static FreePathArr freePathArr;
 
+        // Set once by the static constructor when the movemaps are not on disk.
+        static readonly bool mmapsMissing;
+
         static Navigation()
         {
             var currentFolder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             var mapsPath = $"{currentFolder}\\Navigation.dll";
+
+            // Navigation.dll builds the movemap path from its own module directory and does not
+            // check that it is there, so calling into it without the tiles faults inside the native
+            // code - which arrives here as SEHException, once per tick, naming nothing useful.
+            // Check once and say what is wrong instead. CalculatePath then returns an empty path,
+            // and GetNextWaypoint falls back to the destination, which is already what it does for
+            // any path it cannot build.
+            var mmapsFolder = Path.Combine(currentFolder, "mmaps");
+            mmapsMissing = !Directory.Exists(mmapsFolder);
+            if (mmapsMissing)
+                Logger.Log($"Pathfinding disabled: no \"mmaps\" directory at \"{mmapsFolder}\". Generate the movemaps or put them there. Until then the bot heads straight for its destination instead of pathing around obstacles.");
 
             var navProcPtr = LoadLibrary(mapsPath);
 
@@ -58,6 +72,10 @@ namespace BloogBot
 
         static public Position[] CalculatePath(uint mapId, Position start, Position end, bool straightPath)
         {
+            // Without the movemaps the native call faults rather than returning an empty path.
+            if (mmapsMissing)
+                return new Position[0];
+
             var ret = calculatePath(mapId, start.ToXYZ(), end.ToXYZ(), straightPath, out int length);
             var list = new Position[length];
             for (var i = 0; i < length; i++)

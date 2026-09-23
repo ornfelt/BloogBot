@@ -81,7 +81,8 @@ unsigned __stdcall ThreadMain(void* pParam)
 
 #ifdef USE_CUSTOM_CHANGES
 	int skipDebug = 0;
-	std::cout << std::string("Skipping attaching debugger...") << std::endl;
+	if (skipDebug)
+		std::cout << std::string("Skipping attaching debugger...") << std::endl;
 #if _DEBUG
 	if (!skipDebug)
 	{

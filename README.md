@@ -223,7 +223,21 @@ with `-p:Ui=Avalonia` to switch, then run `Bootstrapper.exe` again.
   "Runtime requirements for injection" below.
 - **A console window but no bot window** - you are in a Debug build and have not answered the
   `Debugger.Launch()` dialog yet.
-- **The bot window opens but navigation fails** - movemaps are missing; they belong in `Bot\mmaps`.
+- **`SEHException: External component has thrown an exception` from `Navigation.CalculatePath`** -
+  the movemaps are missing. `Navigation.dll` builds their path from its own module directory, so it
+  needs `Bot\mmaps\` for Debug and `Bot\Release\mmaps\` for Release, and faults without them. Run
+  [`Link-Mmaps.ps1`](Link-Mmaps.ps1) to point both at a set you already have:
+
+  ```powershell
+  .\Link-Mmaps.ps1                      # junction to the .NET Framework tree's tiles
+  .\Link-Mmaps.ps1 -Source D:\wow\mmaps  # or wherever yours are
+  .\Link-Mmaps.ps1 -Copy                # real copies instead of links
+  .\Link-Mmaps.ps1 -Remove              # undo, leaving the tiles alone
+  ```
+
+  A junction costs no disk space, which matters: a full set is over 2 GB and both configurations
+  need one. Remove a junction with that script or `cmd /c rmdir`, never `rm -rf` from Git Bash -
+  that can follow it and delete the real tiles.
 
 ## How it all works
 

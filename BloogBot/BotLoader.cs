@@ -38,7 +38,11 @@ namespace BloogBot
             container?.Dispose();
 
             var currentFolder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            var botPaths = new[] { "AfflictionWarlockBot.dll", "ArcaneMageBot.dll", "ArmsWarriorBot.dll", "BackstabRogueBot.dll", "BalanceDruidBot.dll", "BeastMasterHunterBot.dll", "CombatRogueBot.dll", "EnhancementShamanBot.dll", "ElementalShamanBot.dll", "FeralDruidBot.dll", "FrostMageBot.dll", "FuryWarriorBot.dll", "ProtectionPaladinBot.dll", "ProtectionWarriorBot.dll", "RetributionPaladinBot.dll", "ShadowPriestBot.dll", "TestBot.dll" };
+            // 'BeastmasterHunterBot.dll' with a lowercase 'm': that is the name the project
+            // actually builds (AssemblyName BeastmasterHunterBot). This list used to spell it with
+            // a capital M, which File.ReadAllBytes below tolerated only because NTFS is
+            // case-insensitive.
+            var botPaths = new[] { "AfflictionWarlockBot.dll", "ArcaneMageBot.dll", "ArmsWarriorBot.dll", "BackstabRogueBot.dll", "BalanceDruidBot.dll", "BeastmasterHunterBot.dll", "CombatRogueBot.dll", "EnhancementShamanBot.dll", "ElementalShamanBot.dll", "FeralDruidBot.dll", "FrostMageBot.dll", "FuryWarriorBot.dll", "ProtectionPaladinBot.dll", "ProtectionWarriorBot.dll", "RetributionPaladinBot.dll", "ShadowPriestBot.dll", "TestBot.dll" };
 
             foreach (var botPath in botPaths)
             {

@@ -12,6 +12,8 @@
 #include <process.h>
 // std::wstring
 #include <string>
+// std::vector, for the module-path buffer
+#include <vector>
 // CLR hosting API
 #ifdef FOR_DOTNET_4
 #include <metahost.h>
@@ -52,6 +54,63 @@ wchar_t* dllLocation = NULL;
 
 #define MB(s) MessageBoxW(NULL, s, NULL, MB_OK);
 
+#if _DEBUG
+// Waits out the debugger grace period, returning as soon as any of three things happens: the
+// timeout elapses, the named MyDebugEvent is signalled from outside - which is what that event was
+// always for - or Enter is pressed in the console ThreadMain just allocated. Without the last of
+// those, every Debug injection cost a flat ten seconds even when nobody was going to attach.
+static void WaitForDebuggerOrEnter(HANDLE hEvent, DWORD timeoutMs)
+{
+	const HANDLE input = GetStdHandle(STD_INPUT_HANDLE);
+
+	DWORD consoleMode;
+	if (input == NULL || input == INVALID_HANDLE_VALUE || !GetConsoleMode(input, &consoleMode))
+	{
+		// No console input to watch - wait exactly as before.
+		WaitForSingleObject(hEvent, timeoutMs);
+		return;
+	}
+
+	// Anything typed before we got here is not an answer to a prompt that had not been printed.
+	FlushConsoleInputBuffer(input);
+
+	const ULONGLONG deadline = GetTickCount64() + timeoutMs;
+	HANDLE handles[2] = { hEvent, input };
+
+	for (;;)
+	{
+		const ULONGLONG now = GetTickCount64();
+		if (now >= deadline)
+			return;
+
+		const DWORD waited = WaitForMultipleObjects(2, handles, FALSE, (DWORD)(deadline - now));
+
+		// Anything but 'the console has input' means we are done: MyDebugEvent fired, the timeout
+		// expired, or the wait failed.
+		if (waited != WAIT_OBJECT_0 + 1)
+			return;
+
+		// The handle also signals for key-up, mouse and focus records, so read them and look for a
+		// real Enter press rather than trusting the wake-up on its own.
+		INPUT_RECORD records[16];
+		DWORD read = 0;
+		if (!ReadConsoleInputW(input, records, ARRAYSIZE(records), &read))
+			return;
+
+		for (DWORD i = 0; i < read; i++)
+		{
+			if (records[i].EventType == KEY_EVENT &&
+				records[i].Event.KeyEvent.bKeyDown &&
+				records[i].Event.KeyEvent.wVirtualKeyCode == VK_RETURN)
+			{
+				std::cout << std::string("Enter pressed - skipping the wait.") << std::endl;
+				return;
+			}
+		}
+	}
+}
+#endif
+
 unsigned __stdcall ThreadMain(void* pParam)
 {
 	AllocConsole();
@@ -60,14 +119,15 @@ unsigned __stdcall ThreadMain(void* pParam)
 
 #ifdef USE_CUSTOM_CHANGES
 	int skipDebug = 0;
-	std::cout << std::string("Skipping attaching debugger...") << std::endl;
+	if (skipDebug)
+		std::cout << std::string("Skipping attaching debugger...") << std::endl;
 #if _DEBUG
 	if (!skipDebug)
 	{
-		std::cout << std::string("Attach a debugger now to WoW.exe if you want to debug Loader.dll. Waiting 10 seconds...") << std::endl;
+		std::cout << std::string("Attach a debugger now to WoW.exe if you want to debug Loader.dll. Waiting 10 seconds... (press Enter to skip)") << std::endl;
 
 		HANDLE hEvent = CreateEvent(nullptr, TRUE, FALSE, L"MyDebugEvent");
-		WaitForSingleObject(hEvent, 10000);  // Wait for 10 seconds
+		WaitForDebuggerOrEnter(hEvent, 10000);  // up to 10 seconds; Enter skips it
 		bool isDebuggerAttached = IsDebuggerPresent() != FALSE;
 
 		if (isDebuggerAttached)
@@ -85,10 +145,10 @@ unsigned __stdcall ThreadMain(void* pParam)
 #endif
 #else
 #if _DEBUG
-	std::cout << std::string("Attach a debugger now to WoW.exe if you want to debug Loader.dll. Waiting 10 seconds...") << std::endl;
+	std::cout << std::string("Attach a debugger now to WoW.exe if you want to debug Loader.dll. Waiting 10 seconds... (press Enter to skip)") << std::endl;
 
 	HANDLE hEvent = CreateEvent(nullptr, TRUE, FALSE, L"MyDebugEvent");
-	WaitForSingleObject(hEvent, 10000);  // Wait for 10 seconds
+	WaitForDebuggerOrEnter(hEvent, 10000);  // up to 10 seconds; Enter skips it
 	bool isDebuggerAttached = IsDebuggerPresent() != FALSE;
 
 	if (isDebuggerAttached)
@@ -225,11 +285,29 @@ unsigned __stdcall ThreadMain(void* pParam)
 
 void LoadClr()
 {
-	wchar_t buffer[255];
-	if (!GetModuleFileNameW(g_myDllModule, buffer, 255))
-		return;
+	// GetModuleFileNameW truncates silently when the buffer is too small: it copies as much as
+	// fits, returns the buffer size rather than failing, and reports the overflow only through
+	// ERROR_INSUFFICIENT_BUFFER. The fixed wchar_t[255] this used to use therefore turned a long
+	// install path into a quietly wrong path to the managed assembly. Grow until it fits.
+	std::wstring modulePath;
+	for (DWORD capacity = MAX_PATH; capacity <= 65536; capacity *= 2)
+	{
+		std::vector<wchar_t> buffer(capacity);
+		SetLastError(ERROR_SUCCESS);
+		const DWORD copied = GetModuleFileNameW(g_myDllModule, buffer.data(), capacity);
 
-	std::wstring modulePath(buffer);
+		if (copied == 0)
+			return;
+
+		if (GetLastError() != ERROR_INSUFFICIENT_BUFFER)
+		{
+			modulePath.assign(buffer.data(), copied);
+			break;
+		}
+	}
+
+	if (modulePath.empty())
+		return;
 
 	// Get just the directory path.
 	modulePath = modulePath.substr(0, modulePath.find_last_of('\\') + 1);
@@ -261,12 +339,16 @@ BOOL WINAPI DllMain(HMODULE hDll, DWORD dwReason, LPVOID lpReserved)
 			g_clrHost->Release();
 		}
 
-		// Yes yes, I know. I should be using _endthread(ex)
-		// however, I can't. Since we don't want the thread killed until we exit.
+		// The thread is deliberately not terminated here. On process exit the loader has already
+		// stopped every other thread before this notification arrives, so there is nothing left
+		// to kill; and on a FreeLibrary detach TerminateThread would stop the managed thread
+		// wherever it happened to be, without unwinding it or letting it release a lock or the
+		// CRT heap - and DLL_PROCESS_DETACH runs under the loader lock, so that is a good way to
+		// hang the process. Closing the handle is all that is needed.
 		if (g_hThread)
 		{
-			TerminateThread(g_hThread, 0);
 			CloseHandle(g_hThread);
+			g_hThread = NULL;
 		}
 	}
 

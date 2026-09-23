@@ -21,16 +21,21 @@ namespace BloogBot
             connectionString = $"Data Source={dbPath};Version=3;New=True;Compress=True;";
 
             if (!File.Exists(dbPath))
-            {
                 SQLiteConnection.CreateFile(dbPath);
-                using (var db = this.NewConnection())
-                {
-                    string script = File.ReadAllText(Path.Combine(strWorkPath, "SqliteSchema.SQL"));
-                    var command = this.NewCommand(script, db);
-                    db.Open();
-                    command.ExecuteNonQuery();
-                    db.Close();
-                }
+
+            // Run SqliteSchema.SQL on every start, the way TSqlRepository already runs
+            // TSqlSchema.SQL: every statement in it is CREATE TABLE IF NOT EXISTS, so it is
+            // idempotent. It used to run only when db.db had just been created, which meant a
+            // database made by an older build never picked up tables added since - GatherRoutes
+            // being the one that bit, since InitializeGatherRoutes in MainViewModel's constructor
+            // queries it and threw 'no such table: GatherRoutes' before the window could open.
+            using (var db = this.NewConnection())
+            {
+                string script = File.ReadAllText(Path.Combine(strWorkPath, "SqliteSchema.SQL"));
+                var command = this.NewCommand(script, db);
+                db.Open();
+                command.ExecuteNonQuery();
+                db.Close();
             }
         }
 

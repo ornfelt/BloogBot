@@ -1,4 +1,4 @@
-<!-- Added by the .NET 9 port - no counterpart in BloogBot, whose window used the stock WPF chrome.
+﻿<!-- Added by the .NET 9 port - no counterpart in BloogBot, whose window used the stock WPF chrome.
      The Avalonia half of what BloogBot.UI.Wpf/Themes/Dark.xaml and Light.xaml carry below their
      brushes: the implicit control styles that let MainWindow.axaml stay a straight port of the
      original - it carries no colour attributes of its own and every brush the window shows comes
@@ -11,6 +11,65 @@
     <Style Selector="Window">
         <Setter Property="Background" Value="{DynamicResource WindowBackgroundBrush}"/>
         <Setter Property="Foreground" Value="{DynamicResource ForegroundBrush}"/>
+    </Style>
+
+    <!-- Density, so the Avalonia shell matches the WPF one rather than FluentTheme's defaults.
+         Fluent is built for touch: its base FontSize is 14 where WPF's is 12, it puts
+         MinHeight="32" on Button, CheckBox, ComboBox and TextBox, and its TabItem template binds
+         FontSize to its own (larger) resource instead of inheriting. Left alone, every control and
+         every tab header came out visibly bigger than the same window in the WPF shell.
+
+         FontSize inherits in Avalonia, so Window carries the base; the controls below repeat it
+         only because their templates would otherwise pull Fluent's own value. MinHeight goes to 0
+         so content plus Padding decides the height, which is how WPF sizes these controls. -->
+
+    <Style Selector="Window">
+        <Setter Property="FontSize" Value="12"/>
+    </Style>
+
+    <Style Selector="TabItem">
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="Padding" Value="8,3"/>
+        <Setter Property="MinHeight" Value="0"/>
+        <Setter Property="MinWidth" Value="0"/>
+    </Style>
+
+    <Style Selector="Button">
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="Padding" Value="6,2"/>
+        <Setter Property="MinHeight" Value="0"/>
+        <Setter Property="MinWidth" Value="0"/>
+    </Style>
+
+    <Style Selector="CheckBox">
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="MinHeight" Value="0"/>
+    </Style>
+
+    <Style Selector="TextBox">
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="Padding" Value="4,1"/>
+        <Setter Property="MinHeight" Value="0"/>
+    </Style>
+
+    <Style Selector="ComboBox">
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="Padding" Value="6,2"/>
+        <Setter Property="MinHeight" Value="0"/>
+    </Style>
+
+    <Style Selector="ComboBoxItem">
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="Padding" Value="6,3"/>
+        <Setter Property="MinHeight" Value="0"/>
+    </Style>
+
+    <Style Selector="Label">
+        <Setter Property="FontSize" Value="12"/>
+    </Style>
+
+    <Style Selector="TextBlock">
+        <Setter Property="FontSize" Value="12"/>
     </Style>
 
     <Style Selector="TabControl">

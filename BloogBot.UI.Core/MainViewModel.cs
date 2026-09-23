@@ -1751,7 +1751,12 @@ namespace BloogBot.UI
                 {
                     var player = ObjectManager.Player;
 
-                    if (player != null)
+                    // IsLoggedIn as well as the null check: this loop runs on a thread pool thread,
+                    // so it can pick up Player in the window between the client tearing the world
+                    // down and ObjectManager noticing. Reading a freed object there is an access
+                    // violation, which .NET 9 cannot catch. IsLoggedIn only reads a fixed static
+                    // address, so it is safe to call from this thread.
+                    if (player != null && ObjectManager.IsLoggedIn)
                     {
                         if (!readyForCommands)
                         {

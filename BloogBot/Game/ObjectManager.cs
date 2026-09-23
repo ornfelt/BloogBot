@@ -262,6 +262,26 @@ namespace BloogBot.Game
                         UpdateProbe();
                     }
                 }
+                else
+                {
+                    // Logged out. The client has freed everything these point at, and nothing else
+                    // clears them, so they used to stay dangling until the next login - anything
+                    // still reading one was reading freed memory. The command-handler loop does
+                    // exactly that from a thread pool thread every 250 ms, which took the whole
+                    // process down with an access violation on logout.
+                    //
+                    // Under .NET Framework that was survivable: BloogBot/App.config sets
+                    // legacyCorruptedStateExceptionsPolicy, so the access violation arrived as a
+                    // catchable AccessViolationException and the loop just logged it. .NET 9 has no
+                    // equivalent setting - a corrupted-state exception is always fatal - so the
+                    // dangling references have to go instead of being caught.
+                    Player = null;
+                    Pet = null;
+                    playerGuid = 0;
+
+                    if (Objects.Count > 0)
+                        Objects = new List<WoWObject>();
+                }
             });
         }
 

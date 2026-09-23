@@ -166,6 +166,9 @@ table before creating it). Any other value throws `NotImplementedException` from
 Discord is off out of the box (`DiscordBotEnabled: false`), so the token and the three ID keys can
 stay as they are.
 
+See [DATABASE.md](DATABASE.md) for the database in detail - where `db.db` lives per configuration, PowerShell and bash commands to create it and apply the schema by hand, the optional
+seed scripts in `Sql\`, the SQL Server path, and what each error means.
+
 ### You do not start the UI yourself
 
 The bot window opens on its own once injection succeeds. Nothing is launched by hand after

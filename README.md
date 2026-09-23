@@ -220,6 +220,184 @@ with `-p:Ui=Avalonia` to switch, then run `Bootstrapper.exe` again.
   `Debugger.Launch()` dialog yet.
 - **The bot window opens but navigation fails** - movemaps are missing; they belong in `Bot\mmaps`.
 
+## How it all works
+
+End to end, from double-clicking the exe to the bot running a state machine inside the game client.
+Nothing here is unique to the .NET 9 port except steps 2 and 3, which are the two places the port
+deliberately differs; everything else is BloogBot's own design.
+
+### 1. Bootstrapper.exe - launch the client and inject
+
+`Bootstrapper/Program.cs`. A console exe that does one job and exits.
+
+1. Reads `bootstrapperSettings.json` from its own folder - **one key, `PathToWoW`**.
+2. `CreateProcess(PathToWoW)`. The child inherits Bootstrapper's working directory, and no command
+   line or start-up flags are passed.
+3. Sleeps 1s, then opens the new process with `Process.GetProcessById(pid).Handle`, which requests
+   `PROCESS_ALL_ACCESS`.
+4. `VirtualAllocEx` in the WoW process and `WriteProcessMemory` the UTF-16 path of `Loader.dll`,
+   resolved next to `Bootstrapper.exe`.
+5. Finds `LoadLibraryW` via `GetProcAddress(GetModuleHandle("kernel32.dll"), ...)`. Its address is
+   the same in both processes because kernel32 loads at the same base.
+6. `CreateRemoteThread` **at `LoadLibraryW`**, passing the written path as its argument. That is the
+   injection: WoW itself loads `Loader.dll`.
+7. `VirtualFreeEx`, then exits 0.
+
+It never checks whether any of that worked - `CreateProcess`'s return value is discarded and none of
+the P/Invokes set `SetLastError`, so a bad `PathToWoW` surfaces as a confusing `Access is denied`
+from step 3 instead. Both are tagged; see "Potential bugs in the original".
+
+### 2. Loader.dll - start .NET 9 inside the game process
+
+`Loader/dllmain.cpp`, native x86. **This is one of the two files the port rewrote**: under .NET
+Framework it hosted the CLR through `mscoree`/`ICLRRuntimeHost`, which does not exist on .NET 9.
+
+`DllMain` on `DLL_PROCESS_ATTACH` calls `LoadClr`, which reads its own module path, derives the
+folder, and builds three paths next to itself - `BloogBot.dll`, `BloogBot.runtimeconfig.json` and
+`nethost.dll` - then hands off to a new thread via `_beginthreadex` so `DllMain` can return promptly.
+That thread:
+
+1. `AllocConsole` + `freopen("CONOUT$")` - **this is the console window you see**, and where every
+   `Logger.Log` and `Console.WriteLine` from managed code ends up.
+2. Debug builds only: waits up to 10 seconds for you to attach a debugger to `WoW.exe`.
+3. Loads `nethost.dll` by full path with `LoadLibraryW` and resolves `get_hostfxr_path` by
+   `GetProcAddress`. It is deliberately not linked - see the comment in the file.
+4. `get_hostfxr_path` locates `hostfxr` **for this process's bitness** (x86, because WoW is 32-bit),
+   loads it, and resolves `hostfxr_initialize_for_runtime_config`, `hostfxr_get_runtime_delegate`
+   and `hostfxr_close`.
+5. Initializes from `BloogBot.runtimeconfig.json`, which is what actually starts .NET 9 - both
+   `Microsoft.NETCore.App` and `Microsoft.WindowsDesktop.App` - **inside `WoW.exe`**.
+6. Asks for the `load_assembly_and_get_function_pointer` delegate and binds
+   `BloogBot.Loader, BloogBot` / `Load`.
+7. Calls it.
+
+Every failure step pops a message box naming what went wrong, so a silent failure here means
+something before step 1.
+
+### 3. BloogBot.Loader.Load - the managed entry point
+
+`BloogBot/Loader.cs`. **The second file the port had to change.** `hostfxr` requires the
+`component_entry_point_fn` shape, so `Load` is `public static int Load(IntPtr arg, int argSize)`
+where the original was a non-public `static int Load(string args)`.
+
+It loads the selected shell assembly by path, reflects onto its `App.Main`, starts it on an **STA
+thread** (WPF and Avalonia both require STA), and returns immediately. `UI_WPF` / `UI_AVALONIA`
+decides which shell - this is the only place in the tree those constants are used.
+
+### 4. The shell - window, theme, and what gets initialised
+
+`App.Main` (both shells) creates the application and runs it. On start-up, in order:
+
+1. Debug builds only: `Debugger.Launch()` - **the UI will not appear until you answer that dialog**.
+2. `WardenDisabler.Initialize()` - a no-op in the default build (`useWarden = false` inside
+   `USE_CUSTOM_CHANGES`); the upstream branch really does patch the client here.
+3. `new MainWindow()`, then `Show()`. Closing the window calls `Environment.Exit(0)`, which takes
+   the game client down with it - the bot is *inside* that process.
+
+`MainWindow`'s constructor builds the viewmodel and assigns it as `DataContext`, then calls
+`InitializeObjectManager()`. Constructing `MainViewModel` is where most of the work happens:
+
+| Step | What it does |
+| --- | --- |
+| reads `botSettings.json` | from the folder the assembly sits in, deserialised into `BotSettings` |
+| applies the theme | `Theme` key; anything other than `Light`, missing included, means Dark |
+| `Logger.Initialize` | just stores the settings; `Logger.Log` is `Console.WriteLine` to that console |
+| `Repository.Initialize` | picks `SqliteRepository` or `TSqlRepository` from `DatabaseType` |
+| `DiscordClientWrapper.Initialize` | no-op unless `DiscordBotEnabled` |
+| `TravelPathGenerator.Initialize` | wires the travel-path recorder to the UI |
+| loads hotspots, NPCs, travel paths, gather routes | via the repository, into the tab collections |
+| `BotLoader` | `Assembly.Load(File.ReadAllBytes(...))` for each of the 17 plugin DLLs, composed with MEF (`[ImportMany(typeof(IBot))]`) into the bot dropdown |
+
+`InitializeObjectManager()` then starts the two things that make the game readable:
+`ObjectManager.Initialize` builds the enumeration callback for the detected client, and
+`StartEnumeration()` begins a loop that re-reads the object list **every 500 ms**.
+
+The UI itself is plain MVVM: `MainWindow.xaml`/`.axaml` binds to `MainViewModel`, and `Start` and
+`login` are just `ICommand`s on it that call `Bot.Start` / `Bot.Login`. The viewmodel lives in
+`BloogBot.UI.Core`, which targets plain `net9.0` and cannot reference WPF or Avalonia - anything
+shell-specific goes through `IUiDispatcher`, `IDialogService` or `IThemeService`.
+
+### 5. ThreadSynchronizer - why everything runs on WoW's own thread
+
+`BloogBot/ThreadSynchronizer.cs`. The client's functions must be called from the thread that owns
+the game loop, so the bot does not call them from its own threads. Instead:
+
+1. At start-up it replaces WoW's window procedure - `SetWindowLong(GWL_WNDPROC)` with a managed
+   delegate, keeping the old one.
+2. `RunOnMainThread(action)` enqueues the action and `SendMessage(WM_USER)` to that window.
+3. The hook sees `WM_USER`, drains the queue **on WoW's own thread**, and forwards everything else
+   to the original procedure with `CallWindowProc`.
+
+There is a generic `RunOnMainThread<T>(Func<T>)` too, which blocks for a return value. This is why
+every managed stack trace in the console bottoms out at `ThreadSynchronizer.WndProc`.
+
+### 6. The game layer - reading and calling the client
+
+| Piece | Role |
+| --- | --- |
+| `ClientHelper` | reads `WoW.exe`'s `FileVersion` once and picks Vanilla 1.12.1 / TBC 2.4.3 / WotLK 3.3.5; an unknown version throws |
+| `Game/MemoryAddresses.cs` | every offset, per client version |
+| `Game/Functions.cs` + the three `*GameFunctionHandler`s | one implementation per client version behind a common interface |
+| `MemoryManager` | the raw reads and writes |
+| `FastCall.dll` | native `__fastcall` / `__thiscall` trampolines, because those conventions are not callable from C# |
+| `Navigation.dll` | Detour-based mmap pathfinding, P/Invoked from `Navigation.cs`; needs movemaps in `Bot\mmaps` |
+| `Fasm.NET` | assembles x86 at runtime for detours - only used if something calls `MemoryManager.InjectAssembly`, which nothing does by default |
+| `ObjectManager` | the 500 ms enumeration; exposes `Player`, `Pet`, `Units`, `Players`, `Items` |
+
+`ObjectManager.Player` is only assigned while `IsLoggedIn` is true **and** the enumeration finds your
+own GUID, so it is null at the login and character-select screens. Several call sites assume
+otherwise.
+
+### 7. The bot - a stack of states
+
+`BloogBot/AI/`. Each plugin implements `IBot` and supplies the states for its spec; the 28 shared
+states in `AI/SharedStates/` cover grinding, looting, travel, corpse runs and battleground queues.
+
+`Bot` holds a `Stack<IBotState>`. Every tick - inside `RunOnMainThread`, so on WoW's thread - it
+checks whether it should log in, applies the fork's delay and map checks, then calls `Update()` on
+the top state. States push and pop to move around: a grind state pushes a combat state, which pops
+itself when the target dies. `Start` assumes you are already in-world; `login` pushes a `LoginState`
+that drives the login screen first.
+
+### 8. What the two settings files carry
+
+`bootstrapperSettings.json` has exactly one key:
+
+| Key | Meaning |
+| --- | --- |
+| `PathToWoW` | full path to the `WoW.exe` to launch and inject into |
+
+`botSettings.json` is the whole bot configuration, read once as the window opens:
+
+| Group | Keys |
+| --- | --- |
+| database | `DatabaseType` (`sqlite` or `mssql`), `DatabasePath` (ignored when sqlite - see above) |
+| Discord | `DiscordBotEnabled`, `DiscordBotToken`, `DiscordGuildId`, `DiscordRoleId`, `DiscordChannelId` |
+| consumables | `Food`, `Drink` |
+| targeting | `TargetingIncludedNames`, `TargetingExcludedNames`, `LevelRangeMin`, `LevelRangeMax`, the seven `CreatureType*` flags, the three `UnitReaction*` flags |
+| looting and vendoring | `LootPoor`, `LootCommon`, `LootUncommon`, `LootExcludedNames`, `SellPoor`, `SellCommon`, `SellUncommon`, `SellExcludedNames` |
+| what to run | `GrindingHotspotId`, `CurrentTravelPathId`, `CurrentGatherRouteId`, `CurrentBotName`, `PowerlevelPlayerName` |
+| killswitches | `UseTeleportKillswitch`, `UseStuckInPositionKillswitch`, `UseStuckInStateKillswitch`, `UsePlayerTargetingKillswitch`, `UsePlayerProximityKillswitch`, and the four `*Timer` values |
+| misc | `UseVerboseLogging`, and `Theme` - **the one key this port adds** |
+
+Both files are written back when you change the corresponding control in the UI, so the window is
+the normal way to edit them.
+
+### 9. Which process everything lives in
+
+Only `Bootstrapper.exe` is its own process, and it is gone seconds after you start it. Everything
+else - .NET 9, the bot, the window, all 17 plugins - runs **inside `WoW.exe`**:
+
+```text
+Bootstrapper.exe ──CreateProcess──> WoW.exe
+        └──CreateRemoteThread(LoadLibraryW, "...\Loader.dll")──┐
+                                                               v
+   WoW.exe ── Loader.dll ── nethost/hostfxr ── .NET 9 ── BloogBot.dll
+                                                             ├── BloogBot.UI.Wpf | .Avalonia  (the window)
+                                                             ├── 17 plugin DLLs  (MEF)
+                                                             └── Navigation.dll, FastCall.dll  (native)
+```
+
 ## Runtime requirements for injection
 
 `Loader.dll` resolves `hostfxr` through `nethost` for the bitness of the process it is loaded into,

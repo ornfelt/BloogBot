@@ -5,7 +5,7 @@ namespace Bootstrapper
 {
     static class WinImports
     {
-        [DllImport("kernel32.dll")]
+        [DllImport("kernel32.dll", SetLastError = true)]
         internal static extern bool CreateProcess(
             string lpApplicationName,
             string lpCommandLine,
@@ -18,13 +18,13 @@ namespace Bootstrapper
             ref STARTUPINFO lpStartupInfo,
             out PROCESS_INFORMATION lpProcessInformation);
 
-        [DllImport("kernel32.dll")]
+        [DllImport("kernel32.dll", SetLastError = true)]
         internal static extern IntPtr GetProcAddress(IntPtr hModule, string procName);
 
-        [DllImport("kernel32.dll")]
+        [DllImport("kernel32.dll", SetLastError = true)]
         internal static extern IntPtr GetModuleHandle(string lpModuleName);
 
-        [DllImport("kernel32.dll")]
+        [DllImport("kernel32.dll", SetLastError = true)]
         internal static extern IntPtr VirtualAllocEx(
             IntPtr hProcess,
             IntPtr dwAddress,
@@ -32,7 +32,7 @@ namespace Bootstrapper
             MemoryAllocationType dwAllocationType,
             MemoryProtectionType dwProtect);
 
-        [DllImport("kernel32.dll")]
+        [DllImport("kernel32.dll", SetLastError = true)]
         internal static extern bool WriteProcessMemory(
             IntPtr hProcess,
             IntPtr lpBaseAddress,
@@ -40,7 +40,7 @@ namespace Bootstrapper
             int dwSize,
             ref int lpNumberOfBytesWritten);
 
-        [DllImport("kernel32.dll")]
+        [DllImport("kernel32.dll", SetLastError = true)]
         internal static extern IntPtr CreateRemoteThread(
             IntPtr hProcess,
             IntPtr lpThreadAttribute,
@@ -50,7 +50,7 @@ namespace Bootstrapper
             uint dwCreationFlags,
             IntPtr lpThreadId);
 
-        [DllImport("kernel32.dll")]
+        [DllImport("kernel32.dll", SetLastError = true)]
         internal static extern bool VirtualFreeEx(
             IntPtr hProcess,
             IntPtr dwAddress,

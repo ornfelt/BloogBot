@@ -41,14 +41,13 @@ namespace Bootstrapper
                 null, 
                 ref startupInfo,
                 out PROCESS_INFORMATION processInfo);
+            var createProcessError = Marshal.GetLastWin32Error();
 
-            // CreateProcess returns a bool that used to be discarded. Its Win32 error code is not
-            // available - none of the DllImports sets SetLastError - but the path is the part
-            // worth reporting anyway.
+            // CreateProcess returns a bool that used to be discarded.
             if (!processCreated)
                 throw new InvalidOperationException(
-                    $"CreateProcess failed for {bootstrapperSettings.PathToWoW}. Check that it is a " +
-                    "32-bit executable you have permission to run.");
+                    $"CreateProcess failed for {bootstrapperSettings.PathToWoW}, error code: " +
+                    $"{createProcessError}. Check that it is a 32-bit executable you have permission to run.");
 
             // this seems to help prevent timing issues
             Thread.Sleep(1000);
@@ -60,53 +59,61 @@ namespace Bootstrapper
             // from a folder that does not hold the deployment still finds it
             var loaderPath = ResolveFile("Loader.dll");
 
+            // The path goes into the target process as UTF-16 - two bytes per char - and LoadLibraryW
+            // needs it null-terminated, so encode it first and size the allocation from the byte
+            // count. This used to pass loaderPath.Length, the char count, which is half of what is
+            // written and leaves no room for the terminator; it only worked because VirtualAllocEx
+            // rounds the request up to a zero-filled 4 KiB page.
+            var loaderPathBytes = Encoding.Unicode.GetBytes(loaderPath + "\0");
+
             // allocate enough memory to hold the full file path to Loader.dll within the BloogBot process
             var loaderPathPtr = VirtualAllocEx(
                 processHandle, 
                 (IntPtr)0, 
-                loaderPath.Length, 
+                loaderPathBytes.Length, 
                 MemoryAllocationType.MEM_COMMIT, 
                 MemoryProtectionType.PAGE_EXECUTE_READWRITE);
+            // Captured straight after the call: Thread.Sleep below - and anything else that
+            // runs in between - can overwrite the thread's last-error value.
+            var allocError = Marshal.GetLastWin32Error();
 
             // this seems to help prevent timing issues
             Thread.Sleep(500);
 
-            int error = Marshal.GetLastWin32Error();
-            if (error > 0)
-                throw new InvalidOperationException($"Failed to allocate memory for Loader.dll, error code: {error}");
+            if (loaderPathPtr == IntPtr.Zero)
+                throw new InvalidOperationException($"Failed to allocate memory for Loader.dll, error code: {allocError}");
 
             // write the file path to Loader.dll to the EoE process's memory
-            var bytes = Encoding.Unicode.GetBytes(loaderPath);
             var bytesWritten = 0; // throw away
-            WriteProcessMemory(processHandle, loaderPathPtr, bytes, bytes.Length, ref bytesWritten);
+            var written = WriteProcessMemory(processHandle, loaderPathPtr, loaderPathBytes, loaderPathBytes.Length, ref bytesWritten);
+            var writeError = Marshal.GetLastWin32Error();
 
             // this seems to help prevent timing issues
             Thread.Sleep(1000);
 
-            error = Marshal.GetLastWin32Error();
-            if (error > 0 || bytesWritten == 0)
-                throw new InvalidOperationException($"Failed to write Loader.dll into the WoW.exe process, error code: {error}");
+            if (!written || bytesWritten == 0)
+                throw new InvalidOperationException($"Failed to write Loader.dll into the WoW.exe process, error code: {writeError}");
 
             // search current process's for the memory address of the LoadLibraryW function within the kernel32.dll module
             var loaderDllPointer = GetProcAddress(GetModuleHandle("kernel32.dll"), "LoadLibraryW");
+            var procAddressError = Marshal.GetLastWin32Error();
 
             // this seems to help prevent timing issues
             Thread.Sleep(1000);
 
-            error = Marshal.GetLastWin32Error();
-            if (error > 0)
-                throw new InvalidOperationException($"Failed to get memory address to Loader.dll in the WoW.exe process, error code: {error}");
+            if (loaderDllPointer == IntPtr.Zero)
+                throw new InvalidOperationException($"Failed to get memory address to Loader.dll in the WoW.exe process, error code: {procAddressError}");
 
             // create a new thread with the execution starting at the LoadLibraryW function, 
             // with the path to our Loader.dll passed as a parameter
-            CreateRemoteThread(processHandle, (IntPtr)null, (IntPtr)0, loaderDllPointer, loaderPathPtr, 0, (IntPtr)null);
+            var remoteThread = CreateRemoteThread(processHandle, (IntPtr)null, (IntPtr)0, loaderDllPointer, loaderPathPtr, 0, (IntPtr)null);
+            var remoteThreadError = Marshal.GetLastWin32Error();
 
             // this seems to help prevent timing issues
             Thread.Sleep(1000);
 
-            error = Marshal.GetLastWin32Error();
-            if (error > 0)
-                throw new InvalidOperationException($"Failed to create remote thread to start execution of Loader.dll in the WoW.exe process, error code: {error}");
+            if (remoteThread == IntPtr.Zero)
+                throw new InvalidOperationException($"Failed to create remote thread to start execution of Loader.dll in the WoW.exe process, error code: {remoteThreadError}");
 
             // free the memory that was allocated by VirtualAllocEx
             VirtualFreeEx(processHandle, loaderPathPtr, 0, MemoryFreeType.MEM_RELEASE);

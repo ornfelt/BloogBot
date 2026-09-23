@@ -201,11 +201,12 @@ what the skill's Orient pipeline compares against.
 Every row here has a matching `POTENTIAL BUG FOUND` comment in the port, and the line column is
 the port's line. Cross-check with
 `grep -rn 'POTENTIAL BUG FOUND' . --include='*.cs' --include='*.xaml' --include='*.axaml' --include='*.cpp'`;
-the eighteen tags map onto these sixteen rows, `DependencyContainer.cs` contributing two tags to
+the nineteen tags map onto these seventeen rows, `DependencyContainer.cs` contributing two tags to
 each of its two rows because both `#if USE_CUSTOM_CHANGES` branches carry one.
 
 | File (port) | Line | What looks wrong | Original |
 | --- | --- | --- | --- |
+| `BloogBot/AI/Bot.cs` | 468 | `ObjectManager.Player` is dereferenced with no null check at the top of every `StartInternal` tick, directly after the block that handles being logged out. `Player` is only assigned while `IsLoggedIn` is true, so starting the bot at the login or character-select screen throws `NullReferenceException` every tick and the `LoginState` just pushed is never reached | `BloogBot/AI/Bot.cs:454` |
 | `Bootstrapper/Program.cs` | 47 | `VirtualAllocEx` reserves `loaderPath.Length` bytes but `Encoding.Unicode.GetBytes(loaderPath)` writes twice that; works only because the allocation rounds up to a zeroed page | `Bootstrapper/Program.cs:46` |
 | `Bootstrapper/Program.cs` | 62 | no `DllImport` in `WinImports.cs` sets `SetLastError = true`, so the four `Marshal.GetLastWin32Error()` checks never reflect those calls | `Bootstrapper/Program.cs:56`, `Bootstrapper/WinImports.cs` |
 | `BloogBot/MemoryManager.cs` | 290 | the `OpenProcess` handle in `WriteBytes` is never closed, so every call leaks a process handle; the Warden page-scan hook calls it per scanned byte | `BloogBot/MemoryManager.cs:289` |

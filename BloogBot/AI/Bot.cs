@@ -456,6 +456,15 @@ namespace BloogBot.AI
                         }
 
 #if USE_CUSTOM_CHANGES
+                        // POTENTIAL BUG FOUND: ObjectManager.Player is null until the client is in-world -
+                        //   EnumerateVisibleObjects only assigns it when IsLoggedIn is true and the enumeration
+                        //   finds the player's own GUID - yet it is dereferenced on the next line with no null
+                        //   check, directly after the block above that exists precisely to handle being logged
+                        //   out. Starting the bot at the login or character-select screen therefore throws
+                        //   NullReferenceException on every tick of the ThreadSynchronizer pump, and the bot
+                        //   never reaches the LoginState it just pushed.
+                        //   Original: BloogBot/AI/Bot.cs:454
+                        //   Ported as-is - behavior matches .NET Framework BloogBot.
                         var player = ObjectManager.Player;
                         // Short delay
                         if (player.ShouldWaitForShortDelay && Wait.For("ShortDelay", 600))

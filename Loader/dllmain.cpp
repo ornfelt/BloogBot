@@ -54,6 +54,63 @@ wchar_t* dllLocation = NULL;
 
 #define MB(s) MessageBoxW(NULL, s, NULL, MB_OK);
 
+#if _DEBUG
+// Waits out the debugger grace period, returning as soon as any of three things happens: the
+// timeout elapses, the named MyDebugEvent is signalled from outside - which is what that event was
+// always for - or Enter is pressed in the console ThreadMain just allocated. Without the last of
+// those, every Debug injection cost a flat ten seconds even when nobody was going to attach.
+static void WaitForDebuggerOrEnter(HANDLE hEvent, DWORD timeoutMs)
+{
+	const HANDLE input = GetStdHandle(STD_INPUT_HANDLE);
+
+	DWORD consoleMode;
+	if (input == NULL || input == INVALID_HANDLE_VALUE || !GetConsoleMode(input, &consoleMode))
+	{
+		// No console input to watch - wait exactly as before.
+		WaitForSingleObject(hEvent, timeoutMs);
+		return;
+	}
+
+	// Anything typed before we got here is not an answer to a prompt that had not been printed.
+	FlushConsoleInputBuffer(input);
+
+	const ULONGLONG deadline = GetTickCount64() + timeoutMs;
+	HANDLE handles[2] = { hEvent, input };
+
+	for (;;)
+	{
+		const ULONGLONG now = GetTickCount64();
+		if (now >= deadline)
+			return;
+
+		const DWORD waited = WaitForMultipleObjects(2, handles, FALSE, (DWORD)(deadline - now));
+
+		// Anything but 'the console has input' means we are done: MyDebugEvent fired, the timeout
+		// expired, or the wait failed.
+		if (waited != WAIT_OBJECT_0 + 1)
+			return;
+
+		// The handle also signals for key-up, mouse and focus records, so read them and look for a
+		// real Enter press rather than trusting the wake-up on its own.
+		INPUT_RECORD records[16];
+		DWORD read = 0;
+		if (!ReadConsoleInputW(input, records, ARRAYSIZE(records), &read))
+			return;
+
+		for (DWORD i = 0; i < read; i++)
+		{
+			if (records[i].EventType == KEY_EVENT &&
+				records[i].Event.KeyEvent.bKeyDown &&
+				records[i].Event.KeyEvent.wVirtualKeyCode == VK_RETURN)
+			{
+				std::cout << std::string("Enter pressed - skipping the wait.") << std::endl;
+				return;
+			}
+		}
+	}
+}
+#endif
+
 unsigned __stdcall ThreadMain(void* pParam)
 {
 	AllocConsole();
@@ -67,10 +124,10 @@ unsigned __stdcall ThreadMain(void* pParam)
 #if _DEBUG
 	if (!skipDebug)
 	{
-		std::cout << std::string("Attach a debugger now to WoW.exe if you want to debug Loader.dll. Waiting 10 seconds...") << std::endl;
+		std::cout << std::string("Attach a debugger now to WoW.exe if you want to debug Loader.dll. Waiting 10 seconds... (press Enter to skip)") << std::endl;
 
 		HANDLE hEvent = CreateEvent(nullptr, TRUE, FALSE, L"MyDebugEvent");
-		WaitForSingleObject(hEvent, 10000);  // Wait for 10 seconds
+		WaitForDebuggerOrEnter(hEvent, 10000);  // up to 10 seconds; Enter skips it
 		bool isDebuggerAttached = IsDebuggerPresent() != FALSE;
 
 		if (isDebuggerAttached)
@@ -88,10 +145,10 @@ unsigned __stdcall ThreadMain(void* pParam)
 #endif
 #else
 #if _DEBUG
-	std::cout << std::string("Attach a debugger now to WoW.exe if you want to debug Loader.dll. Waiting 10 seconds...") << std::endl;
+	std::cout << std::string("Attach a debugger now to WoW.exe if you want to debug Loader.dll. Waiting 10 seconds... (press Enter to skip)") << std::endl;
 
 	HANDLE hEvent = CreateEvent(nullptr, TRUE, FALSE, L"MyDebugEvent");
-	WaitForSingleObject(hEvent, 10000);  // Wait for 10 seconds
+	WaitForDebuggerOrEnter(hEvent, 10000);  // up to 10 seconds; Enter skips it
 	bool isDebuggerAttached = IsDebuggerPresent() != FALSE;
 
 	if (isDebuggerAttached)

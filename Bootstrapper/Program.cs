@@ -20,8 +20,17 @@ namespace Bootstrapper
 
             var startupInfo = new STARTUPINFO();
 
+            // Fail here, with the path in the message, rather than letting a bad PathToWoW turn into
+            // 'Access is denied' from Process.Handle further down: CreateProcess would fail, leave
+            // PROCESS_INFORMATION zeroed, and GetProcessById(0) would hand back the System Idle
+            // process, which cannot be opened.
+            if (!File.Exists(bootstrapperSettings.PathToWoW))
+                throw new FileNotFoundException(
+                    $"PathToWoW does not exist: {bootstrapperSettings.PathToWoW}" + Environment.NewLine +
+                    $"Set it to your WoW.exe in {bootstrapperSettingsFilePath}");
+
             // run BloogBot.exe in a new process
-            CreateProcess(                                                                          
+            var processCreated = CreateProcess(
                 bootstrapperSettings.PathToWoW,
                 null,
                 IntPtr.Zero,
@@ -32,6 +41,14 @@ namespace Bootstrapper
                 null, 
                 ref startupInfo,
                 out PROCESS_INFORMATION processInfo);
+
+            // CreateProcess returns a bool that used to be discarded. Its Win32 error code is not
+            // available - none of the DllImports sets SetLastError - but the path is the part
+            // worth reporting anyway.
+            if (!processCreated)
+                throw new InvalidOperationException(
+                    $"CreateProcess failed for {bootstrapperSettings.PathToWoW}. Check that it is a " +
+                    "32-bit executable you have permission to run.");
 
             // this seems to help prevent timing issues
             Thread.Sleep(1000);

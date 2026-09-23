@@ -21,8 +21,17 @@ namespace Bootstrapper
 
             var startupInfo = new STARTUPINFO();
 
+            // Fail here, with the path in the message, rather than letting a bad PathToWoW turn into
+            // 'Access is denied' from Process.Handle further down: CreateProcess would fail, leave
+            // PROCESS_INFORMATION zeroed, and GetProcessById(0) would hand back the System Idle
+            // process, which cannot be opened.
+            if (!File.Exists(bootstrapperSettings.PathToWoW))
+                throw new FileNotFoundException(
+                    $"PathToWoW does not exist: {bootstrapperSettings.PathToWoW}" + Environment.NewLine +
+                    $"Set it to your WoW.exe in {bootstrapperSettingsFilePath}");
+
             // run BloogBot.exe in a new process
-            CreateProcess(                                                                          
+            var processCreated = CreateProcess(
                 bootstrapperSettings.PathToWoW,
                 null,
                 IntPtr.Zero,
@@ -33,6 +42,14 @@ namespace Bootstrapper
                 null, 
                 ref startupInfo,
                 out PROCESS_INFORMATION processInfo);
+
+            // CreateProcess returns a bool that used to be discarded. Its Win32 error code is not
+            // available - none of the DllImports sets SetLastError - but the path is the part
+            // worth reporting anyway.
+            if (!processCreated)
+                throw new InvalidOperationException(
+                    $"CreateProcess failed for {bootstrapperSettings.PathToWoW}. Check that it is a " +
+                    "32-bit executable you have permission to run.");
 
             // this seems to help prevent timing issues
             Thread.Sleep(1000);
@@ -48,7 +65,7 @@ namespace Bootstrapper
             // POTENTIAL BUG FOUND: the region is loaderPath.Length bytes, but the path is written below as
             //   Encoding.Unicode (2 bytes per char, no terminator), so twice that many bytes are written into
             //   it. It only works because VirtualAllocEx rounds the size up to a zero-filled 4 KiB page.
-            //   Original: Bootstrapper/Program.cs:47
+            //   Original: Bootstrapper/Program.cs:64
             //   Ported as-is - behavior matches .NET Framework BloogBot.
             var loaderPathPtr = VirtualAllocEx(
                 processHandle, 
@@ -64,7 +81,7 @@ namespace Bootstrapper
             //   Marshal.GetLastWin32Error() here and in the three checks below never reflects these calls.
             //   A failed VirtualAllocEx / WriteProcessMemory / CreateRemoteThread goes undetected, and a
             //   stale error code from an unrelated earlier call can throw instead.
-            //   Original: Bootstrapper/Program.cs:57 (DllImports: Bootstrapper/WinImports.cs)
+            //   Original: Bootstrapper/Program.cs:74 (DllImports: Bootstrapper/WinImports.cs)
             //   Ported as-is - behavior matches .NET Framework BloogBot.
             int error = Marshal.GetLastWin32Error();
             if (error > 0)

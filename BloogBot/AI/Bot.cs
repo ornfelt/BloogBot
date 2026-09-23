@@ -456,73 +456,77 @@ namespace BloogBot.AI
                         }
 
 #if USE_CUSTOM_CHANGES
-                        // POTENTIAL BUG FOUND: ObjectManager.Player is null until the client is in-world -
-                        //   EnumerateVisibleObjects only assigns it when IsLoggedIn is true and the enumeration
-                        //   finds the player's own GUID - yet it is dereferenced on the next line with no null
-                        //   check, directly after the block above that exists precisely to handle being logged
-                        //   out. Starting the bot at the login or character-select screen therefore throws
-                        //   NullReferenceException on every tick of the ThreadSynchronizer pump, and the bot
-                        //   never reaches the LoginState it just pushed.
-                        //   Original: BloogBot/AI/Bot.cs:454
-                        //   Ported as-is - behavior matches .NET Framework BloogBot.
                         var player = ObjectManager.Player;
-                        // Short delay
-                        if (player.ShouldWaitForShortDelay && Wait.For("ShortDelay", 600))
-                        {
-                            player.ShouldWaitForShortDelay = false;
-                            HandleLevelUp(player, true); // Try again just in case
-                        }
-                        else if (player.ShouldWaitForShortDelay)
-                            return;
-
-                        // BG / new map delays
-                        if (player.HasJoinedBg && Wait.For("JoinedBGDelay", 30000))
-                            player.HasJoinedBg = false;
-                        else if (player.HasJoinedBg)
-                            return;
-
-                        if (player.HasEnteredNewMap && Wait.For("EnteredNewMapDelay", 16000))
-                            player.HasEnteredNewMap = false;
-                        else if (player.HasEnteredNewMap)
-                            return;
-
-                        if (player.ShouldWaitForTeleportDelay && Wait.For("TeleportDelay", 5000))
-                            player.ShouldWaitForTeleportDelay = false;
-                        else if (player.ShouldWaitForTeleportDelay)
-                            return;
-
-                        if (player.ShouldTeleportToLastWp)
-                        {
-                            player.LuaCall($"SendChatMessage('.npcb wp go {player.LastWpId}')");
-                            player.ShouldTeleportToLastWp = false;
-                            player.ShouldWaitForTeleportDelay = true;
-                            return;
-                        }
-
+                        // Hoisted out of the guard below: playerInBg is read further down the tick, outside it.
+                        // IsPlayerInBg only reads ObjectManager.MapId and never touches Player, so it is safe to
+                        // evaluate whether or not the client is in-world.
                         var playerInBg = IsPlayerInBg();
-                        // If in BG, check if it has ended
-                        if (playerInBg)
+
+                        // This fork reads Player at the top of the tick, but ObjectManager.Player is null until
+                        // the client is in-world, so every delay and map check below would throw. Skipping them
+                        // while it is null lets control reach the 'if (botStates.Peek() is LoginState)' handling
+                        // further down, which exists for exactly this case - see its comment. Without this the
+                        // whole tick threw NullReferenceException on every WndProc pump, LoginState.Update() was
+                        // never reached, and the login command could never actually log in.
+                        if (player != null)
                         {
-                            if (IsBgFinished(player))
+                            // Short delay
+                            if (player.ShouldWaitForShortDelay && Wait.For("ShortDelay", 600))
                             {
-                                if (ObjectManager.MapId == 559)
-                                    player.ShouldTeleportToLastWp = true;
-                                player.LuaCall("LeaveBattlefield()");
-                                player.LuaCallWithResults("LeaveBattlefield()");
-                                player.HasEnteredNewMap = true;
+                                player.ShouldWaitForShortDelay = false;
+                                HandleLevelUp(player, true); // Try again just in case
+                            }
+                            else if (player.ShouldWaitForShortDelay)
+                                return;
+
+                            // BG / new map delays
+                            if (player.HasJoinedBg && Wait.For("JoinedBGDelay", 30000))
+                                player.HasJoinedBg = false;
+                            else if (player.HasJoinedBg)
+                                return;
+
+                            if (player.HasEnteredNewMap && Wait.For("EnteredNewMapDelay", 16000))
+                                player.HasEnteredNewMap = false;
+                            else if (player.HasEnteredNewMap)
+                                return;
+
+                            if (player.ShouldWaitForTeleportDelay && Wait.For("TeleportDelay", 5000))
+                                player.ShouldWaitForTeleportDelay = false;
+                            else if (player.ShouldWaitForTeleportDelay)
+                                return;
+
+                            if (player.ShouldTeleportToLastWp)
+                            {
+                                player.LuaCall($"SendChatMessage('.npcb wp go {player.LastWpId}')");
+                                player.ShouldTeleportToLastWp = false;
+                                player.ShouldWaitForTeleportDelay = true;
                                 return;
                             }
-                        }
 
-                        var mapId = ObjectManager.MapId;
-                        if ((currentState != typeof(ArenaSkirmishQueueState) || mapId == 559) && mapId != player.LastKnownMapId)
-                        {
-                            Console.WriteLine("Bot entered new map... Restarting bot!");
-                            //Stop();
-                            ObjectManager.KillswitchTriggered = false;
-                            //Start(container, stopCallback);
-                            ResetValues(container, false);
-                            player.LastKnownMapId = mapId;
+                            // If in BG, check if it has ended
+                            if (playerInBg)
+                            {
+                                if (IsBgFinished(player))
+                                {
+                                    if (ObjectManager.MapId == 559)
+                                        player.ShouldTeleportToLastWp = true;
+                                    player.LuaCall("LeaveBattlefield()");
+                                    player.LuaCallWithResults("LeaveBattlefield()");
+                                    player.HasEnteredNewMap = true;
+                                    return;
+                                }
+                            }
+
+                            var mapId = ObjectManager.MapId;
+                            if ((currentState != typeof(ArenaSkirmishQueueState) || mapId == 559) && mapId != player.LastKnownMapId)
+                            {
+                                Console.WriteLine("Bot entered new map... Restarting bot!");
+                                //Stop();
+                                ObjectManager.KillswitchTriggered = false;
+                                //Start(container, stopCallback);
+                                ResetValues(container, false);
+                                player.LastKnownMapId = mapId;
+                            }
                         }
 #endif
 

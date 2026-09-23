@@ -15,7 +15,10 @@ namespace BeastMasterHunterBot
     {
         public string Name => "Beast Master Hunter";
 
-        public string FileName => "BeastMasterHunterBot.dll";
+        // 'BeastmasterHunterBot.dll' with a lowercase 'm' - the name the project actually
+        // builds. The !info command feeds this to AssemblyName.GetAssemblyName, which used to
+        // work only because NTFS is case-insensitive.
+        public string FileName => "BeastmasterHunterBot.dll";
 
         bool AdditionalTargetingCriteria(WoWUnit unit) => true;
 

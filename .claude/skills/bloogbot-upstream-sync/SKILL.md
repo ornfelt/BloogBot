@@ -1,8 +1,8 @@
 ---
 name: bloogbot-upstream-sync
-description: Land upstream BloogBot commits in the ornfelt fork, one commit at a time. First run guards every local customization behind the USE_CUSTOM_CHANGES preprocessor directive (toggleable per csproj, default on), strips the XML doc comments the fork added, and proves the solution builds with the directive both on and off. Later runs cherry-pick the next unprocessed upstream commit from the read-only clone in ~/Downloads/BloogBot, resolve conflicts against the guarded blocks, rebuild both configurations, and record the result in UPSTREAM_SYNC.md so the next run continues where this one stopped.
+description: Land upstream BloogBot commits in the ornfelt fork, one commit at a time. First run guards every local customization behind the USE_CUSTOM_CHANGES preprocessor directive (toggleable per csproj, default on), strips the XML doc comments the fork added, and proves the solution builds with the directive both on and off. Later runs cherry-pick the next unprocessed upstream commit from the read-only clone in ~/Downloads/BloogBot, resolve conflicts against the guarded blocks, rebuild both configurations, and record the result in UPSTREAM_SYNC.md so the next run continues where this one stopped. Every upstream commit after the fork point has a ledger row (pending until looked at, in commit-date order, with its origin - upstream, fork or merge - its handling and any special handling or upstream bug flag); commits that came from forks are landed too, a merge is skipped only when it changes nothing, and the ledger can be rebuilt from the two repos.
 disable-model-invocation: true
-argument-hint: "[empty means the next unprocessed commit, or: setup, status, <commit-id>, skip <commit-id> <reason>, replay <commit-id>, abort]"
+argument-hint: "[empty means the next unprocessed commit, or: setup, status, rebuild, <commit-id>, skip <commit-id> <reason>, replay <commit-id>, abort]"
 ---
 
 # Sync upstream BloogBot commits into the fork
@@ -12,6 +12,16 @@ customizations on top of the shared history - a rewritten grind loop, battlegrou
 states, wander-node navigation, corpse-retrieval changes and a pile of waypoint blacklists. Upstream
 keeps moving; this skill walks upstream's history forward from the fork point, **one commit at a
 time**, and lands each commit in the fork while keeping the local customizations working.
+
+- **Commits from forks are landed too.** A commit that reached upstream's `main` only through a
+  merge - from a contributor's fork or branch, like `a5e450a` (origin `fork`, see the ledger) - is
+  landed under the same rules as one made on upstream's own line. Having come from a fork, or not
+  being on upstream's first-parent line, is never a reason to skip one.
+- **Merge commits are skipped only when they change nothing.** A merge whose
+  `git -C "$UP" show --remerge-diff <commit>` (cross-checked with `git show --cc <commit>`) is
+  empty only joins its parents, which are rows of their own. A merge that resolved a conflict in
+  code, or changed anything beyond its parents, is landed like any other commit - see "Merge
+  commits" under step 1 of "Landing a commit".
 
 This is the **BloogBot tree**. It has nothing to do with `ameisenbotx-upstream-sync`, with
 `wow-client-upstream-sync`, with the `wc_clean_new` ports, with `libwow`, or with any of the
@@ -316,11 +326,15 @@ Decide from the argument:
    commits remain, what the next one is, whether a cherry-pick is in progress, and the open
    questions. **Write nothing**, ledger included.
 5. **Skip** - `skip <commit-id> <reason>`. Record the commit as skipped in the ledger without
-   landing it, and move the high-water mark past it if it is the next one. Use this when the user
-   has answered "no" to a question a previous run asked.
-6. **Replay** - `replay <commit-id>`. Redo a commit whose earlier attempt was wrong or incomplete.
-   Update the existing ledger row rather than adding a second one. Do not `git reset` the fork to
-   undo the earlier attempt unless the user asks - fix forward.
+   landing it, with Handling `requested` and a Special handling entry quoting the reason, and move
+   the high-water mark past it if it is the next one. Use this when the user has answered "no" to a
+   question a previous run asked.
+6. **Replay** - `replay <commit-id>`. Redo a commit whose earlier attempt was wrong or incomplete,
+   or fix a bug flagged for upstream in the fork too (see "Upstream bug flags"). Update the existing
+   ledger row rather than adding a second one. Do not `git reset` the fork to undo the earlier
+   attempt unless the user asks - fix forward. A replay the user asked for sets Handling to
+   `requested`, and the Special handling entry says what was redone and quotes their request in
+   their own words; a flag it fixes is closed with that decision.
 7. **Abort** - `abort`. An interrupted cherry-pick is in the working tree and the user wants out:
    `git cherry-pick --abort`, leave the ledger row as `asked`, report.
 8. **Mirror** - `mirror <commit-id>`. The user answered "yes" to a pending mirror question from
@@ -330,6 +344,10 @@ Decide from the argument:
 9. **No-mirror** - `no-mirror <commit-id> <reason>`. The user answered "no": leave the `#if` branch
    as it is, record `mirror declined: <reason>` in that row's `Notes`, clear the question. Writes
    only the ledger.
+
+10. **Rebuild** - `rebuild`. Redo the ledger from the two repos per "Picking up the current state",
+    keeping the notes, Special handling entries, flags, mirror verdicts and open questions of rows
+    that are still right, commit it, report what changed, stop. Lands no upstream commit.
 
 A bare `mirror` or `no-mirror` with no commit id means the newest row whose `Notes` say
 `mirror pending`. If more than one row is pending and no id was given, list them and ask which.
@@ -444,8 +462,9 @@ above makes it easy to hit.
 
 ### 7. Seed the ledger and stop
 
-Create `UPSTREAM_SYNC.md` (shape below) with the fork point as the high-water mark and no commit
-rows. Report, and do not continue into the first commit.
+Create `UPSTREAM_SYNC.md` (shape below) with the fork point as the high-water mark and a `pending`
+row for every upstream commit after it, filled per "Picking up the current state". Report, and do
+not continue into the first commit.
 
 ## Build notes
 
@@ -490,16 +509,37 @@ Remaining after the high-water mark: `<n>`
 Local customizations: guarded by `USE_CUSTOM_CHANGES`, defined in `<list of csproj/vcxproj files>`
 Branch: `main`. The `commented` branch is out of scope.
 
-Statuses: `applied` (cherry-picked clean), `adapted` (landed, conflicts resolved by hand),
-`partial` (part landed, part dropped - the notes say which), `skipped` (deliberately not landed),
-`asked` (waiting on an answer from the user, cherry-pick left in progress or aborted).
+Statuses: `pending` (not looked at yet), `applied` (cherry-picked clean), `adapted` (landed,
+conflicts resolved by hand), `partial` (part landed, part dropped - the notes say which), `skipped`
+(a merge that changes nothing, or deliberately not landed), `asked` (waiting on an answer from the
+user, cherry-pick left in progress or aborted).
 
 A commit that landed but raised a step 6 mirror question keeps its real status - it is `applied` or
 `adapted`, not `asked`, because the commit itself is done. The pending question lives in the `Notes`
 column as `mirror pending` and under "Open questions", and it still blocks the next commit.
 
-| # | Commit | Subject | Status | Conflicts | Notes |
-| --- | --- | --- | --- | --- | --- |
+Origin: `upstream` (on upstream's own first-parent line), `fork` (reached upstream's `main` only
+through a merge - a contributor's fork or branch), `merge` (a merge commit).
+
+Handling: `as-is` (upstream's change landed as upstream wrote it - unguarded, or in the `#else`
+branch beside a customization), `needed` (changed because the fork needed it - a hunk dropped or
+reshaped, a customization reworked, a fix mirrored into the `#if` branch on the run's own call),
+`requested` (changed, skipped or redone because the user asked). Anything but `as-is` has an entry
+under Special handling.
+
+| # | Commit | Date | Origin | Subject | Status | Handling | Conflicts | Notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+
+## Special handling
+
+<one entry per row whose Handling is not `as-is`: `#<n> <commit> <subject>` - what was done and
+why; for `requested`, the user's request in their own words>
+
+## Flagged for upstream
+
+<one entry per upstream bug flag: `#<n> <commit> <subject>` - the bug, a repro, a suggested fix,
+where a PR belongs (DrewKestell/BloogBot or ornfelt/BloogBot), state `open` or `closed (<the
+user's decision>)`>
 
 ## Unguarded customizations
 
@@ -516,12 +556,26 @@ answers: `mirror <commit-id>` or `no-mirror <commit-id> <reason>`>
 
 Rules for the ledger:
 
-- One row per upstream commit that has been looked at, in upstream order, newest last.
-- The **high-water mark** is the newest commit such that every commit from the fork point up to it
-  has a row. A commit landed out of order by mode 3 gets a row but does **not** move the mark; the
+- **Every upstream commit after the fork point has a row** - landed, skipped, `asked` or
+  `pending`. A run first adds `pending` rows for the commits the ledger has none for (after the
+  user fetched new history into the Downloads clone), so the file always shows what is landed and
+  what is not. A ledger written before the `pending` rows and the Origin / Handling columns
+  existed is brought to this shape by the next run, per "Picking up the current state".
+- **Rows are chronological and never move.** New rows are appended in commit-date order, never a
+  commit before its parent: `git -C "$FORK" log --reverse --date-order --format='%h %ct %s'
+  1d0057c..upstream-local/main`, minus the commits that already have a row. `#` keeps counting up;
+  existing rows are never reordered, renumbered or removed. An old commit that only arrives through
+  a later merge is appended when it arrives, so its date can be older than the row above it - that
+  is expected. **The ledger's row order is the landing order.**
+- **Origin**: `merge` when the commit has more than one parent; else `upstream` when
+  `git -C "$UP" rev-list --first-parent 1d0057c..main` lists it; else `fork`.
+- **Handling** as above; `requested` wins over `needed`. A skipped no-change merge is `as-is`:
+  skipping it is the rule, not a change. A `no-mirror` answer changes nothing in the fork, so it
+  leaves the Handling as it was.
+- The **high-water mark** is the last row before the first row that is still `pending` or `asked`.
+  A commit landed out of order by mode 3 gets its row filled but does **not** move the mark; the
   mark moves later, when the gap is closed.
-- `Remaining` is recomputed each run, not carried over:
-  `git -C "$FORK" rev-list --count <high-water>..upstream-local/main`.
+- `Remaining` is the `pending` and `asked` rows, recomputed each run, not carried over.
 - The `Conflicts` column lists the files git actually conflicted on. It is the column that matters
   next time - it is how a later run knows which files the customizations keep colliding with.
 - The `Notes` column carries the real information: how each conflict was resolved, whether a guard
@@ -534,7 +588,27 @@ Rules for the ledger:
   asked). A guarded file touched with no mirror verdict recorded means step 6 was skipped - go back
   and do it rather than assuming it was fine.
 - The ledger is a hint that makes orientation cheap, not the source of truth. If it disagrees with
-  the fork's working tree, the tree wins and the ledger gets corrected in the same run.
+  the fork's working tree, the tree wins and the rows concerned are rebuilt per "Picking up the
+  current state" in the same run.
+
+### Picking up the current state
+
+The ledger can be rebuilt from the two repos - on setup, in `rebuild` mode, and for the rows
+concerned whenever the ledger disagrees with the tree. For every commit in the walk above (a full
+rebuild numbers the rows in that order), origin as above, then:
+
+1. **An earlier sync**: the fork's commit that landed it - same subject and author
+   (`git -C "$FORK" log --format='%h %an %s' 1d0057c..main`), a body naming the sha
+   (`--grep='<commit>'`), or a matching `git patch-id`. Its conflicts and resolution give the
+   status; a mirror commit (`Mirror <commit> fix ...`) gives `mirrored`.
+2. **Already in the code**: with no such commit, check the change against the tree - upstream's
+   added lines present (unguarded or in an `#else` branch) and its removed lines gone from the
+   off-configuration. All of it in: `applied`, noting `rebuilt, found in the tree (<how found>)`.
+   Part of it: `pending` with a note saying which part is there. None: `pending`.
+3. **A no-change merge**: `skipped (merge, changes nothing)`.
+
+Keep the notes, Special handling entries, flags, mirror verdicts and open questions of rows the
+rebuild confirms; for a row it changes, say in the run's output what it was and what it is now.
 
 ## Landing a commit
 
@@ -547,24 +621,41 @@ UP="$USERPROFILE/Downloads/BloogBot"
 cat "$FORK/UPSTREAM_SYNC.md"                       # the cheap answer first
 git -C "$FORK" fetch upstream-local
 
-# HIGH is the ledger's high-water mark
-git -C "$FORK" log --oneline --reverse "$HIGH..upstream-local/main"
-git -C "$FORK" rev-list --count "$HIGH..upstream-local/main"
+# the commits with no ledger row yet get pending rows, in this order
+git -C "$FORK" log --reverse --date-order --format='%h %ct %s' 1d0057c..upstream-local/main
 ```
 
-The next commit is the first line of that `--reverse` listing. In mode 3 it is the commit the user
-named instead.
+Add the `pending` rows first (see "The ledger"). The next commit is the ledger's first `pending`
+row. In mode 3 it is the commit the user named instead.
 
 At the time of writing, **61** commits sit after the fork point, from `a5e450a` ("More information
 when building path") to `a9be5e8` ("BeastmasterHunterBot: LOS checks, pet management, rest state
 rewrite"). They are mostly small and single-purpose, unlike the AmeisenBotX sync.
 
 Exactly **one** is a merge commit: `f22af34` ("Merge branch 'main' of github.com:DrewKestell/BloogBot
-into main"). It needs `-m 1`. Test before picking - this prints `1` for a merge and `0` otherwise:
+into main"), joining `569d3cb` and `a5e450a`. Test before picking - this prints `1` for a merge and
+`0` otherwise:
 
 ```bash
 git -C "$UP" rev-list --no-walk --count --merges <commit>
 ```
+
+#### Merge commits
+
+A merge's parents have rows above it, so they are already landed. Read what the merge itself did:
+
+```bash
+git -C "$UP" show --remerge-diff <commit>
+git -C "$UP" show --cc <commit>
+```
+
+- **Empty** - it only joins its parents (`f22af34` is one): record it `skipped (merge, changes
+  nothing)`, Handling `as-is`, and stop the run there as for any decided commit. No cherry-pick.
+- **Not empty** - a conflict resolved in code, or anything beyond its parents: land that
+  resolution like any other commit, through steps 2-8, with the `--remerge-diff` as the change.
+  **Never `cherry-pick -m 1`**: that re-applies the second parent's whole line, whose commits have
+  rows of their own. Make the same edits by hand, then commit them with the merge's subject and a
+  body saying it is the resolution of upstream merge `<commit>`.
 
 ### 2. Read the whole commit before touching anything
 
@@ -621,12 +712,28 @@ it to conflict trivially or come out empty - take upstream's version and note it
 Upstream also adds a per-bot `app.config` to most bot projects. The fork edited three `App.config`
 files. Hand-merge, do not guard.
 
+#### Upstream bug flags
+
+When the commit's own change has an evident, reproducible bug - in the lines it adds or changes,
+not in the code around them - flag it. This is not the step 6 mirror question, which is about a
+fix upstream made; a flag is about a bug upstream introduced.
+
+- The commit is still landed exactly as upstream wrote it, and the run carries on. Never fix it
+  on your own.
+- Add an entry under "Flagged for upstream": the bug, a repro (the bot state or steps and what
+  goes wrong), a suggested fix, and where a pull request belongs: `DrewKestell/BloogBot` for a bug
+  in upstream's code, `ornfelt/BloogBot` when it only bites the fork - e.g. the `#if
+  USE_CUSTOM_CHANGES` branch calls the new code in a way upstream does not. The note names it.
+  Never open the pull request.
+- It stays `open` until the user decides. When they want the fork fixed too, `replay <commit>`
+  fixes it forward in a commit of its own - behind `USE_CUSTOM_CHANGES`, the fix in the `#if`
+  branch and upstream's text kept in the `#else` - with Handling `requested` and a Special
+  handling entry quoting their request; the flag is closed with their decision either way.
+
 ### 3. Cherry-pick
 
 ```bash
-git -C "$FORK" cherry-pick <commit>
-# or, for f22af34 only:
-git -C "$FORK" cherry-pick -m 1 f22af34
+git -C "$FORK" cherry-pick <commit>      # never for a merge - see "Merge commits"
 ```
 
 Three outcomes:
@@ -793,7 +900,9 @@ mirror, or a `mirror` argument naming the commit just landed. When mirroring:
 - commit it **separately** from the cherry-pick, so a bad mirror can be reverted without losing the
   upstream commit. Subject shape: `Mirror <commit> fix into the USE_CUSTOM_CHANGES branch`;
 - clear the open question if one was raised, and record `mirrored` in the row's `Notes` (replacing
-  `mirror pending` when it is there).
+  `mirror pending` when it is there);
+- set the row's Handling - `needed` for a clear-cut mirror made on the run's own call, `requested`
+  for one the user said yes to - and add its Special handling entry.
 
 If the answer was no, change `mirror pending` to `mirror declined: <reason>` and clear the question.
 Do not raise the same question again on a later run.
@@ -829,9 +938,10 @@ any that appear mean fork-authored `///` crept back in.
 
 ### 8. Record
 
-Update `UPSTREAM_SYNC.md`: add or update the row, fill the `Conflicts` column, move the high-water
-mark if this commit closed the gap, refresh `Upstream HEAD when last checked` and `Remaining`, and
-add or clear any open question. Commit the ledger update as part of the cherry-pick commit
+Update `UPSTREAM_SYNC.md`: fill the commit's row (status, Handling, `Conflicts`, notes), add its
+Special handling entry when the Handling is not `as-is` and its upstream flag if it raised one,
+move the high-water mark if this commit closed the gap, refresh `Upstream HEAD when last checked`
+and `Remaining`, and add or clear any open question. Commit the ledger update as part of the cherry-pick commit
 (`git commit --amend`) or as a separate follow-up commit - either is fine, but do not leave it
 uncommitted.
 
@@ -868,8 +978,10 @@ is its own commit and its own run, and it never picks up the next upstream commi
 
 Every run ends with, in this order:
 
-1. **What the commit was** - upstream sha, subject, and the classification (`applied` / `adapted` /
-   `partial` / `skipped` / `asked`). For a setup run: "Phase 0 - customizations guarded".
+1. **What the commit was** - upstream sha, origin, subject, the classification (`applied` /
+   `adapted` / `partial` / `skipped` / `asked`) and the Handling. For a setup run: "Phase 0 -
+   customizations guarded". Say how many `pending` rows the run added, and any that arrived older
+   than the rows above them.
 2. **What changed in the fork** - file by file. For a cherry-pick, the interesting part is the
    conflicts: which files conflicted, and how each was resolved. Say explicitly if a csproj or
    vcxproj was touched, if a guard was added, moved or removed, and if nothing was written.
@@ -889,6 +1001,10 @@ Every run ends with, in this order:
      has the same defect, what the mirrored fix would look like, and a recommendation. State that
      the commit itself has landed and that the answer is `mirror <commit-id>` or
      `no-mirror <commit-id> <reason>`.
+   - **Upstream flags** - a new one in full (bug, repro, suggested fix, where the pull request
+     belongs), and how many older ones are still open.
+   - **Ledger changes** - rows a rebuild or a disagreement with the tree changed, what they were and
+     what they are now.
 7. **A `Next:` line** so the following run - and the reader - knows the entry point:
 
    ```text

@@ -1,6 +1,6 @@
 ---
 name: bloogbot-upstream-sync
-description: Land upstream BloogBot commits in the ornfelt fork, one commit at a time. First run guards every local customization behind the USE_CUSTOM_CHANGES preprocessor directive (toggleable per csproj, default on), strips the XML doc comments the fork added, and proves the solution builds with the directive both on and off. Later runs cherry-pick the next unprocessed upstream commit from the read-only clone in ~/Downloads/BloogBot, resolve conflicts against the guarded blocks, rebuild both configurations, and record the result in UPSTREAM_SYNC.md so the next run continues where this one stopped. Every upstream commit after the fork point has a ledger row (pending until looked at, in commit-date order, with its origin - upstream, fork or merge - its handling and any special handling or upstream bug flag); commits that came from forks are landed too, a merge is skipped only when it changes nothing, and the ledger can be rebuilt from the two repos.
+description: Land upstream BloogBot commits in the ornfelt fork, one commit at a time. First run guards every local customization behind the USE_CUSTOM_CHANGES preprocessor directive (toggleable per csproj, default on), strips the XML doc comments the fork added, and proves the solution builds with the directive both on and off. Later runs cherry-pick the next unprocessed upstream commit from the read-only clone in ~/Downloads/BloogBot, resolve conflicts against the guarded blocks, rebuild both configurations, and record the result in UPSTREAM_SYNC.md so the next run continues where this one stopped. Every upstream commit after the fork point has a ledger row (pending until looked at, in commit-date order, with its origin - upstream, fork or merge - its handling and any special handling or upstream bug flag), and upstream_info.txt names the upstream commit the fork is synced through; commits that came from forks are landed too, a merge is skipped only when it changes nothing, and the ledger can be rebuilt from the two repos.
 disable-model-invocation: true
 argument-hint: "[empty means the next unprocessed commit, or: setup, status, rebuild, <commit-id>, skip <commit-id> <reason>, replay <commit-id>, abort]"
 ---
@@ -318,7 +318,7 @@ Decide from the argument:
    run on its own.
 2. **Setup** - `setup`, or the ledger does not exist. Phase 0 below: switch to `main`, strip the
    fork's XML doc comments, guard the customizations, wire up the csproj/vcxproj toggle, prove both
-   builds, create the ledger. Does **not** continue into a commit; the guarded tree is worth
+   builds, create the ledger and `upstream_info.txt`. Does **not** continue into a commit; the guarded tree is worth
    reviewing on its own.
 3. **Specific commit** - a bare upstream commit id (`5e949d4`), optionally spelled
    `apply <commit-id>`. Land that commit even if it is out of order.
@@ -463,7 +463,8 @@ above makes it easy to hit.
 ### 7. Seed the ledger and stop
 
 Create `UPSTREAM_SYNC.md` (shape below) with the fork point as the high-water mark and a `pending`
-row for every upstream commit after it, filled per "Picking up the current state". Report, and do
+row for every upstream commit after it, filled per "Picking up the current state", and
+`upstream_info.txt` naming that high-water mark (see "upstream_info.txt"). Report, and do
 not continue into the first commit.
 
 ## Build notes
@@ -591,6 +592,19 @@ Rules for the ledger:
   the fork's working tree, the tree wins and the rows concerned are rebuilt per "Picking up the
   current state" in the same run.
 
+### upstream_info.txt
+
+`upstream_info.txt` in the fork's root, next to `UPSTREAM_SYNC.md` (tracked), names the upstream
+commit the fork is synced through - the high-water mark's full 40-character hash:
+
+```text
+BloogBot
+  commit <full hash of the high-water mark>
+```
+
+It changes whenever the high-water mark moves, and is committed together with the ledger whenever
+the ledger is committed (see step 8 of "Landing a commit").
+
 ### Picking up the current state
 
 The ledger can be rebuilt from the two repos - on setup, in `rebuild` mode, and for the rows
@@ -609,6 +623,7 @@ rebuild numbers the rows in that order), origin as above, then:
 
 Keep the notes, Special handling entries, flags, mirror verdicts and open questions of rows the
 rebuild confirms; for a row it changes, say in the run's output what it was and what it is now.
+Recompute the high-water mark, `Remaining` and `upstream_info.txt` from the rows.
 
 ## Landing a commit
 
@@ -940,10 +955,15 @@ any that appear mean fork-authored `///` crept back in.
 
 Update `UPSTREAM_SYNC.md`: fill the commit's row (status, Handling, `Conflicts`, notes), add its
 Special handling entry when the Handling is not `as-is` and its upstream flag if it raised one,
-move the high-water mark if this commit closed the gap, refresh `Upstream HEAD when last checked`
+move the high-water mark if this commit closed the gap (updating `upstream_info.txt` with it),
+refresh `Upstream HEAD when last checked`
 and `Remaining`, and add or clear any open question. Commit the ledger update as part of the cherry-pick commit
 (`git commit --amend`) or as a separate follow-up commit - either is fine, but do not leave it
-uncommitted.
+uncommitted. `upstream_info.txt` is staged with the ledger either way:
+
+```bash
+git -C "$FORK" add UPSTREAM_SYNC.md upstream_info.txt
+```
 
 ## One commit at a time
 
@@ -981,7 +1001,8 @@ Every run ends with, in this order:
 1. **What the commit was** - upstream sha, origin, subject, the classification (`applied` /
    `adapted` / `partial` / `skipped` / `asked`) and the Handling. For a setup run: "Phase 0 -
    customizations guarded". Say how many `pending` rows the run added, and any that arrived older
-   than the rows above them.
+   than the rows above them. Give the high-water mark, whether it moved, and what
+   `upstream_info.txt` now names.
 2. **What changed in the fork** - file by file. For a cherry-pick, the interesting part is the
    conflicts: which files conflicted, and how each was resolved. Say explicitly if a csproj or
    vcxproj was touched, if a guard was added, moved or removed, and if nothing was written.

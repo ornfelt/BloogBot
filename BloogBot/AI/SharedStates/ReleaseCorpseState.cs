@@ -52,8 +52,8 @@ namespace BloogBot.AI.SharedStates
                 }
                 else
                 {
+                    Functions.LuaCall("UseSoulstone()");
                     ObjectManager.Player.ReleaseCorpse();
-
                 }
 #endif
             }

@@ -316,6 +316,8 @@ namespace BloogBot.Game.Objects
 
         public bool HasDebuff(string name) => Debuffs.Any(a => a.Name == name);
 
+        public bool HasAura(string name) => HasBuff(name) || HasDebuff(name);
+
         public bool IsImmobilized
         {
             get

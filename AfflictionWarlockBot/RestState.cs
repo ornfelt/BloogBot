@@ -19,7 +19,7 @@ namespace AfflictionWarlockBot
         readonly Stack<IBotState> botStates;
         readonly IDependencyContainer container;
         readonly LocalPlayer player;
-        
+
         readonly WoWItem foodItem;
         readonly WoWItem drinkItem;
         LocalPet pet;
@@ -42,7 +42,7 @@ namespace AfflictionWarlockBot
         {
             pet = ObjectManager.Pet;
 
-            if (pet != null && pet.HealthPercent < 60 && pet.CanUse(ConsumeShadows) && !pet.IsCasting && !pet.IsChanneling)
+            if (pet != null && pet.HealthPercent < 95 && pet.CanUse(ConsumeShadows) && !pet.IsCasting && !pet.IsChanneling)
                 pet.Cast(ConsumeShadows);
 
             if (InCombat || (HealthOk && ManaOk))
@@ -82,8 +82,8 @@ namespace AfflictionWarlockBot
                         container.CheckForTravelPath(botStates, true, false);
                         container.RunningErrands = true;
                     }
-                    else
-                        botStates.Push(new SummonVoidwalkerState(botStates));
+
+                    botStates.Push(new SummonVoidwalkerState(botStates));
                 }
                 else
                 {

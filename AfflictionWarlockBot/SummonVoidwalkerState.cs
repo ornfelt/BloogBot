@@ -10,7 +10,7 @@ namespace AfflictionWarlockBot
     {
         const string SummonImp = "Summon Imp";
         const string SummonVoidwalker = "Summon Voidwalker";
-        
+
         readonly Stack<IBotState> botStates;
         readonly LocalPlayer player;
 
@@ -22,14 +22,16 @@ namespace AfflictionWarlockBot
 
         public void Update()
         {
-            if (player.IsCasting)
-                return;
-
-            
             if ((!player.KnowsSpell(SummonImp) && !player.KnowsSpell(SummonVoidwalker)) || ObjectManager.Pet != null)
             {
+                player.LuaCall("SpellStopCasting()");
                 botStates.Pop();
                 botStates.Push(new BuffSelfState(botStates));
+                return;
+            }
+
+            if (player.IsCasting)
+            {
                 return;
             }
 

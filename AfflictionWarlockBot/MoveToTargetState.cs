@@ -14,6 +14,7 @@ namespace AfflictionWarlockBot
         const string SummonVoidwalker = "Summon Voidwalker";
         const string CurseOfAgony = "Curse of Agony";
         const string ShadowBolt = "Shadow Bolt";
+        const string Haunt = "Haunt";
 
         readonly Stack<IBotState> botStates;
         readonly IDependencyContainer container;
@@ -33,10 +34,18 @@ namespace AfflictionWarlockBot
             player = ObjectManager.Player;
             stuckHelper = new StuckHelper(botStates, container);
 
-            if (player.KnowsSpell(CurseOfAgony))
+            if (player.KnowsSpell(Haunt))
+            {
+                pullingSpell = Haunt;
+            }
+            else if (player.KnowsSpell(CurseOfAgony))
+            {
                 pullingSpell = CurseOfAgony;
+            }
             else
+            {
                 pullingSpell = ShadowBolt;
+            }
         }
 
         public new void Update()

@@ -28,6 +28,285 @@ This is the **BloogBot tree**. It has nothing to do with `ameisenbotx-upstream-s
 `cpp-csharp-*` server ports. Different source, different target, different rules. Do not apply any
 `.claude/rules/wc-clean-new-*.md` file here - none of them apply to this tree.
 
+## Running on the net9-port branch
+
+The fork has two long-lived branches that both take upstream commits:
+
+| Branch | Tree | Ledger |
+| --- | --- | --- |
+| `main` | .NET Framework 4.8, old-style csproj, `BloogBot.sln`, MSBuild | its own `UPSTREAM_SYNC.md` / `upstream_info.txt` |
+| `net9-port` | .NET 9 replica of `main`, branched from it at `3fa79c9` (2026-09-22); SDK-style projects, `BloogBot_net9.sln`, `dotnet build` - see `.claude/skills/bloogbot-net9-port/SKILL.md` | its own `UPSTREAM_SYNC.md` / `upstream_info.txt` |
+
+Each branch carries its own copy of this skill. **This section only applies when `net9-port` is
+checked out**, and it overrides the rest of the file wherever the two disagree. Everything below it
+is kept as close to `main`'s copy as possible, so skill changes made on `main` still cherry-pick
+here. Where the rest of the file says `main` as the branch being written to, read `net9-port`;
+`upstream/main` and "upstream's `main`" still mean upstream.
+
+### Branch and history
+
+- **Pre-check.** `HEAD` must be `net9-port`. If it is anything else, stop and name the branch that is
+  checked out. Never `git checkout` anything on the run's own: there is one worktree, and switching
+  branches swaps the whole tree, the ledger and this skill. Phase 0 and the `commented` branch's
+  "switch to `main`" rule never run here.
+- **Source.** Upstream commits are cherry-picked from their **upstream sha**, exactly as on `main`.
+  Never cherry-pick `main`'s landing commits or its `Record upstream ...` ledger commits, and never
+  merge `main`, `origin/main`, `migrate-to-net9` or any commit of `main`'s (its rejoin `4ef1d3c`
+  included) into `net9-port` - that would pull `main`'s .NET Framework-shaped landings and dozens of
+  other commits in. Never merge `net9-port` into `main`. A skill-only commit from `main` may be
+  cherry-picked here; if it also touches `UPSTREAM_SYNC.md` or `upstream_info.txt`, pick it with
+  `-n` and `git restore --staged --worktree` those two before committing.
+- **`main` is the reference resolution.** When `main` already landed the same upstream commit, read
+  its row (`git show main:UPSTREAM_SYNC.md`) and its landing commit (`git show <main sha>`) before
+  resolving, and resolve the same way unless the port's shape forces a difference. The row's Notes
+  say `main: <sha>` and either "same resolution as main" or exactly how it differs. Quick check for a
+  pick that needed no port change: `git show <commit> | git patch-id --stable` equals the same for
+  the net9 landing (it does for `8685d6d` and `main`'s `faac253`). Status, conflicts, counts and
+  build results are always this branch's own - never copied from `main`'s row.
+- **Decisions made on `main` carry over.** A user answer, a mirror verdict or a fork-side follow-up
+  `main` recorded for the row (row 70's upstream-only guard `3a49406`, for instance) applies here too
+  without asking again, unless the port changes the situation. Redo a follow-up as a commit of its
+  own with `main`'s subject. Handling follows `main`'s row; the Special handling entry says
+  "as main row <n>" and quotes the user's words from `main`'s entry. An upstream flag `main` raised
+  is re-checked against this branch's code and copied with "(also main #<n>)" if it holds. A flag
+  that only bites this branch (port code, an API-map swap) belongs at `ornfelt/BloogBot` and says
+  "net9-port only".
+- **Order.** This branch may land a commit `main` has not landed yet; it is then decided on its own
+  merits, and `main`'s later run can read this row as its reference.
+- **Commit messages.** Upstream's subject verbatim - no `BloogBot_net9:` prefix on landing, mirror,
+  follow-up or ledger commits. Every landing commit here carries the body line
+  `Cherry-picked from upstream <full sha>.` even when the pick was clean: port transforms change the
+  patch, so `patch-id` alone cannot find landings in a rebuild, and `--grep` can.
+- **The rejoin point.** `git -C "$FORK" merge-base HEAD upstream/main` - `a9be5e8` (via the shared
+  first rejoin `b5334a2`) until this branch rejoins on its own. `main`'s later rejoins are not in
+  this history. The fork point `1d0057c` and the ledger's `1d0057c..upstream/main` walk are the same
+  on both branches, so row numbers match `main`'s - still, look a commit up in `main`'s ledger by
+  sha, not by number.
+- **Rebuild.** A missing ledger is not setup mode here - offer `rebuild` instead. A match found only
+  on `main` (`git log main --not HEAD upstream/main`) is a reference, not a landing: the row stays
+  `pending`. Compare "already in the code" modulo the port transforms below. Rows 1-61's landing
+  commits are ancestors of `net9-port` through `3fa79c9` and stay valid.
+- **`?? packages/`** in `git status` is expected (NuGet restore output from `main`'s .NET Framework
+  builds, which this branch's `.gitignore` does not cover). It does not make the tree dirty: use
+  `git status --short -- ':!packages/'` in every clean-tree check, and never stage, commit or delete
+  it.
+
+### What a hunk lands on
+
+- **The port header.** Every ported `.cs` / `.xaml` / `.axaml` starts (after the UTF-8 BOM) with
+  `// Ported from BloogBot/<repo-relative path> (.NET Framework 4.8 -> .NET 9). Replica - do not redesign.`
+  (XAML: `<!-- Ported from BloogBot/<path> (.NET Framework 4.8 -> .NET 9, WPF shell). Replica - do not redesign. -->`).
+  The leading `BloogBot/` is the repository directory. A file a pick **adds** gets the header in the
+  pick's own commit (`git commit --amend --no-edit` after a clean pick, or before
+  `cherry-pick --continue`): without it the net9 port skill treats the file as an unported original,
+  and a regeneration of `UnportedOriginals.targets` would exclude it from compilation. Check:
+  `for f in $(git show --diff-filter=A --name-only --format= HEAD -- '*.cs' '*.xaml' '*.axaml'); do head -1 "$f" | grep -q 'Ported from BloogBot/' || echo "MISSING HEADER: $f"; done`.
+  A fork-only file keeps the header above the `#if USE_CUSTOM_CHANGES` that wraps the rest.
+- **Conflicts away from the guards are conflicts with the port.** Step 4's "take upstream's side"
+  never means `--theirs` for a whole file here. Keep the port material - the header line, an
+  API-map swap with its one-line comment, a `PORT_STATUS.md` "Deviations from the original" entry,
+  a net9-only fix (e.g. `Bot.cs`'s `if (player != null)` block) - and re-apply upstream's change on
+  top of it. Say in Notes what was kept.
+- **`#else` branches** hold upstream's code *as ported*: verbatim except for swaps the net9 port
+  skill's API map forces. When upstream edits an `#else`, take its text and re-apply any swap that
+  region already carries.
+- **API map check, after every pick.** Code in the `BloogBot` project cannot name `BloogBot.UI` /
+  `MainViewModel` (assembly cycle - use a type from this assembly, as `LogToFile` does),
+  `BloogBot.Properties` does not exist, and `<array>.Reverse()` binds to the in-place
+  `MemoryExtensions.Reverse(Span)` - use `Enumerable.Reverse(x)`. Scan:
+  `git show HEAD | grep '^+' | grep -nE 'using BloogBot\.UI;|MainViewModel|BloogBot\.Properties|Properties\.(Settings|Resources)|\.Reverse\(\)|\.CodeBase|ConfigurationManager|AppDomain\.CreateDomain|Thread\.Abort|BinaryFormatter'`.
+  Apply each swap per the API map with its comment, and add a `PORT_STATUS.md` Deviations row in the
+  same commit. A green build does not prove this check ran.
+- **Project files.** Every `.csproj` is SDK-style and globs every `.cs` under its directory, so an
+  upstream csproj hunk never applies as written: resolve with `git checkout --ours -- <csproj>` and
+  carry the intent over. A `<Compile Include>` needs nothing (an explicit duplicate fails with
+  NETSDK1022) - confirm with `dotnet msbuild <proj> -nologo -getItem:Compile | Select-String <file>`.
+  A `<Reference>` / `<HintPath>` / `packages.config` package becomes a `<PackageReference>` with a
+  one-line comment, only when a landed `.cs` uses it (in-box packages are dropped, per the API map).
+  `TargetFrameworkVersion` / toolset / platform edits are dropped - `Directory.Build.props` owns
+  them. A new upstream project gets an SDK csproj modelled on `FrostMageBot/FrostMageBot.csproj` and
+  `dotnet sln BloogBot_net9.sln add <csproj>`; otherwise `dotnet build` silently skips it.
+  `BloogBot.sln` is deleted on this branch: an upstream hunk to it is a modify/delete (`DU`)
+  conflict, resolved with `git rm BloogBot.sln`.
+- **The toggle.** `Directory.Build.props` defines `USE_CUSTOM_CHANGES` for every `.csproj`
+  (`UseCustomChanges`, default `true`, off with `-p:UseCustomChanges=false`); `Loader/Loader.vcxproj`
+  keeps its own `CustomChangesDefine`. No csproj defines it, so "the five projects", the old-style
+  placement rule and "add the same two groups to that project's csproj" do not apply - a new project
+  inherits the symbol. In a csproj, `DefineConstants` may only be appended (`$(DefineConstants);X`),
+  never assigned: an assignment silently wipes `USE_CUSTOM_CHANGES` and `UI_WPF` / `UI_AVALONIA`.
+- **Files that are on disk but not built.** `BloogBot/UI/*.cs`, every `Properties/AssemblyInfo.cs`
+  and the `Resources` / `Settings` designers are excluded by `UnportedOriginals.targets`;
+  `App.config` / `app.config` and `packages.config` are tracked but unused. A hunk to one of them
+  lands **as upstream wrote it** (the rejoin's tree-hash proof needs that), and its live counterpart
+  is changed in the same commit:
+  - `BloogBot/UI/MainViewModel.cs`, `CommandHandler.cs`, `BotService.cs` -> `BloogBot.UI.Core/<same>.cs`;
+  - `BloogBot/UI/App.xaml(.cs)`, `MainWindow.xaml(.cs)` -> **both** `BloogBot.UI.Wpf/<same>.xaml(.cs)`
+    and `BloogBot.UI.Avalonia/<same>.axaml(.cs)`, kept at parity;
+  - an assembly attribute -> the csproj (`<InternalsVisibleTo Include>`, `<AssemblyAttribute>`);
+  - a package -> a `<PackageReference>` as above.
+
+  A new upstream file under `BloogBot/UI/` is ported into the right project with its header, and its
+  original path is added to `UnportedOriginals.targets`. Notes say which live file carried the
+  change; a commit whose only effect is on a file that is not built says so instead of citing a
+  green build as proof. `botSettings.json` / `bootstrapperSettings.json` are live and hand-merge as
+  on `main`; `README.md` and `.gitignore` are net9 rewrites - merge upstream's intent into them.
+- **Native.** `Loader/dllmain.cpp` was rewritten from CLR hosting to `nethost` / `hostfxr`. A hunk
+  in its replica parts (console setup, `MB()`, thread creation, the `#ifdef USE_CUSTOM_CHANGES`
+  debugger wait) applies as usual; a hunk in CLR-hosting code is an **ask**, with a proposed
+  `hostfxr` equivalent.
+- **Recovering upstream's text.** A ported file's header names its original path (strip the leading
+  `BloogBot/`). Use `git show <commit>:<original path>` and `main`'s landing for the same row;
+  `git show 1d0057c:<path>` is fork-point .NET Framework text, for orientation only.
+- **`POTENTIAL BUG FOUND` tags** (the port's own) survive every resolution. When an upstream commit
+  fixes the code a tag describes, remove the tag and its `PORT_STATUS.md` row in the pick's commit.
+  Sync-landed code gets ledger flags, not new tags.
+- **Step 2 pre-read, additionally:** `git diff --numstat 3fa79c9 HEAD -- $(git show --name-only --format= <commit>)`
+  (anything beyond `+2/-1` per file is port divergence beyond the header), the `PORT_STATUS.md`
+  Deviations rows for those files, and whether the commit adds files, touches `BloogBot/UI/`, a
+  project file, an unused file or `Loader/`. Predict those conflicts like guard conflicts.
+
+### Building
+
+`BloogBot.sln` does not exist here. The solution is `BloogBot_net9.sln` - 25 SDK-style managed
+projects, no vcxproj - built with `dotnet` (.NET SDK 11.0.100 builds the `net9.0-windows` projects;
+no `-p:Platform` is needed, the solution only has x86). This replaces "Build notes", Phase 0 step 6
+and step 7. Every "both configurations", "both builds" and "the off-build" in this file means the
+**four** managed builds below, all of which must exit 0. Run them in this order so `Bot\` ends on
+the default (Wpf, on):
+
+```powershell
+$repo = "$env:code_root_dir\Code2\C#\BloogBot"
+$sln  = "$repo\BloogBot_net9.sln"
+dotnet build $sln -c Debug -p:Ui=Avalonia -p:UseCustomChanges=false -nologo -v:m; Write-Output "avalonia off exit=$LASTEXITCODE"
+dotnet build $sln -c Debug -p:UseCustomChanges=false -nologo -v:m;               Write-Output "wpf off exit=$LASTEXITCODE"
+dotnet build $sln -c Debug -p:Ui=Avalonia -nologo -v:m;                          Write-Output "avalonia on exit=$LASTEXITCODE"
+dotnet build $sln -c Debug -nologo -v:m;                                         Write-Output "wpf on exit=$LASTEXITCODE"
+```
+
+- Judge each by `$LASTEXITCODE` and a grep for `error CS|error MSB|error NETSDK|error NU`; take the
+  warning count from dotnet's `N Warning(s)` line. Compare with this branch's previous row, never
+  with `main`'s MSBuild warning sets. Baseline (2026-11-20): Debug / Wpf / on = 0 errors, 35
+  warnings.
+- **Define proof** - run it when a commit touches a `.csproj`, `Directory.Build.props` / `.targets`,
+  `UnportedOriginals.targets`, `BloogBot_net9.sln` or `Loader.vcxproj`, or adds a project.
+  Evaluation only, it builds nothing (`-getProperty` refuses a `.sln`, hence the loop):
+
+  ```powershell
+  cd "$env:code_root_dir\Code2\C#\BloogBot"
+  $projs = dotnet sln BloogBot_net9.sln list | Select-String '\.csproj$' | ForEach-Object { $_.Line.Trim() }
+  foreach ($p in $projs) {
+    $on  = dotnet msbuild $p -nologo -p:Configuration=Debug -getProperty:DefineConstants
+    $off = dotnet msbuild $p -nologo -p:Configuration=Debug -p:UseCustomChanges=false -getProperty:DefineConstants
+    if ($on -notmatch 'USE_CUSTOM_CHANGES' -or $off -match 'USE_CUSTOM_CHANGES') { Write-Output "FLIP FAILED: $p" }
+  }
+  ```
+
+  No `FLIP FAILED` line means all 25 define it when on and none when off.
+- **Native projects** are not in the solution, so no managed build compiles them. Only when a commit
+  touches `Loader/`, `FastCall/`, `Navigation/` or `NavigationTests/`, build that project with the
+  full MSBuild path (it is not on `PATH`) and `-p:PlatformToolset=v145` (VS 18 ships only `v145`;
+  the vcxproj files are not edited). Loader carries the C++ guard, so build it off and then on:
+
+  ```powershell
+  $msbuild = "C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Current\Bin\MSBuild.exe"
+  & $msbuild "$repo\Loader\Loader.vcxproj" -p:Configuration=Debug -p:Platform=Win32 -p:PlatformToolset=v145 -p:UseCustomChanges=false -v:m -nologo; Write-Output "loader off exit=$LASTEXITCODE"
+  & $msbuild "$repo\Loader\Loader.vcxproj" -p:Configuration=Debug -p:Platform=Win32 -p:PlatformToolset=v145 -v:m -nologo; Write-Output "loader on exit=$LASTEXITCODE"
+  ```
+
+  Loader also needs the .NET 9 win-x86 host pack (`C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Host.win-x86\9.*`).
+- **Packages** are `PackageReference`; `dotnet build` restores them (`dotnet restore BloogBot_net9.sln`
+  if one is ever wanted on its own). `nuget restore BloogBot.sln` does not apply here.
+- **Doc comments.** No project generates documentation, so CS1587 / CS1570 never appear and their
+  absence proves nothing. The check is the Verification grep, which excludes `Fasm.NET/`: its 36
+  `///` lines are the port's own managed FASM shim and are never stripped.
+- **Guard counts** are code-only, `git grep -c USE_CUSTOM_CHANGES -- ':!*.md'`, compared with this
+  branch's previous row: 24 files / 78 lines at the start (2026-11-20; `Directory.Build.props`
+  replaces `main`'s csproj toggles). The guarded-file list for steps 2 and 6 is
+  `git grep -l USE_CUSTOM_CHANGES -- '*.cs' '*.cpp'`.
+
+### This branch's ledger
+
+- **Header.** It names the `upstream` remote, `Branch: net9-port` (the .NET 9 replica, branched from
+  `main` at `3fa79c9`; `main` keeps its own ledger), `USE_CUSTOM_CHANGES` defined in
+  `Directory.Build.props` (every `.csproj`) and `Loader/Loader.vcxproj`, the four-build commands,
+  and this branch's rejoin history. A header inherited from `main` is corrected by the first run
+  that writes the ledger.
+- **Rows 1-61** were landed on `main` before the branch point; their commits are ancestors here, and
+  the port carried their content into the .NET 9 files. Their Notes describe `main`'s tree (line
+  numbers, MSBuild results, guard counts) and are history, not this branch's figures.
+- **Rows 62 onwards** are seeded by the normal walk, even when this run's fetch brought nothing new,
+  with Notes carrying only the reference: `main: <landing sha> (<status>, <handling>)`. When a row
+  lands, its Notes keep that reference and add what happened here.
+- **Handling.** Port-mechanical transforms keep Handling `as-is` and are listed in Notes as
+  `port: <what>`: the header on a new file, a csproj / `packages.config` / `App.config` hunk with no
+  SDK counterpart, an API-map swap, a `BloogBot/UI/` change carried into `BloogBot.UI.Core` and both
+  shells. `needed` and `requested` keep their meaning for anything the customizations, a net9-only
+  fix or the user forced.
+- **"Fork changes since the rejoin"** lists this branch's own fixes - the `BloogBot_net9:` commits
+  after `3fa79c9` - not `main`'s `migrate-to-net9` merge `0df33fa`, which is not in this history.
+  **"Unguarded customizations"** also lists the port itself, which is unguarded by design.
+  **"Notes carried forward"** never takes `main`'s build or rejoin notes.
+- **`PORT_STATUS.md`** is updated in the same commit whenever a landing adds an API-map swap or a
+  deviation, or removes a `POTENTIAL BUG FOUND` tag.
+- **`upstream_info.txt`** names the upstream commit **this branch** is synced through, written from
+  this branch's ledger only; it may trail `main`'s.
+
+### Commits behind, and rejoining, on this branch
+
+GitHub counts every branch of the fork against `DrewKestell/BloogBot:main`, separately.
+`net9-port`'s count is `git -C "$FORK" rev-list --count HEAD..upstream/main` - every upstream commit
+after this branch's last rejoin, landed here or not. `main`'s rejoins do nothing for it. The aim is
+the same as on `main`: once this branch has landed everything, rejoin it so GitHub shows it **0
+behind**, and from then on, until upstream moves, report it as caught up and 0 behind - never as
+behind.
+
+- **Caught up** means *this* ledger's high-water mark equals a freshly fetched `upstream/main`.
+  `main` being caught up says nothing about this branch.
+- **The insertions-only check does not apply.** `git diff upstream/main HEAD` has deletions by design
+  (header lines, SDK csproj, API-map swaps, the hostfxr loader, the port's `.gitignore`); do not
+  chase them, and do not read "do not paper over it with a merge" as forbidding the rejoin here.
+  Prove two things instead, and record both in the rejoin note:
+  1. **Coverage** - every upstream commit since this branch's last rejoin has a decided row with a
+     landing here (or a skip). `git -C "$FORK" range-diff -s <U>..upstream/main <M>..HEAD -- . ':!UPSTREAM_SYNC.md' ':!upstream_info.txt' ':!.claude' ':!PORT_STATUS.md'`,
+     with `U` / `M` the upstream sha and merge commit of the last rejoin (today `a9be5e8` /
+     `b5334a2`), must print no `<  -:` line. `>` lines are this branch's own commits. A heavily
+     adapted landing that does not pair is matched to its row by hand (or retried with
+     `--creation-factor=95`).
+  2. **No content change** - the "Clearing it" tree-hash proof.
+- **The merge** is `git merge --no-commit --no-ff upstream/main` with `net9-port` checked out, and
+  only that. Besides guard conflicts, expect conflicts where this branch carries upstream's change
+  in its own form: an SDK csproj against upstream's `<Compile Include>` / `<Reference>` hunks;
+  add/add on a file upstream created (ours has the header); the header line against an upstream
+  change to a file's first lines; an API-map swap upstream also edited; `BloogBot.sln`
+  (modify/delete - `git rm`). Resolve one with `--ours` only when its landing row's Notes record that
+  transform; a conflict no row explains still means stop and investigate. Before `write-tree`,
+  `git -C "$FORK" diff --cached --stat HEAD` must print nothing - a file it lists is an upstream hunk
+  this branch never landed: abort the merge unless its row recorded the drop. `git write-tree` must
+  equal the `HEAD^{tree}` noted first; that equality is the proof.
+- Commit it as `Merge upstream/main (<sha>) to restore ancestry - tree unchanged`, record it in this
+  branch's ledger (header and Notes carried forward, with the before/after
+  `rev-list --left-right --count upstream/main...HEAD`), and tell the user to run
+  `git push origin net9-port` - a fast-forward. Never push `net9-port` to `origin/main` or
+  `origin/migrate-to-net9`. GitHub's count only updates after that push.
+- The net9 port skill's "Branch and repositories" section (a separate `BloogBot_net9` repository, a
+  root commit, "122 commits behind ... ignore it") is stale: `net9-port` lives in this repository and
+  shares its history. This section wins.
+
+### Output on this branch
+
+- Item 1 also names the row's `main` reference (`main: <sha>`, its status and handling), both
+  high-water marks (this branch's, and `main`'s from `git show main:upstream_info.txt`) and this
+  branch's `rev-list --left-right --count upstream/main...HEAD`. The fetch line reads "upstream has N
+  commits this branch's ledger has not seen (M of them already landed on main)".
+- Item 2 also says whether `Directory.Build.props` / `.targets`, `UnportedOriginals.targets` or an
+  SDK csproj was touched, each `port:` transform applied, UI shell parity, and whether the
+  resolution matches `main`'s.
+- Item 4 lists the four managed builds (exit code, errors, warnings each), the define proof when it
+  ran, and each native build - or says that no native build was needed.
+- The `Next:` line names `main`'s reference and any net9-specific conflict prediction, e.g.
+  `Next: upstream 39e39ec "CombatStateBase: factor out spell casting into SpellCastingStateBase" (main: 2d7dc04, clean there; here expect a BloogBot.csproj conflict - SDK project - and give SpellCastingStateBase.cs the port header)`.
+  Once caught up: `Next: rejoin - merge upstream/main into net9-port (N behind), then git push origin net9-port`.
+
 ## Source and target
 
 Target - the fork this skill writes to, remote `origin` = `https://github.com/ornfelt/BloogBot`:
@@ -113,9 +392,11 @@ git -C "$FORK" log -1 --format='%h %cs %s' upstream/main
 - Adding the `upstream` remote when it is missing and `git fetch upstream` are required plumbing
   and always fine. Do not touch `origin`'s configuration, and do not `git fetch origin` or
   `git pull` anything unless the user asks.
-- Work on the fork's **`main`** branch. The fork's `commented` branch is **out of scope** - never
+- Work on the branch this copy of the skill belongs to: the fork's **`main`** branch, or **`net9-port`**
+  (see "Running on the net9-port branch"). The fork's `commented` branch is **out of scope** - never
   check it out, never merge it, never cherry-pick onto it. See "The commented branch" below.
-- Do not push. Cherry-pick creates commits in the fork's local `main`; that is as far as a run goes.
+- Do not push. Cherry-pick creates commits in the fork's local branch (`main` or `net9-port`); that is
+  as far as a run goes.
 - Do not run the bot: it needs a WoW 1.12 / 3.3.5a client, a private server and an injected loader.
   Building is the whole verification story here.
 
@@ -154,8 +435,8 @@ commits, in three files:
 Setup removes those. Re-derive the current set rather than trusting the count:
 
 ```bash
-git -C "$FORK" diff 1d0057c main -- '*.cs' | grep -c '^+[[:space:]]*///'
-git -C "$FORK" diff 1d0057c main -- '*.cs' | awk '/^diff --git/{f=$3} /^\+[[:space:]]*\/\/\//{print f}' | sort -u
+git -C "$FORK" diff 1d0057c HEAD -- '*.cs' ':!Fasm.NET/' | grep -c '^+[[:space:]]*///'
+git -C "$FORK" diff 1d0057c HEAD -- '*.cs' ':!Fasm.NET/' | awk '/^diff --git/{f=$3} /^\+[[:space:]]*\/\/\//{print f}' | sort -u
 ```
 
 Rules:
@@ -412,7 +693,7 @@ A bare `mirror` or `no-mirror` with no commit id means the newest row whose `Not
 FORK="$code_root_dir/Code2/C#/BloogBot"
 cat "$FORK/UPSTREAM_SYNC.md" 2>/dev/null || echo "NO LEDGER - setup mode"
 cat "$FORK/upstream_info.txt" 2>/dev/null
-git -C "$FORK" rev-parse --abbrev-ref HEAD      # must be main outside setup
+git -C "$FORK" rev-parse --abbrev-ref HEAD      # must be main (or net9-port - see "Running on the net9-port branch")
 git -C "$FORK" status --short
 ls "$FORK/.git/CHERRY_PICK_HEAD" 2>/dev/null && echo "CHERRY-PICK IN PROGRESS"
 git -C "$FORK" remote -v
@@ -677,10 +958,10 @@ the rows concerned whenever the ledger disagrees with the tree. For every commit
 (a full rebuild numbers the rows in that order), origin as above, then:
 
 1. **An earlier sync**: the fork's commit that landed it - same subject and author among the fork's
-   own commits (`git -C "$FORK" log --format='%h %an %s' main --not upstream/main 1d0057c`; the
-   `--not upstream/main` matters once the histories have been rejoined, because `main` then
+   own commits (`git -C "$FORK" log --format='%h %an %s' HEAD --not upstream/main 1d0057c`; the
+   `--not upstream/main` matters once the histories have been rejoined, because the branch then
    contains upstream's original commits too and every subject would match itself), a body naming the sha
-   (`--grep='<commit>'`), or a matching `git patch-id`. Its conflicts and resolution give the
+   (`--grep='<commit>'` over the same `HEAD` range), or a matching `git patch-id` among the branch's own commits. Its conflicts and resolution give the
    status; a mirror commit (`Mirror <commit> fix ...`) gives `mirrored`.
 2. **Already in the code**: with no such commit, check the change against the tree - upstream's
    added lines present (unguarded or in an `#else` branch) and its removed lines gone from the
@@ -1049,14 +1330,15 @@ is its own commit and its own run, and it never picks up the next upstream commi
 
 - MSBuild Debug|x86 with `UseCustomChanges` at its default (on).
 - The same build with `-p:UseCustomChanges=false`.
-- `git -C "$FORK" rev-parse --abbrev-ref HEAD` - must still say `main`.
+- `git -C "$FORK" rev-parse --abbrev-ref HEAD` - must still name the branch the run started on (`main`,
+  or `net9-port`).
 - `git -C "$FORK" status --short` at the end - it should be clean, or show only files the run
   deliberately left uncommitted. A stray `.orig` or `.rej` file means a resolution was left
   half-done.
 - `git -C "$FORK" log --oneline -3` so the summary shows the commit that was created.
-- `git -C "$FORK" grep -c "USE_CUSTOM_CHANGES"` - the guard count should only ever change for a
+- `git -C "$FORK" grep -c "USE_CUSTOM_CHANGES" -- ':!*.md'` - the guard count (code only) should only ever change for a
   reason the run can name.
-- `git -C "$FORK" diff 1d0057c main -- '*.cs' | grep -c '^+[[:space:]]*///'` - should be 0 after
+- `git -C "$FORK" diff 1d0057c HEAD -- '*.cs' ':!Fasm.NET/' | grep -c '^+[[:space:]]*///'` - should be 0 after
   setup, and stay 0 unless upstream itself added the doc comments.
 - Every guarded file the commit touched has a step 6 mirror verdict in the ledger row's `Notes`.
   Silence there is not a pass; it means the check did not happen.
@@ -1133,9 +1415,10 @@ Five stopping conditions:
   inventing work; rerunning the skill later fetches again and picks up whatever upstream added. An
   empty run that says "nothing left" is a correct run. If the fetch failed, say "caught up with the
   last fetched `upstream/main`" instead - it is not proof that upstream has nothing new.
-  Then check `git -C "$FORK" rev-list --left-right --count upstream/main...main`: when the left
+  Then check `git -C "$FORK" rev-list --left-right --count upstream/main...HEAD`: when the left
   (behind) number is above 0, offer the rejoin merge from "Clearing it" so GitHub stops showing the
-  fork as behind, and run it if the user says yes - never push; the user runs `git push origin main`.
+  fork as behind, and run it if the user says yes - never push; the user runs `git push origin <the branch>`
+  (`main` or `net9-port`).
   The run that lands the last pending commit is caught up too, so it makes the same offer.
 
 ## The 'N commits behind' banner
@@ -1152,8 +1435,8 @@ never falls on its own, even when the fork's content is a strict superset of ups
 Confirm it is cosmetic rather than assuming it:
 
 ```bash
-git -C "$FORK" rev-list --left-right --count upstream/main...main   # left = behind, right = ahead
-git -C "$FORK" diff --stat upstream/main main                       # must be insertions only
+git -C "$FORK" rev-list --left-right --count upstream/main...HEAD   # left = behind, right = ahead
+git -C "$FORK" diff --stat upstream/main HEAD                       # must be insertions only (main only - see "Running on the net9-port branch")
 ```
 
 The second command is the real check. If it shows **only the expected files and zero deletions**,
@@ -1175,7 +1458,7 @@ one-commit-at-a-time and makes the ledger's high-water mark a lie. Ask the user 
 rewrites nothing but it does change a branch they publish.
 
 ```bash
-git -C "$FORK" rev-parse main^{tree}                    # note this hash
+git -C "$FORK" rev-parse HEAD^{tree}                    # note this hash
 git -C "$FORK" merge --no-commit --no-ff upstream/main
 git -C "$FORK" status --short | grep -E '^(UU|AA|DU|UD|AU|UA)'
 ```
@@ -1199,7 +1482,7 @@ looks.
 
 Commit the merge with a message saying why the histories were rejoined and that the tree is
 unchanged. Then stop - **the no-push rule still applies**. Tell the user to run
-`git push origin main` themselves; it is a fast-forward and needs no force. Record the merge in
+`git push origin <the branch>` (`main` or `net9-port`) themselves; it is a fast-forward and needs no force. Record the merge in
 `UPSTREAM_SYNC.md`.
 
 Afterwards the merge base moves from the fork point to upstream HEAD, so the next run's `rev-list`

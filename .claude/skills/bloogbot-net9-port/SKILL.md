@@ -1,6 +1,6 @@
 ---
 name: bloogbot-net9-port
-description: Port the .NET Framework 4.8 BloogBot solution (Code2/C#/BloogBot) to .NET 9 in a new sibling tree Code2/C#/BloogBot_net9. The port is a faithful replica - same files, same types, same members, same behavior - not a redesign. The WPF UI is split into a UI-agnostic abstraction plus two interchangeable shells, WPF (default) and Avalonia, that carry the same controls and both default to dark mode with a light toggle. The USE_CUSTOM_CHANGES preprocessor directive is carried over unchanged, anything that looks like a real bug is tagged POTENTIAL BUG FOUND rather than fixed, and the native Loader.dll is rewritten from the .NET Framework CLR hosting API to nethost/hostfxr. Run it over and over - each run does one slice, leaves the solution building, updates PORT_STATUS.md and writes commit_message.txt.
+description: Port the .NET Framework 4.8 BloogBot solution (Code2/C#/BloogBot) to .NET 9 on the net9-port branch of the same repository (the port lives in place at the repo root next to BloogBot_net9.sln; main stays the .NET Framework source). The port is a faithful replica - same files, same types, same members, same behavior - not a redesign. The WPF UI is split into a UI-agnostic abstraction plus two interchangeable shells, WPF (default) and Avalonia, that carry the same controls and both default to dark mode with a light toggle. The USE_CUSTOM_CHANGES preprocessor directive is carried over unchanged, anything that looks like a real bug is tagged POTENTIAL BUG FOUND rather than fixed, and the native Loader.dll is rewritten from the .NET Framework CLR hosting API to nethost/hostfxr. Run it over and over - each run does one slice, leaves the solution building, updates PORT_STATUS.md and writes commit_message.txt.
 disable-model-invocation: true
 argument-hint: "[empty means the next unported slice, or: setup, status, port <project-or-file>, ui [wpf|avalonia], native, review <path>, verify]"
 ---
@@ -24,26 +24,46 @@ Two things are deliberately **not** a straight copy, and only two:
 Everything else is a replica. **Do not modernize, do not refactor, do not "improve".** If the
 original code looks wrong, tag it - see "POTENTIAL BUG FOUND" - and port it as it is.
 
-This is the **BloogBot .NET 9 port**. It has nothing to do with `bloogbot-upstream-sync` (which
-lands upstream `DrewKestell/BloogBot` commits in the .NET Framework tree and keeps running on its
-own), nothing to do with the `cpp-csharp-*` server ports, with `libwow`, with the `wc_clean_new`
-ports, or with `ameisenbotx-upstream-sync`. Do not apply any `.claude/rules/wc-clean-new-*.md` file
+This is the **BloogBot .NET 9 port**. Upstream `DrewKestell/BloogBot` commits reach the port
+through `bloogbot-upstream-sync`, which also runs on `net9-port` (since 2026-11-20) and cherry-picks
+upstream commits straight into the .NET 9 files - see its "Running on the net9-port branch". That
+skill follows this skill's conventions (header line, API map, `POTENTIAL BUG FOUND`, shell parity);
+this skill ports what it does not carry: changes made on `main` that are not upstream syncs (see
+"What the port is based on"). It has nothing to do with the `cpp-csharp-*` server ports, with
+`libwow`, with the `wc_clean_new` ports, or with `ameisenbotx-upstream-sync`. Do not apply any `.claude/rules/wc-clean-new-*.md` file
 here - none of them apply to this tree.
 
 ## Source and target
 
-Source (read-only reference), the .NET Framework 4.8 solution, on branch `migrate-to-net9`:
+Source and port live in **one repository and one worktree**, `$code_root_dir/Code2/C#/BloogBot`
+(PowerShell: `$env:code_root_dir\Code2\C#\BloogBot`), on two branches:
 
-`$code_root_dir/Code2/C#/BloogBot` (PowerShell: `$env:code_root_dir\Code2\C#\BloogBot`)
+- **Source** (read-only reference): branch `main`, the .NET Framework 4.8 solution. It keeps
+  receiving upstream syncs and fork fixes.
+- **Port**: branch `net9-port`, the .NET 9 replica, branched from `main` at `3fa79c9` (2026-09-22)
+  and rewritten in place; `BloogBot_net9.sln` sits at the repository root.
 
-Target, created by setup mode, its own git repository, on branch `net9-port`:
+There is no `Code2/C#/BloogBot_net9` directory and no second repository. That was the original plan
+(setup was written for it); in practice setup converted a clone of the source in place - see
+`PORT_STATUS.md` "Blocked" - and the result is the `net9-port` branch. The .NET Framework originals
+that have no in-place port (`BloogBot/UI/*.cs`, `Properties/*`) are still on disk there, excluded by
+`UnportedOriginals.targets`.
 
-`$code_root_dir/Code2/C#/BloogBot_net9` (PowerShell: `$env:code_root_dir\Code2\C#\BloogBot_net9`)
+Only one branch can be checked out at a time, so the source is **read through git, never by
+checking `main` out**:
 
-The source tree stays on .NET Framework and keeps receiving upstream syncs. **Never edit it** apart
-from this skill file and its own `commit_message.txt`. That is what makes `bloogbot-upstream-sync`
-keep working: it cherry-picks upstream commits into `BloogBot`, and a later run of this skill
-carries the result across into `BloogBot_net9`.
+```bash
+REPO="$code_root_dir/Code2/C#/BloogBot"
+git -C "$REPO" show main:<path>                    # one original file
+git -C "$REPO" diff main HEAD -- <path>            # original vs port
+git -C "$REPO" ls-tree -r --name-only main         # every source file
+git -C "$REPO" grep -n <pattern> main -- '*.cs'    # search the source
+```
+
+Throughout the rest of this file, `$DST`, `BloogBot_net9/` and "the port tree" mean that worktree
+with `net9-port` checked out; `$SRC` and "the source tree" mean the `main` branch, read with the
+commands above - a `find` or `grep` over `$SRC` becomes `git ls-tree -r --name-only main` or
+`git grep ... main --`.
 
 ### What is in the source tree
 
@@ -76,74 +96,55 @@ The `BloogBot` project's internal layout, which the port mirrors exactly:
 
 ## Scope guard
 
-Write only inside `$code_root_dir/Code2/C#/BloogBot_net9`, plus this skill file and
-`commit_message.txt` in the source repo. Nothing else under `Code2/C#` is touched. **Never edit the
-source tree's code** - not a `.cs`, not a `.csproj`, not a `.vcxproj`, not a `.xaml`, not a `.sql`.
-It has to keep building as it is and it has to stay the reference for every later run. If the source
-looks wrong, tag it in the *port* (see "POTENTIAL BUG FOUND") and say so in the summary instead of
-fixing it here.
+Write only on the `net9-port` branch of this repository. **Never edit `main`'s code** - not a `.cs`,
+not a `.csproj`, not a `.vcxproj`, not a `.xaml`, not a `.sql` - and never check `main` out from this
+skill: it has to keep building as it is and it has to stay the reference for every later run. If the
+source looks wrong, tag it in the *port* (see "POTENTIAL BUG FOUND") and say so in the summary
+instead of fixing it. Nothing outside `$code_root_dir/Code2/C#/BloogBot` is touched.
 
-## Branch and repositories
+## Branch
 
-The two repositories use **different branch names on purpose**. The source tree is on
-`migrate-to-net9`; the port is on `net9-port`. Every run starts by making sure of both:
+Every run starts on `net9-port`:
 
 ```bash
-SRC="$code_root_dir/Code2/C#/BloogBot"
-DST="$code_root_dir/Code2/C#/BloogBot_net9"
-
-# source repo - the branch already exists in the normal case
-cd "$SRC"
-git rev-parse --verify migrate-to-net9 >/dev/null 2>&1 || git checkout -b migrate-to-net9
-[ "$(git branch --show-current)" = "migrate-to-net9" ] || git checkout migrate-to-net9
-
-# port repo
-cd "$DST"
-git rev-parse --verify net9-port >/dev/null 2>&1 || git checkout -b net9-port
-[ "$(git branch --show-current)" = "net9-port" ] || git checkout net9-port
+REPO="$code_root_dir/Code2/C#/BloogBot"
+[ "$(git -C "$REPO" branch --show-current)" = "net9-port" ] || echo "STOP: check out net9-port first"
 ```
 
-If either working tree is dirty with changes this skill did not make, say so and stop rather than
-switching branches under the user.
+If another branch is checked out, stop and say so - never switch branches on the user's behalf:
+there is one worktree, and a checkout swaps the whole tree. If the worktree is dirty with changes
+this skill did not make, stop as well. An untracked `packages/` (NuGet output of `main`'s .NET
+Framework builds, not covered by this branch's `.gitignore`) is expected and is not a dirty tree.
 
-The target is its own repository, created once by setup mode with `git init -b net9-port`, so the
-port has a history independent of the upstream syncs happening in the source tree.
+`net9-port` tracks `origin/net9-port`. Never push it to `origin/main` or `origin/migrate-to-net9`
+(a leftover of the original two-repository plan that plays no part now).
 
-### Why the branch names differ
+### GitHub's "commits behind"
 
-Both repositories push to the same GitHub remote, `https://github.com/ornfelt/BloogBot`:
-
-| Repository | Local branch | Remote branch |
-| --- | --- | --- |
-| `BloogBot` (source) | `migrate-to-net9` | `origin/migrate-to-net9` |
-| `BloogBot_net9` (port) | `net9-port` | `origin/net9-port` |
-
-`origin/migrate-to-net9` belongs to the source tree. The port must never be pushed there: the two
-repositories have unrelated histories, so such a push is rejected as a non-fast-forward and only
-goes through with `--force`, which would repoint the branch away from the source-tree history.
-
-GitHub shows `net9-port` as "122 commits behind". `ornfelt/BloogBot` is a **fork** of
-`DrewKestell/BloogBot`, and for a fork GitHub compares each branch against the *parent* repository's
-default branch, not against your own `main`. 122 is exactly the commit count of
-`DrewKestell/BloogBot:main`, and `net9-port` is a root commit that shares no ancestor with it, so
-every one of those 122 counts as absent. The badge says nothing about whether the port is current -
-`main` is caught up with upstream and the port was taken from `main`. Ignore it. The real question
-is which source commit the port was taken from, which "Orient" answers by diffing the two working
-trees.
+`ornfelt/BloogBot` is a **fork** of `DrewKestell/BloogBot`, and GitHub counts every branch of a fork
+against the parent's default branch. `net9-port` shares history with upstream up to its last rejoin
+(`a9be5e8`, via `b5334a2`), so its count is `git rev-list --count HEAD..upstream/main` - the upstream
+commits since then. `bloogbot-upstream-sync` clears it: it lands those commits on `net9-port` and,
+once caught up, merges `upstream/main` into it with a tree-hash proof; after
+`git push origin net9-port` GitHub shows 0 behind. This skill neither causes nor clears that count.
 
 ### What the port is based on
 
-The port replicates the source tree's **working tree** as it stands when a run executes, which on
-`migrate-to-net9` is `main` plus this skill file. Confirm that `migrate-to-net9` carries no C#
-changes of its own before porting:
+The port replicates `main`. After the branch point, two kinds of change reach `main`:
 
-```bash
-cd "$SRC"
-git diff main..migrate-to-net9 --stat    # expect only .claude/ and .gitignore
-```
+- **Upstream commits** - landed on `net9-port` by `bloogbot-upstream-sync`, including any
+  follow-up `main` made for them (its ledger row says so). Not this skill's work.
+- **Changes made directly on `main`** - fork fixes, customizations, data. These are this skill's
+  work. Find them with
 
-If that diff ever touches a `.cs`, `.csproj`, `.vcxproj`, `.xaml` or `.sql` file, stop and say so:
-the port would no longer be a replica of `main`.
+  ```bash
+  git -C "$REPO" log --oneline 3fa79c9..main --not upstream/main -- '*.cs' '*.xaml' '*.csproj' '*.vcxproj' '*.cpp' '*.h' '*.sql' '*.json'
+  ```
+
+  minus `main`'s landing commits for upstream ledger rows (and their follow-ups), and minus changes
+  that already have a net9 replica - `UPSTREAM_SYNC.md` on this branch lists them under "Fork
+  changes since the rejoin". Port each one like any other slice, with its own
+  `BloogBot_net9: ...` commit message.
 
 **Never commit anything.** A run stages nothing, commits nothing and pushes nothing. It writes the
 message it *would* use to `commit_message.txt` and stops there - see "Output expectations".
@@ -152,7 +153,9 @@ message it *would* use to `commit_message.txt` and stops there - see "Output exp
 
 Decide from the argument:
 
-1. **Setup** - `setup`, or `BloogBot_net9/BloogBot_net9.sln` does not exist yet. Create the
+1. **Setup** - **done; never runs again.** The port exists on `net9-port`. `setup`, or a missing
+   `BloogBot_net9.sln` at the repository root, means the wrong branch is checked out - stop and say
+   so. (Historically: create the
    directory and the git repository, `Directory.Build.props`, the solution, the `.csproj` files, the
    `.gitignore`, `README.md` and `PORT_STATUS.md`, and copy the non-code assets across. If the
    argument also named a project or file, continue into port mode in the same run.
@@ -171,7 +174,8 @@ Decide from the argument:
 8. **Continue (no argument, or `continue`)** - work out what is missing and do the next slice. This
    is the default when the skill is invoked bare.
 
-Check `BloogBot_net9/BloogBot_net9.sln` for existence before doing anything else. If it exists,
+Check that `net9-port` is checked out and `BloogBot_net9.sln` exists at the repository root
+before doing anything else. If it exists,
 never regenerate it or the `.csproj` files - extend them only when a ported file genuinely needs a
 new package reference.
 
@@ -189,30 +193,31 @@ Work out the current state from the trees themselves - that is the authoritative
 deciding anything:
 
 ```bash
-SRC="$code_root_dir/Code2/C#/BloogBot"
-DST="$code_root_dir/Code2/C#/BloogBot_net9"
+REPO="$code_root_dir/Code2/C#/BloogBot"
+cd "$REPO"
 
-# does the solution exist at all?
-ls "$DST/BloogBot_net9.sln"
+# right branch, and does the solution exist?
+git branch --show-current            # must be net9-port
+ls BloogBot_net9.sln
 
-# every source file that has to end up somewhere
-(cd "$SRC" && find . \( -name '*.cs' -o -name '*.xaml' \) \
-   -not -path './packages/*' -not -path '*/obj/*' -not -path '*/bin/*' \
-   -not -path './Bot/*' -not -path './Debug/*' -not -path './Release/*' \
-   | sed 's|^\./||' | sort) > /tmp/bloogbot-src.txt
+# every source file that has to end up somewhere (the .NET Framework tree on main)
+git ls-tree -r --name-only main | grep -E '\.(cs|xaml)$' \
+  | grep -vE '^(packages|Bot|Debug|Release)/|/(obj|bin)/' | sort > /tmp/bloogbot-src.txt
 
 # every source file the port already claims, via the header line each ported file carries
-grep -rho '// Ported from BloogBot/[^ ]*' "$DST" \
-     --include='*.cs' --include='*.xaml' --include='*.axaml' \
+git grep -ho '// Ported from BloogBot/[^ ]*' -- '*.cs' '*.xaml' '*.axaml' \
   | sed 's|// Ported from BloogBot/||' | sort -u > /tmp/bloogbot-done.txt
 
 comm -23 /tmp/bloogbot-src.txt /tmp/bloogbot-done.txt      # still to port
 
 # what is half-done - these markers are the resume pointer
-grep -rln 'TODO: port body here' "$DST" --include='*.cs' --include='*.xaml' --include='*.axaml' | sort
+git grep -l 'TODO: port body here' -- '*.cs' '*.xaml' '*.axaml' | sort
 
 # what was flagged on the way through
-grep -rn 'POTENTIAL BUG FOUND' "$DST" | wc -l
+git grep -n 'POTENTIAL BUG FOUND' -- ':!*.md' | wc -l
+
+# changes made directly on main since the branch point (see "What the port is based on")
+git log --oneline 3fa79c9..main --not upstream/main -- '*.cs' '*.xaml' '*.csproj' '*.vcxproj' '*.cpp' '*.h' '*.sql' '*.json'
 ```
 
 `PORT_STATUS.md` is a hint that makes this cheaper, not a substitute for it: read it first, then
@@ -220,8 +225,8 @@ confirm against the trees. Where the two disagree, the trees win and the ledger 
 
 #### 2. Pick the next slice
 
-1. If `BloogBot_net9` does not exist, or the `.sln` is missing, run setup mode first, then carry on
-   into the steps below in the same run.
+1. If `BloogBot_net9.sln` is missing, the wrong branch is checked out - stop (setup never runs
+   again).
 2. Otherwise walk the porting order below and pick the first group that has a missing file, or a
    file that exists but still carries `TODO: port body here`. Skip everything listed under "Not
    ported" - it is done by definition and never comes up again.
@@ -262,7 +267,8 @@ Next: port BloogBot/AI/SharedStates (GrindState onwards)
   leave the solution building if it already was, and stop. Do not reshape the projects to get around
   it and do not silently pick a different file to have something to show.
 - **Nothing left** - every source file outside "Not ported" has a counterpart,
-  `grep -rl 'TODO: port body here' "$DST"` comes back empty, and all four build configurations from
+  `git grep -l 'TODO: port body here'` comes back empty, no change made directly on `main` is
+  still waiting to be carried over, and all four build configurations from
   "Verification" are green. Say the port is feature-complete, print the `POTENTIAL BUG FOUND`
   inventory, and suggest `review` plus a real injection test as the next steps. **Do not invent
   work**: no new tests, no refactors, no helper classes, no restructuring. An empty run that says
@@ -320,7 +326,7 @@ Each group depends on the ones above it. Bottom-up: nothing is ported before the
 
 ## Project layout
 
-One solution under `$code_root_dir/Code2/C#/BloogBot_net9`, SDK-style throughout:
+One solution, `BloogBot_net9.sln` at the repository root on `net9-port`, SDK-style throughout:
 
 | Project | TFM | Output | Notes |
 | --- | --- | --- | --- |
@@ -405,8 +411,9 @@ These never come up again:
   grep before dropping them; if something does read them, port that file instead.
 - `Bot/`, `Debug/`, `Release/`, `x64/`, `obj/`, `bin/` - build output.
 - `bloogbot_diff.ps1`, `bloogbot_current_vs_prefork.diff`, `bloogbot_downloaded_vs_prefork.diff` -
-  tooling for `bloogbot-upstream-sync`, which stays in the source tree.
-- `UPSTREAM_SYNC.md` and `.claude/` - they belong to the source repository.
+  tooling for `bloogbot-upstream-sync`.
+- `UPSTREAM_SYNC.md`, `upstream_info.txt` and `.claude/` - maintained by `bloogbot-upstream-sync`;
+  each branch has its own ledger.
 - `Fasm.NET.dll` and every other prebuilt binary under `Bot/` - see "Known blockers".
 
 ## Replication rules
@@ -502,6 +509,10 @@ Rules:
   `bloogbot-upstream-sync` later.
 
 ## Setup mode
+
+**Historical - setup has run and never runs again.** It was written for a separate `BloogBot_net9`
+repository; what actually happened is described under "Source and target". It stays here as the
+record of how the scaffolding was built.
 
 Create, in this order:
 
@@ -835,7 +846,7 @@ Rules:
 A run that touches either shell proves they still match, and reports the result:
 
 ```bash
-DST="$code_root_dir/Code2/C#/BloogBot_net9"
+DST="$code_root_dir/Code2/C#/BloogBot"     # net9-port checked out
 W="$DST/BloogBot.UI.Wpf/MainWindow.xaml"
 A="$DST/BloogBot.UI.Avalonia/MainWindow.axaml"
 
@@ -962,7 +973,7 @@ Rule: **a package is carried across only when a ported `.cs` file actually refer
 check before adding one:
 
 ```bash
-grep -rn "using MessagePack\|using StreamJsonRpc\|using Nerdbank" "$SRC" --include='*.cs' | grep -v packages
+git -C "$code_root_dir/Code2/C#/BloogBot" grep -n -e 'using MessagePack' -e 'using StreamJsonRpc' -e 'using Nerdbank' main -- '*.cs'
 ```
 
 ## Known blockers
@@ -996,7 +1007,7 @@ so in the summary, and stop. **Do not invent a workaround that changes behavior.
 Compiling in **all four configurations** is the acceptance bar for a run:
 
 ```powershell
-cd "$env:code_root_dir/Code2/C#/BloogBot_net9"
+cd "$env:code_root_dir/Code2/C#/BloogBot"     # net9-port checked out
 dotnet build BloogBot_net9.sln -c Debug
 dotnet build BloogBot_net9.sln -c Debug -p:Ui=Avalonia
 dotnet build BloogBot_net9.sln -c Debug -p:UseCustomChanges=false
@@ -1004,14 +1015,16 @@ dotnet build BloogBot_net9.sln -c Debug -p:Ui=Avalonia -p:UseCustomChanges=false
 ```
 
 ```bash
-cd "$code_root_dir/Code2/C#/BloogBot_net9"
+cd "$code_root_dir/Code2/C#/BloogBot"     # net9-port checked out
 dotnet build BloogBot_net9.sln -c Debug
 dotnet build BloogBot_net9.sln -c Debug -p:Ui=Avalonia
 dotnet build BloogBot_net9.sln -c Debug -p:UseCustomChanges=false
 dotnet build BloogBot_net9.sln -c Debug -p:Ui=Avalonia -p:UseCustomChanges=false
 ```
 
-A run always builds the first two. It builds all four whenever it touched a file containing
+All builds write `Bot\`, so end on a plain `dotnet build BloogBot_net9.sln -c Debug` (Wpf, on) if
+the last configuration built was another one - `Bot\` should hold the default. A run always builds
+the first two. It builds all four whenever it touched a file containing
 `#if USE_CUSTOM_CHANGES`, and reports every result in the run-log row. A C# `#if` branch that is off
 is **not** compiled and **not** type-checked, so an untouched configuration proves nothing about the
 branch it excludes - say so explicitly when a run ports a branch it did not build.
@@ -1083,7 +1096,7 @@ After the edits, summarize:
 - anything that could not be ported, and why - blockers especially
 - which build commands were run and their results, one line each
 - that `PORT_STATUS.md` was updated
-- **a suggested commit message, written to `BloogBot_net9/commit_message.txt` rather than printed.**
+- **a suggested commit message, written to `commit_message.txt` at the repository root rather than printed.**
   1-3 sentences, overwriting whatever the previous run left there; in the reply just say it was
   written, without reproducing it. It names what was ported and how, including anything adapted or
   left out, and is prefixed with the project name. A subject line, a blank line, then the body:

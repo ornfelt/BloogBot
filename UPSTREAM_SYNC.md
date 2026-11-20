@@ -22,7 +22,9 @@ net9-port branch"). Native projects only when a commit touched them, with VS 18 
 `-p:PlatformToolset=v145`.
 Histories rejoined at `a9be5e8` on 2026-09-22 by merge `b5334a2` (tree unchanged) - shared with
 `main`, which this branch left after it. `main`'s second rejoin (`4ef1d3c`, at `fc6e580`) is not in
-this history; this branch is rejoined on its own once caught up.
+this history. **This branch rejoined on its own at `fc6e580` on 2026-11-20 by merge `28a6340` (tree
+unchanged; 10 behind / 438 ahead -> 0 behind / 439 ahead)** - the next rejoin's coverage check uses
+`U` = `fc6e580`, `M` = `28a6340`.
 Rows 1-61 were landed on `main` before the branch point. Their fork commits are ancestors here
 through `3fa79c9`, and the port carried their content into the .NET 9 files; their Notes describe
 `main`'s .NET Framework tree (line numbers, MSBuild results, guard counts) and are history, not this
@@ -325,6 +327,27 @@ None.
   port's `.gitignore` rewrite had dropped `main`'s rule) - never commit or delete it. Paragraphs below that cite MSBuild, `main`'s `**/packages/*` rule at `.gitignore:171`, `upstream-local` or
   `main`'s line numbers describe `main`; re-derive before citing them here. The first rejoin note is
   shared history.
+
+- **Caught up, and net9-port rejoined on its own on 2026-11-20.** Rows 62-71 were the whole range since
+  the shared rejoin `a9be5e8` / `b5334a2`; row 71 (`fc6e580`) landed last, so the high-water mark equals
+  `upstream/main` (`fc6e580`, 2026-11-18). The user chose 'Rejoin now (Recommended)'. Merge `28a6340`,
+  made with `git merge --no-commit --no-ff upstream/main`: `rev-list --left-right --count
+  upstream/main...HEAD` went from **10 behind / 438 ahead** to **0 behind / 439 ahead**, and
+  `merge-base HEAD upstream/main` moved from `a9be5e8` to `fc6e580`.
+
+  **Coverage**: `git range-diff -s a9be5e8..upstream/main b5334a2..HEAD -- . ':!UPSTREAM_SYNC.md'
+  ':!upstream_info.txt' ':!.claude' ':!PORT_STATUS.md'` paired all 10 upstream commits with this branch's
+  landings (each `!`, the difference being the `Cherry-picked from upstream ...` body line); no `<  -:`
+  line. **No content change**: four conflicts, each this branch carrying upstream's change in its own
+  form and resolved with `--ours` as its row records - `AfflictionWarlockBot/BuffSelfState.cs` (port
+  header vs upstream's first-line `using`, row 67), `BloogBot/AI/SharedStates/SpellCastingStateBase.cs`
+  (add/add, port header, row 65), `BloogBot/BloogBot.csproj` (SDK project vs upstream's old-style
+  `<Compile Include>` list, row 65) and `BloogBot/AI/SharedStates/CombatStateBase.cs` (the three
+  `#if !USE_CUSTOM_CHANGES` regions of `d05ea92` vs upstream's unguarded lines, row 70). Everything else
+  auto-merged. `git diff --cached --stat HEAD` printed nothing, and `git write-tree` returned `36d55e2`,
+  equal to the pre-merge `HEAD^{tree}` - a byte-identical tree, so no rebuild was needed (the tree is
+  the one built green in all four configurations at row 71). Not pushed: `git push origin net9-port` is
+  a fast-forward and GitHub's count updates only after it.
 
 - **Caught up, and the histories were rejoined on 2026-09-22.** (Settled.) `a9be5e8` was the last commit in the
   range. The 'N commits behind' banner has been **cleared**: `rev-list --left-right --count

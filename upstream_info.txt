@@ -1,2 +1,2 @@
 BloogBot
-  commit d7289059d7aa355df0c214e6bd0b712db147f391
+  commit 39e39ec8fdc25c02c9e0c2a0b2b5d7241894b73f

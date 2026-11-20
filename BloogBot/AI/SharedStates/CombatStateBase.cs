@@ -20,7 +20,12 @@ namespace BloogBot.AI.SharedStates
         readonly LocalPlayer player;
         readonly WoWUnit target;
         readonly bool loot;
+#if !USE_CUSTOM_CHANGES
+        // Upstream 57857d2. Kept out of the custom build: in combat the pushed StuckState pops at
+        // once (it bails on IsInCombat), and each push/pop resets Bot's state timer, which kept the
+        // fork's 3-minute stuck-in-combat teleport from ever firing while bumping WpStuckCount.
         readonly StuckHelper stuckHelper;
+#endif
 
         bool backpedaling;
         int backpedalStartTime;
@@ -56,7 +61,9 @@ namespace BloogBot.AI.SharedStates
 
             WoWEventHandler.OnErrorMessage += OnErrorMessageCallback;
 
+#if !USE_CUSTOM_CHANGES
             stuckHelper = new StuckHelper(botStates, container);
+#endif
 
 #if USE_CUSTOM_CHANGES
             loopTimer = 0;
@@ -220,7 +227,9 @@ namespace BloogBot.AI.SharedStates
             {
                 var nextWaypoint = Navigation.GetNextWaypoint(ObjectManager.MapId, player.Position, target.Position, false);
                 player.MoveToward(nextWaypoint);
+#if !USE_CUSTOM_CHANGES
                 stuckHelper.CheckIfStuck();
+#endif
             }
             else if (player.IsMoving && player.Position.DistanceTo(target.Position) < desiredRange - 1)
                 player.StopAllMovement();

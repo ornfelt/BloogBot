@@ -1133,6 +1133,10 @@ Five stopping conditions:
   inventing work; rerunning the skill later fetches again and picks up whatever upstream added. An
   empty run that says "nothing left" is a correct run. If the fetch failed, say "caught up with the
   last fetched `upstream/main`" instead - it is not proof that upstream has nothing new.
+  Then check `git -C "$FORK" rev-list --left-right --count upstream/main...main`: when the left
+  (behind) number is above 0, offer the rejoin merge from "Clearing it" so GitHub stops showing the
+  fork as behind, and run it if the user says yes - never push; the user runs `git push origin main`.
+  The run that lands the last pending commit is caught up too, so it makes the same offer.
 
 ## The 'N commits behind' banner
 

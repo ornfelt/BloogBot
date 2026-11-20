@@ -1,20 +1,32 @@
 # Upstream sync ledger
 
-Upstream: <https://github.com/DrewKestell/BloogBot> branch `main`, cloned at
-`$USERPROFILE/Downloads/BloogBot`, wired into this repo as the `upstream-local` remote.
+Upstream: <https://github.com/DrewKestell/BloogBot> branch `main`, wired into this repo as the
+`upstream` remote and fetched at the start of every run (read as `upstream/main`). The former
+`upstream-local` path remote into a `~/Downloads/BloogBot` clone is gone (2026-11-20).
 Fork point: `1d0057c` - Merge branch 'main' of github.com:DrewKestell/BloogBot into main
 High-water mark: `a9be5e8` (every commit up to and including this one is decided)
-**The fork is CAUGHT UP**: the high-water mark equals `upstream-local/main`, re-checked 2026-10-22.
-Every one of the 61 commits after the fork point has a row and none is `pending`. The next run has
-nothing to do until the user fetches new upstream history in the Downloads clone.
-Upstream HEAD when last checked: `a9be5e8` `BeastmasterHunterBot: LOS checks, pet management, rest state rewrite` (2026-10-22)
-Remaining after the high-water mark: `0`
-Local customizations: guarded by `USE_CUSTOM_CHANGES`, defined in `BloogBot/BloogBot.csproj`,
-`FrostMageBot/FrostMageBot.csproj` and `Loader/Loader.vcxproj`. `ArmsWarriorBot` and
-`ShadowPriestBot` had their toggles removed after `569d3cb` left them with no guards.
-Branch: `main`. The `commented` branch is out of scope.
-Histories rejoined at `a9be5e8` on 2026-09-22 by merge `b5334a2` (tree unchanged). Since then the
-fork has gained the `migrate-to-net9` fixes (merge `0df33fa`) - see "Fork changes since the rejoin".
+Upstream HEAD when last checked: `fc6e580` `MoveToCorpseState: check for Spirit Healer before graveyard resurrection` (2026-11-20)
+Remaining after the high-water mark: `10`
+Local customizations: guarded by `USE_CUSTOM_CHANGES`, defined for every `.csproj` in
+`Directory.Build.props` (property `UseCustomChanges`, default `true`, off with
+`-p:UseCustomChanges=false`) and in `Loader/Loader.vcxproj` (`CustomChangesDefine`, prefixed to its four
+`PreprocessorDefinitions`). No individual `.csproj` defines it.
+Branch: `net9-port` - the .NET 9 replica of `main`, branched from it at `3fa79c9` (2026-09-22). Upstream
+commits are cherry-picked here from `upstream/main`; `main`'s landing commits are never picked and
+`main` is never merged in. Where `main` already landed a row, its landing commit and row are the
+reference resolution, named in the row's Notes as `main: <sha>`. `main` keeps its own ledger. The
+`commented` branch is out of scope.
+Build: `dotnet build BloogBot_net9.sln -c Debug` in four configurations - `-p:Ui=Avalonia` and the
+default Wpf, each with `-p:UseCustomChanges=false` and the default on (see the skill's "Running on the
+net9-port branch"). Native projects only when a commit touched them, with VS 18 MSBuild and
+`-p:PlatformToolset=v145`.
+Histories rejoined at `a9be5e8` on 2026-09-22 by merge `b5334a2` (tree unchanged) - shared with
+`main`, which this branch left after it. `main`'s second rejoin (`4ef1d3c`, at `fc6e580`) is not in
+this history; this branch is rejoined on its own once caught up.
+Rows 1-61 were landed on `main` before the branch point. Their fork commits are ancestors here
+through `3fa79c9`, and the port carried their content into the .NET 9 files; their Notes describe
+`main`'s .NET Framework tree (line numbers, MSBuild results, guard counts) and are history, not this
+branch's figures.
 
 Ledger reshaped 2026-10-22 to the current skill's format: Date, Origin and Handling columns, the
 Special handling and Flagged for upstream sections, and rows 24-49 moved back into the table (they
@@ -113,6 +125,16 @@ fork fix); their Date is the fork commit's and Origin and Handling are `-`.
 | 59 | `c0dbabd` | 2026-05-18 | upstream | FrostMageBot/ConjureItemsState: gate Wait.For behind IsSpellReady | applied | as-is | - | Clean cherry-pick, no conflicts; `ConjureItemsState.cs` auto-merged. One file, +8/-11, and it touches **no guarded file at all** - the guarded-file intersection is empty, because `879191b` moved this project's only guard out of this very file and into `FrostMageConsumables.cs` one run earlier. A genuine ordering **fix** on the `Wait.For` throttles `879191b` had just introduced: `Wait.For` resets its timer whenever it fires, so testing it *before* castability meant a tick where the GCD was still running would consume the window and impose a spurious 3-second wait before the next attempt. The test order is now `!HasEnough && IsSpellReady(...) && Wait.For(...)`, so the timer only advances when a cast is genuinely possible. The `TryCastSpell` helper became unused and was removed, inlining the `LuaCall`. **Checked the one thing that removal could have dropped**: `TryCastSpell` also tested `!player.IsCasting`, which the new inline code does not - but `Update()` still early-returns on `player.IsCasting` at `ConjureItemsState.cs:46`, so that check was redundant and losing it changes nothing. After the pick the file is identical to upstream apart from the single pre-existing `using System;` that `879191b` deliberately left in place (verified with a line-ending-normalised diff; an unnormalised one renders as a whole-file change and is misleading here). mirror n/a: no guarded file touched. Guard count unchanged at 19 files / 71 regions. Both builds exit 0, no errors; the five `CS0169` warnings in the on-build are the long-standing upstream ones in `BackstabRogueBot`, `BeastmasterHunterBot` and `FuryWarriorBot`, none in `FrostMageBot`. |
 | 60 | `c540fa8` | 2026-05-18 | upstream | FrostMageConsumables: consume lower-level conjured items first | applied | as-is | - | Clean cherry-pick, no conflicts; `FrostMageBot/FrostMageConsumables.cs` auto-merged. One file, **+7/-0**. Adds a `ConjuredRank` helper - the index of an item's name in the conjured name list, `int.MaxValue` when absent - and inserts `.ThenBy(i => ConjuredRank(...))` into `SelectItem`'s ordering, between the configured-items-first key and the stack-count tie-break. Upstream's rationale: lower-level conjured items do not survive a logout, so burning them first reclaims bag slots on its own. **mirror n/a: the changed code sits entirely outside every guard.** This file's only customization is the three WotLK entries appended to `ConjuredFoodNames` (`:22-28`) and `ConjuredDrinkNames` (`:43-48`), and that guard is a pure addition with **no `#else` branch** - `SelectItem` and `ConjuredRank` are shared code compiled identically in both configurations, so there is no half for a fix to miss. The interaction was checked rather than assumed: `ConjuredRank` ranks by array index, the arrays are documented lowest-level-first, and the fork's `Conjured Mana Pie` / `Mana Strudel` / `Mana Biscuit` sit at the end in ascending level order and are all above the Vanilla entries (`Conjured Croissant` and `Conjured Glacier Water` are level 55). So the guard already satisfies the contract the new ordering relies on, and in the on-build the bot now eats its Vanilla-era leftovers before touching WotLK consumables - which is what upstream intended. Nothing to change. Guard counts identical before and after: 27 files / 110 occurrences / 66 `#if` regions, 21 of the files `.cs`. |
 | 61 | `a9be5e8` | 2026-05-18 | upstream | BeastmasterHunterBot: LOS checks, pet management, rest state rewrite | applied | as-is | - | Clean cherry-pick, no conflicts. 3 files, **+78/-39**, all inside `BeastmasterHunterBot`: `CombatState.cs`, `MoveToTargetState.cs` and a full `RestState.cs` rewrite. The pick was a perfect content transfer - all three files were **byte-identical to upstream at `a9be5e8^` before** the pick and are **byte-identical to upstream at `a9be5e8` after** it (blob-hash compared, not eyeballed), confirming the fork has never customized this project. **mirror n/a: no guarded file touched** (`comm` against `git grep -l USE_CUSTOM_CHANGES` is empty). Every symbol the new code calls was checked to be outside the guards before picking, because a fork-only helper would have broken the off-build alone: `InLosWith` (`LocalPlayer.cs:430`, guard depth 0, and present verbatim at the fork point - upstream's own), `Stand()` (`:224`) and `IsSpellReady` (`:383`) likewise depth 0, while `WoWPlayer.cs` (`IsEating`/`IsDrinking`), `LocalPet.cs` (`IsHappy`) and `ObjectManager.Pet` (`:50`) carry no guards at all. `b353f7d`'s `public new void Update()` hiding was re-checked since this commit edits that method in two of the three files: **0 CS0108/CS0114** in either configuration. Behavior, all unguarded and hunter-only: engagement range 30 -> 28; a proactive LOS check that walks toward an unseen target instead of burning the ranged GCD; Auto Shot now toggled regardless of mana percent (it was gated on `ManaPercent < 60`, which left a dead `else if` branch below it); Mend Pet at <75% pet health in combat and <90% at rest; pet feeding via `Feed Pet` plus a Lua bag scan behind a 3s `Wait.For`; rest now exits into `BuffSelfState` rather than straight to idle. **One upstream discrepancy worth recording, not fixed here**: the commit message claims food and drink references are looked up each tick, but the rewrite only demotes `foodItem`/`drinkItem` from `readonly` to mutable fields and still assigns them **solely in the constructor** - only `pet` is actually re-read per tick (`RestState.cs:47`). So a hunter who buys food mid-rest still will not see it without re-entering the state. That is upstream's own gap in unguarded code, identical in both configurations, with nothing fork-specific to mirror. Guard counts unchanged: 27 files / 111 occurrences before and after. |
+| 62 | `8685d6d` | 2026-11-18 | upstream | SkinningState: use MoveToHotspotWaypointState when swimming | pending | - | - | Added 2026-11-20 by the first net9-port sync run. main: `faac253` (applied, as-is). |
+| 63 | `9f8f365` | 2026-11-18 | upstream | Bot: keep RunningErrands set until post-resurrection rest finishes | pending | - | - | Added 2026-11-20 by the first net9-port sync run. main: `d7a9bd5` (applied, as-is). |
+| 64 | `d728905` | 2026-11-18 | upstream | ReleaseCorpseState: try using Soulstone before releasing corpse | pending | - | - | Added 2026-11-20 by the first net9-port sync run. main: `cb6a3d2` (applied, as-is; mirror n/a: a feature - `mirror d728905` is still optional there). |
+| 65 | `39e39ec` | 2026-11-18 | upstream | CombatStateBase: factor out spell casting into SpellCastingStateBase | pending | - | - | Added 2026-11-20 by the first net9-port sync run. main: `2d7dc04` (applied, as-is). Here expect a `BloogBot/BloogBot.csproj` conflict (SDK project - drop the `<Compile Include>`) and give the new `SpellCastingStateBase.cs` the port header. |
+| 66 | `e523458` | 2026-11-18 | upstream | WoWUnit: add HasAura helper | pending | - | - | Added 2026-11-20 by the first net9-port sync run. main: `8d1ffd3` (applied, as-is). |
+| 67 | `7385d33` | 2026-11-18 | upstream | AfflictionWarlockBot: overhaul combat, buffing, and pet states | pending | - | - | Added 2026-11-20 by the first net9-port sync run. main: `914cc63` (applied, as-is). Here expect a header-line conflict in `AfflictionWarlockBot/BuffSelfState.cs`. |
+| 68 | `f3e58eb` | 2026-11-18 | upstream | SqliteRepository: escape single quotes in AddHotspot | pending | - | - | Added 2026-11-20 by the first net9-port sync run. main: `203ac98` (applied, as-is; flagged for upstream as main #68). |
+| 69 | `38a27e8` | 2026-11-18 | upstream | Bot: restore last used bot type on relogin | pending | - | - | Added 2026-11-20 by the first net9-port sync run. main: `fc79fb1` (applied, as-is). |
+| 70 | `57857d2` | 2026-11-18 | upstream | CombatStateBase: check for stuckness when moving toward target | pending | - | - | Added 2026-11-20 by the first net9-port sync run. main: `190191c` + fork guard `3a49406` (adapted, requested - the user chose 'Upstream-only (Recommended)'; flagged as main #70). Redo the guard here as its own commit. |
+| 71 | `fc6e580` | 2026-11-18 | upstream | MoveToCorpseState: check for Spirit Healer before graveyard resurrection | pending | - | - | Added 2026-11-20 by the first net9-port sync run. main: `fdaed86` (applied, as-is). |
 
 ## Special handling
 
@@ -167,6 +189,12 @@ upstream wrote them.
 
 ## Guarded files
 
+**On net9-port** (2026-11-20): `git grep -c USE_CUSTOM_CHANGES -- ':!*.md'` = **24 files / 78 lines** -
+the C# and C++ sources below plus `Directory.Build.props` and `Loader/Loader.vcxproj`; no `.csproj`
+carries the symbol. `GrindState.cs` has one more guard than on `main` (the missing-hotspot warning from
+`2c9dd54`, this branch's replica of `main`'s `0592173`). The table describes the regions; counts in older
+rows' Notes are `main`'s.
+
 22 source files carry `USE_CUSTOM_CHANGES`, 75 guard regions total (re-derived 2026-10-22).
 Re-derive from the tree - it is the source of truth, not this list. Note two traps when counting: `BattlegroundQueueState.cs` and
 `ArenaSkirmishQueueState.cs` open with a BOM before `#if`, and `WoWObject.cs`/`Position.cs` use
@@ -213,6 +241,17 @@ customization moved into `FrostMageConsumables.cs`.
 
 ## Unguarded customizations
 
+**On net9-port the port itself is the largest unguarded divergence**, by design (`USE_CUSTOM_CHANGES`
+means divergence from upstream gameplay, not port scaffolding): the port header line in every ported
+`.cs` / `.xaml` / `.axaml`, API-map swaps (listed in `PORT_STATUS.md`), the SDK `.csproj` files,
+`Directory.Build.props` / `.targets`, `UnportedOriginals.targets`, `BloogBot_net9.sln` (with `BloogBot.sln`
+deleted), `BloogBot.UI.Abstractions` / `Core` / `Wpf` / `Avalonia`, `Fasm.NET/FasmNet.cs` (its 36 `///`
+lines are the port's own), the hostfxr `Loader/dllmain.cpp`, `.gitignore`, `README.md`,
+`PORT_STATUS.md` and `DATABASE.md`. `App.config` / `app.config` / `packages.config` and the
+`BloogBot/UI/*.cs` / `Properties/*` originals are tracked but not built: upstream hunks land in them as
+written and the live counterpart is changed alongside (see the skill). The v4.8 retarget and
+designer-file notes below are `main`'s.
+
 No preprocessor available - hand-merge these when upstream touches them.
 
 - `Sql/clean.sql`, `Sql/npcs.sql`, `Sql/wander_nodes_{bg,ek,kalimdor,northrend,outland}.sql` -
@@ -241,31 +280,41 @@ Deliberately not guarded, per the skill's do-not-guard list:
 
 ### Fork changes since the rejoin
 
-The `migrate-to-net9` work merged in `0df33fa` (fork commits `ee6b3be`..`1181793`, 2026-09-23) fixed bugs
-in this tree directly, mostly **unguarded and in upstream's own code**, so they reach both configurations
-on purpose. That means the off-configuration is no longer upstream verbatim in these files, and
-`git diff upstream-local/main main` is no longer insertions-only there. A later upstream commit that
-touches one of them may conflict with these fixes rather than with a guard - hand-merge it and keep
-the fork's fix unless upstream fixed the same thing:
+On net9-port the whole tree is the .NET 9 port (`BloogBot_net9:` commits after `3fa79c9`), unguarded by
+design - see "Unguarded customizations". On top of the port, this branch carries its own replicas of
+the bug fixes `main` landed in its `migrate-to-net9` merge `0df33fa` (which is **not** in this
+history), mostly unguarded and in upstream's own code. A later upstream commit touching one of them
+may conflict with the fix rather than with a guard - hand-merge it and keep the fix unless upstream
+fixed the same thing. `main`'s commit is in brackets, which is how `main`'s resolution of such a
+conflict maps across:
 
-- `BloogBot/AI/Bot.cs` (`868ff82`, no dereference of `ObjectManager.Player` before the client is in-world)
-- `BloogBot/AI/SharedStates/GrindState.cs` (`0592173`, missing-hotspot null check - in the `#else` branch too)
-- `BloogBot/Game/ObjectManager.cs` (`1181793`, clear player/object references on logout)
-- `BloogBot/Navigation.cs` (`86a33f8`, report missing movemaps instead of faulting in native code)
-- `BloogBot/SqliteRepository.cs` (`e3cadd8`, apply the schema on every start)
-- `BloogBot/BotLoader.cs`, `BloogBot/UI/MainViewModel.cs`, `BeastmasterHunterBot/BeastMasterHunterBot.cs` (`7e4b210` and the loader-path work)
-- `Bootstrapper/Program.cs`, `Bootstrapper/WinImports.cs` (`eff1d35`, `ca82c2f`, `be41652`)
-- `Loader/dllmain.cpp` (`ee6b3be`, `9da7ac9`, `187dc14`)
-- `BloogBot/bootstrapperSettings.json` (config, already on the cannot-be-guarded list)
+- `BloogBot/AI/Bot.cs` (`7a8929f`, tagged in `def7e4b` [`868ff82`]) - no dereference of `ObjectManager.Player` before the client is in-world
+- `BloogBot/AI/SharedStates/GrindState.cs` (`2c9dd54` [`0592173`]) - missing-hotspot warning, in the `#else` branch too
+- `BloogBot/Game/ObjectManager.cs`, `BloogBot.UI.Core/MainViewModel.cs` (`37301e3` [`1181793`]) - clear player/object references on logout
+- `BloogBot/Navigation.cs` (`5723f7f` [`86a33f8`]) - report missing movemaps instead of faulting in native code
+- `BloogBot/SqliteRepository.cs` (`7d48ddb` [`e3cadd8`]) - apply the schema on every start
+- `BloogBot/BotLoader.cs`, `BeastmasterHunterBot/BeastMasterHunterBot.cs` (`b3694b0` [`7e4b210`]) - assembly name casing
+- `Bootstrapper/Program.cs`, `Bootstrapper/WinImports.cs` (`7a31898`, `8ea60a3`, `b7279e5` [`eff1d35`, `ca82c2f`, `be41652`])
+- `Loader/dllmain.cpp` (`86a406f`, `e0ee0c3`, `32146e0` [`ee6b3be`, `9da7ac9`, `187dc14`]) - on top of the hostfxr rewrite
+- `BloogBot/bootstrapperSettings.json` (`5c97e06`, WotLK client path - config)
 
-None of these is an upstream commit, so none has a row. Whether any of them should go to
-`DrewKestell/BloogBot` as a pull request is the user's call.
+None of these is an upstream commit, so none has a row.
 
 ## Open questions
 
 None.
 
 ## Notes carried forward
+
+- **net9-port build environment, 2026-11-20.** .NET SDK 11.0.100 (the only SDK installed) builds
+  `BloogBot_net9.sln`'s `net9.0-windows` projects; baseline `dotnet build BloogBot_net9.sln -c Debug` = exit 0,
+  0 errors, 35 warnings. NuGet is `PackageReference`, restored by `dotnet build`. The native projects are
+  not in the solution: build them with VS 18 MSBuild and `-p:PlatformToolset=v145` (only `v145` is
+  installed) when a commit touches them. The untracked `packages/` in the worktree is left by `main`'s
+  .NET Framework builds; this branch's `.gitignore` has no packages rule - leave it alone and never
+  commit it. Paragraphs below that cite MSBuild, `packages/` being gitignored, `upstream-local` or
+  `main`'s line numbers describe `main`; re-derive before citing them here. The first rejoin note is
+  shared history.
 
 - **Caught up, and the histories were rejoined on 2026-09-22.** (Settled.) `a9be5e8` was the last commit in the
   range. The 'N commits behind' banner has been **cleared**: `rev-list --left-right --count

@@ -1,8 +1,8 @@
 ---
 name: bloogbot-upstream-sync
-description: Land upstream BloogBot commits in the ornfelt fork, one commit at a time. First run guards every local customization behind the USE_CUSTOM_CHANGES preprocessor directive (toggleable per csproj, default on), strips the XML doc comments the fork added, and proves the solution builds with the directive both on and off. Later runs cherry-pick the next unprocessed upstream commit from the read-only clone in ~/Downloads/BloogBot, resolve conflicts against the guarded blocks, rebuild both configurations, and record the result in UPSTREAM_SYNC.md so the next run continues where this one stopped. Every upstream commit after the fork point has a ledger row (pending until looked at, in commit-date order, with its origin - upstream, fork or merge - its handling and any special handling or upstream bug flag), and upstream_info.txt names the upstream commit the fork is synced through; commits that came from forks are landed too, a merge is skipped only when it changes nothing, and the ledger can be rebuilt from the two repos.
+description: Land upstream BloogBot commits in the ornfelt fork, one commit at a time. First run guards every local customization behind the USE_CUSTOM_CHANGES preprocessor directive (toggleable per csproj, default on), strips the XML doc comments the fork added, and proves the solution builds with the directive both on and off. Every run adds the fork's `upstream` remote (https://github.com/DrewKestell/BloogBot) if it is missing and fetches it - never a pull - so recent upstream commits are always visible; later runs cherry-pick the next unprocessed commit from `upstream/main`, resolve conflicts against the guarded blocks, rebuild both configurations, and record the result in UPSTREAM_SYNC.md so the next run continues where this one stopped. Every upstream commit after the fork point has a ledger row (pending until looked at, in commit-date order, with its origin - upstream, fork or merge - its handling and any special handling or upstream bug flag), and upstream_info.txt names the upstream commit the fork is synced through; commits that came from forks are landed too, a merge is skipped only when it changes nothing, and the ledger can be rebuilt from the fork and `upstream/main`.
 disable-model-invocation: true
-argument-hint: "[empty means the next unprocessed commit, or: setup, status, rebuild, <commit-id>, skip <commit-id> <reason>, replay <commit-id>, abort]"
+argument-hint: "[empty means the next unprocessed commit, or: setup, status, fetch, rebuild, <commit-id>, skip <commit-id> <reason>, replay <commit-id>, abort, mirror <commit-id>, no-mirror <commit-id> <reason>]"
 ---
 
 # Sync upstream BloogBot commits into the fork
@@ -18,7 +18,7 @@ time**, and lands each commit in the fork while keeping the local customizations
   landed under the same rules as one made on upstream's own line. Having come from a fork, or not
   being on upstream's first-parent line, is never a reason to skip one.
 - **Merge commits are skipped only when they change nothing.** A merge whose
-  `git -C "$UP" show --remerge-diff <commit>` (cross-checked with `git show --cc <commit>`) is
+  `git -C "$FORK" show --remerge-diff <commit>` (cross-checked with `git show --cc <commit>`) is
   empty only joins its parents, which are rows of their own. A merge that resolved a conflict in
   code, or changed anything beyond its parents, is landed like any other commit - see "Merge
   commits" under step 1 of "Landing a commit".
@@ -30,42 +30,89 @@ This is the **BloogBot tree**. It has nothing to do with `ameisenbotx-upstream-s
 
 ## Source and target
 
-Upstream reference clone (read-only), branch `main`, remote
-`https://github.com/DrewKestell/BloogBot`:
-
-`$USERPROFILE/Downloads/BloogBot` (PowerShell: `$env:USERPROFILE\Downloads\BloogBot`)
-
-**On Linux there is no `USERPROFILE`** - use `$HOME/Downloads/BloogBot` there. Every
-`$USERPROFILE/Downloads` written in the snippets below means `$HOME/Downloads` on Linux; set `UP`
-accordingly (`UP="$HOME/Downloads/BloogBot"`) and the rest of the commands are unchanged.
-
-Target - the fork this skill writes to, remote `https://github.com/ornfelt/BloogBot`:
+Target - the fork this skill writes to, remote `origin` = `https://github.com/ornfelt/BloogBot`:
 
 `$code_root_dir/Code2/C#/BloogBot` (PowerShell: `$env:code_root_dir\Code2\C#\BloogBot`)
 
 `code_root_dir` is an environment variable. Note the `C#` path segment: in PowerShell the `#` must
 be inside a quoted string or the rest of the line becomes a comment.
 
-**These two repositories share history** - both descend from the same GitHub repo, and the fork
-already has upstream's objects in it. That makes `git cherry-pick` available, and cherry-pick is the
-transfer mechanism this skill uses. Git does the bulk of the work; the run only hand-resolves what
-actually conflicts.
+Upstream - `https://github.com/DrewKestell/BloogBot`, branch `main`, wired into the fork itself as
+the remote **`upstream`**. There is no separate upstream clone: every upstream read is
+`git -C "$FORK" <log|show|diff> ... upstream/main` (or an upstream sha, whose objects the fetch put
+in the fork). `upstream/main` is a remote-tracking ref - fetching moves it, nothing else does, and
+no run ever checks it out, merges it into `main` (except "Clearing it" below) or writes to it.
+
+```bash
+FORK="$code_root_dir/Code2/C#/BloogBot"
+UPSTREAM_URL="https://github.com/DrewKestell/BloogBot"
+```
+
+**The fork and upstream share history** - both descend from the same GitHub repo, and after the
+fetch the fork has upstream's objects in it. That makes `git cherry-pick` available, and
+cherry-pick is the transfer mechanism this skill uses. Git does the bulk of the work; the run only
+hand-resolves what actually conflicts.
 
 The fork point is `1d0057c` ("Merge branch 'main' of github.com:DrewKestell/BloogBot into main",
-dkestell, 2023-08-19). It is both the merge base of the two trees and the parent of the first
-ornfelt commit, so the two ways of deriving it agree. Everything at or before it is already in the
-fork by definition and never comes up again.
+dkestell, 2023-08-19). It is both the original merge base of `main` and `upstream/main` and the
+parent of the first ornfelt commit, so the two ways of deriving it agree. Everything at or before it
+is already in the fork by definition and never comes up again. (Since the histories were rejoined -
+see "Clearing it" - `git merge-base main upstream/main` returns the last rejoin point instead; the
+ledger's ranges still start at `1d0057c`, so every row keeps its place.)
+
+### Fetching
+
+**At the start of every run - every mode, `status` included - make sure the remote exists and fetch
+it.** That is what makes recent upstream commits visible; the ledger and `upstream_info.txt` are
+then compared against a current `upstream/main`.
+
+```bash
+FORK="$code_root_dir/Code2/C#/BloogBot"
+UPSTREAM_URL="https://github.com/DrewKestell/BloogBot"
+
+# add the remote when it is missing
+git -C "$FORK" remote get-url upstream >/dev/null 2>&1 \
+  || git -C "$FORK" remote add upstream "$UPSTREAM_URL"
+git -C "$FORK" remote get-url upstream        # must print $UPSTREAM_URL
+
+# what is incoming, then the fetch itself
+git -C "$FORK" fetch --dry-run upstream 2>&1 | head -20
+git -C "$FORK" fetch upstream
+git -C "$FORK" log -1 --format='%h %cs %s' upstream/main
+```
+
+- **The remote is named `upstream`.** If it already exists with a **different URL**, stop and ask -
+  do not repoint it; the user may have wired it to a mirror on purpose. The `.git` suffix and an
+  `http`/`https` or trailing-slash difference on the same `github.com/DrewKestell/BloogBot` path
+  count as the same URL.
+- **Fetch, never pull.** `git fetch upstream` only moves the remote-tracking ref `upstream/main` and
+  writes objects; it touches neither `main` nor the worktree, so it is always fine and needs no
+  confirmation. `git pull upstream main`, `git merge upstream/main` (outside "Clearing it") or
+  `git rebase upstream/main` would pull every unprocessed commit in at once and defeat
+  one-commit-at-a-time - never do them.
+- **An older `upstream-local` remote** (a path remote into a former `~/Downloads/BloogBot` clone)
+  is obsolete. If it is still configured, leave it alone and never fetch from it - its path may be
+  gone - and mention once in the summary that `git remote remove upstream-local` tidies it up. The
+  ledger's header names the `upstream` remote; a ledger that still mentions `upstream-local` or the
+  Downloads clone gets that line corrected by the next run that writes it.
+- **When the fetch fails** (offline, GitHub down), say so in one line and carry on with the
+  `upstream/main` the fork already has - the ledger still has whatever was pending. If the fork has
+  no `upstream/main` at all yet, a run cannot see upstream: stop and report rather than guessing.
+- Report what the fetch found in the summary: "upstream has N new commits on `main` since the last
+  check, newest `<sha> <subject>`", or "upstream has nothing new". `N` is
+  `git -C "$FORK" rev-list --count <ledger's 'Upstream HEAD when last checked'>..upstream/main`.
 
 ## Scope guard
 
 - Write only inside `$code_root_dir/Code2/C#/BloogBot`.
-- **Never write anything under `~/Downloads/BloogBot`** - no commits, no checkouts, no `git stash`,
-  no branch switching, no `git clean`. It is read-only reference material and must stay on `main`
-  with a clean worktree so the next run finds the same history. Reading is `git log`, `git show`,
-  `git diff`, `git cat-file`, `git ls-tree`; that is the whole allowed set.
-- Do not `git fetch` or `git pull` from GitHub unless the user asks. A run works with the history
-  that is already in the Downloads clone. Fetching *from the local clone into the fork*
-  (`git fetch upstream-local`) is not that - it is required plumbing and is always fine.
+- **Upstream is read-only.** The `upstream` remote is only ever fetched from (see "Fetching"):
+  never push to it, never check out `upstream/main` or an upstream sha, never pull or rebase onto
+  it. Reading it is `git log`, `git show`, `git diff`, `git cat-file`, `git ls-tree`, `git rev-list`
+  against `upstream/main` or an upstream sha; that is the whole allowed set besides `cherry-pick`
+  onto `main`.
+- Adding the `upstream` remote when it is missing and `git fetch upstream` are required plumbing
+  and always fine. Do not touch `origin`'s configuration, and do not `git fetch origin` or
+  `git pull` anything unless the user asks.
 - Work on the fork's **`main`** branch. The fork's `commented` branch is **out of scope** - never
   check it out, never merge it, never cherry-pick onto it. See "The commented branch" below.
 - Do not push. Cherry-pick creates commits in the fork's local `main`; that is as far as a run goes.
@@ -324,7 +371,10 @@ Decide from the argument:
    `apply <commit-id>`. Land that commit even if it is out of order.
 4. **Status** - `status`. Report where the sync stands: fork point, high-water mark, how many
    commits remain, what the next one is, whether a cherry-pick is in progress, and the open
-   questions. **Write nothing**, ledger included.
+   questions. **Write nothing**, ledger included - the "Fetching" step (remote add, `git fetch
+   upstream`) still runs, since it only updates git's remote config and refs, and the counts are
+   taken against the freshly fetched `upstream/main`: the commits with no ledger row yet are
+   reported as new, not added.
 5. **Skip** - `skip <commit-id> <reason>`. Record the commit as skipped in the ledger without
    landing it, with Handling `requested` and a Special handling entry quoting the reason, and move
    the high-water mark past it if it is the next one. Use this when the user has answered "no" to a
@@ -345,22 +395,31 @@ Decide from the argument:
    as it is, record `mirror declined: <reason>` in that row's `Notes`, clear the question. Writes
    only the ledger.
 
-10. **Rebuild** - `rebuild`. Redo the ledger from the two repos per "Picking up the current state",
-    keeping the notes, Special handling entries, flags, mirror verdicts and open questions of rows
-    that are still right, commit it, report what changed, stop. Lands no upstream commit.
+10. **Rebuild** - `rebuild`. Redo the ledger from the fork and `upstream/main` per "Picking up the
+    current state", keeping the notes, Special handling entries, flags, mirror verdicts and open
+    questions of rows that are still right, commit it, report what changed, stop. Lands no upstream
+    commit.
+11. **Fetch** - `fetch`. Do "Fetching", then list every upstream commit that has no ledger row yet
+    (`sha`, date, origin, subject, and which guarded files it touches - see step 2 of "Landing a
+    commit"), and stop. **Write nothing** besides the remote and the fetched refs, ledger included.
 
 A bare `mirror` or `no-mirror` with no commit id means the newest row whose `Notes` say
 `mirror pending`. If more than one row is pending and no id was given, list them and ask which.
 
-**Before anything else**, check three things:
+**Before anything else**, check these things, then do "Fetching":
 
 ```bash
 FORK="$code_root_dir/Code2/C#/BloogBot"
 cat "$FORK/UPSTREAM_SYNC.md" 2>/dev/null || echo "NO LEDGER - setup mode"
+cat "$FORK/upstream_info.txt" 2>/dev/null
 git -C "$FORK" rev-parse --abbrev-ref HEAD      # must be main outside setup
 git -C "$FORK" status --short
 ls "$FORK/.git/CHERRY_PICK_HEAD" 2>/dev/null && echo "CHERRY-PICK IN PROGRESS"
+git -C "$FORK" remote -v
 ```
+
+`upstream_info.txt`'s commit and the ledger's high-water mark must name the same commit. If they
+disagree, the ledger rows decide (see "upstream_info.txt") and the run corrects the file.
 
 A cherry-pick already in progress means a previous run stopped on a conflict question. Do not start
 a new commit. Read the ledger's open question, and if the user's answer is in this invocation,
@@ -379,7 +438,6 @@ Runs once, before any upstream commit is touched.
 
 ```bash
 FORK="$code_root_dir/Code2/C#/BloogBot"
-UP="$USERPROFILE/Downloads/BloogBot"
 
 git -C "$FORK" status --short                  # must be clean
 git -C "$FORK" checkout main
@@ -391,20 +449,17 @@ git -C "$FORK" diff 1d0057c main
 ```
 
 Derive the fork point rather than trusting `1d0057c` blindly - the real merge base is
-`git -C "$FORK" merge-base main upstream-local/main` once the remote exists. The literal above is
-the value at the time of writing and a sanity check, not an assumption.
+`git -C "$FORK" merge-base main upstream/main` once the remote is fetched (and as long as the
+histories have not been rejoined - see "Clearing it"). The literal above is the value at the time
+of writing and a sanity check, not an assumption.
 
 That diff is the complete list of what has to end up behind a guard, minus the do-not-guard
 categories above. Read all of it before editing.
 
 ### 2. Wire the remote
 
-```bash
-git -C "$FORK" remote add upstream-local "$USERPROFILE/Downloads/BloogBot" 2>/dev/null || true
-git -C "$FORK" fetch upstream-local
-```
-
-`upstream-local` is a path remote into the read-only clone. It is only ever fetched from.
+Per "Fetching": add the `upstream` remote if it is missing, fetch it, and confirm
+`upstream/main` resolves. It is only ever fetched from.
 
 ### 3. Strip the fork's XML doc comments
 
@@ -501,8 +556,8 @@ Setup creates it with this shape:
 ```markdown
 # Upstream sync ledger
 
-Upstream: <https://github.com/DrewKestell/BloogBot> branch `main`, cloned at
-`$USERPROFILE/Downloads/BloogBot`, wired into this repo as the `upstream-local` remote.
+Upstream: <https://github.com/DrewKestell/BloogBot> branch `main`, wired into this repo as the
+`upstream` remote and fetched at the start of every run (read as `upstream/main`).
 Fork point: `1d0057c` - Merge branch 'main' of github.com:DrewKestell/BloogBot into main
 High-water mark: `1d0057c` (every commit up to and including this one is decided)
 Upstream HEAD when last checked: `<sha>` `<subject>` (<date of the run>)
@@ -558,18 +613,18 @@ answers: `mirror <commit-id>` or `no-mirror <commit-id> <reason>`>
 Rules for the ledger:
 
 - **Every upstream commit after the fork point has a row** - landed, skipped, `asked` or
-  `pending`. A run first adds `pending` rows for the commits the ledger has none for (after the
-  user fetched new history into the Downloads clone), so the file always shows what is landed and
-  what is not. A ledger written before the `pending` rows and the Origin / Handling columns
+  `pending`. A run that writes the ledger first adds `pending` rows for the commits the ledger has
+  none for (the ones the run's `git fetch upstream` brought in), so the file always shows what is
+  landed and what is not. A ledger written before the `pending` rows and the Origin / Handling columns
   existed is brought to this shape by the next run, per "Picking up the current state".
 - **Rows are chronological and never move.** New rows are appended in commit-date order, never a
   commit before its parent: `git -C "$FORK" log --reverse --date-order --format='%h %ct %s'
-  1d0057c..upstream-local/main`, minus the commits that already have a row. `#` keeps counting up;
+  1d0057c..upstream/main`, minus the commits that already have a row. `#` keeps counting up;
   existing rows are never reordered, renumbered or removed. An old commit that only arrives through
   a later merge is appended when it arrives, so its date can be older than the row above it - that
   is expected. **The ledger's row order is the landing order.**
 - **Origin**: `merge` when the commit has more than one parent; else `upstream` when
-  `git -C "$UP" rev-list --first-parent 1d0057c..main` lists it; else `fork`.
+  `git -C "$FORK" rev-list --first-parent 1d0057c..upstream/main` lists it; else `fork`.
 - **Handling** as above; `requested` wins over `needed`. A skipped no-change merge is `as-is`:
   skipping it is the rule, not a change. A `no-mirror` answer changes nothing in the fork, so it
   leaves the Handling as it was.
@@ -603,16 +658,28 @@ BloogBot
 ```
 
 It changes whenever the high-water mark moves, and is committed together with the ledger whenever
-the ledger is committed (see step 8 of "Landing a commit").
+the ledger is committed (see step 8 of "Landing a commit"). Write it from the ledger, never from
+`upstream/main`: a fetch that brings new commits does **not** move it - only landing (or skipping)
+them does. So after a fetch, the commits the fork still has to take are exactly
+
+```bash
+git -C "$FORK" log --reverse --date-order --format='%h %cs %s' \
+  "$(awk '/commit/{print $2}' "$FORK/upstream_info.txt")..upstream/main"
+```
+
+which is the quick cross-check against the ledger's `pending` rows (equal when nothing was landed
+out of order).
 
 ### Picking up the current state
 
-The ledger can be rebuilt from the two repos - on setup, in `rebuild` mode, and for the rows
-concerned whenever the ledger disagrees with the tree. For every commit in the walk above (a full
-rebuild numbers the rows in that order), origin as above, then:
+The ledger can be rebuilt from the fork and `upstream/main` - on setup, in `rebuild` mode, and for
+the rows concerned whenever the ledger disagrees with the tree. For every commit in the walk above
+(a full rebuild numbers the rows in that order), origin as above, then:
 
-1. **An earlier sync**: the fork's commit that landed it - same subject and author
-   (`git -C "$FORK" log --format='%h %an %s' 1d0057c..main`), a body naming the sha
+1. **An earlier sync**: the fork's commit that landed it - same subject and author among the fork's
+   own commits (`git -C "$FORK" log --format='%h %an %s' main --not upstream/main 1d0057c`; the
+   `--not upstream/main` matters once the histories have been rejoined, because `main` then
+   contains upstream's original commits too and every subject would match itself), a body naming the sha
    (`--grep='<commit>'`), or a matching `git patch-id`. Its conflicts and resolution give the
    status; a mirror commit (`Mirror <commit> fix ...`) gives `mirrored`.
 2. **Already in the code**: with no such commit, check the change against the tree - upstream's
@@ -631,17 +698,18 @@ Recompute the high-water mark, `Remaining` and `upstream_info.txt` from the rows
 
 ```bash
 FORK="$code_root_dir/Code2/C#/BloogBot"
-UP="$USERPROFILE/Downloads/BloogBot"
 
 cat "$FORK/UPSTREAM_SYNC.md"                       # the cheap answer first
-git -C "$FORK" fetch upstream-local
+# then "Fetching": remote add if missing, git fetch upstream
 
 # the commits with no ledger row yet get pending rows, in this order
-git -C "$FORK" log --reverse --date-order --format='%h %ct %s' 1d0057c..upstream-local/main
+git -C "$FORK" log --reverse --date-order --format='%h %ct %s' 1d0057c..upstream/main
 ```
 
 Add the `pending` rows first (see "The ledger"). The next commit is the ledger's first `pending`
-row. In mode 3 it is the commit the user named instead.
+row. In mode 3 it is the commit the user named instead - it has to be reachable from
+`upstream/main` (`git -C "$FORK" merge-base --is-ancestor <commit> upstream/main`); if it is not,
+say so and stop rather than picking a commit from somewhere else.
 
 At the time of writing, **61** commits sit after the fork point, from `a5e450a` ("More information
 when building path") to `a9be5e8` ("BeastmasterHunterBot: LOS checks, pet management, rest state
@@ -652,7 +720,7 @@ into main"), joining `569d3cb` and `a5e450a`. Test before picking - this prints 
 `0` otherwise:
 
 ```bash
-git -C "$UP" rev-list --no-walk --count --merges <commit>
+git -C "$FORK" rev-list --no-walk --count --merges <commit>
 ```
 
 #### Merge commits
@@ -660,8 +728,8 @@ git -C "$UP" rev-list --no-walk --count --merges <commit>
 A merge's parents have rows above it, so they are already landed. Read what the merge itself did:
 
 ```bash
-git -C "$UP" show --remerge-diff <commit>
-git -C "$UP" show --cc <commit>
+git -C "$FORK" show --remerge-diff <commit>
+git -C "$FORK" show --cc <commit>
 ```
 
 - **Empty** - it only joins its parents (`f22af34` is one): record it `skipped (merge, changes
@@ -675,8 +743,8 @@ git -C "$UP" show --cc <commit>
 ### 2. Read the whole commit before touching anything
 
 ```bash
-git -C "$UP" show --stat <commit>
-git -C "$UP" show <commit> -- <the guarded files>
+git -C "$FORK" show --stat <commit>
+git -C "$FORK" show <commit> -- <the guarded files>
 ```
 
 The second command is the one that predicts the run: it shows whether this commit collides with a
@@ -1003,6 +1071,9 @@ Every run ends with, in this order:
    customizations guarded". Say how many `pending` rows the run added, and any that arrived older
    than the rows above them. Give the high-water mark, whether it moved, and what
    `upstream_info.txt` now names.
+   Also the **fetch result**: whether the `upstream` remote had to be added, what `git fetch
+   upstream` found (N new commits since the last check, newest `<sha> <subject>`, or nothing new),
+   or that the fetch failed and the run used the `upstream/main` it already had.
 2. **What changed in the fork** - file by file. For a cherry-pick, the interesting part is the
    conflicts: which files conflicted, and how each was resolved. Say explicitly if a csproj or
    vcxproj was touched, if a guard was added, moved or removed, and if nothing was written.
@@ -1042,8 +1113,9 @@ Every run ends with, in this order:
 ## Rerunning
 
 The bare form is designed to be run again and again, from a cold context each time. A run re-derives
-its position from `UPSTREAM_SYNC.md` plus `git log`, so a fresh session, a new day or a `/clear` in
-between changes nothing.
+its position from `UPSTREAM_SYNC.md` and `upstream_info.txt` plus `git log` against a freshly fetched
+`upstream/main`, so a fresh session, a new day or a `/clear` in between changes nothing - and new
+upstream commits show up on their own, as `pending` rows, the next time the skill runs.
 
 Five stopping conditions:
 
@@ -1056,9 +1128,11 @@ Five stopping conditions:
   `no-mirror <commit-id> <reason>` settles it.
 - **Setup finished** - report the guarded tree and stop; the user reviews it before commits start
   landing on top.
-- **Nothing left** - the high-water mark is `upstream-local/main`. Say the fork is caught up and
-  suggest `git -C "$UP" fetch` (in the Downloads clone, by the user) as the next step rather than
-  inventing work. An empty run that says "nothing left" is a correct run.
+- **Nothing left** - after this run's fetch, the high-water mark is `upstream/main`. Say the fork
+  is caught up with upstream as of the fetch (naming `upstream/main`'s sha and date) rather than
+  inventing work; rerunning the skill later fetches again and picks up whatever upstream added. An
+  empty run that says "nothing left" is a correct run. If the fetch failed, say "caught up with the
+  last fetched `upstream/main`" instead - it is not proof that upstream has nothing new.
 
 ## The 'N commits behind' banner
 
@@ -1074,8 +1148,8 @@ never falls on its own, even when the fork's content is a strict superset of ups
 Confirm it is cosmetic rather than assuming it:
 
 ```bash
-git -C "$FORK" rev-list --left-right --count upstream-local/main...main   # left = behind, right = ahead
-git -C "$FORK" diff --stat upstream-local/main main                       # must be insertions only
+git -C "$FORK" rev-list --left-right --count upstream/main...main   # left = behind, right = ahead
+git -C "$FORK" diff --stat upstream/main main                       # must be insertions only
 ```
 
 The second command is the real check. If it shows **only the expected files and zero deletions**,
@@ -1090,7 +1164,7 @@ upstream code instead of guarding it, fix that, and do not paper over it with a 
 
 ### Clearing it
 
-Only when the sync is **caught up** - the high-water mark equals `upstream-local/main`. Never
+Only when the sync is **caught up** - the high-water mark equals a freshly fetched `upstream/main`. Never
 mid-sync, and with 61 commits to work through that means not for a long while: merging early would
 make unprocessed upstream commits ancestors and pull all their content in at once, which defeats
 one-commit-at-a-time and makes the ledger's high-water mark a lie. Ask the user first; this
@@ -1098,7 +1172,7 @@ rewrites nothing but it does change a branch they publish.
 
 ```bash
 git -C "$FORK" rev-parse main^{tree}                    # note this hash
-git -C "$FORK" merge --no-commit --no-ff upstream-local/main
+git -C "$FORK" merge --no-commit --no-ff upstream/main
 git -C "$FORK" status --short | grep -E '^(UU|AA|DU|UD|AU|UA)'
 ```
 

@@ -60,8 +60,11 @@ here. Where the rest of the file says `main` as the branch being written to, rea
   its row (`git show main:UPSTREAM_SYNC.md`) and its landing commit (`git show <main sha>`) before
   resolving, and resolve the same way unless the port's shape forces a difference. The row's Notes
   say `main: <sha>` and either "same resolution as main" or exactly how it differs. Quick check for a
-  pick that needed no port change: `git show <commit> | git patch-id --stable` equals the same for
-  the net9 landing (it does for `8685d6d` and `main`'s `faac253`). Status, conflicts, counts and
+  pick that needed no port change: `git show <sha> | git patch-id --stable` of the net9 landing
+  equals that of `main`'s landing. Compare with `main`'s, not upstream's: patch-id hashes the hunk's
+  context lines, and a hunk next to a guard has the fork's `#if` / `#else` lines as context on both
+  branches but not upstream (row 64: `main` and net9 `ef0c75f8`, upstream `20e649e1`). With no guard
+  nearby it equals upstream's too (row 62). Status, conflicts, counts and
   build results are always this branch's own - never copied from `main`'s row.
 - **Decisions made on `main` carry over.** A user answer, a mirror verdict or a fork-side follow-up
   `main` recorded for the row (row 70's upstream-only guard `3a49406`, for instance) applies here too

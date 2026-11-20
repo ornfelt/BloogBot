@@ -312,8 +312,8 @@ None.
   not in the solution: build them with VS 18 MSBuild and `-p:PlatformToolset=v145` (only `v145` is
   installed) when a commit touches them. `packages/` in the worktree is the NuGet restore of `main`'s
   .NET Framework builds (46 packages, 182 MB, restored 2026-11-20; `main`'s csproj `HintPath`s load
-  from it). This branch does not use it; `.gitignore` ignores it as `/packages/` (added 2026-11-20, the
-  port's `.gitignore` rewrite had dropped `main`'s rule) - never commit or delete it. Paragraphs below that cite MSBuild, `packages/` being gitignored, `upstream-local` or
+  from it and import SQLite / MSTest build targets from it). This branch does not use it; `.gitignore` ignores it as `/packages/` (added 2026-11-20, the
+  port's `.gitignore` rewrite had dropped `main`'s rule) - never commit or delete it. Paragraphs below that cite MSBuild, `main`'s `**/packages/*` rule at `.gitignore:171`, `upstream-local` or
   `main`'s line numbers describe `main`; re-derive before citing them here. The first rejoin note is
   shared history.
 

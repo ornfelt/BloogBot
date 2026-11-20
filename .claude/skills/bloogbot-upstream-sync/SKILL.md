@@ -90,7 +90,8 @@ here. Where the rest of the file says `main` as the branch being written to, rea
   `pending`. Compare "already in the code" modulo the port transforms below. Rows 1-61's landing
   commits are ancestors of `net9-port` through `3fa79c9` and stay valid.
 - **`packages/`** at the repository root is the NuGet restore output of `main`'s .NET Framework
-  builds (182 MB; `main`'s projects load DLLs from it by `HintPath`). This branch never reads it, but
+  builds (182 MB; `main`'s projects load DLLs from it by `HintPath` and import SQLite / MSTest build
+  targets from it). This branch never reads it, but
   it stays on disk when the worktree switches branches. `.gitignore` ignores it here as on `main`
   (`/packages/`, added 2026-11-20). Never commit it, and never delete it - `main`'s next build needs
   it. If it ever shows up as `?? packages/` again, the ignore rule was lost: restore the rule, do not
@@ -822,9 +823,11 @@ not continue into the first commit.
   `-p:Platform=x86` - the default `AnyCPU` does not exist in this solution.
 - The vcxproj files ask for `PlatformToolset` `v141`/`v142`/`v143`. VS 18 builds them anyway; the
   whole solution was verified green at the time of writing (exit code 0, C++ projects included).
-- NuGet is `packages.config`-based with a checked-in `packages/` directory. `-t:Restore` reports
-  "Nothing to do" - that is expected, not an error. If a package ever goes missing, restore it with
-  `nuget restore BloogBot.sln`, not with `dotnet restore`.
+- NuGet on `main` is `packages.config`-based. The `packages/` directory is restored, not checked in
+  (`.gitignore` ignores it on both branches). When it is missing or a package is absent, restore it
+  with `MSBuild BloogBot.sln -t:Restore -p:RestorePackagesConfig=true` - there is no `nuget.exe` on
+  this machine, and `dotnet restore` does not handle these projects. A restore with nothing to do is
+  not an error.
 - All projects output to the shared `Bot\` directory, so the on- and off-builds overwrite each
   other's artifacts. That is fine for verification but means the last build wins on disk - finish
   with the default (on) configuration so the user's `Bot\` is the one they expect.

@@ -11,8 +11,9 @@ Local customizations: guarded by `USE_CUSTOM_CHANGES`, defined in `BloogBot/Bloo
 `FrostMageBot/FrostMageBot.csproj` and `Loader/Loader.vcxproj`. `ArmsWarriorBot` and
 `ShadowPriestBot` had their toggles removed after `569d3cb` left them with no guards.
 Branch: `main`. The `commented` branch is out of scope.
-Histories rejoined at `a9be5e8` on 2026-09-22 by merge `b5334a2` (tree unchanged). Since then the
-fork has gained the `migrate-to-net9` fixes (merge `0df33fa`) - see "Fork changes since the rejoin".
+Histories rejoined at `a9be5e8` on 2026-09-22 by merge `b5334a2` (tree unchanged), and again at
+`fc6e580` on 2026-11-20 by merge `4ef1d3c` (tree unchanged). Between the two the fork gained the
+`migrate-to-net9` fixes (merge `0df33fa`) - see "Fork changes since the rejoin".
 
 Ledger reshaped 2026-10-22 to the current skill's format: Date, Origin and Handling columns, the
 Special handling and Flagged for upstream sections, and rows 24-49 moved back into the table (they
@@ -283,6 +284,29 @@ None of these is an upstream commit, so none has a row. Whether any of them shou
 None.
 
 ## Notes carried forward
+
+- **Caught up again, and the histories were rejoined a second time on 2026-11-20.** (Settled.) `fc6e580`
+  was the last pending row. Before the merge `rev-list --left-right --count upstream/main...main` was
+  **10 behind / 408 ahead** - the ten upstream commits `8685d6d`..`fc6e580`, all landed by cherry-pick;
+  after it, **0 behind / 409 ahead**, and `git merge-base --is-ancestor upstream/main main` succeeds.
+  The merge is `4ef1d3c`, made with `--no-commit --no-ff` and **proved to change nothing**: `main^{tree}`
+  was `7853111e` before and `git write-tree` returned `7853111e` after resolving, and
+  `git diff 4ef1d3c^1 4ef1d3c` is empty. `-s ours` was not used. One conflict, in the guarded
+  `CombatStateBase.cs`: the three `57857d2` lines the fork keeps upstream-only behind
+  `#if !USE_CUSTOM_CHANGES` (row 70) against the same three lines unguarded on upstream's side -
+  resolved to ours, which already contains upstream's text. Every other file auto-merged with no
+  change. No rebuild was needed: the tree is the one already built green in both configurations at
+  `01a10b2`.
+
+  Superset diagnostic taken first: `diff --stat upstream/main main` was 63 files, **+5495/-75**. The
+  deletions are all accounted for - the `migrate-to-net9` fixes listed under "Fork changes since the
+  rejoin" (`SqliteRepository.cs`, `BotLoader.cs`, `MainViewModel.cs`, `BeastMasterHunterBot.cs`,
+  `Bootstrapper/Program.cs`, `WinImports.cs`, `Loader/dllmain.cpp`), plus the items already explained at
+  the first rejoin: the v4.8 retarget lines, the `Loader.vcxproj` defines, `FastCall.vcxproj`, the
+  `FrostMageConsumables.cs` trailing commas and the fork's config values.
+
+  **Not pushed** - the user runs `git push origin main` (a fast-forward); GitHub's banner only updates
+  after that push.
 
 - **Build environment, 2026-11-20.** Two things broke the stock build commands on this machine, neither caused by
   a sync: (1) VS 18 now ships only the `v145` C++ toolset, so the vcxprojs' `v143` fails with `MSB8020` -

@@ -113,8 +113,9 @@ REPO="$code_root_dir/Code2/C#/BloogBot"
 
 If another branch is checked out, stop and say so - never switch branches on the user's behalf:
 there is one worktree, and a checkout swaps the whole tree. If the worktree is dirty with changes
-this skill did not make, stop as well. An untracked `packages/` (NuGet output of `main`'s .NET
-Framework builds, not covered by this branch's `.gitignore`) is expected and is not a dirty tree.
+this skill did not make, stop as well. `packages/` at the root is the NuGet output of
+`main`'s .NET Framework builds, which `main`'s projects load by `HintPath`; this branch does not use
+it, and `.gitignore` ignores it (`/packages/`) - never commit or delete it.
 
 `net9-port` tracks `origin/net9-port`. Never push it to `origin/main` or `origin/migrate-to-net9`
 (a leftover of the original two-repository plan that plays no part now).

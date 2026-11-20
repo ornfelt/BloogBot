@@ -86,10 +86,12 @@ here. Where the rest of the file says `main` as the branch being written to, rea
   on `main` (`git log main --not HEAD upstream/main`) is a reference, not a landing: the row stays
   `pending`. Compare "already in the code" modulo the port transforms below. Rows 1-61's landing
   commits are ancestors of `net9-port` through `3fa79c9` and stay valid.
-- **`?? packages/`** in `git status` is expected (NuGet restore output from `main`'s .NET Framework
-  builds, which this branch's `.gitignore` does not cover). It does not make the tree dirty: use
-  `git status --short -- ':!packages/'` in every clean-tree check, and never stage, commit or delete
-  it.
+- **`packages/`** at the repository root is the NuGet restore output of `main`'s .NET Framework
+  builds (182 MB; `main`'s projects load DLLs from it by `HintPath`). This branch never reads it, but
+  it stays on disk when the worktree switches branches. `.gitignore` ignores it here as on `main`
+  (`/packages/`, added 2026-11-20). Never commit it, and never delete it - `main`'s next build needs
+  it. If it ever shows up as `?? packages/` again, the ignore rule was lost: restore the rule, do not
+  stage the folder.
 
 ### What a hunk lands on
 

@@ -310,9 +310,10 @@ None.
   `BloogBot_net9.sln`'s `net9.0-windows` projects; baseline `dotnet build BloogBot_net9.sln -c Debug` = exit 0,
   0 errors, 35 warnings. NuGet is `PackageReference`, restored by `dotnet build`. The native projects are
   not in the solution: build them with VS 18 MSBuild and `-p:PlatformToolset=v145` (only `v145` is
-  installed) when a commit touches them. The untracked `packages/` in the worktree is left by `main`'s
-  .NET Framework builds; this branch's `.gitignore` has no packages rule - leave it alone and never
-  commit it. Paragraphs below that cite MSBuild, `packages/` being gitignored, `upstream-local` or
+  installed) when a commit touches them. `packages/` in the worktree is the NuGet restore of `main`'s
+  .NET Framework builds (46 packages, 182 MB, restored 2026-11-20; `main`'s csproj `HintPath`s load
+  from it). This branch does not use it; `.gitignore` ignores it as `/packages/` (added 2026-11-20, the
+  port's `.gitignore` rewrite had dropped `main`'s rule) - never commit or delete it. Paragraphs below that cite MSBuild, `packages/` being gitignored, `upstream-local` or
   `main`'s line numbers describe `main`; re-derive before citing them here. The first rejoin note is
   shared history.
 

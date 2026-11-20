@@ -20,3 +20,7 @@ NavigationTests/NavigationTests/
 db.db
 # written fresh by every run of the bloogbot-net9-port skill
 commit_message.txt
+# NuGet packages folder restored by main's .NET Framework build (packages.config + HintPath).
+# net9-port uses PackageReference and never reads it, but the folder stays on disk when the
+# shared worktree switches branches, and main's next build needs it. Ignored on main too.
+/packages/

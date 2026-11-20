@@ -64,7 +64,10 @@ here. Where the rest of the file says `main` as the branch being written to, rea
   equals that of `main`'s landing. Compare with `main`'s, not upstream's: patch-id hashes the hunk's
   context lines, and a hunk next to a guard has the fork's `#if` / `#else` lines as context on both
   branches but not upstream (row 64: `main` and net9 `ef0c75f8`, upstream `20e649e1`). With no guard
-  nearby it equals upstream's too (row 62). Status, conflicts, counts and
+  nearby it equals upstream's too (row 62). A hunk at a file's first lines has the port header in its
+  context and matches neither (row 67). The proof that always holds is per file:
+  `git diff --numstat <main landing> HEAD -- <files>` must show only this branch's port delta for each
+  file - the same numbers as before the pick (`+2/-1` for a header-only replica). Status, conflicts, counts and
   build results are always this branch's own - never copied from `main`'s row.
 - **Decisions made on `main` carry over.** A user answer, a mirror verdict or a fork-side follow-up
   `main` recorded for the row (row 70's upstream-only guard `3a49406`, for instance) applies here too
